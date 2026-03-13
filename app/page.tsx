@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import {
   BookOpenCheck,
   BrainCircuit,
@@ -46,6 +47,18 @@ export default function Home() {
         <div className="flex flex-col justify-center">
           <div className="mb-5 flex justify-end lg:justify-start">
             <ThemeToggle />
+          </div>
+          <div className="mb-5 flex items-center gap-3">
+            <Image
+              src="/koriai-logo.svg"
+              alt="KoriAI logo"
+              width={36}
+              height={36}
+              className="rounded-lg"
+            />
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
+              KoriAI
+            </p>
           </div>
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-300/60 bg-white/80 px-3.5 py-2 text-xs text-emerald-800 shadow-sm backdrop-blur sm:px-4 sm:text-sm dark:border-emerald-500/30 dark:bg-slate-900/70 dark:text-emerald-200">
             <BrainCircuit size={20} strokeWidth={1.5} className="text-current" />

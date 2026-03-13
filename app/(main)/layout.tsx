@@ -1,7 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Image from "next/image"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useSyncExternalStore } from "react"
 import {
   BookOpen,
   Gauge,
@@ -24,6 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { isAuthenticated } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -40,6 +43,23 @@ export default function MainLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname()
+  const router = useRouter()
+  const mounted = useSyncExternalStore(
+    (callback) => {
+      queueMicrotask(callback)
+      return () => undefined
+    },
+    () => true,
+    () => false
+  )
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.replace("/login")
+    }
+  }, [router])
+
+  if (!mounted) return null
 
   const navItems = links.map((item) => {
     const Icon = item.icon
@@ -67,7 +87,16 @@ export default function MainLayout({
       <div className="mx-auto grid min-h-screen max-w-7xl gap-4 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 lg:grid-cols-[280px_1fr] lg:gap-6 lg:px-6 lg:py-4">
         <aside className="hidden rounded-[2rem] border border-white/70 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:border-emerald-500/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,8,23,0.98))] dark:shadow-black/40 lg:block">
           <Link href="/" className="block rounded-3xl bg-white/8 p-4">
-            <p className="text-sm uppercase tracking-[0.24em] text-emerald-200">KoriAI</p>
+            <div className="mb-3 flex items-center gap-3">
+              <Image
+                src="/koriai-logo.svg"
+                alt="KoriAI logo"
+                width={34}
+                height={34}
+                className="rounded-lg"
+              />
+              <p className="text-sm uppercase tracking-[0.24em] text-emerald-200">KoriAI</p>
+            </div>
             <p className="mt-2 text-2xl font-semibold">Frontend shell</p>
             <p className="mt-2 text-sm text-white/70">
               Structured for chat, vocabulary, diary, scenarios, and progress.
@@ -90,13 +119,22 @@ export default function MainLayout({
 
         <div className="flex min-h-[calc(100vh-1rem)] flex-col rounded-[1.6rem] border border-white/70 bg-white/65 p-3 shadow-xl shadow-slate-950/5 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,18,37,0.78),rgba(2,8,23,0.86))] dark:shadow-black/35 sm:p-4 lg:min-h-[calc(100vh-2rem)] lg:rounded-[2rem] lg:p-6">
           <div className="mb-4 flex items-center justify-between rounded-[1.25rem] border border-white/10 bg-slate-950/70 px-3 py-2 text-white shadow-lg shadow-black/20 backdrop-blur lg:hidden">
-            <Link href="/" className="min-w-0">
-              <p className="text-[0.68rem] uppercase tracking-[0.28em] text-emerald-200">
-                KoriAI
-              </p>
-              <p className="truncate text-sm font-medium text-white/90">
-                Korean AI Platform
-              </p>
+            <Link href="/" className="flex min-w-0 items-center gap-2">
+              <Image
+                src="/koriai-logo.svg"
+                alt="KoriAI logo"
+                width={22}
+                height={22}
+                className="rounded"
+              />
+              <div className="min-w-0">
+                <p className="text-[0.68rem] uppercase tracking-[0.28em] text-emerald-200">
+                  KoriAI
+                </p>
+                <p className="truncate text-sm font-medium text-white/90">
+                  Korean AI Platform
+                </p>
+              </div>
             </Link>
 
             <div className="flex items-center gap-2">
