@@ -21,14 +21,18 @@ export function VocabCard({ item, onReview }: VocabCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        <p className="rounded-2xl bg-muted/70 p-3 text-foreground">{item.example}</p>
-        <div className="flex flex-wrap gap-2">
-          {item.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">
-              {tag}
-            </Badge>
-          ))}
-        </div>
+        {item.example ? (
+          <p className="rounded-2xl bg-muted/70 p-3 text-foreground">{item.example}</p>
+        ) : null}
+        {item.tags.length ? (
+          <div className="flex flex-wrap gap-2">
+            {item.tags.map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-3">
         <span className="text-xs text-muted-foreground">

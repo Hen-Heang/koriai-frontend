@@ -1,34 +1,104 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 
-import type { ChatMessage } from "@/lib/types"
+import { chatApi } from "@/lib/api"
+import type { ChatMessage, MessageRole } from "@/lib/types"
 
 type UseChatOptions = {
+  conversationId?: number
   initialMessages?: ChatMessage[]
 }
 
-function createAssistantReply(content: string): ChatMessage {
-  return {
-    id: crypto.randomUUID(),
-    role: "assistant",
-    content: `좋아요. "${content}"에 맞춰서 더 자연스러운 한국어 표현으로 연습해볼게요.`,
-    correction: "문장을 조금 더 자연스럽게 다듬고, 존댓말 톤을 유지해보세요.",
-    translation: "Good. Let's practice a more natural Korean version of that sentence.",
-    createdAt: new Date().toISOString(),
+type ResponseLanguage = "auto" | "english" | "korean"
+
+function detectLanguagePreference(input: string): ResponseLanguage | null {
+  const normalized = input.toLowerCase()
+
+  const wantsEnglish =
+    /\benglish\b/.test(normalized) ||
+    /\bin english\b/.test(normalized) ||
+    /\bspeak english\b/.test(normalized) ||
+    /\buse english\b/.test(normalized) ||
+    /영어/.test(input)
+
+  if (wantsEnglish) {
+    return "english"
   }
+
+  const wantsKorean =
+    /\bkorean\b/.test(normalized) ||
+    /\bin korean\b/.test(normalized) ||
+    /\buse korean\b/.test(normalized) ||
+    /한국어|한글/.test(input)
+
+  if (wantsKorean) {
+    return "korean"
+  }
+
+  return null
 }
 
-export function useChat({ initialMessages = [] }: UseChatOptions = {}) {
+function buildMessageForApi(content: string, language: ResponseLanguage): string {
+  if (language === "english") {
+    return `${content}\n\n[Response preference: Reply in English unless I ask for another language.]`
+  }
+
+  if (language === "korean") {
+    return `${content}\n\n[Response preference: Reply in Korean unless I ask for another language.]`
+  }
+
+  return content
+}
+
+export function useChat({ conversationId, initialMessages = [] }: UseChatOptions) {
   const [messages, setMessages] = useState(initialMessages)
   const [draft, setDraft] = useState("")
+  const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
+  const [error, setError] = useState("")
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (!conversationId) {
+      return
+    }
+
+    chatApi
+      .getMessages(conversationId)
+      .then((data) => {
+        setError("")
+        const history = Array.isArray(data) ? data : []
+        const normalized = history.map((item, index) => {
+          const message = item as Record<string, unknown>
+          const role: MessageRole =
+            message.role === "assistant" || message.senderType === "ASSISTANT"
+              ? "assistant"
+              : "user"
+          return {
+            id: String(message.id ?? message.messageId ?? `${conversationId}-${index}`),
+            role,
+            content: String(message.content ?? message.message ?? message.text ?? ""),
+            correction: message.correction ? String(message.correction) : undefined,
+            translation: message.translation ? String(message.translation) : undefined,
+            createdAt: String(message.createdAt ?? new Date().toISOString()),
+          }
+        })
+        setMessages(normalized)
+      })
+      .catch(() => setError("Failed to load messages."))
+  }, [conversationId])
 
   const sendMessage = (content?: string) => {
     const nextContent = (content ?? draft).trim()
 
     if (!nextContent) {
       return
+    }
+
+    const detectedLanguage = detectLanguagePreference(nextContent)
+    const nextLanguage = detectedLanguage ?? responseLanguage
+    if (detectedLanguage) {
+      setResponseLanguage(detectedLanguage)
     }
 
     const userMessage: ChatMessage = {
@@ -41,15 +111,46 @@ export function useChat({ initialMessages = [] }: UseChatOptions = {}) {
     setMessages((current) => [...current, userMessage])
     setDraft("")
 
-    startTransition(() => {
-      window.setTimeout(() => {
-        setMessages((current) => [...current, createAssistantReply(nextContent)])
-      }, 700)
+    if (!conversationId) {
+      setError("Conversation is not available.")
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await chatApi.sendMessage(
+          conversationId,
+          buildMessageForApi(nextContent, nextLanguage)
+        )
+        setError("")
+        const assistantMessage: ChatMessage = {
+          id: String(response.assistantMessageId),
+          role: "assistant",
+          content: response.assistantReply,
+          createdAt: new Date().toISOString(),
+        }
+        setMessages((current) => [...current, assistantMessage])
+      } catch {
+        setError("Failed to send message.")
+        setMessages((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content:
+              nextLanguage === "korean"
+                ? "문제가 발생했어요. 다시 시도해 주세요."
+                : "Sorry, something went wrong. Please try again.",
+            createdAt: new Date().toISOString(),
+          },
+        ])
+      }
     })
   }
 
   return {
     draft,
+    error,
     isStreaming: isPending,
     messages,
     sendMessage,

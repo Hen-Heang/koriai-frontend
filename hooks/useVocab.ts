@@ -1,63 +1,85 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
+import { vocabApi } from "@/lib/api"
 import type { VocabItem } from "@/lib/types"
 
-const initialWords: VocabItem[] = [
-  {
-    id: "word-1",
-    term: "적응하다",
-    meaning: "to adapt",
-    example: "한국 생활에 빨리 적응하고 싶어요.",
-    mastery: 74,
-    nextReview: "Tomorrow",
-    tags: ["daily-life", "verb"],
-  },
-  {
-    id: "word-2",
-    term: "면접",
-    meaning: "interview",
-    example: "내일 한국 회사 면접이 있어요.",
-    mastery: 51,
-    nextReview: "Today",
-    tags: ["career", "noun"],
-  },
-  {
-    id: "word-3",
-    term: "예약하다",
-    meaning: "to reserve",
-    example: "식당을 미리 예약했어요.",
-    mastery: 88,
-    nextReview: "In 3 days",
-    tags: ["travel", "verb"],
-  },
-]
+function normalizeWord(raw: unknown): VocabItem {
+  const source = (raw ?? {}) as Record<string, unknown>
+  const id = String(source.id ?? source.vocabId ?? crypto.randomUUID())
+  const term = String(source.term ?? source.word ?? "")
+  const meaning = String(source.meaning ?? source.definition ?? "")
+  const example = source.example ? String(source.example) : undefined
+  const mastery = Number(source.mastery ?? source.masteryRate ?? 0)
+  const nextReview = String(source.nextReview ?? source.nextReviewDate ?? "-")
+  const tags = Array.isArray(source.tags)
+    ? source.tags.map((tag) => String(tag))
+    : []
+
+  return { id, term, meaning, example, mastery, nextReview, tags }
+}
 
 export function useVocab() {
-  const [words, setWords] = useState(initialWords)
+  const [words, setWords] = useState<VocabItem[]>([])
+  const [dueToday, setDueToday] = useState<VocabItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  const dueToday = useMemo(
-    () => words.filter((word) => word.nextReview === "Today"),
-    [words]
-  )
+  async function fetchWords() {
+    const [savedData, dueData] = await Promise.all([
+      vocabApi.getSavedWords(),
+      vocabApi.getDueWords(),
+    ])
 
-  const markReviewed = (id: string) => {
-    setWords((current) =>
-      current.map((word) =>
-        word.id === id
-          ? {
-              ...word,
-              mastery: Math.min(word.mastery + 8, 100),
-              nextReview: "In 4 days",
-            }
-          : word
-      )
-    )
+    const savedWords = Array.isArray(savedData)
+      ? savedData.map((item) => normalizeWord(item))
+      : []
+    const dueWords = Array.isArray(dueData)
+      ? dueData.map((item) => normalizeWord(item))
+      : []
+
+    return { dueWords, savedWords }
+  }
+
+  useEffect(() => {
+    let active = true
+
+    fetchWords()
+      .then(({ dueWords, savedWords }) => {
+        if (!active) {
+          return
+        }
+        setWords(savedWords)
+        setDueToday(dueWords)
+      })
+      .catch(() => {
+        if (active) {
+          setError("Failed to load vocabulary data.")
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const markReviewed = async (id: string) => {
+    await vocabApi.markReviewed(id)
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
   }
 
   return {
     dueToday,
+    error,
+    loading,
     markReviewed,
     words,
   }

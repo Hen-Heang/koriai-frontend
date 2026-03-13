@@ -13,7 +13,7 @@ export interface VocabItem {
   id: string
   term: string
   meaning: string
-  example: string
+  example?: string
   mastery: number
   nextReview: string
   tags: string[]
@@ -33,6 +33,10 @@ export interface Scenario {
   level: "Beginner" | "Intermediate" | "Advanced"
   summary: string
   goal: string
+}
+
+export interface ScenarioDetail extends Scenario {
+  introMessage?: string
 }
 
 export interface ProgressPoint {

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useProgress } from "@/hooks/useProgress"
 
 export default function DashboardPage() {
-  const { chartData, dailyAverage, stats } = useProgress()
+  const { chartData, dailyAverage, error, loading, stats } = useProgress()
 
   return (
     <div className="space-y-6">
@@ -24,6 +24,10 @@ export default function DashboardPage() {
         <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
         <DailyGoalRing progress={stats.dailyGoalProgress} />
       </div>
+      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading dashboard data…</p>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
         <ProgressChart data={chartData} />

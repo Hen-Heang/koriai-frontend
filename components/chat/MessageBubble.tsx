@@ -10,8 +10,8 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
       className={cn(
         "max-w-2xl rounded-3xl border px-4 py-3 shadow-sm",
         isUser
-          ? "ml-auto border-emerald-300/60 bg-emerald-100/80"
-          : "border-border/70 bg-card"
+          ? "ml-auto border-emerald-300/60 bg-emerald-100/80 text-slate-900 dark:border-emerald-300/30 dark:bg-emerald-500/15 dark:text-emerald-50"
+          : "border-border/70 bg-card dark:border-white/10 dark:bg-slate-950/80"
       )}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -25,9 +25,11 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           })}
         </span>
       </div>
-      <p className="text-sm leading-7 text-foreground">{message.content}</p>
+      <p className={cn("text-sm leading-7", isUser ? "text-inherit" : "text-foreground")}>
+        {message.content}
+      </p>
       {message.correction ? (
-        <div className="mt-3 rounded-2xl bg-muted/80 p-3 text-sm">
+        <div className="mt-3 rounded-2xl bg-muted/80 p-3 text-sm dark:bg-slate-900/80">
           <p className="font-medium text-foreground">Correction</p>
           <p className="mt-1 text-muted-foreground">{message.correction}</p>
           {message.translation ? (

@@ -4,29 +4,50 @@ import { useState } from "react"
 
 import { DiaryEditor } from "@/components/diary/DiaryEditor"
 import { FeedbackPanel } from "@/components/diary/FeedbackPanel"
+import { diaryApi } from "@/lib/api"
 import type { DiaryFeedback } from "@/lib/types"
 
-const initialFeedback: DiaryFeedback[] = [
-  {
-    id: "feedback-1",
-    title: "Grammar polish",
-    description:
-      "Use past tense consistently when summarizing what happened earlier today.",
-    example:
-      "One polished version: Today I had a meeting at work and talked about a new project.",
-  },
-  {
-    id: "feedback-2",
-    title: "Vocabulary upgrade",
-    description:
-      "Swap basic adjectives for more precise ones to sound more natural.",
-    example:
-      "Try replacing simple adjectives with more specific ones, like 'interesting' to 'memorable' or 'rewarding'.",
-  },
-]
-
 export default function DiaryPage() {
-  const [feedback, setFeedback] = useState(initialFeedback)
+  const [feedback, setFeedback] = useState<DiaryFeedback[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  async function handleAnalyze(content: string) {
+    if (!content.trim()) return
+    setLoading(true)
+    setError("")
+    try {
+      const today = new Date().toISOString().split("T")[0]
+      const data = await diaryApi.createOrUpdate(today, content)
+
+      const items: DiaryFeedback[] = [
+        {
+          id: "corrected",
+          title: "Corrected version",
+          description: data.correctedText,
+        },
+        {
+          id: "feedback",
+          title: "AI Feedback",
+          description: data.feedback,
+        },
+      ]
+
+      if (data.mood) {
+        items.push({
+          id: "mood",
+          title: "Mood detected",
+          description: data.mood,
+        })
+      }
+
+      setFeedback(items)
+    } catch {
+      setError("Failed to analyze diary. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -39,20 +60,17 @@ export default function DiaryPage() {
         </h1>
       </div>
 
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <DiaryEditor
-          onAnalyze={(content) => {
-            setFeedback((current) => [
-              {
-                id: crypto.randomUUID(),
-                title: "Fresh diary insight",
-                description: `Your latest draft has ${content.length} characters. Add linking phrases like "so", "however", and "especially" to improve flow.`,
-              },
-              ...current,
-            ])
-          }}
-        />
-        <FeedbackPanel items={feedback} />
+        <DiaryEditor onAnalyze={handleAnalyze} />
+        {loading ? (
+          <div className="flex items-center justify-center rounded-[2rem] border border-border/60 bg-white/90 p-8 text-sm text-muted-foreground shadow-lg">
+            Analyzing your diary…
+          </div>
+        ) : (
+          <FeedbackPanel items={feedback} />
+        )}
       </div>
     </div>
   )

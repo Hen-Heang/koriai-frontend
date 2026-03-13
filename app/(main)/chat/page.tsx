@@ -1,16 +1,21 @@
-import { ChatWindow } from "@/components/chat/ChatWindow"
+"use client"
 
-const messages = [
-  {
-    id: "chat-1",
-    role: "assistant" as const,
-    content: "안녕하세요. 오늘은 어떤 상황에서 한국어를 연습하고 싶어요?",
-    translation: "Hello. What situation would you like to practice Korean for today?",
-    createdAt: new Date().toISOString(),
-  },
-]
+import { useEffect, useState } from "react"
+
+import { ChatWindow } from "@/components/chat/ChatWindow"
+import { chatApi } from "@/lib/api"
 
 export default function ChatPage() {
+  const [conversationId, setConversationId] = useState<number | null>(null)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    chatApi
+      .createConversation("General Practice", "FREE_CHAT")
+      .then((data) => setConversationId(data.id))
+      .catch(() => setError("Failed to start conversation. Please refresh."))
+  }, [])
+
   return (
     <div className="space-y-6">
       <div>
@@ -19,11 +24,16 @@ export default function ChatPage() {
           AI Korean chat tutor
         </h1>
       </div>
-      <ChatWindow
-        title="General Practice"
-        subtitle="Conversation mode with inline corrections and translation support."
-        initialMessages={messages}
-      />
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      {conversationId ? (
+        <ChatWindow
+          title="General Practice"
+          subtitle="Conversation mode with inline corrections and translation support."
+          conversationId={conversationId}
+        />
+      ) : !error ? (
+        <p className="text-sm text-muted-foreground">Starting conversation…</p>
+      ) : null}
     </div>
   )
 }

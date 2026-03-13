@@ -4,10 +4,15 @@ import { BookOpenCheck } from "lucide-react"
 
 import { VocabCard } from "@/components/vocab/VocabCard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useVocab } from "@/hooks/useVocab"
+import type { VocabItem } from "@/lib/types"
 
-export function ReviewSession() {
-  const { dueToday, markReviewed } = useVocab()
+type ReviewSessionProps = {
+  dueToday: VocabItem[]
+  loading?: boolean
+  onReview: (id: string) => void | Promise<void>
+}
+
+export function ReviewSession({ dueToday, loading, onReview }: ReviewSessionProps) {
 
   return (
     <Card className="rounded-[2rem] border-border/60 bg-white/90 shadow-lg shadow-slate-950/5">
@@ -18,9 +23,11 @@ export function ReviewSession() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {dueToday.length ? (
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading due cards…</p>
+        ) : dueToday.length ? (
           dueToday.map((item) => (
-            <VocabCard key={item.id} item={item} onReview={markReviewed} />
+            <VocabCard key={item.id} item={item} onReview={onReview} />
           ))
         ) : (
           <p className="text-sm text-muted-foreground">

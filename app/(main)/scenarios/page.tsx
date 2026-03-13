@@ -1,38 +1,52 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { scenarioApi } from "@/lib/api"
 import type { Scenario } from "@/lib/types"
 
-const scenarios: Scenario[] = [
-  {
-    id: "restaurant",
-    title: "Restaurant Ordering",
-    category: "food",
-    level: "Beginner",
-    summary: "Practice ordering food, asking for recommendations, and paying naturally.",
-    goal: "Order politely and handle follow-up questions from staff.",
-  },
-  {
-    id: "job-interview",
-    title: "Job Interview",
-    category: "career",
-    level: "Advanced",
-    summary: "Train formal self-introduction and experience-based answers.",
-    goal: "Respond clearly with professional vocabulary and structure.",
-  },
-  {
-    id: "hospital",
-    title: "Doctor Visit",
-    category: "medical",
-    level: "Intermediate",
-    summary: "Explain symptoms and understand simple treatment instructions.",
-    goal: "Describe pain, duration, and follow-up advice accurately.",
-  },
-]
+function normalizeLevel(rawLevel: unknown): Scenario["level"] {
+  if (rawLevel === "Advanced" || rawLevel === "ADVANCED") {
+    return "Advanced"
+  }
+  if (rawLevel === "Intermediate" || rawLevel === "INTERMEDIATE") {
+    return "Intermediate"
+  }
+  return "Beginner"
+}
+
+function normalizeScenario(raw: unknown): Scenario {
+  const source = (raw ?? {}) as Record<string, unknown>
+  return {
+    id: String(source.id ?? ""),
+    title: String(source.title ?? ""),
+    category: String(source.category ?? "general"),
+    level: normalizeLevel(source.level),
+    summary: String(source.summary ?? ""),
+    goal: String(source.goal ?? ""),
+  }
+}
 
 export default function ScenariosPage() {
+  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    scenarioApi
+      .getList()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : []
+        setScenarios(list.map((item) => normalizeScenario(item)))
+      })
+      .catch(() => setError("Failed to load scenarios."))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,6 +57,12 @@ export default function ScenariosPage() {
           Choose a real-life simulation
         </h1>
       </div>
+
+      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading scenarios…</p> : null}
+      {!loading && !scenarios.length ? (
+        <p className="text-sm text-muted-foreground">No scenarios available yet.</p>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
         {scenarios.map((scenario) => (
@@ -57,9 +77,7 @@ export default function ScenariosPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm leading-7 text-muted-foreground">
-                {scenario.summary}
-              </p>
+              <p className="text-sm leading-7 text-muted-foreground">{scenario.summary}</p>
               <div className="rounded-2xl bg-muted/70 p-3 text-sm">
                 <p className="font-medium text-foreground">Goal</p>
                 <p className="mt-1 text-muted-foreground">{scenario.goal}</p>

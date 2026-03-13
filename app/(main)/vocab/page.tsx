@@ -1,28 +1,12 @@
+"use client"
+
 import { ReviewSession } from "@/components/vocab/ReviewSession"
 import { VocabCard } from "@/components/vocab/VocabCard"
-
-const savedWords = [
-  {
-    id: "saved-1",
-    term: "배달",
-    meaning: "delivery",
-    example: "저녁은 배달 음식으로 먹었어요.",
-    mastery: 63,
-    nextReview: "Tomorrow",
-    tags: ["food", "daily-life"],
-  },
-  {
-    id: "saved-2",
-    term: "연습하다",
-    meaning: "to practice",
-    example: "매일 말하기를 연습하려고 해요.",
-    mastery: 81,
-    nextReview: "In 2 days",
-    tags: ["study", "verb"],
-  },
-]
+import { useVocab } from "@/hooks/useVocab"
 
 export default function VocabPage() {
+  const { dueToday, error, loading, markReviewed, words } = useVocab()
+
   return (
     <div className="space-y-6">
       <div>
@@ -33,13 +17,22 @@ export default function VocabPage() {
           Build your review deck
         </h1>
       </div>
+      {error ? <p className="text-sm text-red-500">{error}</p> : null}
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-4">
-          {savedWords.map((item) => (
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading saved words…</p>
+          ) : null}
+          {words.map((item) => (
             <VocabCard key={item.id} item={item} />
           ))}
+          {!loading && !words.length ? (
+            <p className="text-sm text-muted-foreground">
+              No saved words yet. Save words from chats or corrections.
+            </p>
+          ) : null}
         </div>
-        <ReviewSession />
+        <ReviewSession dueToday={dueToday} loading={loading} onReview={markReviewed} />
       </div>
     </div>
   )
