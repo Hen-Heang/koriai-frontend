@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { Flag, MessageSquareText, Theater } from "lucide-react"
 
 import { ChatWindow } from "@/components/chat/ChatWindow"
 import { Badge } from "@/components/ui/badge"
@@ -56,20 +57,39 @@ export default function ScenarioDetailPage() {
         subtitle="The AI stays in character and keeps role-play focused on this context."
         conversationId={conversationId ?? undefined}
       />
-      <Card className="rounded-[2rem] border-border/60 bg-white/90 shadow-lg shadow-slate-950/5">
-        <CardHeader>
-          <CardTitle className="text-xl">Scenario briefing</CardTitle>
+      <Card className="rounded-[2rem] border-border/60 bg-white/90 shadow-lg shadow-slate-950/5 dark:bg-slate-900/90">
+        <CardHeader className="border-b border-border/60 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 dark:text-violet-300">
+              <Theater size={18} />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Scenario briefing</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Keep this context in mind while you role-play.
+              </p>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 pt-5 text-sm">
           {error ? <p className="text-red-500">{error}</p> : null}
           {!scenario && !error ? <p className="text-muted-foreground">Loading scenario…</p> : null}
           {scenario ? (
             <>
               <Badge variant="secondary">{scenario.level}</Badge>
-              <p className="text-muted-foreground">{scenario.summary}</p>
               <div className="rounded-2xl bg-muted/70 p-4">
-                <p className="font-medium text-foreground">Goal</p>
-                <p className="mt-2 text-muted-foreground">{scenario.goal}</p>
+                <div className="flex items-center gap-2">
+                  <MessageSquareText size={15} className="text-muted-foreground" />
+                  <p className="font-medium text-foreground">Context</p>
+                </div>
+                <p className="mt-2 leading-7 text-muted-foreground">{scenario.summary}</p>
+              </div>
+              <div className="rounded-2xl bg-muted/70 p-4">
+                <div className="flex items-center gap-2">
+                  <Flag size={15} className="text-muted-foreground" />
+                  <p className="font-medium text-foreground">Goal</p>
+                </div>
+                <p className="mt-2 leading-7 text-muted-foreground">{scenario.goal}</p>
               </div>
               <p className="text-xs text-muted-foreground">Scenario id: {id}</p>
             </>

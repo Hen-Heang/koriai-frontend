@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useState } from "react"
 
 import { chatApi } from "@/lib/api"
 import type { ChatMessage, MessageRole } from "@/lib/types"
@@ -56,13 +56,18 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
   const [error, setError] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     if (!conversationId) {
       return
     }
 
+    setMessages([])
+    setDraft("")
+    setError("")
+    setIsLoadingMessages(true)
     chatApi
       .getMessages(conversationId)
       .then((data) => {
@@ -86,12 +91,13 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
         setMessages(normalized)
       })
       .catch(() => setError("Failed to load messages."))
+      .finally(() => setIsLoadingMessages(false))
   }, [conversationId])
 
-  const sendMessage = (content?: string) => {
+  const sendMessage = async (content?: string) => {
     const nextContent = (content ?? draft).trim()
 
-    if (!nextContent) {
+    if (!nextContent || isSending) {
       return
     }
 
@@ -116,42 +122,44 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
       return
     }
 
-    startTransition(async () => {
-      try {
-        const response = await chatApi.sendMessage(
-          conversationId,
-          buildMessageForApi(nextContent, nextLanguage)
-        )
-        setError("")
-        const assistantMessage: ChatMessage = {
-          id: String(response.assistantMessageId),
-          role: "assistant",
-          content: response.assistantReply,
-          createdAt: new Date().toISOString(),
-        }
-        setMessages((current) => [...current, assistantMessage])
-      } catch {
-        setError("Failed to send message.")
-        setMessages((current) => [
-          ...current,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content:
-              nextLanguage === "korean"
-                ? "문제가 발생했어요. 다시 시도해 주세요."
-                : "Sorry, something went wrong. Please try again.",
-            createdAt: new Date().toISOString(),
-          },
-        ])
+    setIsSending(true)
+    try {
+      const response = await chatApi.sendMessage(
+        conversationId,
+        buildMessageForApi(nextContent, nextLanguage)
+      )
+      setError("")
+      const assistantMessage: ChatMessage = {
+        id: String(response.assistantMessageId),
+        role: "assistant",
+        content: response.assistantReply,
+        createdAt: new Date().toISOString(),
       }
-    })
+      setMessages((current) => [...current, assistantMessage])
+    } catch {
+      setError("Failed to send message.")
+      setMessages((current) => [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content:
+            nextLanguage === "korean"
+              ? "문제가 발생했어요. 다시 시도해 주세요."
+              : "Sorry, something went wrong. Please try again.",
+          createdAt: new Date().toISOString(),
+        },
+      ])
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return {
     draft,
     error,
-    isStreaming: isPending,
+    isLoadingMessages,
+    isStreaming: isSending,
     messages,
     sendMessage,
     setDraft,

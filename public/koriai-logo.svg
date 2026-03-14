@@ -1,23 +1,64 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="16" y="16" width="224" height="224" rx="56" fill="url(#bg)" />
-  <rect x="16.5" y="16.5" width="223" height="223" rx="55.5" stroke="url(#stroke)" />
-  <circle cx="128" cy="128" r="64" fill="url(#core)" />
-  <path d="M96 94C96 78.536 108.536 66 124 66H132C147.464 66 160 78.536 160 94V162C160 177.464 147.464 190 132 190H124C108.536 190 96 177.464 96 162V94Z" fill="#F8FAFC" />
-  <path d="M76 128C76 123.582 79.582 120 84 120H112V136H84C79.582 136 76 132.418 76 128Z" fill="#A7F3D0" />
-  <path d="M144 120H172C176.418 120 180 123.582 180 128C180 132.418 176.418 136 172 136H144V120Z" fill="#A7F3D0" />
-  <circle cx="128" cy="128" r="14" fill="#0F766E" />
+
+  <!-- App icon background: deep violet-navy rounded square -->
+  <rect width="256" height="256" rx="58" fill="url(#grad_bg)"/>
+
+  <!-- Subtle radial glow at top-centre -->
+  <ellipse cx="128" cy="72" rx="100" ry="56" fill="url(#grad_glow)"/>
+
+  <!-- Subtle inner border -->
+  <rect x="1" y="1" width="254" height="254" rx="57" stroke="url(#grad_border)" stroke-width="1.5"/>
+
+  <!--
+    ㄱ  (gi-yeok) — first Korean consonant, "K" sound
+    Geometry:
+      Horizontal top bar : x 60–196, y 74–98  (width 136, height 24)
+      Vertical right bar  : x 172–196, y 74–182 (width 24, height 108)
+      The two bars share the top-right corner rect (x 172–196, y 74–98)
+  -->
+
+  <!-- Horizontal bar -->
+  <rect x="60" y="74" width="136" height="24" rx="12" fill="white"/>
+
+  <!-- Vertical bar -->
+  <rect x="172" y="74" width="24" height="108" rx="12" fill="white"/>
+
+  <!--
+    Emerald AI-spark dot — sits at the inner corner of ㄱ (the bend point).
+    Positioned at (172, 98) — inside bend — radius 16 for visibility.
+  -->
+  <circle cx="172" cy="98" r="15" fill="url(#grad_dot)"/>
+  <!-- Bright core of the dot -->
+  <circle cx="172" cy="98" r="7" fill="white" opacity="0.9"/>
+
+  <!-- Subtle shine highlight on background top-left -->
+  <ellipse cx="80" cy="70" rx="48" ry="28" fill="white" opacity="0.04"/>
+
   <defs>
-    <linearGradient id="bg" x1="32" y1="24" x2="224" y2="232" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0F766E" />
-      <stop offset="1" stop-color="#0B1324" />
+
+    <!-- Background: rich dark violet-to-navy -->
+    <linearGradient id="grad_bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1a0e3a"/>
+      <stop offset="100%" stop-color="#060914"/>
     </linearGradient>
-    <linearGradient id="stroke" x1="16" y1="16" x2="240" y2="240" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#5EEAD4" stop-opacity="0.55" />
-      <stop offset="1" stop-color="#38BDF8" stop-opacity="0.35" />
-    </linearGradient>
-    <radialGradient id="core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(112 98) rotate(50.7106) scale(103.613)">
-      <stop stop-color="#34D399" />
-      <stop offset="1" stop-color="#0F766E" />
+
+    <!-- Top glow: soft violet -->
+    <radialGradient id="grad_glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
     </radialGradient>
+
+    <!-- Inner border: violet → indigo fade -->
+    <linearGradient id="grad_border" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#8B5CF6" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.15"/>
+    </linearGradient>
+
+    <!-- Emerald dot: bright centre → deep teal -->
+    <radialGradient id="grad_dot" cx="40%" cy="35%" r="65%">
+      <stop offset="0%"   stop-color="#6EE7B7"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </radialGradient>
+
   </defs>
 </svg>

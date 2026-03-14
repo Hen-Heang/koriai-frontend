@@ -76,11 +76,20 @@ export function useVocab() {
     setDueToday(dueWords)
   }
 
+  const generate = async (category: string) => {
+    const generated = await vocabApi.generate(category)
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
+    return generated
+  }
+
   return {
     dueToday,
     error,
     loading,
     markReviewed,
+    generate,
     words,
   }
 }

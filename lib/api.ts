@@ -1,4 +1,5 @@
 import axios from "axios"
+import { clearAuth } from "@/lib/auth-store"
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api",
@@ -17,6 +18,19 @@ api.interceptors.request.use((config) => {
 
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      clearAuth()
+      if (typeof window !== "undefined") {
+        window.location.href = "/login"
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Auth
 export const authApi = {
@@ -76,7 +90,9 @@ export const diaryApi = {
 export const vocabApi = {
   getSavedWords: () => api.get("/vocab").then((r) => r.data.data),
   getDueWords: () => api.get("/vocab/review/due").then((r) => r.data.data),
-  markReviewed: (id: string) => api.post(`/vocab/${id}/review`).then((r) => r.data.data),
+  markReviewed: (id: string, correct = true) => api.post(`/vocab/${id}/review?correct=${correct}`).then((r) => r.data.data),
+  generate: (category: string, count = 10) =>
+    api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
 }
 
 // Dashboard / Progress
@@ -88,6 +104,14 @@ export const progressApi = {
 export const scenarioApi = {
   getList: () => api.get("/scenarios").then((r) => r.data.data),
   getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
+}
+
+// TTS
+export const ttsApi = {
+  speak: async (text: string, voice = "nova"): Promise<string> => {
+    const response = await api.post("/tts", { text, voice }, { responseType: "blob" })
+    return URL.createObjectURL(response.data)
+  },
 }
 
 export default api

@@ -51,13 +51,17 @@ export default function DiaryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="max-w-3xl">
         <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">
           Diary
         </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight dark:text-white">
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight dark:text-white sm:text-5xl">
           Daily writing with AI feedback
         </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+          Turn a rough Korean diary entry into a corrected version with feedback you can
+          actually study from.
+        </p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}

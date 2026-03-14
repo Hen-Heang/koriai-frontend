@@ -40,10 +40,10 @@ export function ThemeToggle() {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-border/70 bg-background/80 backdrop-blur"
+          className="size-9 rounded-full border-border/70 bg-background/80 px-0 backdrop-blur"
+          aria-label="Toggle theme"
         >
           <ActiveIcon size={20} strokeWidth={1.5} className="text-current" />
-          Theme
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40 rounded-2xl">
