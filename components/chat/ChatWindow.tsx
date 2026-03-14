@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { ArrowUp, SquarePen, Sparkles } from "lucide-react"
+import { ArrowUp, CornerDownLeft, SquarePen, Sparkles } from "lucide-react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"
 import { TypingIndicator } from "@/components/chat/TypingIndicator"
@@ -45,10 +45,19 @@ export function ChatWindow({
   } = useChat({ conversationId, initialMessages })
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }, [messages, isStreaming])
+
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    textarea.style.height = "0px"
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
+  }, [draft])
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -166,31 +175,39 @@ export function ChatWindow({
       </div>
 
       {/* ── Input area ── */}
-      <div className="shrink-0 border-t border-slate-800/90 bg-[#050916]/90 px-3 py-3 backdrop-blur-sm sm:px-5 sm:py-4">
+      <div className="shrink-0 border-t border-slate-800/90 bg-[linear-gradient(180deg,rgba(5,9,22,0.92),rgba(7,11,24,0.98))] px-3 py-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-5 sm:py-4 sm:pb-4">
         {error ? <p className="mb-2 text-xs text-red-400">{error}</p> : null}
-        <div className="flex min-w-0 items-end gap-2 rounded-[1.4rem] border border-slate-700 bg-white/4 px-3 py-2.5 transition-all focus-within:border-violet-500/50 focus-within:ring-2 focus-within:ring-violet-500/15 sm:px-4">
+        <div className="mb-2 flex items-center justify-between px-1 sm:hidden">
+          <p className="text-[11px] font-medium tracking-[0.08em] text-slate-500 uppercase">
+            Message
+          </p>
+          <p className="text-[11px] text-slate-600">Enter to send</p>
+        </div>
+        <div className="flex min-w-0 items-end gap-2 rounded-[1.65rem] border border-slate-700/90 bg-white/[0.05] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_30px_rgba(2,6,23,0.28)] transition-all focus-within:border-violet-400/70 focus-within:bg-white/[0.06] focus-within:ring-2 focus-within:ring-violet-500/15 sm:px-4">
           <Textarea
+            ref={textareaRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write in Korean or English…"
-            className="max-h-32 min-h-0 min-w-0 flex-1 resize-none border-0 bg-transparent p-0 text-base text-slate-100 placeholder:text-slate-600 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm"
+            className="max-h-32 min-h-0 min-w-0 flex-1 resize-none rounded-[1.2rem] border-0 bg-white/[0.04] px-3 py-2 text-[15px] leading-6 text-slate-100 placeholder:text-slate-500 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:bg-transparent sm:p-0 sm:text-sm"
             disabled={!conversationId || isStreaming || isLoadingMessages}
             rows={1}
           />
           <Button
             type="button"
             size="icon"
-            className="mb-0.5 h-9 w-9 shrink-0 rounded-xl bg-violet-600 text-white transition-all hover:bg-violet-500 disabled:opacity-30 sm:h-8 sm:w-8"
+            className="h-11 w-11 shrink-0 rounded-[1.2rem] bg-[linear-gradient(180deg,#6d28d9,#5b21b6)] text-white shadow-[0_10px_24px_rgba(91,33,182,0.35)] transition-all hover:scale-[1.02] hover:bg-violet-500 disabled:opacity-30 sm:h-9 sm:w-9 sm:rounded-xl"
             disabled={!conversationId || isStreaming || isLoadingMessages || !draft.trim()}
             onClick={() => sendMessage()}
           >
-            <ArrowUp size={15} strokeWidth={2.5} />
+            <ArrowUp size={17} strokeWidth={2.5} />
           </Button>
         </div>
-        <p className="mt-2 text-center text-[10px] text-slate-600 sm:text-[10px]">
-          Enter to send · Shift+Enter for new line · KoriAI can make mistakes
-        </p>
+        <div className="hidden items-center justify-center gap-2 text-[10px] text-slate-500 sm:mt-2 sm:flex">
+          <CornerDownLeft size={11} strokeWidth={1.8} />
+          <p>Enter to send · Shift+Enter for new line · KoriAI can make mistakes</p>
+        </div>
       </div>
     </div>
   )

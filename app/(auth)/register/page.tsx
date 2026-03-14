@@ -17,7 +17,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { authApi } from "@/lib/api"
+import { authApi, getApiErrorMessage } from "@/lib/api"
 import { setAuth } from "@/lib/auth-store"
 
 export default function RegisterPage() {
@@ -38,8 +38,8 @@ export default function RegisterPage() {
       const data = await authApi.register({ email, password, displayName, koreanLevel })
       setAuth(data.accessToken, data.userId, data.email)
       router.push("/dashboard")
-    } catch {
-      setError("Registration failed. Email may already be in use.")
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Registration failed. Email may already be in use."))
     } finally {
       setLoading(false)
     }

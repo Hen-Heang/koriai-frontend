@@ -233,17 +233,22 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
       </div>
 
       {/* Content column */}
-      <div className={cn("flex max-w-[75%] flex-col gap-1.5", isUser && "items-end")}>
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-1.5",
+          isUser ? "max-w-[82%] items-end sm:max-w-[70%]" : "max-w-[calc(100%-2.75rem)] flex-1"
+        )}
+      >
         {/* Bubble */}
         <article
           className={cn(
-            "rounded-2xl px-4 py-3 shadow-sm",
+            "w-full rounded-2xl px-4 py-3.5 shadow-sm",
             isUser
-              ? "rounded-tr-sm bg-emerald-500 text-white dark:bg-emerald-600"
+              ? "w-auto rounded-tr-sm bg-emerald-500 text-white dark:bg-emerald-600"
               : "rounded-tl-sm border border-border/60 bg-card text-foreground dark:border-white/10 dark:bg-slate-900/80"
           )}
         >
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {renderBlocks(message.content, isUser)}
           </div>
         </article>

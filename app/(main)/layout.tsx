@@ -3,11 +3,12 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useSyncExternalStore } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpen,
   Gauge,
   MessageCircle,
+  Mic,
   NotebookText,
   Settings,
   Sparkles,
@@ -24,6 +25,7 @@ const allLinks = [
   { href: "/chat", label: "AI Chat", icon: MessageCircle },
   { href: "/correct", label: "Correction", icon: SpellCheck2 },
   { href: "/diary", label: "Diary", icon: NotebookText },
+  { href: "/speaking", label: "Speaking", icon: Mic },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
   { href: "/scenarios", label: "Scenarios", icon: Theater },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -42,6 +44,7 @@ export default function MainLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname()
   const router = useRouter()
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const mounted = useSyncExternalStore(
     (callback) => {
       queueMicrotask(callback)
@@ -50,6 +53,54 @@ export default function MainLayout({
     () => true,
     () => false
   )
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const viewport = window.visualViewport
+    const baseHeight = viewport?.height ?? window.innerHeight
+
+    function updateKeyboardState() {
+      const currentHeight = viewport?.height ?? window.innerHeight
+      const heightDelta = baseHeight - currentHeight
+      const activeElement = document.activeElement as HTMLElement | null
+      const isEditable =
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        activeElement?.isContentEditable
+
+      setIsKeyboardOpen(Boolean(isEditable && heightDelta > 120))
+    }
+
+    function handleFocusIn(event: FocusEvent) {
+      const target = event.target as HTMLElement | null
+      const isEditable =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+
+      if (isEditable) {
+        updateKeyboardState()
+      }
+    }
+
+    function handleFocusOut() {
+      window.setTimeout(updateKeyboardState, 120)
+    }
+
+    updateKeyboardState()
+    viewport?.addEventListener("resize", updateKeyboardState)
+    window.addEventListener("focusin", handleFocusIn)
+    window.addEventListener("focusout", handleFocusOut)
+
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboardState)
+      window.removeEventListener("focusin", handleFocusIn)
+      window.removeEventListener("focusout", handleFocusOut)
+    }
+  }, [])
 
   if (!mounted) return null
 
@@ -135,7 +186,7 @@ export default function MainLayout({
         <div className="flex min-w-0 flex-col overflow-x-hidden">
 
           {/* Mobile top bar */}
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200/60 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#030712]/90 lg:hidden">
+          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200/60 bg-white/88 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#030712]/88 lg:hidden">
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/koriai-logo.svg"
@@ -170,7 +221,14 @@ export default function MainLayout({
           </div>
 
           {/* Page content */}
-          <main className="flex-1 overflow-x-hidden px-4 pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-5 lg:pb-8 lg:px-7 lg:pt-7">
+          <main
+            className={cn(
+              "flex-1 overflow-x-hidden px-4 pt-5 sm:px-5 lg:px-7 lg:pt-7",
+              isKeyboardOpen
+                ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-8"
+                : "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8"
+            )}
+          >
             {children}
           </main>
         </div>
@@ -178,13 +236,17 @@ export default function MainLayout({
 
       {/* ── Mobile bottom tab bar ── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 lg:hidden"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 transition-all duration-200 lg:hidden",
+          isKeyboardOpen ? "pointer-events-none translate-y-6 opacity-0" : "translate-y-0 opacity-100"
+        )}
         style={{
           paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))",
         }}
+        aria-hidden={isKeyboardOpen}
       >
         <div className="mx-auto max-w-md px-3">
-          <div className="flex items-end gap-1.5 rounded-[2rem] border border-white/45 bg-white/70 px-2.5 py-2 shadow-[0_20px_50px_rgba(15,23,42,0.16)] ring-1 ring-white/35 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06] dark:ring-white/8 dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
+          <div className="flex items-end gap-1 rounded-[1.85rem] border border-white/40 bg-white/68 px-2 py-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.14)] ring-1 ring-white/30 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06] dark:ring-white/8 dark:shadow-[0_20px_48px_rgba(0,0,0,0.42)]">
           {bottomTabs.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`)
             return (
@@ -192,7 +254,7 @@ export default function MainLayout({
                 key={href}
                 href={href}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-[1.35rem] px-1 py-1.5 transition-all duration-200",
+                  "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.2rem] px-1 py-1 transition-all duration-200",
                   active
                     ? "text-emerald-600 dark:text-emerald-300"
                     : "text-slate-500/90 dark:text-slate-400"
@@ -200,17 +262,17 @@ export default function MainLayout({
               >
                 <div
                   className={cn(
-                    "flex min-w-[3.5rem] items-center justify-center rounded-[1.1rem] px-3.5 py-2.5 transition-all duration-200",
+                    "flex min-w-[3rem] items-center justify-center rounded-[1rem] px-3 py-2 transition-all duration-200",
                     active
-                      ? "bg-[linear-gradient(180deg,rgba(16,185,129,0.22),rgba(16,185,129,0.1))] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_10px_24px_rgba(16,185,129,0.18)] ring-1 ring-emerald-200/70 dark:bg-emerald-500/18 dark:ring-emerald-400/20"
+                      ? "bg-[linear-gradient(180deg,rgba(16,185,129,0.22),rgba(16,185,129,0.1))] shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_18px_rgba(16,185,129,0.16)] ring-1 ring-emerald-200/70 dark:bg-emerald-500/18 dark:ring-emerald-400/20"
                       : "bg-transparent opacity-90"
                   )}
                 >
-                  <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
+                  <Icon size={20} strokeWidth={active ? 2.15 : 1.75} />
                 </div>
                 <span
                   className={cn(
-                    "truncate px-1 text-[12px] leading-none tracking-[-0.015em]",
+                    "truncate px-1 text-[11px] leading-none tracking-[-0.015em]",
                     active ? "font-semibold" : "font-medium"
                   )}
                 >

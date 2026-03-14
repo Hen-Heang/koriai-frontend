@@ -1,12 +1,32 @@
 import axios from "axios"
 import { clearAuth } from "@/lib/auth-store"
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api"
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 })
+
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (!axios.isAxiosError(error)) {
+    return fallback
+  }
+
+  const serverMessage = error.response?.data?.data?.message
+  if (typeof serverMessage === "string" && serverMessage.trim()) {
+    return serverMessage
+  }
+
+  if (!error.response) {
+    return `Cannot connect to the backend at ${API_BASE_URL}. Make sure the backend is running and CORS is configured for this frontend origin.`
+  }
+
+  return error.message || fallback
+}
 
 api.interceptors.request.use((config) => {
   const token =
@@ -91,6 +111,8 @@ export const vocabApi = {
   getSavedWords: () => api.get("/vocab").then((r) => r.data.data),
   getDueWords: () => api.get("/vocab/review/due").then((r) => r.data.data),
   markReviewed: (id: string, correct = true) => api.post(`/vocab/${id}/review?correct=${correct}`).then((r) => r.data.data),
+  save: (data: { category?: string; term: string; meaning: string; example?: string }) =>
+    api.post("/vocab/save", data).then((r) => r.data.data),
   generate: (category: string, count = 10) =>
     api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
 }

@@ -1,24 +1,43 @@
 "use client"
 
 import { useState } from "react"
+import { BookmarkPlus } from "lucide-react"
 
 import { DiaryEditor } from "@/components/diary/DiaryEditor"
 import { FeedbackPanel } from "@/components/diary/FeedbackPanel"
-import { diaryApi } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { diaryApi, vocabApi } from "@/lib/api"
 import type { DiaryFeedback } from "@/lib/types"
+
+type DiaryResult = {
+  correctedText: string
+  feedback: string
+  originalText: string
+  mood?: string
+}
 
 export default function DiaryPage() {
   const [feedback, setFeedback] = useState<DiaryFeedback[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [result, setResult] = useState<DiaryResult | null>(null)
+  const [saveMessage, setSaveMessage] = useState("")
+  const [saving, setSaving] = useState(false)
 
   async function handleAnalyze(content: string) {
     if (!content.trim()) return
     setLoading(true)
     setError("")
+    setSaveMessage("")
     try {
       const today = new Date().toISOString().split("T")[0]
       const data = await diaryApi.createOrUpdate(today, content)
+      setResult({
+        correctedText: data.correctedText,
+        feedback: data.feedback,
+        originalText: data.originalText,
+        mood: data.mood ?? undefined,
+      })
 
       const items: DiaryFeedback[] = [
         {
@@ -49,6 +68,25 @@ export default function DiaryPage() {
     }
   }
 
+  async function handleSavePhrase() {
+    if (!result) return
+    setSaving(true)
+    setSaveMessage("")
+    try {
+      await vocabApi.save({
+        category: "Diary phrase",
+        term: result.correctedText,
+        meaning: result.feedback,
+        example: result.originalText,
+      })
+      setSaveMessage("Saved to your vocabulary deck.")
+    } catch {
+      setSaveMessage("Could not save this phrase right now.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="max-w-3xl">
@@ -65,6 +103,16 @@ export default function DiaryPage() {
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {result ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-emerald-200/70 bg-emerald-50/70 px-4 py-3 text-sm dark:border-emerald-400/15 dark:bg-emerald-400/8">
+          <Button type="button" variant="outline" onClick={handleSavePhrase} disabled={saving}>
+            <BookmarkPlus size={16} />
+            {saving ? "Saving..." : "Save corrected diary phrase"}
+          </Button>
+          {saveMessage ? <p className="text-muted-foreground">{saveMessage}</p> : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <DiaryEditor onAnalyze={handleAnalyze} />

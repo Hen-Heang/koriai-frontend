@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  ArrowLeft,
   User,
   Mail,
   BrainCircuit,
@@ -113,6 +114,15 @@ export default function SettingsPage() {
     }
   }
 
+  function handleClose() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back()
+      return
+    }
+
+    router.push("/dashboard")
+  }
+
   function handleSignOut() {
     clearAuth()
     router.replace("/login")
@@ -144,6 +154,14 @@ export default function SettingsPage() {
     >
       <div className="space-y-4 xl:sticky xl:top-7 xl:self-start">
         <div>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.06]"
+          >
+            <ArrowLeft size={14} strokeWidth={1.9} />
+            Back
+          </button>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
             Account
           </p>

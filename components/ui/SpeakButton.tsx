@@ -8,9 +8,17 @@ interface SpeakButtonProps {
   text: string
   voice?: string
   className?: string
+  playbackRate?: number
+  title?: string
 }
 
-export function SpeakButton({ text, voice = "nova", className = "" }: SpeakButtonProps) {
+export function SpeakButton({
+  text,
+  voice = "nova",
+  className = "",
+  playbackRate = 1,
+  title = "Listen to pronunciation",
+}: SpeakButtonProps) {
   const [loading, setLoading] = useState(false)
   const [playing, setPlaying] = useState(false)
 
@@ -20,6 +28,7 @@ export function SpeakButton({ text, voice = "nova", className = "" }: SpeakButto
     try {
       const url = await ttsApi.speak(text, voice)
       const audio = new Audio(url)
+      audio.playbackRate = playbackRate
       setLoading(false)
       setPlaying(true)
       audio.play()
@@ -36,7 +45,7 @@ export function SpeakButton({ text, voice = "nova", className = "" }: SpeakButto
     <button
       onClick={handleSpeak}
       disabled={loading || playing}
-      title="Listen to pronunciation"
+      title={title}
       className={`inline-flex items-center justify-center rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 ${className}`}
     >
       {loading ? (

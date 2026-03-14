@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Languages, Lightbulb, Sparkles, WandSparkles } from "lucide-react"
+import { BookmarkPlus, CheckCircle2, Languages, Lightbulb, Sparkles, WandSparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { SpeakButton } from "@/components/ui/SpeakButton"
-import { correctionApi } from "@/lib/api"
+import { correctionApi, vocabApi } from "@/lib/api"
 
 type CorrectionResult = {
   originalText: string
@@ -27,11 +27,14 @@ export default function CorrectPage() {
   const [result, setResult] = useState<CorrectionResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [saveMessage, setSaveMessage] = useState("")
+  const [saving, setSaving] = useState(false)
 
   async function handleAnalyze() {
     if (!text.trim()) return
     setLoading(true)
     setError("")
+    setSaveMessage("")
     setResult(null)
     try {
       const data = await correctionApi.check(text)
@@ -40,6 +43,25 @@ export default function CorrectPage() {
       setError("Failed to analyze. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSavePhrase() {
+    if (!result) return
+    setSaving(true)
+    setSaveMessage("")
+    try {
+      await vocabApi.save({
+        category: "Correction phrase",
+        term: result.correctedText,
+        meaning: result.explanation,
+        example: result.originalText,
+      })
+      setSaveMessage("Saved to your vocabulary deck.")
+    } catch {
+      setSaveMessage("Could not save this phrase right now.")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -159,6 +181,19 @@ export default function CorrectPage() {
                     Explanation
                   </p>
                   <p className="mt-2 leading-7 text-muted-foreground">{result.explanation}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSavePhrase}
+                    disabled={saving}
+                    className="h-10 rounded-2xl"
+                  >
+                    <BookmarkPlus size={16} />
+                    {saving ? "Saving..." : "Save corrected phrase"}
+                  </Button>
+                  {saveMessage ? <p className="text-sm text-muted-foreground">{saveMessage}</p> : null}
                 </div>
                 {result.grammarPoints.length > 0 && (
                   <div className="rounded-2xl bg-white/80 p-4 dark:bg-white/4">

@@ -16,7 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { authApi } from "@/lib/api"
+import { authApi, getApiErrorMessage } from "@/lib/api"
 import { setAuth } from "@/lib/auth-store"
 
 export default function LoginPage() {
@@ -35,8 +35,8 @@ export default function LoginPage() {
       const data = await authApi.login({ email, password })
       setAuth(data.accessToken, data.userId, data.email)
       router.push("/dashboard")
-    } catch {
-      setError("Invalid email or password.")
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Invalid email or password."))
     } finally {
       setLoading(false)
     }

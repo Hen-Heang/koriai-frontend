@@ -16,9 +16,15 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "KoriAI — Korean AI Tutor",
   description: "Practice Korean with your personal AI tutor. Chat, corrections, vocabulary, and more.",
+  manifest: "/site.webmanifest",
   icons: {
-    icon: "/favicon.svg",
-    apple: "/koriai-logo.svg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico"],
   },
 }
 
