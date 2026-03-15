@@ -10,23 +10,49 @@ type StreakCardProps = {
 
 export function StreakCard({ days, wordsSaved }: StreakCardProps) {
   return (
-    <Card className="rounded-[2rem] border-border/60 bg-linear-to-br from-amber-50 via-white to-rose-50 shadow-lg shadow-slate-950/5 dark:border-amber-400/10 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.28),rgba(30,41,59,0.92)_44%,rgba(76,5,25,0.48))]">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl dark:text-white">Current Streak</CardTitle>
-        <Badge variant="outline" className="dark:border-amber-400/20 dark:bg-amber-300/10 dark:text-amber-100">
+    <Card className="overflow-hidden rounded-[1.5rem] border-border bg-card shadow-xl dark:bg-slate-900/60 dark:backdrop-blur-sm sm:rounded-[1.8rem] lg:rounded-3xl">
+      <CardHeader className="relative flex flex-row items-start justify-between gap-3 pb-2 sm:pb-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+            Momentum
+          </p>
+          <CardTitle className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl lg:text-2xl">Current Streak</CardTitle>
+        </div>
+        <Badge variant="outline" className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
           <Flame
-            size={20}
-            strokeWidth={1.5}
-            className="mr-1 text-amber-500 dark:text-amber-300"
+            size={14}
+            strokeWidth={2}
+            className="mr-1 text-amber-500 dark:text-amber-400"
           />
           Hot
         </Badge>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-5xl font-semibold tracking-tight dark:text-white">{days} days</p>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-slate-300">
-          <Trophy size={20} strokeWidth={1.5} className="text-current" />
-          {wordsSaved} saved words are reinforcing your retention.
+      <CardContent className="space-y-3.5 sm:space-y-4">
+        <div>
+          <p className="text-[2rem] font-bold tracking-tight text-foreground sm:text-[2.5rem] lg:text-5xl">{days} days</p>
+          <div className="mt-2.5 flex items-center gap-2 text-[13px] text-muted-foreground sm:text-sm">
+            <Trophy size={16} strokeWidth={1.5} className="text-amber-500" />
+            <span>{wordsSaved} saved words reinforcing your retention.</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <div className="rounded-[1rem] border border-border bg-accent/10 px-3 py-2.5 dark:bg-white/5 sm:rounded-2xl sm:py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              Consistency
+            </p>
+            <p className="mt-1 text-sm font-bold text-foreground">
+              {days >= 7 ? "Strong" : "Building"}
+            </p>
+          </div>
+          <div className="rounded-[1rem] border border-border bg-accent/10 px-3 py-2.5 dark:bg-white/5 sm:rounded-2xl sm:py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              Vocab support
+            </p>
+            <p className="mt-1 text-sm font-bold text-foreground">
+              {wordsSaved} words
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

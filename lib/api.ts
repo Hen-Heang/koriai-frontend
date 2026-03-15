@@ -86,6 +86,8 @@ export const chatApi = {
 export const correctionApi = {
   check: (text: string) =>
     api.post("/corrections/check", { text }).then((r) => r.data.data),
+  history: (limit = 10) =>
+    api.get(`/corrections/history?limit=${limit}`).then((r) => r.data.data),
 }
 
 // Users
@@ -104,6 +106,8 @@ export const userApi = {
 export const diaryApi = {
   createOrUpdate: (entryDate: string, originalText: string) =>
     api.post("/diary", { entryDate, originalText }).then((r) => r.data.data),
+  getByMonth: (month: string) =>
+    api.get(`/diary?month=${month}`).then((r) => r.data.data),
 }
 
 // Vocabulary
@@ -120,6 +124,7 @@ export const vocabApi = {
 // Dashboard / Progress
 export const progressApi = {
   getDashboard: () => api.get("/dashboard/progress").then((r) => r.data.data),
+  getStreak: () => api.get("/dashboard/streak").then((r) => r.data.data) as Promise<{ streakDays: number; activityToday: boolean }>,
 }
 
 // Scenarios

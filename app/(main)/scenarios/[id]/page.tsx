@@ -91,7 +91,6 @@ export default function ScenarioDetailPage() {
                 </div>
                 <p className="mt-2 leading-7 text-muted-foreground">{scenario.goal}</p>
               </div>
-              <p className="text-xs text-muted-foreground">Scenario id: {id}</p>
             </>
           ) : null}
         </CardContent>

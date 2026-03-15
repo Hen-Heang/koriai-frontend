@@ -1,64 +1,34 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-  <!-- App icon background: deep violet-navy rounded square -->
-  <rect width="256" height="256" rx="58" fill="url(#grad_bg)"/>
-
-  <!-- Subtle radial glow at top-centre -->
-  <ellipse cx="128" cy="72" rx="100" ry="56" fill="url(#grad_glow)"/>
-
-  <!-- Subtle inner border -->
-  <rect x="1" y="1" width="254" height="254" rx="57" stroke="url(#grad_border)" stroke-width="1.5"/>
-
-  <!--
-    ㄱ  (gi-yeok) — first Korean consonant, "K" sound
-    Geometry:
-      Horizontal top bar : x 60–196, y 74–98  (width 136, height 24)
-      Vertical right bar  : x 172–196, y 74–182 (width 24, height 108)
-      The two bars share the top-right corner rect (x 172–196, y 74–98)
+  <!-- 
+    KoriAI Modern Logo
+    A clean, high-end geometric mark representing the 'ㄱ' (Gi-yeok) 
+    with an AI 'Spark' element.
   -->
+  
+  <!-- Subtle Gradient Background (Optional, but kept clean) -->
+  <rect width="256" height="256" rx="64" fill="transparent"/>
 
-  <!-- Horizontal bar -->
-  <rect x="60" y="74" width="136" height="24" rx="12" fill="white"/>
+  <!-- The "ㄱ" Mark -->
+  <path d="M70 80H186V176" stroke="url(#logo_grad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- AI Spark / Connectivity Node -->
+  <circle cx="186" cy="80" r="22" fill="url(#spark_grad)" shadow="0 4px 12px rgba(16,185,129,0.4)"/>
+  <circle cx="186" cy="80" r="10" fill="white"/>
 
-  <!-- Vertical bar -->
-  <rect x="172" y="74" width="24" height="108" rx="12" fill="white"/>
-
-  <!--
-    Emerald AI-spark dot — sits at the inner corner of ㄱ (the bend point).
-    Positioned at (172, 98) — inside bend — radius 16 for visibility.
-  -->
-  <circle cx="172" cy="98" r="15" fill="url(#grad_dot)"/>
-  <!-- Bright core of the dot -->
-  <circle cx="172" cy="98" r="7" fill="white" opacity="0.9"/>
-
-  <!-- Subtle shine highlight on background top-left -->
-  <ellipse cx="80" cy="70" rx="48" ry="28" fill="white" opacity="0.04"/>
+  <!-- Accent Detail -->
+  <path d="M110 120H156" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.3"/>
 
   <defs>
-
-    <!-- Background: rich dark violet-to-navy -->
-    <linearGradient id="grad_bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#1a0e3a"/>
-      <stop offset="100%" stop-color="#060914"/>
+    <!-- Modern vibrant gradient for the main mark -->
+    <linearGradient id="logo_grad" x1="70" y1="80" x2="186" y2="176" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/> <!-- Emerald 500 -->
+      <stop offset="100%" stop-color="#0EA5E9"/> <!-- Sky 500 -->
     </linearGradient>
 
-    <!-- Top glow: soft violet -->
-    <radialGradient id="grad_glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Inner border: violet → indigo fade -->
-    <linearGradient id="grad_border" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#8B5CF6" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.15"/>
-    </linearGradient>
-
-    <!-- Emerald dot: bright centre → deep teal -->
-    <radialGradient id="grad_dot" cx="40%" cy="35%" r="65%">
-      <stop offset="0%"   stop-color="#6EE7B7"/>
+    <!-- Sparkle gradient -->
+    <radialGradient id="spark_grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(186 80) rotate(90) scale(22)">
+      <stop offset="0%" stop-color="#34D399"/>
       <stop offset="100%" stop-color="#059669"/>
     </radialGradient>
-
   </defs>
 </svg>

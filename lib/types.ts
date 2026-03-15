@@ -14,6 +14,7 @@ export interface VocabItem {
   term: string
   meaning: string
   example?: string
+  exampleTranslation?: string
   mastery: number
   nextReview: string
   tags: string[]

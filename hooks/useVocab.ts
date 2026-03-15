@@ -11,13 +11,14 @@ function normalizeWord(raw: unknown): VocabItem {
   const term = String(source.term ?? source.word ?? "")
   const meaning = String(source.meaning ?? source.definition ?? "")
   const example = source.example ? String(source.example) : undefined
+  const exampleTranslation = source.exampleTranslation ? String(source.exampleTranslation) : undefined
   const mastery = Number(source.mastery ?? source.masteryRate ?? 0)
   const nextReview = String(source.nextReview ?? source.nextReviewDate ?? "-")
   const tags = Array.isArray(source.tags)
     ? source.tags.map((tag) => String(tag))
     : []
 
-  return { id, term, meaning, example, mastery, nextReview, tags }
+  return { id, term, meaning, example, exampleTranslation, mastery, nextReview, tags }
 }
 
 export function useVocab() {

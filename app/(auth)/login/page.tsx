@@ -4,7 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
+import { AlertCircle, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from "lucide-react"
+import { motion } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -43,52 +44,71 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(15,118,110,0.12),transparent_32%),linear-gradient(180deg,#eef6ff_0%,#ffffff_100%)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] sm:px-6 sm:py-16">
-      <div className="w-full max-w-md">
-        <div className="mb-4 flex justify-end">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 selection:bg-emerald-500/30 sm:px-6">
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute -top-24 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[100px] dark:bg-emerald-500/5" />
+        <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-sky-500/10 blur-[100px] dark:bg-sky-500/5" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-[440px]"
+      >
+        <div className="mb-8 flex items-center justify-between">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 transition-transform group-hover:scale-105">
+              <Image src="/koriai-logo.svg" alt="" width={24} height={24} className="invert brightness-0" />
+            </div>
+            <span className="text-xl font-black tracking-tight text-foreground">KoriAI</span>
+          </Link>
           <ThemeToggle />
         </div>
-        <Card className="w-full rounded-[1.75rem] border-border/60 bg-white/90 shadow-xl shadow-slate-950/5 dark:border-white/10 dark:bg-slate-900/80 sm:rounded-[2rem]">
-          <CardHeader>
-            <div className="mb-2 flex items-center gap-2">
-              <Image
-                src="/koriai-logo.svg"
-                alt="KoriAI logo"
-                width={28}
-                height={28}
-                className="rounded-md"
-              />
-              <span className="text-sm font-semibold tracking-widest uppercase text-teal-600 dark:text-teal-400">
-                Kori AI
-              </span>
+
+        <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+          
+          <CardHeader className="space-y-2 pb-8 pt-10">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck size={14} strokeWidth={3} />
+              Secure Login
             </div>
-            <CardTitle className="text-2xl font-bold sm:text-3xl dark:text-white">
+            <CardTitle className="text-3xl font-black tracking-tight text-foreground">
               Welcome back
             </CardTitle>
-            <p className="text-sm text-muted-foreground dark:text-slate-400">
-              Continue your Korean practice streak and resume your AI sessions.
+            <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+              Continue your journey to Korean fluency with your personal AI tutor.
             </p>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <FieldGroup>
+
+          <CardContent className="space-y-8 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <FieldGroup className="space-y-4">
                 <Field>
-                  <FieldLabel>Email</FieldLabel>
+                  <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Email Address</FieldLabel>
                   <FieldContent>
                     <Input
                       type="email"
                       name="email"
                       autoComplete="email"
-                      placeholder="you@example.com"
+                      placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoFocus
+                      className="h-12 rounded-2xl border-border bg-accent/5 px-4 focus:bg-background transition-all"
                     />
                   </FieldContent>
                 </Field>
                 <Field>
-                  <FieldLabel>Password</FieldLabel>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Password</FieldLabel>
+                    <Link href="#" className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
+                      Forgot?
+                    </Link>
+                  </div>
                   <FieldContent>
                     <div className="relative">
                       <Input
@@ -99,15 +119,15 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="pr-9"
+                        className="h-12 rounded-2xl border-border bg-accent/5 pl-4 pr-12 focus:bg-background transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                         aria-label={showPassword ? "Hide password" : "Show password"}
                       >
-                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </FieldContent>
@@ -115,43 +135,60 @@ export default function LoginPage() {
               </FieldGroup>
 
               {error && (
-                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-                  <AlertCircle className="size-4 shrink-0" />
-                  {error}
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
+                >
+                  <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                  <p className="leading-relaxed">{error}</p>
+                </motion.div>
               )}
 
-              <Button className="w-full h-10 text-base" type="submit" disabled={loading}>
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-[0.98]"
+              >
                 {loading ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 size={20} className="mr-2 animate-spin" />
                     Signing in…
                   </>
-                ) : "Sign in"}
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight size={18} className="ml-2" />
+                  </>
+                )}
               </Button>
             </form>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t dark:border-white/10" />
+                <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
+              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                <span className="bg-card px-4 text-muted-foreground/60">New to KoriAI?</span>
               </div>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground dark:text-slate-400">
-              New here?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-teal-600 hover:underline dark:text-teal-400"
-              >
-                Create an account
-              </Link>
-            </p>
+            <Button 
+              asChild 
+              variant="outline" 
+              className="h-14 w-full rounded-2xl border-border bg-background/50 font-bold hover:bg-accent active:scale-[0.98]"
+            >
+              <Link href="/register">Create an account</Link>
+            </Button>
           </CardContent>
         </Card>
-      </div>
+
+        <p className="mt-8 text-center text-[11px] font-medium text-muted-foreground">
+          By signing in, you agree to our{" "}
+          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
+          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
+        </p>
+      </motion.div>
     </main>
   )
 }

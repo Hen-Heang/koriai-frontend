@@ -1,14 +1,29 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { AlertCircle, CheckCircle2, Mic, PencilLine, RotateCcw, Waves } from "lucide-react"
+import { 
+  AlertCircle, 
+  CheckCircle2, 
+  Mic, 
+  PencilLine, 
+  RotateCcw, 
+  Waves, 
+  Play, 
+  Trophy,
+  Activity,
+  Mic2
+} from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
 
+import { PageHero } from "@/components/app/page-hero"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { assessSpeaking } from "@/lib/speaking"
+import { useStreak } from "@/hooks/useStreak"
+import { cn } from "@/lib/utils"
 
 const drills = [
   {
@@ -63,10 +78,27 @@ declare global {
   }
 }
 
-const supportMessage =
-  "Speech recognition depends on the browser. Chrome and Safari usually work better than embedded webviews."
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+} as const
 
 export default function SpeakingPage() {
+  const { refreshStreak } = useStreak()
   const [selectedId, setSelectedId] = useState(drills[0].id)
   const [status, setStatus] = useState<"idle" | "listening" | "finished">("idle")
   const [transcript, setTranscript] = useState("")
@@ -82,6 +114,16 @@ export default function SpeakingPage() {
     () => drills.find((drill) => drill.id === selectedId) ?? drills[0],
     [selectedId]
   )
+
+  function handleDrillKeyDown(
+    event: React.KeyboardEvent<HTMLDivElement>,
+    drillId: string
+  ) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      setSelectedId(drillId)
+    }
+  }
 
   const assessment = useMemo(
     () => assessSpeaking(selectedDrill.target, transcript),
@@ -118,6 +160,7 @@ export default function SpeakingPage() {
 
       setTranscript(spokenText)
       setStatus("finished")
+      refreshStreak()
     }
 
     recognition.onend = () => {
@@ -186,278 +229,325 @@ export default function SpeakingPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="max-w-4xl">
-        <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">
-          Speaking
-        </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-          Speak Korean more clearly
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
-          Follow a simple loop: listen to a model sentence, repeat it out loud, then check which chunks matched and which ones still need work.
-        </p>
-      </div>
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-6 pb-12 sm:space-y-8"
+    >
+      <motion.div variants={itemVariants}>
+        <PageHero
+          eyebrow="Speaking"
+          title="Master Natural Phrasing"
+          description="Build muscle memory by shadowing native model sentences. Get instant feedback on your pronunciation and flow."
+          stats={[
+            { label: "Level", value: selectedDrill.level },
+            { label: "Mode", value: supported ? "Voice AI" : "Manual" },
+            { label: "Target", value: "90% Accuracy" },
+          ]}
+        />
+      </motion.div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
-        <Card className="rounded-[2rem] border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,247,250,0.96))] shadow-lg shadow-slate-950/5 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,15,28,0.98))]">
-          <CardHeader className="border-b border-slate-200/70 pb-5 dark:border-white/10">
-            <CardTitle className="text-xl">1. Pick a speaking drill</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Start with a short sentence you can repeat 3 to 5 times without rushing.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            {drills.map((drill) => {
-              const active = drill.id === selectedDrill.id
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] xl:gap-6">
+        {/* Left Col — Drill Selection */}
+        <motion.div variants={itemVariants}>
+          <Card className="h-full rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+            <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6 sm:pb-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Play size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-black">Practice Drills</CardTitle>
+                  <p className="text-xs font-medium text-muted-foreground">Select a sentence to begin shadowing.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              {drills.map((drill) => {
+                const active = drill.id === selectedDrill.id
 
-              return (
-                <div
-                  key={drill.id}
-                  className={`w-full rounded-[1.5rem] border p-4 text-left transition-all ${
-                    active
-                      ? "border-emerald-400 bg-emerald-50 shadow-sm dark:border-emerald-400/30 dark:bg-emerald-400/10"
-                      : "border-border/60 bg-background hover:border-emerald-300 hover:-translate-y-0.5 dark:border-white/10 dark:hover:border-emerald-400/20"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-foreground">{drill.label}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant={active ? "default" : "outline"}>{drill.level}</Badge>
-                        {active ? <Badge variant="secondary">Current</Badge> : null}
+                return (
+                  <div
+                    key={drill.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={active}
+                    onClick={() => selectDrill(drill.id)}
+                    onKeyDown={(event) => handleDrillKeyDown(event, drill.id)}
+                    className={cn(
+                      "group relative w-full overflow-hidden rounded-[1.4rem] border p-4 text-left transition-all sm:rounded-3xl sm:p-5",
+                      "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40",
+                      active
+                        ? "border-emerald-500/50 bg-emerald-500/5 shadow-inner"
+                        : "border-border bg-accent/5 hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                    )}
+                  >
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className={cn("font-black tracking-tight", active ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+                            {drill.label}
+                          </p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge variant={active ? "default" : "outline"} className="text-[10px] h-5 rounded-lg px-2">
+                              {drill.level}
+                            </Badge>
+                            {active && <Badge variant="secondary" className="text-[10px] h-5 rounded-lg px-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">Current</Badge>}
+                          </div>
+                        </div>
+                        <div
+                          className="rounded-xl border border-border bg-background p-1.5 shadow-sm transition-transform group-hover:scale-110"
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                        >
+                          <SpeakButton text={drill.target} className="p-1.5" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/70 bg-white/80 p-1 dark:border-white/10 dark:bg-white/5">
-                      <SpeakButton text={drill.target} className="p-2" />
+                      <p className="mt-3 text-[15px] font-bold leading-7 text-foreground/90 sm:mt-4 sm:text-base sm:leading-relaxed">{drill.target}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground/70">{drill.focus}</p>
                     </div>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-foreground">{drill.target}</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{drill.focus}</p>
+                )
+              })}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Right Col — Interactive Area */}
+        <div className="space-y-6">
+          <motion.div variants={itemVariants}>
+            <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 backdrop-blur-md sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+              <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6 sm:pb-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600">
+                      <Waves size={20} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black">Voice Session</CardTitle>
+                      <p className="text-xs font-medium text-muted-foreground">Shadow the model then record your voice.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={status === "listening" ? "default" : "secondary"} className={cn(
+                      "rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-wider border-none",
+                      status === "listening" ? "bg-rose-500 animate-pulse" : "bg-accent/20"
+                    )}>
+                      {status === "listening" ? "Recording..." : status === "finished" ? "Captured" : "Ready"}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-5 pt-5 sm:space-y-6 sm:pt-6">
+                {/* Target Sentence Display */}
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-border bg-accent/5 p-4 sm:rounded-[2rem] sm:p-6">
+                  <div className="absolute top-0 right-0 p-4 opacity-5">
+                    <Mic2 size={80} />
+                  </div>
+                  
+                  <p className="text-[1.55rem] font-black leading-tight text-foreground sm:text-2xl lg:text-3xl">
+                    {selectedDrill.target}
+                  </p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Chunking</span>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      {selectedDrill.chunkHint}
+                    </p>
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-3 sm:mt-8">
+                    <div className="flex items-center gap-1.5 rounded-2xl bg-background border border-border p-1.5 shadow-sm">
+                      <div className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-accent transition-colors">
+                        <SpeakButton text={selectedDrill.target} className="p-0" />
+                        <span className="text-xs font-black uppercase tracking-tighter text-muted-foreground">Normal</span>
+                      </div>
+                      <div className="w-px h-4 bg-border mx-1" />
+                      <div className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-accent transition-colors">
+                        <SpeakButton text={selectedDrill.target} className="p-0" playbackRate={0.75} />
+                        <span className="text-xs font-black uppercase tracking-tighter text-muted-foreground">Slow</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Control Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <Button
-                    type="button"
-                    variant={active ? "default" : "outline"}
-                    onClick={() => selectDrill(drill.id)}
-                    className="mt-4 rounded-xl"
+                    onClick={status === "listening" ? stopListening : startListening}
+                    className={cn(
+                      "h-12 w-full rounded-2xl px-6 text-sm font-black transition-all shadow-lg active:scale-95 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
+                      status === "listening" 
+                        ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20" 
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+                    )}
                   >
-                    {active ? "Selected Drill" : "Use This Drill"}
+                    {status === "listening" ? (
+                      <><Waves size={20} className="mr-2 animate-pulse" /> Stop</>
+                    ) : (
+                      <><Mic size={20} className="mr-2" /> Start Recording</>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditingTranscript((c) => !c)}
+                    className="h-12 w-full rounded-2xl border-border bg-background px-6 font-bold hover:bg-accent active:scale-95 transition-all sm:h-14 sm:w-auto"
+                  >
+                    <PencilLine size={18} className="mr-2" />
+                    {isEditingTranscript ? "Done" : "Manual Edit"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetAttempt} 
+                    className="h-12 w-12 rounded-2xl border-border bg-background p-0 hover:bg-accent active:scale-95 transition-all sm:h-14 sm:w-14"
+                    title="Reset"
+                  >
+                    <RotateCcw size={18} />
                   </Button>
                 </div>
-              )
-            })}
-          </CardContent>
-        </Card>
 
-        <div className="space-y-6">
-          <Card className="rounded-[2rem] border-slate-200/70 bg-white/95 shadow-lg shadow-slate-950/5 dark:border-white/10 dark:bg-slate-900/95">
-            <CardHeader className="border-b border-slate-200/70 pb-5 dark:border-white/10">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <CardTitle className="text-xl">2. Listen, speak, and review</CardTitle>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Listen first, shadow once, then record one clean attempt.
-                  </p>
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }} 
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-start gap-3"
+                  >
+                    <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
+                    <p className="text-sm font-bold text-destructive leading-relaxed">{error}</p>
+                  </motion.div>
+                )}
+
+                {/* Assessment Grid */}
+                <div className="grid gap-4 lg:grid-cols-[0.45fr_0.55fr]">
+                  <div className="rounded-[1.5rem] border border-border bg-accent/5 p-4 text-center shadow-inner lg:rounded-3xl lg:p-6 lg:text-left">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+                      Score
+                    </p>
+                    <div className="mt-4 flex flex-col items-center lg:items-start">
+                      <p className="text-5xl font-black tracking-tighter text-foreground sm:text-6xl">
+                        {transcript ? `${assessment.score}%` : "—"}
+                      </p>
+                      <div className="mt-4 flex items-center gap-2 rounded-full px-3 py-1.5 bg-background shadow-sm ring-1 ring-border">
+                        {assessment.score >= 90 ? (
+                          <CheckCircle2 size={14} className="text-emerald-600" strokeWidth={3} />
+                        ) : (
+                          <Activity size={14} className="text-amber-600" strokeWidth={3} />
+                        )}
+                        <span className="text-xs font-black uppercase tracking-tight text-foreground">
+                          {transcript ? assessment.accuracyLabel : "No attempt"}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-6 text-sm font-medium leading-relaxed text-muted-foreground">
+                      {assessment.feedback}
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-border bg-background p-4 shadow-sm lg:rounded-3xl lg:p-6">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+                      Transcript
+                    </p>
+                    <AnimatePresence mode="wait">
+                      {isEditingTranscript || !supported ? (
+                        <motion.div
+                          key="edit"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                        >
+                          <Textarea
+                            value={transcript}
+                            onChange={(e) => {
+                              setTranscript(e.target.value)
+                              setStatus(e.target.value.trim() ? "finished" : "idle")
+                            }}
+                            placeholder="Type what you said if voice capture was weak..."
+                            className="mt-4 min-h-[120px] rounded-2xl border-border bg-accent/5 focus:bg-background transition-colors sm:min-h-[140px]"
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="mt-4 min-h-[140px]"
+                        >
+                          {transcript ? (
+                            <p className="text-lg font-bold leading-relaxed text-foreground">
+                              {transcript}
+                            </p>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                              <Mic2 size={32} className="text-muted-foreground/20 mb-3" />
+                              <p className="text-sm font-medium text-muted-foreground/40 italic">
+                                Your spoken words will appear here.
+                              </p>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600 dark:bg-rose-400/12 dark:text-rose-300">
-                  <Waves size={20} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-5">
-              <div className="rounded-[1.75rem] border border-rose-200/70 bg-[linear-gradient(135deg,rgba(255,241,242,0.95),rgba(255,247,237,0.92))] p-5 dark:border-rose-400/15 dark:bg-[linear-gradient(135deg,rgba(127,29,29,0.18),rgba(67,20,7,0.22))]">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Feedback Card */}
+          <motion.div variants={itemVariants}>
+            <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+              <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6 sm:pb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                    <Trophy size={20} strokeWidth={2.5} />
+                  </div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">Target Sentence</Badge>
-                      <Badge variant={status === "listening" ? "default" : "secondary"}>
-                        {status === "listening"
-                          ? "Listening live"
-                          : status === "finished"
-                            ? "Attempt captured"
-                            : "Ready"}
-                      </Badge>
+                    <CardTitle className="text-xl font-black">Detailed Feedback</CardTitle>
+                    <p className="text-xs font-medium text-muted-foreground">Focus on specific word patterns.</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {[
+                    { label: "Matched", val: assessment.matchedWords, color: "emerald" },
+                    { label: "Missing", val: assessment.missingWords, color: "amber" },
+                    { label: "Extra", val: assessment.extraWords, color: "sky" }
+                  ].map((cat) => (
+                    <div key={cat.label} className={cn(
+                      "rounded-2xl border p-4 shadow-inner",
+                      cat.color === "emerald" ? "border-emerald-500/20 bg-emerald-500/5" :
+                      cat.color === "amber" ? "border-amber-500/20 bg-amber-500/5" :
+                      "border-sky-500/20 bg-sky-500/5"
+                    )}>
+                      <p className={cn(
+                        "text-[10px] font-black uppercase tracking-[0.2em]",
+                        cat.color === "emerald" ? "text-emerald-600" :
+                        cat.color === "amber" ? "text-amber-600" :
+                        "text-sky-600"
+                      )}>
+                        {cat.label}
+                      </p>
+                      <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
+                        {cat.val.length ? cat.val.join(", ") : `No ${cat.label.toLowerCase()} words`}
+                      </p>
                     </div>
-                    <p className="mt-3 text-xl font-semibold leading-8 text-slate-900 dark:text-white">
-                      {selectedDrill.target}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                      Chunk hint: {selectedDrill.chunkHint}
-                    </p>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-dashed border-border bg-accent/5 p-4">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 mt-0.5">
+                    <Activity size={14} strokeWidth={3} />
                   </div>
-                    <div className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/80 p-2 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      <div className="flex items-center gap-1 rounded-xl border border-slate-200/70 bg-white px-2 py-1 dark:border-white/10 dark:bg-white/5">
-                        <SpeakButton text={selectedDrill.target} className="p-1.5" title="Play normal speed" />
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Normal</span>
-                      </div>
-                      <div className="flex items-center gap-1 rounded-xl border border-slate-200/70 bg-white px-2 py-1 dark:border-white/10 dark:bg-white/5">
-                        <SpeakButton
-                          text={selectedDrill.target}
-                          className="p-1.5"
-                          playbackRate={0.8}
-                          title="Play slower"
-                        />
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Slow</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-[1.4rem] border border-border/60 bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Step 1
-                  </p>
-                  <p className="mt-2 font-medium text-foreground">Play the sentence</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Listen twice before recording.
+                  <p className="text-xs font-medium leading-relaxed text-muted-foreground">
+                    <span className="font-bold text-foreground">Pro Routine:</span> Listen to the model twice, repeat slowly once, then do a full-speed recording. Focus on matching the rhythmic chunks highlighted above.
                   </p>
                 </div>
-                <div className="rounded-[1.4rem] border border-border/60 bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Step 2
-                  </p>
-                  <p className="mt-2 font-medium text-foreground">Say it once clearly</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Aim for smooth chunks, not speed.
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-border/60 bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Step 3
-                  </p>
-                  <p className="mt-2 font-medium text-foreground">Fix one weak chunk</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Repeat after reviewing missing words.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  onClick={status === "listening" ? stopListening : startListening}
-                  className="h-11 rounded-2xl bg-rose-600 px-5 text-white hover:bg-rose-500"
-                >
-                  <Mic size={16} />
-                  {status === "listening" ? "Stop Recording" : "Start Recording"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditingTranscript((current) => !current)}
-                  className="h-11 rounded-2xl"
-                >
-                  <PencilLine size={16} />
-                  {isEditingTranscript ? "Hide Transcript Box" : "Edit Transcript Manually"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetAttempt} className="h-11 rounded-2xl">
-                  <RotateCcw size={16} />
-                  Reset Attempt
-                </Button>
-              </div>
-
-              <div className="rounded-[1.4rem] border border-dashed border-border/70 bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                  <p>{supportMessage}</p>
-                </div>
-              </div>
-
-              {error ? (
-                <div className="rounded-[1.4rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300">
-                  {error}
-                </div>
-              ) : null}
-
-              <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr]">
-                <div className="rounded-[1.6rem] border border-border/60 bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Speaking Score
-                  </p>
-                  <p className="mt-3 text-5xl font-semibold tracking-tight text-foreground">
-                    {transcript ? `${assessment.score}%` : "—"}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
-                    {assessment.score >= 90 ? (
-                      <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-300" />
-                    ) : (
-                      <AlertCircle size={16} className="text-amber-600 dark:text-amber-300" />
-                    )}
-                    <span className="text-sm font-medium text-foreground">
-                      {transcript ? assessment.accuracyLabel : "No attempt yet"}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {assessment.feedback}
-                  </p>
-                </div>
-
-                <div className="rounded-[1.6rem] border border-border/60 bg-background p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Transcript
-                  </p>
-                  {isEditingTranscript || !supported ? (
-                    <Textarea
-                      value={transcript}
-                      onChange={(event) => {
-                        setTranscript(event.target.value)
-                        setStatus(event.target.value.trim() ? "finished" : "idle")
-                      }}
-                      placeholder="Type or paste your recognized Korean here if microphone capture is weak."
-                      className="mt-3 min-h-32 rounded-[1.2rem]"
-                    />
-                  ) : (
-                    <p className="mt-3 min-h-24 text-sm leading-7 text-foreground">
-                      {transcript || "No transcript yet. Record one attempt or open the transcript box to type manually."}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-slate-200/70 bg-white/95 shadow-lg shadow-slate-950/5 dark:border-white/10 dark:bg-slate-900/95">
-            <CardHeader className="border-b border-slate-200/70 pb-5 dark:border-white/10">
-              <CardTitle className="text-xl">3. Focus on the weak part</CardTitle>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Don&apos;t fix everything at once. Improve one chunk, then repeat the full sentence.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-5">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-[1.4rem] border border-emerald-200/70 bg-emerald-50/70 p-4 dark:border-emerald-400/15 dark:bg-emerald-400/8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
-                    Matched words
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-foreground">
-                    {assessment.matchedWords.length ? assessment.matchedWords.join(", ") : "No matched words yet"}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-amber-200/70 bg-amber-50/70 p-4 dark:border-amber-400/15 dark:bg-amber-400/8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">
-                    Missing words
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-foreground">
-                    {assessment.missingWords.length ? assessment.missingWords.join(", ") : "No missing words"}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-sky-200/70 bg-sky-50/70 p-4 dark:border-sky-400/15 dark:bg-sky-400/8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
-                    Extra words
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-foreground">
-                    {assessment.extraWords.length ? assessment.extraWords.join(", ") : "No extra words"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[1.6rem] border border-dashed border-border/70 bg-muted/30 p-4 text-sm leading-7 text-muted-foreground">
-                Recommended routine: play the target audio twice, repeat once slowly, fix the missing chunk, then do one final full-speed attempt.
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

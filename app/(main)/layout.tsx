@@ -7,6 +7,7 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpen,
   Gauge,
+  History,
   MessageCircle,
   Mic,
   NotebookText,
@@ -15,6 +16,7 @@ import {
   SpellCheck2,
   Theater,
 } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { isAuthenticated } from "@/lib/auth-store"
@@ -28,6 +30,7 @@ const allLinks = [
   { href: "/speaking", label: "Speaking", icon: Mic },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
   { href: "/scenarios", label: "Scenarios", icon: Theater },
+  { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
@@ -45,6 +48,11 @@ export default function MainLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+  
+  const activeTabIndex = bottomTabs.findIndex(tab => 
+    pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+  )
+
   const mounted = useSyncExternalStore(
     (callback) => {
       queueMicrotask(callback)
@@ -110,36 +118,38 @@ export default function MainLayout({
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#030712]">
-      <div className="mx-auto flex max-w-7xl lg:grid lg:grid-cols-[256px_1fr]">
+    <div className="min-h-[100dvh] bg-background">
+      <div className="mx-auto flex w-full max-w-[92rem] lg:grid lg:grid-cols-[280px_1fr]">
 
         {/* ── Desktop sidebar ── */}
-        <aside className="hidden lg:flex h-screen sticky top-0 flex-col border-r border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-[#0a0f1e]">
+        <aside className="sticky top-0 hidden h-screen flex-col border-r border-border/60 bg-card/50 backdrop-blur-2xl dark:border-white/[0.07] dark:bg-[#08111f]/80 lg:flex">
           {/* Brand */}
-          <div className="px-5 pt-5 pb-4">
-            <Link href="/" className="flex items-center gap-3 rounded-2xl p-2 -ml-2 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-              <Image
-                src="/koriai-logo.svg"
-                alt="KoriAI"
-                width={36}
-                height={36}
-                className="rounded-xl shrink-0"
-              />
+          <div className="px-6 pt-8 pb-6">
+            <Link href="/" className="group flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
+                <Image
+                  src="/koriai-logo.svg"
+                  alt="KoriAI Logo"
+                  width={28}
+                  height={28}
+                  className="transition-all"
+                />
+              </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
-                  KoriAI
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-foreground">
+                  KoriAI Lab
                 </p>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">
-                  Korean AI Platform
+                <p className="text-[10px] font-bold text-muted-foreground/60 text-nowrap">
+                  Premium Learning
                 </p>
               </div>
             </Link>
           </div>
 
-          <div className="mx-4 h-px bg-slate-100 dark:bg-white/[0.06]" />
+          <div className="mx-6 h-px bg-border/60" />
 
           {/* Nav */}
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
             {allLinks.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`)
               return (
@@ -147,13 +157,13 @@ export default function MainLayout({
                   key={href}
                   href={href}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[14px] font-medium transition-all",
+                    "flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-bold transition-all",
                     active
-                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+                      ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/20"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground dark:hover:bg-white/5"
                   )}
                 >
-                  <Icon size={18} strokeWidth={active ? 2 : 1.6} className="shrink-0" />
+                  <Icon size={18} strokeWidth={2.5} className="shrink-0" />
                   {label}
                 </Link>
               )
@@ -161,21 +171,21 @@ export default function MainLayout({
           </nav>
 
           {/* AI badge */}
-          <div className="m-3 rounded-[1.4rem] border border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-4 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-teal-500/5">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
-              <Sparkles size={14} strokeWidth={2} />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em]">
-                AI Tutor
+          <div className="m-4 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Sparkles size={14} strokeWidth={2.5} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                AI Active
               </span>
             </div>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-              Your AI tutor is always ready to chat, correct, and coach in Korean.
+            <p className="mt-3 text-[12px] font-medium leading-relaxed text-muted-foreground/80">
+              Tutor is monitoring your fluency patterns in real-time.
             </p>
           </div>
 
           {/* Theme + bottom */}
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 dark:border-white/[0.06]">
-            <span className="text-[12px] text-slate-400 dark:text-slate-500">
+          <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
+            <span className="text-[11px] font-bold text-muted-foreground/40">
               © 2026 KoriAI
             </span>
             <ThemeToggle />
@@ -183,104 +193,141 @@ export default function MainLayout({
         </aside>
 
         {/* ── Main column ── */}
-        <div className="flex min-w-0 flex-col overflow-x-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
 
           {/* Mobile top bar */}
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200/60 bg-white/88 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#030712]/88 lg:hidden">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/koriai-logo.svg"
-                alt="KoriAI"
-                width={28}
-                height={28}
-                className="rounded-lg"
-              />
-              <span className="text-[14px] font-semibold text-slate-900 dark:text-white">
+          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
+            <Link href="/" className="group flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+                <Image
+                  src="/koriai-logo.svg"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="invert brightness-0"
+                />
+              </div>
+              <span className="text-base font-black tracking-tight text-foreground">
                 KoriAI
               </span>
             </Link>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link
                 href="/settings"
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                  "flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card shadow-sm transition-all active:scale-95",
                   pathname === "/settings"
-                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
-                    : "text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
+                    ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/5"
+                    : "text-muted-foreground"
                 )}
               >
-                <Settings size={17} strokeWidth={1.6} />
+                <Settings size={18} strokeWidth={2.5} />
               </Link>
             </div>
           </header>
 
           {/* Desktop top bar */}
-          <div className="hidden items-center justify-end border-b border-slate-200/60 px-6 py-3 dark:border-white/[0.07] lg:flex">
-            <ThemeToggle />
+          <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-5 backdrop-blur-xl lg:flex">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600/60 dark:text-emerald-400/60">
+                Workspace
+              </p>
+              <h2 className="mt-1 text-sm font-bold text-foreground">
+                {allLinks.find(l => pathname.startsWith(l.href))?.label || "KoriAI"}
+              </h2>
+            </div>
+            <div className="flex items-center gap-4">
+               <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 shadow-sm">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-black uppercase tracking-widest text-foreground/60 text-nowrap">AI Sync Active</span>
+               </div>
+               <ThemeToggle />
+            </div>
           </div>
 
           {/* Page content */}
           <main
             className={cn(
-              "flex-1 overflow-x-hidden px-4 pt-5 sm:px-5 lg:px-7 lg:pt-7",
+              "flex-1 overflow-x-hidden px-3.5 pt-5 sm:px-6 lg:px-8 lg:pt-8",
               isKeyboardOpen
-                ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-8"
-                : "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8"
+                ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-10"
+                : "pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10"
             )}
           >
-            {children}
+            <div className="mx-auto w-full max-w-6xl">{children}</div>
           </main>
         </div>
       </div>
 
-      {/* ── Mobile bottom tab bar ── */}
+      {/* ── Mobile bottom tab bar (Telegram-style Switcher) ── */}
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 transition-all duration-200 lg:hidden",
-          isKeyboardOpen ? "pointer-events-none translate-y-6 opacity-0" : "translate-y-0 opacity-100"
+          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out lg:hidden",
+          isKeyboardOpen ? "pointer-events-none translate-y-20 opacity-0" : "translate-y-0 opacity-100"
         )}
         style={{
-          paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))",
+          paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
         }}
         aria-hidden={isKeyboardOpen}
       >
-        <div className="mx-auto max-w-md px-3">
-          <div className="flex items-end gap-1 rounded-[1.85rem] border border-white/40 bg-white/68 px-2 py-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.14)] ring-1 ring-white/30 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06] dark:ring-white/8 dark:shadow-[0_20px_48px_rgba(0,0,0,0.42)]">
-          {bottomTabs.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.2rem] px-1 py-1 transition-all duration-200",
-                  active
-                    ? "text-emerald-600 dark:text-emerald-300"
-                    : "text-slate-500/90 dark:text-slate-400"
-                )}
-              >
-                <div
+        <div className="mx-auto max-w-md px-3.5">
+          <div className="relative flex items-center justify-around rounded-[2rem] border border-white/15 bg-background/40 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-[32px] ring-1 ring-white/10 dark:bg-slate-900/60">
+            
+            {/* Sliding Active Indicator (Telegram-style) */}
+            <AnimatePresence initial={false}>
+              {activeTabIndex !== -1 && (
+                <motion.div
+                  className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                  initial={false}
+                  animate={{
+                    left: `${(activeTabIndex * 100) / bottomTabs.length}%`,
+                    width: `${100 / bottomTabs.length}%`,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 30,
+                    mass: 1
+                  }}
+                />
+              )}
+            </AnimatePresence>
+
+            {bottomTabs.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || pathname.startsWith(`${href}/`)
+              return (
+                <Link
+                  key={href}
+                  href={href}
                   className={cn(
-                    "flex min-w-[3rem] items-center justify-center rounded-[1rem] px-3 py-2 transition-all duration-200",
+                    "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
                     active
-                      ? "bg-[linear-gradient(180deg,rgba(16,185,129,0.22),rgba(16,185,129,0.1))] shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_18px_rgba(16,185,129,0.16)] ring-1 ring-emerald-200/70 dark:bg-emerald-500/18 dark:ring-emerald-400/20"
-                      : "bg-transparent opacity-90"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground/50 hover:text-muted-foreground"
                   )}
                 >
-                  <Icon size={20} strokeWidth={active ? 2.15 : 1.75} />
-                </div>
-                <span
-                  className={cn(
-                    "truncate px-1 text-[11px] leading-none tracking-[-0.015em]",
-                    active ? "font-semibold" : "font-medium"
-                  )}
-                >
-                  {label}
-                </span>
-              </Link>
-            )
-          })}
+                  <div className="flex h-5.5 w-5.5 items-center justify-center">
+                    <Icon 
+                      size={20} 
+                      strokeWidth={active ? 2.8 : 2.2} 
+                      className={cn(
+                        "transition-all duration-300",
+                        active ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "scale-100"
+                      )}
+                    />
+                  </div>
+                  <span
+                    className={cn(
+                      "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                      active ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                    )}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </nav>

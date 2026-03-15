@@ -1,9 +1,13 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
+import { motion } from "motion/react"
+import { CheckCircle2, Languages } from "lucide-react"
+import { SmartPeek } from "@/components/ui/SmartPeek"
 
 // ─── Inline parser ────────────────────────────────────────────────────────────
-// Handles: **bold**, *italic*, `inline code`, plain text
 type InlineToken =
   | { type: "bold"; text: string }
   | { type: "italic"; text: string }
@@ -12,7 +16,6 @@ type InlineToken =
 
 function parseInline(raw: string): InlineToken[] {
   const tokens: InlineToken[] = []
-  // Matches **bold**, *italic*, `code` in order
   const re = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g
   let last = 0
   let match: RegExpExecArray | null
@@ -38,11 +41,29 @@ function parseInline(raw: string): InlineToken[] {
   return tokens
 }
 
+function SmartText({ text }: { text: string }) {
+  // Split by whitespace but keep the whitespace in the results
+  const words = text.split(/(\s+)/)
+  
+  return words.map((word, i) => {
+    if (!word.trim()) return <span key={i}>{word}</span>
+    
+    // Remove punctuation for the lookup but keep it for display
+    const cleanWord = word.replace(/[.,!??"']/g, "")
+    
+    return (
+      <SmartPeek key={i} word={cleanWord}>
+        {word}
+      </SmartPeek>
+    )
+  })
+}
+
 function renderInline(raw: string, isUserBubble = false) {
   return parseInline(raw).map((token, i) => {
     switch (token.type) {
       case "bold":
-        return <strong key={i} className="font-semibold">{token.text}</strong>
+        return <strong key={i} className="font-bold">{token.text}</strong>
       case "italic":
         return <em key={i} className="italic">{token.text}</em>
       case "code":
@@ -50,17 +71,17 @@ function renderInline(raw: string, isUserBubble = false) {
           <code
             key={i}
             className={cn(
-              "rounded px-1.5 py-0.5 font-mono text-[0.8em]",
+              "rounded-md px-1.5 py-0.5 font-mono text-[0.85em]",
               isUserBubble
                 ? "bg-white/20 text-white"
-                : "bg-violet-50 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
+                : "bg-muted text-foreground ring-1 ring-border/50"
             )}
           >
             {token.text}
           </code>
         )
       default:
-        return <span key={i}>{token.text}</span>
+        return <SmartText key={i} text={token.text} />
     }
   })
 }
@@ -82,20 +103,17 @@ function parseBlocks(content: string): Block[] {
     const line = lines[i].trimEnd()
     const trimmed = line.trim()
 
-    // Blank line → skip
     if (!trimmed) {
       i++
       continue
     }
 
-    // Horizontal rule
     if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
       blocks.push({ type: "hr" })
       i++
       continue
     }
 
-    // Heading
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/)
     if (headingMatch) {
       const level = Math.min(headingMatch[1].length, 3) as 1 | 2 | 3
@@ -104,7 +122,6 @@ function parseBlocks(content: string): Block[] {
       continue
     }
 
-    // Bullet list — collect consecutive bullet lines
     if (/^[-*•]\s+/.test(trimmed)) {
       const items: string[] = []
       while (i < lines.length && /^[-*•]\s+/.test(lines[i].trim())) {
@@ -115,7 +132,6 @@ function parseBlocks(content: string): Block[] {
       continue
     }
 
-    // Numbered list — collect consecutive numbered lines
     if (/^\d+\.\s+/.test(trimmed)) {
       const items: string[] = []
       while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
@@ -126,7 +142,6 @@ function parseBlocks(content: string): Block[] {
       continue
     }
 
-    // Paragraph — collect until blank line or structural element
     const paragraphLines: string[] = []
     while (i < lines.length) {
       const cur = lines[i].trim()
@@ -157,56 +172,45 @@ function renderBlocks(content: string, isUserBubble = false) {
     switch (block.type) {
       case "heading": {
         const Tag = (`h${block.level}`) as "h1" | "h2" | "h3"
-        const cls = cn(
-          "font-semibold leading-tight",
-          block.level === 1 && "text-base mt-1",
-          block.level === 2 && "text-sm mt-1",
-          block.level === 3 && "text-sm mt-0.5 text-muted-foreground"
-        )
         return (
-          <Tag key={idx} className={cls}>
+          <Tag key={idx} className={cn(
+            "font-black tracking-tight",
+            block.level === 1 ? "text-lg" : "text-base",
+            "mt-2 mb-1"
+          )}>
             {renderInline(block.text, isUserBubble)}
           </Tag>
         )
       }
-
       case "bullet":
         return (
-          <ul key={idx} className="space-y-1 pl-4 text-sm">
+          <ul key={idx} className="space-y-1.5 pl-4 text-[14px]">
             {block.items.map((item, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="mt-[0.35em] h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-50" />
-                <span>{renderInline(item, isUserBubble)}</span>
+              <li key={i} className="flex gap-2.5">
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-40" />
+                <span className="leading-relaxed">{renderInline(item, isUserBubble)}</span>
               </li>
             ))}
           </ul>
         )
-
       case "ordered":
         return (
-          <ol key={idx} className="space-y-1 pl-4 text-sm">
+          <ol key={idx} className="space-y-1.5 pl-4 text-[14px]">
             {block.items.map((item, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="shrink-0 font-mono text-xs font-semibold opacity-60 mt-[0.15em]">
-                  {i + 1}.
+              <li key={i} className="flex gap-2.5">
+                <span className="shrink-0 font-black text-[10px] opacity-40 mt-1">
+                  {i + 1}
                 </span>
-                <span>{renderInline(item, isUserBubble)}</span>
+                <span className="leading-relaxed">{renderInline(item, isUserBubble)}</span>
               </li>
             ))}
           </ol>
         )
-
       case "hr":
-        return (
-          <hr
-            key={idx}
-            className="border-current opacity-10"
-          />
-        )
-
+        return <hr key={idx} className="border-border/40 my-4" />
       case "paragraph":
         return (
-          <p key={idx} className="text-sm leading-7">
+          <p key={idx} className="text-[14px] font-medium leading-relaxed">
             {renderInline(block.text, isUserBubble)}
           </p>
         )
@@ -219,33 +223,38 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user"
 
   return (
-    <div className={cn("flex items-start gap-3", isUser && "flex-row-reverse")}>
-      {/* Avatar */}
+    <motion.div 
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+      className={cn("flex items-end gap-2.5", isUser && "flex-row-reverse")}
+    >
+      {/* Avatar - Compact */}
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm",
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-white shadow-sm mb-1",
           isUser
-            ? "bg-emerald-500"
+            ? "bg-emerald-600"
             : "bg-linear-to-br from-violet-500 to-indigo-600"
         )}
       >
-        {isUser ? "You" : "AI"}
+        {isUser ? "U" : "AI"}
       </div>
 
       {/* Content column */}
       <div
         className={cn(
           "flex min-w-0 flex-col gap-1.5",
-          isUser ? "max-w-[82%] items-end sm:max-w-[70%]" : "max-w-[calc(100%-2.75rem)] flex-1"
+          isUser ? "max-w-[85%] items-end sm:max-w-[70%]" : "max-w-[85%] sm:max-w-[75%]"
         )}
       >
         {/* Bubble */}
         <article
           className={cn(
-            "w-full rounded-2xl px-4 py-3.5 shadow-sm",
+            "w-full rounded-[1.5rem] px-4 py-3 shadow-sm",
             isUser
-              ? "w-auto rounded-tr-sm bg-emerald-500 text-white dark:bg-emerald-600"
-              : "rounded-tl-sm border border-border/60 bg-card text-foreground dark:border-white/10 dark:bg-slate-900/80"
+              ? "rounded-br-md bg-emerald-600 text-white"
+              : "rounded-bl-md border border-border bg-card text-foreground dark:bg-slate-900/60"
           )}
         >
           <div className="space-y-3">
@@ -253,25 +262,33 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           </div>
         </article>
 
-        {/* Correction card */}
+        {/* Correction card - High End */}
         {message.correction ? (
-          <div className="w-full rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 text-sm dark:border-amber-400/20 dark:bg-amber-500/10">
-            <p className="font-semibold text-amber-800 dark:text-amber-300">Correction</p>
-            <p className="mt-1 text-amber-700 dark:text-amber-400/90">
-              {renderInline(message.correction)}
-            </p>
-            {message.translation ? (
-              <p className="mt-1.5 text-xs text-amber-600/80 dark:text-amber-400/70">
-                Translation: {message.translation}
-              </p>
-            ) : null}
+          <div className="w-full overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] shadow-sm">
+            <div className="flex items-center gap-2 border-b border-amber-500/10 bg-amber-500/5 px-3 py-2">
+              <CheckCircle2 size={14} className="text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Correction</p>
+            </div>
+            <div className="p-3">
+              <div className="text-[13px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">
+                {renderInline(message.correction)}
+              </div>
+              {message.translation && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-white/40 p-2 dark:bg-black/20">
+                  <Languages size={12} className="mt-0.5 shrink-0 text-amber-600/60" />
+                  <p className="text-[11px] font-medium leading-normal text-amber-800/80 dark:text-amber-200/70">
+                    {message.translation}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
 
-        {/* Speak + Timestamp */}
-        <div className={cn("flex items-center gap-1 px-1", isUser && "flex-row-reverse")}>
-          {!isUser && <SpeakButton text={message.content} />}
-          <span className="text-[11px] text-muted-foreground/60">
+        {/* Action row - Minimal */}
+        <div className={cn("flex items-center gap-3 px-1", isUser && "flex-row-reverse")}>
+          {!isUser && <SpeakButton text={message.content} className="h-6 w-6 rounded-lg bg-accent/50 p-0 text-muted-foreground hover:bg-accent hover:text-foreground" />}
+          <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/40">
             {new Date(message.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -279,6 +296,6 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

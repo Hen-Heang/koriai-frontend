@@ -1,6 +1,10 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import type { VocabItem } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
+import { motion } from "motion/react"
+import { Calendar, Tag, ChevronRight, BookOpen } from "lucide-react"
 
 type VocabCardProps = {
   item: VocabItem
@@ -16,72 +20,98 @@ export function VocabCard({ item, onReview }: VocabCardProps) {
       ? "bg-amber-500"
       : "bg-red-500"
 
-  return (
-    <div className="flex flex-col gap-3 rounded-[1.25rem] border border-slate-800 bg-slate-900/60 px-5 py-4">
-      {/* Term + mastery */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-xl font-bold tracking-tight text-white">{item.term}</p>
-            <SpeakButton text={item.term} />
-          </div>
-          <p className="mt-0.5 text-sm text-slate-400">{item.meaning}</p>
-        </div>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
-            mastery >= 80
-              ? "bg-emerald-500/15 text-emerald-400"
-              : mastery >= 50
-              ? "bg-amber-500/15 text-amber-400"
-              : "bg-red-500/15 text-red-400"
-          )}
-        >
-          {mastery}%
-        </span>
-      </div>
+  const masteryBg =
+    mastery >= 80
+      ? "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 dark:text-emerald-400"
+      : mastery >= 50
+      ? "bg-amber-500/10 text-amber-600 ring-amber-500/20 dark:text-amber-400"
+      : "bg-red-500/10 text-red-600 ring-red-500/20 dark:text-red-400"
 
-      {/* Mastery bar */}
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-        <div
-          className={cn("h-full rounded-full transition-all duration-500", masteryColor)}
-          style={{ width: `${mastery}%` }}
+  return (
+    <div className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+      {/* Mastery Progress Bar (Top) */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-accent/10">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${mastery}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className={cn("h-full", masteryColor)}
         />
       </div>
 
-      {/* Example */}
-      {item.example ? (
-        <p className="rounded-xl border border-slate-800 bg-slate-800/40 px-3 py-2 text-xs leading-6 text-slate-300">
-          {item.example}
-        </p>
-      ) : null}
-
-      {/* Tags + next review */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400"
-            >
-              {tag}
-            </span>
-          ))}
+      <div className="flex items-start justify-between gap-4 pt-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="truncate text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              {item.term}
+            </h3>
+            <SpeakButton 
+              text={item.term} 
+              className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90" 
+            />
+          </div>
+          <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight sm:text-xl">
+            {item.meaning}
+          </p>
         </div>
-        <span className="text-[11px] text-slate-600">
-          Next review: {item.nextReview}
-        </span>
+        
+        <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
+          {mastery}%
+        </div>
       </div>
 
-      {onReview ? (
+      {/* Context/Example */}
+      {item.example && (
+        <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen size={12} className="text-muted-foreground/40" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Usage Context</span>
+          </div>
+          <p className="text-sm font-bold leading-relaxed text-foreground/80 sm:text-[15px]">
+            {item.example}
+          </p>
+          {item.exampleTranslation && (
+            <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed">
+              {item.exampleTranslation}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Metadata */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border/40">
+        <div className="flex flex-wrap gap-1.5">
+          {item.tags.length > 0 ? (
+            item.tags.map((tag) => (
+              <span
+                key={tag}
+                className="flex items-center gap-1 rounded-full bg-accent/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/70"
+              >
+                <Tag size={10} strokeWidth={3} />
+                {tag}
+              </span>
+            ))
+          ) : (
+            <span className="text-[10px] font-bold text-muted-foreground/30 italic">No tags</span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+          <Calendar size={12} strokeWidth={3} />
+          <span>Next: {item.nextReview}</span>
+        </div>
+      </div>
+
+      {onReview && (
         <button
           type="button"
           onClick={() => onReview(item.id)}
-          className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-black uppercase tracking-[0.15em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
         >
-          Mark reviewed
+          Complete Review
+          <ChevronRight size={16} strokeWidth={3} />
         </button>
-      ) : null}
+      )}
     </div>
   )
 }

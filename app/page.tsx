@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -9,7 +11,12 @@ import {
   Sparkles,
   ArrowRight,
   Send,
+  Zap,
+  Globe,
+  Smartphone,
+  CheckCircle2,
 } from "lucide-react"
+import { motion } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -62,39 +69,62 @@ const chatMessages = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+} as const
+
 export default function Home() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white dark:bg-[#030712]">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground selection:bg-emerald-500/30">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-radial from-emerald-300/30 via-teal-200/10 to-transparent blur-3xl dark:from-emerald-600/20 dark:via-teal-500/5" />
-        <div className="absolute right-0 top-0 h-[400px] w-[400px] rounded-full bg-gradient-radial from-sky-300/20 via-blue-200/10 to-transparent blur-3xl dark:from-sky-600/15 dark:via-blue-500/5" />
-        <div className="absolute bottom-0 left-0 h-[300px] w-[500px] rounded-full bg-gradient-radial from-violet-300/15 to-transparent blur-3xl dark:from-violet-600/10" />
+        <div className="absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-radial from-emerald-300/20 via-teal-200/5 to-transparent blur-3xl dark:from-emerald-600/15 dark:via-teal-500/5" />
+        <div className="absolute right-0 top-0 h-[400px] w-[400px] rounded-full bg-gradient-radial from-sky-300/15 via-blue-200/5 to-transparent blur-3xl dark:from-sky-600/10 dark:via-blue-500/5" />
+        <div className="absolute bottom-0 left-0 h-[300px] w-[500px] rounded-full bg-gradient-radial from-violet-300/10 to-transparent blur-3xl dark:from-violet-600/5" />
       </div>
 
       <div className="relative z-10">
         {/* Navbar */}
-        <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 px-4 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#030712]/80 sm:px-6 lg:px-8">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between sm:h-16">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Image
-                src="/koriai-logo.svg"
-                alt="KoriAI"
-                width={34}
-                height={34}
-                className="rounded-xl"
-              />
-              <span className="text-[15px] font-semibold tracking-tight text-slate-900 dark:text-white">
+        <header className="sticky top-0 z-50 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
+            <Link href="/" className="group flex items-center gap-3">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                <Image
+                  src="/koriai-logo.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="invert brightness-0"
+                />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-foreground">
                 KoriAI
               </span>
             </Link>
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button asChild size="sm" variant="ghost" className="hidden text-slate-600 dark:text-slate-300 sm:inline-flex">
+              <div className="hidden h-6 w-px bg-border/60 sm:block mx-2" />
+              <Button asChild size="sm" variant="ghost" className="hidden font-medium text-muted-foreground hover:text-foreground sm:inline-flex">
                 <Link href="/login">Sign in</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-4 text-[13px]">
+              <Button asChild size="sm" className="rounded-full bg-emerald-600 px-5 font-bold text-white hover:bg-emerald-500 shadow-md">
                 <Link href="/register">Get started</Link>
               </Button>
             </div>
@@ -102,214 +132,295 @@ export default function Home() {
         </header>
 
         {/* Hero */}
-        <section className="px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pb-28 lg:pt-24">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+        <section className="relative px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
               {/* Left — copy */}
-              <div className="flex flex-col">
-                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-[13px] font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                  <BrainCircuit size={14} strokeWidth={2} />
-                  AI-powered Korean learning
-                </div>
+              <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="flex flex-col"
+              >
+                <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                  <BrainCircuit size={14} strokeWidth={2.5} />
+                  Next-Gen Language Learning
+                </motion.div>
 
-                <h1 className="mt-5 text-[2.6rem] font-bold leading-[1.08] tracking-[-0.03em] text-slate-950 sm:text-5xl lg:text-[3.6rem] dark:text-white">
-                  Learn Korean that{" "}
+                <motion.h1 variants={itemVariants} className="mt-6 text-[3rem] font-black leading-[1.1] tracking-tight text-foreground sm:text-[4.5rem]">
+                  Master Korean with{" "}
                   <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-                    actually sticks.
+                    AI precision.
                   </span>
-                </h1>
+                </motion.h1>
 
-                <p className="mt-5 text-[1.05rem] leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
-                  Practice with an AI tutor, fix your writing, and build vocabulary — all inside one clean, focused app that feels right on iPhone and Mac.
-                </p>
+                <motion.p variants={itemVariants} className="mt-8 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-xl">
+                  Practice conversation, refine your writing, and build a lasting vocabulary with an AI tutor designed to feel like a real native speaker.
+                </motion.p>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-4 sm:flex-row">
                   <Button
                     asChild
                     size="lg"
-                    className="h-12 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-500 hover:to-teal-500 dark:shadow-emerald-900/30"
+                    className="h-14 rounded-2xl bg-emerald-600 px-8 text-base font-bold text-white shadow-xl shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Link href="/register">
-                      Start for free
-                      <ArrowRight size={16} className="ml-1" />
+                      Start learning free
+                      <ArrowRight size={18} className="ml-2" />
                     </Link>
                   </Button>
                   <Button
                     asChild
                     size="lg"
                     variant="outline"
-                    className="h-12 rounded-full border-slate-200 px-7 text-[15px] font-medium dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    className="h-14 rounded-2xl border-border bg-background/50 px-8 text-base font-bold backdrop-blur-sm transition-all hover:bg-accent hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Link href="/dashboard">Open dashboard</Link>
                   </Button>
-                </div>
+                </motion.div>
 
-                {/* Stats row */}
-                <div className="mt-10 grid grid-cols-3 divide-x divide-slate-200 dark:divide-white/10">
+                {/* Trust / Stats */}
+                <motion.div variants={itemVariants} className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
                   {[
-                    { value: "4", label: "Learning modes" },
-                    { value: "AI", label: "Powered tutor" },
-                    { value: "iOS", label: "& Mac ready" },
-                  ].map((stat) => (
-                    <div key={stat.label} className="px-4 first:pl-0 last:pr-0">
-                      <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        {stat.value}
-                      </p>
-                      <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
-                        {stat.label}
-                      </p>
+                    { icon: Zap, label: "Instant Feedback", color: "text-amber-500" },
+                    { icon: Globe, label: "Natural Phrasing", color: "text-blue-500" },
+                    { icon: Smartphone, label: "Mobile Ready", color: "text-emerald-500" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-2.5">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-background shadow-sm ring-1 ring-border`}>
+                        <item.icon size={16} className={item.color} strokeWidth={2.5} />
+                      </div>
+                      <span className="text-sm font-bold text-foreground/80">{item.label}</span>
                     </div>
                   ))}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               {/* Right — chat preview */}
-              <div className="relative">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                className="relative"
+              >
                 {/* Glow */}
-                <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-br from-emerald-400/20 via-teal-400/10 to-sky-400/15 blur-2xl dark:from-emerald-600/20 dark:via-teal-600/10 dark:to-sky-600/15" />
+                <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-sky-500/20 blur-3xl" />
 
-                {/* Phone frame */}
-                <div className="relative mx-auto max-w-[340px] lg:max-w-full">
-                  <div className="overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-white shadow-2xl shadow-slate-950/10 dark:border-white/10 dark:bg-[#0e1724]">
-                    {/* Phone status bar */}
-                    <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3 dark:border-white/[0.07]">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-emerald-600 dark:text-emerald-400">
-                          KoriAI Chat
-                        </span>
-                      </div>
-                      <div className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                        Live
-                      </div>
-                    </div>
-
-                    {/* Messages */}
-                    <div className="space-y-3 p-4 pb-2">
-                      {chatMessages.map((msg, i) => (
-                        <div
-                          key={i}
-                          className={`flex ${msg.role === "you" ? "justify-end" : "justify-start"}`}
-                        >
-                          {msg.role === "ai" && (
-                            <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                              <Sparkles size={11} className="text-white" />
-                            </div>
-                          )}
-                          <div
-                            className={`max-w-[82%] rounded-[1.1rem] px-3.5 py-2.5 text-[13px] leading-[1.55] ${
-                              msg.role === "you"
-                                ? "rounded-br-[0.4rem] bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-                                : "rounded-bl-[0.4rem] border border-slate-100 bg-slate-50 text-slate-800 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-slate-100"
-                            }`}
-                          >
-                            {msg.text}
+                {/* Phone frame mockup */}
+                <div className="relative mx-auto w-full max-w-[360px]">
+                  <div className="relative overflow-hidden rounded-[3rem] border-[8px] border-slate-900 bg-background shadow-2xl dark:border-slate-800">
+                    {/* Notch */}
+                    <div className="absolute left-1/2 top-0 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-slate-900 dark:bg-slate-800" />
+                    
+                    <div className="flex h-[640px] flex-col">
+                      {/* App header */}
+                      <div className="flex items-center justify-between border-b border-border/50 bg-background/80 px-6 pb-4 pt-10 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white shadow-lg">
+                            AI
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-bold leading-none text-foreground">KoriAI Tutor</p>
+                            <p className="mt-1 text-[10px] font-medium text-emerald-500">Always online</p>
                           </div>
                         </div>
-                      ))}
-
-                      {/* Typing indicator */}
-                      <div className="flex items-center gap-2 pb-1">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                          <Sparkles size={11} className="text-white" />
-                        </div>
-                        <div className="flex gap-1 rounded-[1.1rem] rounded-bl-[0.4rem] border border-slate-100 bg-slate-50 px-3.5 py-3 dark:border-white/[0.08] dark:bg-white/[0.05]">
-                          {[0, 1, 2].map((i) => (
-                            <span
-                              key={i}
-                              className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 dark:bg-slate-500"
-                              style={{ animationDelay: `${i * 0.15}s` }}
-                            />
-                          ))}
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/50 text-muted-foreground">
+                          <Zap size={14} />
                         </div>
                       </div>
-                    </div>
 
-                    {/* Input bar */}
-                    <div className="border-t border-slate-100 px-4 py-3 dark:border-white/[0.07]">
-                      <div className="flex items-center gap-2 rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-white/10 dark:bg-white/[0.05]">
-                        <span className="flex-1 text-[13px] text-slate-400 dark:text-slate-500">
-                          Practice something new…
-                        </span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                          <Send size={12} className="text-white" />
+                      {/* Messages */}
+                      <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                        {chatMessages.map((msg, i) => (
+                          <div
+                            key={i}
+                            className={`flex ${msg.role === "you" ? "justify-end" : "justify-start"}`}
+                          >
+                            {msg.role === "ai" && (
+                              <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                                <Sparkles size={12} />
+                              </div>
+                            )}
+                            <div
+                              className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+                                msg.role === "you"
+                                  ? "rounded-tr-sm bg-emerald-600 font-medium text-white"
+                                  : "rounded-tl-sm border border-border bg-accent/30 text-foreground"
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Animated typing */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                            <Sparkles size={12} />
+                          </div>
+                          <div className="flex gap-1 rounded-2xl rounded-tl-sm border border-border bg-accent/30 px-4 py-3.5">
+                            {[0, 1, 2].map((i) => (
+                              <motion.span
+                                key={i}
+                                animate={{ y: [0, -4, 0] }}
+                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                                className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Input bar */}
+                      <div className="border-t border-border/50 bg-background/80 p-4 backdrop-blur-md">
+                        <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/30 px-4 py-3">
+                          <span className="flex-1 text-[13px] text-muted-foreground font-medium">
+                            Ask me about Korean...
+                          </span>
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                            <Send size={14} />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
 
         {/* Features */}
-        <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-10 text-center sm:mb-14">
-              <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
-                What&apos;s inside
+        <section className="relative px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-16 text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
+                Core Capabilities
               </p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                Four focused learning modes
+              <h2 className="mt-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+                Learning tools that <span className="text-muted-foreground/40 italic font-medium">actually</span> work.
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-[1.05rem] text-slate-500 dark:text-slate-400">
-                Each mode targets a specific skill so you&apos;re always making progress, not just practicing randomly.
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+                We've combined advanced AI with proven language acquisition techniques to help you reach fluency faster than ever.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {features.map((feature) => {
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature, i) => {
                 const Icon = feature.icon
                 return (
-                  <div
+                  <motion.div
                     key={feature.title}
-                    className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/[0.08] dark:bg-[#0e1724]"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                    className="group relative h-full overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-500/10 dark:bg-slate-900/40"
                   >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
-                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
                     <div className="relative">
-                      <div className={`inline-flex rounded-2xl ${feature.iconBg} p-3`}>
-                        <Icon size={20} strokeWidth={1.7} className={feature.iconColor} />
+                      <div className={`inline-flex rounded-2xl ${feature.iconBg} p-4 shadow-sm ring-1 ring-border/50 group-hover:scale-110 transition-transform duration-500`}>
+                        <Icon size={24} strokeWidth={2} className={feature.iconColor} />
                       </div>
-                      <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">
+                      <h3 className="mt-6 text-xl font-bold text-foreground">
                         {feature.title}
                       </h3>
-                      <p className="mt-2 text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                      <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
                         {feature.description}
                       </p>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-foreground/40 group-hover:text-foreground transition-colors">
+                        Learn more <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
           </div>
         </section>
 
-        {/* Bottom CTA */}
-        <section className="px-4 pb-20 pt-8 sm:px-6 sm:pb-24 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-600 p-8 text-center shadow-2xl shadow-emerald-900/20 sm:p-12">
-              {/* Decorative blobs */}
-              <div className="pointer-events-none absolute -left-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-10 -right-10 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-
-              <div className="relative">
-                <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
-                  Start today
-                </p>
-                <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Ready to speak more natural Korean?
+        {/* Benefits Section */}
+        <section className="border-y border-border/40 bg-accent/10 px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="space-y-8"
+              >
+                <h2 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+                  Built for the serious learner.
                 </h2>
-                <p className="mx-auto mt-4 max-w-md text-[1.05rem] text-emerald-100">
-                  Join KoriAI and practice the way that works — focused, structured, and designed for your phone.
+                <div className="space-y-6">
+                  {[
+                    { title: "Context-Aware Corrections", desc: "Don't just get fixed—understand why with AI explanations." },
+                    { title: "Personalized Daily Goals", desc: "Adaptive targets that keep you consistent without burning out." },
+                    { title: "Native-Level Scenarios", desc: "Practice real-life situations from ordering food to job interviews." },
+                  ].map((benefit) => (
+                    <div key={benefit.title} className="flex gap-4">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 mt-1">
+                        <CheckCircle2 size={16} strokeWidth={3} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-foreground">{benefit.title}</h4>
+                        <p className="mt-1 text-sm text-muted-foreground">{benefit.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="relative aspect-video overflow-hidden rounded-3xl border border-border shadow-2xl"
+              >
+                <div className="absolute inset-0 bg-emerald-600/5 backdrop-blur-sm flex items-center justify-center">
+                   <div className="text-center p-8">
+                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl mb-4 text-emerald-600">
+                        <Zap size={32} fill="currentColor" />
+                      </div>
+                      <p className="text-lg font-bold text-foreground">Interactive Demo Coming Soon</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Join 5,000+ learners mastering Korean today.</p>
+                   </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom CTA */}
+        <section className="px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-12 text-center shadow-2xl dark:bg-slate-900/80 dark:border dark:border-white/5 sm:p-20"
+            >
+              {/* Decorative blobs */}
+              <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-[80px]" />
+              <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-sky-500/20 blur-[80px]" />
+
+              <div className="relative z-10">
+                <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  Ready to sound like a native?
+                </h2>
+                <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
+                  Stop memorizing and start speaking. Join KoriAI today and take your Korean to the next level with your personal AI tutor.
                 </p>
-                <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                   <Button
                     asChild
                     size="lg"
-                    className="h-12 rounded-full bg-white px-8 text-[15px] font-semibold text-emerald-700 shadow-lg hover:bg-emerald-50"
+                    className="h-14 rounded-2xl bg-white px-10 text-base font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 active:scale-95 shadow-xl"
                   >
                     <Link href="/register">Create free account</Link>
                   </Button>
@@ -317,27 +428,37 @@ export default function Home() {
                     asChild
                     size="lg"
                     variant="ghost"
-                    className="h-12 rounded-full px-8 text-[15px] font-medium text-white hover:bg-white/15"
+                    className="h-14 rounded-2xl px-10 text-base font-bold text-white transition-all hover:bg-white/10 hover:scale-105 active:scale-95"
                   >
                     <Link href="/login">Sign in</Link>
                   </Button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200/60 px-4 py-6 dark:border-white/[0.07]">
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Image src="/koriai-logo.svg" alt="KoriAI" width={24} height={24} className="rounded-lg opacity-70" />
-              <span className="text-[13px] text-slate-400 dark:text-slate-500">
-                © 2026 KoriAI
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ThemeToggle />
+        <footer className="border-t border-border/40 bg-background/50 px-4 py-12 backdrop-blur-sm sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col items-center justify-between gap-8 sm:flex-row">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+                  <Image src="/koriai-logo.svg" alt="" width={18} height={18} className="invert brightness-0" />
+                </div>
+                <span className="text-sm font-bold tracking-tight text-foreground">
+                  KoriAI
+                </span>
+                <span className="text-xs text-muted-foreground ml-4">
+                  © 2026 KoriAI. All rights reserved.
+                </span>
+              </div>
+              <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+                <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
+                <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
+                <Link href="#" className="hover:text-foreground transition-colors">Contact</Link>
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </footer>

@@ -10,14 +10,18 @@ import {
   RotateCcw,
   Sparkles,
   XCircle,
+  Trophy,
+  ArrowLeft,
+  Volume2
 } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { chatApi } from "@/lib/api"
 import type { VocabItem } from "@/lib/types"
+import { SpeakButton } from "@/components/ui/SpeakButton"
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5)
 }
@@ -27,7 +31,6 @@ function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   return shuffle([correct, ...distractors])
 }
 
-// ─── types ────────────────────────────────────────────────────────────────────
 type Mode = "flashcard" | "choice"
 type Phase = "idle" | "quiz" | "done"
 
@@ -38,7 +41,7 @@ type ReviewSessionProps = {
   onReview: (id: string) => void | Promise<void>
 }
 
-// ─── Flashcard face ───────────────────────────────────────────────────────────
+// ─── Flashcard ────────────────────────────────────────────────────────────────
 function FlashCard({
   card,
   onKnew,
@@ -70,102 +73,98 @@ function FlashCard({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Card */}
-      <button
-        type="button"
-        onClick={() => setFlipped((f) => !f)}
-        className={cn(
-          "group relative w-full cursor-pointer rounded-[1.5rem] border text-left transition-all duration-200",
-          flipped
-            ? "border-violet-500/30 bg-violet-950/40"
-            : "border-slate-700 bg-slate-900/60 hover:border-slate-600"
-        )}
-      >
-        <div className="px-6 py-8 sm:px-8 sm:py-10">
-          {!flipped ? (
-            <div className="flex flex-col items-center gap-3 text-center">
-              <span className="text-[0.7rem] font-semibold uppercase tracking-widest text-slate-500">
-                Korean
-              </span>
-              <p className="text-4xl font-bold tracking-tight text-white">{card.term}</p>
-              <span className="mt-2 text-xs text-slate-500">tap to reveal meaning</span>
+    <div className="flex flex-col gap-6">
+      {/* Flip card */}
+      <div className="perspective-1000 h-80 sm:h-96">
+        <motion.div
+          animate={{ rotateY: flipped ? 180 : 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="relative h-full w-full preserve-3d"
+        >
+          {/* Front */}
+          <button
+            type="button"
+            onClick={() => setFlipped(true)}
+            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[3rem] border border-border bg-card p-8 text-center shadow-xl dark:bg-slate-900/60"
+          >
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">Korean</span>
+            <p className="text-5xl font-black tracking-tight text-foreground sm:text-7xl">{card.term}</p>
+            <div className="mt-10 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-5 py-2.5 text-xs font-bold text-muted-foreground/60 transition-colors hover:bg-accent/10">
+              Tap to Reveal
             </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <span className="text-[0.7rem] font-semibold uppercase tracking-widest text-violet-400">
-                  Meaning
-                </span>
-                <p className="text-2xl font-semibold text-white">{card.meaning}</p>
+          </button>
+
+          {/* Back */}
+          <div
+            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[3rem] border border-emerald-500/20 bg-card p-8 text-center shadow-2xl dark:bg-slate-900/80"
+          >
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">Meaning</span>
+            <p className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">{card.meaning}</p>
+            
+            {card.example && (
+              <div className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-accent/5 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
+                {card.example}
               </div>
-              {card.example ? (
-                <div className="rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-300">
-                  {card.example}
-                </div>
-              ) : null}
-              {card.tags.length ? (
-                <div className="flex flex-wrap justify-center gap-2">
-                  {card.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+            )}
+
+            <div className="mt-8">
+              <SpeakButton text={card.term} className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 shadow-sm ring-1 ring-emerald-500/20 active:scale-90" />
             </div>
-          )}
-        </div>
-      </button>
+          </div>
+        </motion.div>
+      </div>
 
-      {/* AI Hint */}
-      {flipped && (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-          {hint ? (
-            <p className="text-sm leading-6 text-amber-200/90">{hint}</p>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto gap-2 px-0 text-xs text-amber-400 hover:bg-transparent hover:text-amber-300"
-              onClick={fetchHint}
-              disabled={loadingHint}
-            >
-              <Lightbulb size={13} />
-              {loadingHint ? "Generating AI example…" : "Get AI example sentence"}
-            </Button>
-          )}
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {flipped && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            {/* AI Hint Section */}
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              {hint ? (
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-200/90 leading-relaxed">{hint}</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={fetchHint}
+                  disabled={loadingHint}
+                  className="flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                >
+                  <Lightbulb size={14} strokeWidth={2.5} className={loadingHint ? "animate-pulse" : ""} />
+                  {loadingHint ? "Creating AI sentence..." : "Get AI example sentence"}
+                </button>
+              )}
+            </div>
 
-      {/* Grade buttons — only visible after flip */}
-      {flipped && (
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            className="h-12 gap-2 rounded-2xl border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-            onClick={() => { setFlipped(false); setHint(null); onLearning() }}
-          >
-            <XCircle size={16} />
-            Still learning
-          </Button>
-          <Button
-            className="h-12 gap-2 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-500"
-            onClick={() => { setFlipped(false); setHint(null); onKnew() }}
-          >
-            <CheckCircle2 size={16} />
-            I knew it!
-          </Button>
-        </div>
-      )}
+            {/* Decision Buttons */}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => { setFlipped(false); setHint(null); onLearning() }}
+                className="flex h-16 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
+              >
+                <XCircle size={20} strokeWidth={2.5} />
+                Again
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFlipped(false); setHint(null); onKnew() }}
+                className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+              >
+                <CheckCircle2 size={20} strokeWidth={2.5} />
+                Got it
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// ─── Multiple choice card ─────────────────────────────────────────────────────
+// ─── Multiple choice ───────────────────────────────────────────────────────────
 function ChoiceCard({
   card,
   allWords,
@@ -186,69 +185,80 @@ function ChoiceCard({
     setSelected(id)
   }
 
-  function next() {
-    if (selected === card.id) onKnew()
-    else onLearning()
-  }
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* Prompt */}
-      <div className="flex flex-col items-center gap-2 rounded-[1.5rem] border border-slate-700 bg-slate-900/60 px-6 py-8 text-center">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-widest text-slate-500">
-          What does this mean?
-        </span>
-        <p className="text-4xl font-bold tracking-tight text-white">{card.term}</p>
+    <div className="flex flex-col gap-6">
+      {/* Prompt Card */}
+      <div className="flex flex-col items-center justify-center rounded-[3rem] border border-border bg-accent/5 p-10 text-center dark:bg-white/5">
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Select Meaning</span>
+        <p className="text-5xl font-black tracking-tight text-foreground sm:text-6xl">{card.term}</p>
+        <div className="mt-6">
+          <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
+        </div>
       </div>
 
-      {/* Choices */}
-      <div className="grid gap-2.5">
-        {choices.map((choice) => {
+      {/* Choices List */}
+      <div className="grid gap-3">
+        {choices.map((choice, i) => {
           const isCorrect = choice.id === card.id
           const isSelected = choice.id === selected
+          
           return (
-            <button
+            <motion.button
               key={choice.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
               type="button"
               onClick={() => pick(choice.id)}
               disabled={answered}
               className={cn(
-                "w-full rounded-2xl border px-5 py-3.5 text-left text-sm font-medium transition-all",
+                "group flex w-full items-center justify-between rounded-2xl border px-6 py-5 text-left transition-all active:scale-[0.98]",
                 !answered
-                  ? "border-slate-700 bg-slate-800/60 text-slate-200 hover:border-slate-500 hover:bg-slate-800"
+                  ? "border-border bg-card hover:border-emerald-500/40 hover:bg-emerald-500/[0.02]"
                   : isCorrect
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                  ? "border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/20"
                   : isSelected
-                  ? "border-red-500/50 bg-red-500/15 text-red-300"
-                  : "border-slate-800 bg-slate-900/40 text-slate-500"
+                  ? "border-red-500 bg-red-500/10 ring-1 ring-red-500/20"
+                  : "border-border/40 bg-accent/10 opacity-40"
               )}
             >
-              {choice.meaning}
-            </button>
+              <span className={cn(
+                "text-[15px] font-bold",
+                !answered ? "text-foreground" : isCorrect ? "text-emerald-700 dark:text-emerald-400" : isSelected ? "text-red-700 dark:text-red-400" : "text-muted-foreground"
+              )}>
+                {choice.meaning}
+              </span>
+              {answered && isCorrect && <CheckCircle2 size={18} className="text-emerald-600" strokeWidth={3} />}
+              {answered && isSelected && !isCorrect && <XCircle size={18} className="text-red-600" strokeWidth={3} />}
+            </motion.button>
           )
         })}
       </div>
 
-      {/* Feedback + next */}
-      {answered && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3">
-          <p className="text-sm font-medium">
-            {selected === card.id ? (
-              <span className="text-emerald-400">Correct!</span>
-            ) : (
-              <span className="text-red-400">Not quite — the answer was <strong className="text-slate-200">{card.meaning}</strong></span>
-            )}
-          </p>
-          <Button size="sm" className="gap-1.5 rounded-xl bg-violet-600 hover:bg-violet-500" onClick={next}>
-            Next <ChevronRight size={14} />
-          </Button>
-        </div>
-      )}
+      {/* Immediate Result / Next Button */}
+      <AnimatePresence>
+        {answered && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-2"
+          >
+            <button
+              type="button"
+              onClick={() => (selected === card.id ? onKnew() : onLearning())}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
+            >
+              Next Word
+              <ChevronRight size={20} strokeWidth={3} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main component ────────────────────────────────────────────────────────────
 export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewSessionProps) {
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
@@ -279,7 +289,6 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
 
   const handleLearning = useCallback(() => {
     setStats((s) => ({ ...s, learning: s.learning + 1 }))
-    // Push card to end of queue for another attempt
     setQueue((q) => {
       const next = [...q]
       const card = next.splice(currentIndex, 1)[0]
@@ -293,147 +302,193 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
 
   const total = queue.length
 
-  // ── idle ──
+  // ── idle ──────────────────────────────────────────────────────────────────
   if (phase === "idle") {
     const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
     return (
-      <div className="flex flex-col gap-5 rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,#070b18,#040814)] p-6 sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/15">
-            <BrainCircuit size={20} className="text-violet-400" />
+      <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+        {/* Top Header */}
+        <div className="bg-emerald-500/[0.03] px-8 py-8 text-center border-b border-border/60">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
+            <BrainCircuit size={32} strokeWidth={2.5} />
           </div>
-          <div>
-            <p className="font-semibold text-white">Quiz Mode</p>
-            <p className="text-xs text-slate-400">
-              {dueToday.length > 0
-                ? `${dueToday.length} card${dueToday.length !== 1 ? "s" : ""} due today`
-                : allWords.length > 0
-                ? `${allWords.length} saved words`
-                : "No words saved yet"}
-            </p>
-          </div>
+          <h2 className="text-2xl font-black tracking-tight text-foreground">Memory Lab</h2>
+          <p className="mt-2 text-sm font-medium text-muted-foreground/60">
+            {dueToday.length > 0
+              ? `${dueToday.length} reviews awaiting attention`
+              : "Review your saved dictionary items"}
+          </p>
         </div>
 
-        {/* Mode selector */}
-        {canUseChoice && (
-          <div className="flex gap-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-1.5">
-            {(["flashcard", "choice"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={cn(
-                  "flex-1 rounded-xl py-2 text-sm font-medium transition-all",
-                  mode === m
-                    ? "bg-violet-600 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                )}
-              >
-                {m === "flashcard" ? "Flashcard" : "Multiple Choice"}
-              </button>
-            ))}
+        <div className="flex flex-col gap-6 p-6 sm:p-8">
+          {/* Deck Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
+              <p className="text-3xl font-black text-emerald-600">{dueToday.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Due Now</p>
+            </div>
+            <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
+              <p className="text-3xl font-black text-foreground">{allWords.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Total Deck</p>
+            </div>
           </div>
-        )}
 
-        <Button
-          className="h-12 gap-2 rounded-2xl bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-40"
-          disabled={loading || deckSize === 0}
-          onClick={startQuiz}
-        >
-          <Sparkles size={15} />
-          {loading ? "Loading…" : deckSize === 0 ? "No words to review" : "Start Quiz"}
-        </Button>
+          {/* Mode Selector - iOS style */}
+          {canUseChoice && (
+            <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
+              {(["flashcard", "choice"] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={cn(
+                    "flex-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
+                    mode === m
+                      ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {m === "flashcard" ? "Flashcard" : "Quiz"}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {!loading && allWords.length === 0 && (
-          <p className="text-center text-xs text-slate-500">
-            Save words from your chat sessions to build your deck.
-          </p>
-        )}
+          {/* Action Button */}
+          <button
+            type="button"
+            disabled={loading || deckSize === 0}
+            onClick={startQuiz}
+            className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+          >
+            <Sparkles size={20} strokeWidth={2.5} />
+            {loading ? "Loading..." : "Enter Session"}
+          </button>
+        </div>
       </div>
     )
   }
 
-  // ── done ──
+  // ── done ──────────────────────────────────────────────────────────────────
   if (phase === "done") {
     const pct = total > 0 ? Math.round((stats.knew / total) * 100) : 0
+    const headline = pct >= 80 ? "Perfect Loop" : pct >= 50 ? "Solid Growth" : "Keep Building"
+    
     return (
-      <div className="flex flex-col items-center gap-5 rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,#070b18,#040814)] px-6 py-10 text-center">
-        <div className="text-4xl">{pct >= 80 ? "🎉" : pct >= 50 ? "💪" : "📚"}</div>
-        <div>
-          <p className="text-xl font-bold text-white">
-            {pct >= 80 ? "Great session!" : pct >= 50 ? "Good effort!" : "Keep practicing!"}
-          </p>
-          <p className="mt-1 text-sm text-slate-400">
-            You knew <strong className="text-emerald-400">{stats.knew}</strong> of{" "}
-            <strong className="text-white">{total}</strong> cards
-          </p>
-        </div>
-        <div className="w-full rounded-full bg-slate-800 h-2">
-          <div
-            className="h-2 rounded-full bg-emerald-500 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="flex w-full gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 gap-2 rounded-2xl border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800"
-            onClick={startQuiz}
-          >
-            <RotateCcw size={14} />
-            Try again
-          </Button>
-          <Button
-            className="flex-1 gap-2 rounded-2xl bg-violet-600 hover:bg-violet-500"
-            onClick={() => setPhase("idle")}
-          >
-            <BookOpenCheck size={14} />
-            Done
-          </Button>
+      <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40">
+        <div className="flex flex-col items-center gap-8 px-8 py-12 text-center sm:py-16">
+          <div className="relative">
+            <div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-emerald-500/10 text-emerald-600 shadow-inner ring-1 ring-emerald-500/20">
+              <Trophy size={48} strokeWidth={2} />
+            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+              className="absolute -right-2 -top-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 ring-4 ring-card"
+            >
+              <CheckCircle2 size={24} strokeWidth={3} />
+            </motion.div>
+          </div>
+
+          <div>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">{headline}</h2>
+            <p className="mt-3 text-[15px] font-medium text-muted-foreground/60 leading-relaxed">
+              You retained <span className="text-emerald-600 font-black">{stats.knew}</span> out of <span className="text-foreground font-black">{total}</span> words. 
+              Keep this momentum up to strengthen long-term memory.
+            </p>
+          </div>
+
+          {/* Performance Visualization */}
+          <div className="relative h-2 w-full max-w-xs overflow-hidden rounded-full bg-accent/10">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="h-full bg-linear-to-r from-emerald-500 to-teal-400"
+            />
+          </div>
+
+          <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={startQuiz}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-background py-4 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:bg-accent active:scale-95"
+            >
+              <RotateCcw size={16} strokeWidth={3} />
+              Re-run
+            </button>
+            <button
+              type="button"
+              onClick={() => setPhase("idle")}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+            >
+              Finish Lab
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  // ── quiz ──
+  // ── quiz ──────────────────────────────────────────────────────────────────
   const card = queue[currentIndex]
   if (!card) return null
 
   return (
-    <div className="flex flex-col gap-4 rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,#070b18,#040814)] p-5 sm:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500">
-          Card {Math.min(currentIndex + 1, total)} of {total}
-        </span>
-        <span className="text-xs font-medium text-emerald-400">{stats.knew} correct</span>
+    <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+      {/* Session Progress Header */}
+      <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-6 py-5">
+        <button 
+          onClick={() => setPhase("idle")}
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
+        >
+          <ArrowLeft size={20} strokeWidth={2.5} />
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+          <span className="text-[13px] font-black uppercase tracking-widest text-foreground">
+            {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
+          </span>
+        </div>
+        <div className="h-9 w-9" /> {/* Spacer */}
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-        <div
-          className="h-full rounded-full bg-violet-600 transition-all duration-500"
-          style={{ width: `${((currentIndex) / total) * 100}%` }}
+      {/* Smooth Progress Indicator */}
+      <div className="h-1 w-full bg-accent/10">
+        <motion.div
+          animate={{ width: `${(currentIndex / total) * 100}%` }}
+          transition={{ duration: 0.5 }}
+          className="h-full bg-emerald-500"
         />
       </div>
 
-      {/* Card */}
-      {mode === "flashcard" || !canUseChoice ? (
-        <FlashCard
-          key={card.id + currentIndex}
-          card={card}
-          onKnew={handleKnew}
-          onLearning={handleLearning}
-        />
-      ) : (
-        <ChoiceCard
-          key={card.id + currentIndex}
-          card={card}
-          allWords={allWords}
-          onKnew={handleKnew}
-          onLearning={handleLearning}
-        />
-      )}
+      <div className="p-6 sm:p-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={card.id + currentIndex}
+            initial={{ opacity: 0, scale: 0.98, x: 10 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.98, x: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            {mode === "flashcard" || !canUseChoice ? (
+              <FlashCard
+                card={card}
+                onKnew={handleKnew}
+                onLearning={handleLearning}
+              />
+            ) : (
+              <ChoiceCard
+                card={card}
+                allWords={allWords}
+                onKnew={handleKnew}
+                onLearning={handleLearning}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

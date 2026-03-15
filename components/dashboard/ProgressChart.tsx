@@ -26,57 +26,72 @@ export function ProgressChart({ data }: { data: ProgressPoint[] }) {
   )
 
   return (
-    <Card className="rounded-[2rem] border-border/60 bg-white/90 shadow-lg shadow-slate-950/5 dark:border-cyan-400/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(3,7,18,0.95))]">
-      <CardHeader>
-        <CardTitle className="text-xl dark:text-white">Weekly Progress</CardTitle>
+    <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/60 dark:backdrop-blur-sm sm:rounded-3xl">
+      <CardHeader className="pb-1 sm:pb-2">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
+              Activity
+            </p>
+            <CardTitle className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">Weekly Progress</CardTitle>
+          </div>
+          <div className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/20 sm:px-3 sm:text-[11px]">
+            Last 7 days
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-72 min-w-0 w-full">
+      <CardContent className="pt-3 sm:pt-4">
+        <div className="h-56 min-w-0 w-full sm:h-64 lg:h-72">
           {mounted ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data}
-                margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
+                margin={{ left: -20, right: 8, top: 10, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="minutesFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.08} />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   vertical={false}
-                  stroke="rgba(148,163,184,0.18)"
+                  stroke="var(--color-border)"
+                  opacity={0.5}
                 />
                 <XAxis
                   dataKey="day"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "rgba(148,163,184,0.92)", fontSize: 12 }}
+                  tick={{ fill: "var(--color-muted-foreground)", fontSize: 11, fontWeight: 500 }}
+                  dy={10}
                 />
                 <Tooltip
+                  cursor={{ stroke: "var(--color-primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
                   contentStyle={{
-                    borderRadius: "18px",
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    background: "rgba(2, 6, 23, 0.94)",
-                    color: "#e2e8f0",
-                    boxShadow: "0 16px 50px rgba(2, 6, 23, 0.35)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--color-border)",
+                    background: "var(--color-popover)",
+                    color: "var(--color-popover-foreground)",
+                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                    padding: "10px 14px",
                   }}
-                  labelStyle={{ color: "#f8fafc" }}
-                  itemStyle={{ color: "#99f6e4" }}
+                  labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "var(--color-foreground)" }}
+                  itemStyle={{ padding: 0, fontSize: "13px" }}
                 />
                 <Area
                   type="monotone"
                   dataKey="minutes"
-                  stroke="#14b8a6"
+                  stroke="var(--color-primary)"
                   fill="url(#minutesFill)"
                   strokeWidth={3}
+                  animationDuration={1200}
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full rounded-3xl bg-muted/70 dark:bg-white/[0.04]" />
+            <div className="h-full rounded-2xl bg-muted/20 animate-pulse" />
           )}
         </div>
       </CardContent>

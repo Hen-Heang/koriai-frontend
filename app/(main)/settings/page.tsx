@@ -11,18 +11,24 @@ import {
   CheckCircle2,
   LogOut,
   ChevronRight,
+  ShieldCheck,
+  Zap,
+  Activity
 } from "lucide-react"
+import { motion } from "motion/react"
 
+import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { userApi } from "@/lib/api"
 import { clearAuth, getUserId } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
 const levels = [
   { value: "BEGINNER", label: "Beginner", desc: "Just starting out", emoji: "🌱" },
-  { value: "INTERMEDIATE", label: "Intermediate", desc: "Can hold basic conversations", emoji: "🌿" },
-  { value: "ADVANCED", label: "Advanced", desc: "Fluent in most situations", emoji: "🌳" },
+  { value: "INTERMEDIATE", label: "Intermediate", desc: "Basic conversations", emoji: "🌿" },
+  { value: "ADVANCED", label: "Advanced", desc: "Fluent situations", emoji: "🌳" },
 ]
 
 const models = [
@@ -31,9 +37,9 @@ const models = [
   { value: "gpt-5-mini", label: "GPT-5 mini", desc: "Latest generation" },
 ]
 
-function SectionCard({ children }: { children: React.ReactNode }) {
+function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white shadow-sm dark:border-white/8 dark:bg-[#0e1724]">
+    <div className={cn("overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm dark:bg-slate-900/40", className)}>
       {children}
     </div>
   )
@@ -41,29 +47,49 @@ function SectionCard({ children }: { children: React.ReactNode }) {
 
 function SectionRow({ children, last }: { children: React.ReactNode; last?: boolean }) {
   return (
-    <div className={cn("px-5 py-4", !last && "border-b border-slate-100 dark:border-white/[0.06]")}>
+    <div className={cn("px-6 py-5", !last && "border-b border-border/60")}>
       {children}
     </div>
   )
 }
 
-function SectionHeader({ icon: Icon, title, description }: {
+function SectionHeader({ icon: Icon, title, description, color = "text-emerald-600" }: {
   icon: React.ElementType
   title: string
   description: string
+  color?: string
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-100 dark:bg-white/8">
-        <Icon size={16} strokeWidth={1.7} className="text-slate-600 dark:text-slate-300" />
+    <div className="flex items-center gap-4">
+      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/5 ring-1 ring-border/50", color)}>
+        <Icon size={20} strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-[14px] font-semibold text-slate-900 dark:text-white">{title}</p>
-        <p className="text-[12px] text-slate-500 dark:text-slate-400">{description}</p>
+        <p className="text-sm font-black text-foreground uppercase tracking-wider">{title}</p>
+        <p className="text-[12px] font-medium text-muted-foreground">{description}</p>
       </div>
     </div>
   )
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+} as const
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -119,7 +145,6 @@ export default function SettingsPage() {
       router.back()
       return
     }
-
     router.push("/dashboard")
   }
 
@@ -134,244 +159,309 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
-        <div className="space-y-4">
-          <div className="h-8 w-44 animate-pulse rounded-xl bg-slate-100 dark:bg-white/8" />
-          <div className="h-28 animate-pulse rounded-[1.5rem] bg-slate-100 dark:bg-white/8" />
+      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
+        <div className="space-y-6">
+          <div className="rounded-[2.5rem] border border-border bg-card p-6 shadow-sm">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="mt-4 h-11 w-48" />
+            <Skeleton className="mt-3 h-5 w-full max-w-sm" />
+            <div className="mt-6 flex gap-3">
+              <Skeleton className="h-10 w-28 rounded-xl" />
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-5">
+              <Skeleton className="h-16 w-16 rounded-2xl" />
+              <div className="flex-1">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="mt-2 h-4 w-40" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="space-y-4">
-          <div className="h-44 animate-pulse rounded-[1.5rem] bg-slate-100 dark:bg-white/8" />
-          <div className="h-52 animate-pulse rounded-[1.5rem] bg-slate-100 dark:bg-white/8" />
+        <div className="space-y-6">
+          {[1, 2].map((item) => (
+            <div key={item} className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-2xl" />
+                <div>
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="mt-2 h-4 w-44" />
+                </div>
+              </div>
+              <div className="mt-6 space-y-4">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )
   }
 
   return (
-    <form
+    <motion.form
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
       onSubmit={handleSave}
-      className="grid gap-4 pb-6 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]"
+      className="grid gap-6 pb-12 xl:grid-cols-[0.75fr_1.25fr]"
     >
-      <div className="space-y-4 xl:sticky xl:top-7 xl:self-start">
-        <div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.06]"
+      {/* Left Sidebar */}
+      <div className="space-y-6 xl:sticky xl:top-8 xl:self-start">
+        <motion.div variants={itemVariants}>
+          <PageHero
+            eyebrow="Account"
+            title="Settings"
+            description="Manage your profile, language level, and defaults."
+            actions={
+              <Button type="button" variant="outline" className="h-10 rounded-xl font-bold active:scale-95" onClick={handleClose}>
+                <ArrowLeft size={14} strokeWidth={3} className="mr-2" />
+                Back
+              </Button>
+            }
+            className="p-6"
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard className="border-emerald-500/10 bg-emerald-500/[0.02]">
+            <SectionRow last>
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-2xl font-black text-white shadow-xl shadow-emerald-500/20">
+                    {initials}
+                  </div>
+                  <div className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
+                    <CheckCircle2 size={12} className="text-white" strokeWidth={4} />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-black text-foreground">
+                    {displayName || "Your name"}
+                  </p>
+                  <p className="truncate text-sm font-medium text-muted-foreground/60">{email}</p>
+                </div>
+              </div>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-3">
+          <Button
+            type="submit"
+            disabled={saving}
+            className="h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 transition-all"
           >
-            <ArrowLeft size={14} strokeWidth={1.9} />
-            Back
-          </button>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-            Account
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-            Settings
-          </h1>
-          <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Manage your profile, study level, and default AI model in one place.
-          </p>
-        </div>
+            {saving ? (
+              <><Activity size={20} className="mr-2 animate-pulse" /> Saving...</>
+            ) : (
+              <><Zap size={20} className="mr-2" strokeWidth={2.5} /> Update Profile</>
+            )}
+          </Button>
 
-        <SectionCard>
-          <SectionRow last>
-            <div className="flex items-center gap-4">
-              <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-[1.1rem] bg-gradient-to-br from-emerald-500 to-teal-600 text-xl font-bold text-white shadow-md shadow-emerald-500/20">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-white">
-                  {displayName || "Your name"}
-                </p>
-                <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{email}</p>
-                <span className="mt-1.5 inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                  {levels.find((l) => l.value === koreanLevel)?.label ?? koreanLevel}
-                </span>
-              </div>
+          {saved && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-emerald-600 dark:text-emerald-400"
+            >
+              <CheckCircle2 size={16} strokeWidth={3} />
+              <span className="text-sm font-bold tracking-tight">Changes saved successfully</span>
+            </motion.div>
+          )}
+          {error && (
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive text-center">
+              {error}
             </div>
-          </SectionRow>
-        </SectionCard>
+          )}
+        </motion.div>
 
-        {saved && (
-          <div className="flex items-center gap-2.5 rounded-2xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/15">
-            <CheckCircle2 size={15} strokeWidth={2} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-[13px] font-medium text-emerald-700 dark:text-emerald-300">
-              Settings saved successfully.
-            </span>
-          </div>
-        )}
-        {error && (
-          <div className="rounded-2xl bg-red-50 px-4 py-3 text-[13px] font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
-        <Button
-          type="submit"
-          disabled={saving}
-          className="h-12 w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-[15px] font-semibold text-white shadow-md shadow-emerald-500/20 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-60"
-        >
-          {saving ? "Saving..." : "Save settings"}
-        </Button>
-
-        <SectionCard>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-red-50/50 active:bg-red-50 dark:hover:bg-red-500/5"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-500/10">
-                <LogOut size={16} strokeWidth={1.7} className="text-red-500" />
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-red-500/5 active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 ring-1 ring-red-500/20 transition-transform group-hover:scale-110">
+                  <LogOut size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-red-600 uppercase tracking-wider">
+                    Sign out
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground/60">
+                    End your active session
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[14px] font-semibold text-red-600 dark:text-red-400">
-                  Sign out
-                </p>
-                <p className="text-[12px] text-slate-400 dark:text-slate-500">
-                  You&apos;ll need to log in again
-                </p>
-              </div>
-            </div>
-            <ChevronRight size={15} strokeWidth={1.6} className="text-slate-300 dark:text-slate-600" />
-          </button>
-        </SectionCard>
+              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+            </button>
+          </SectionCard>
+        </motion.div>
       </div>
 
-      <div className="space-y-4">
-        <SectionCard>
-          <SectionRow>
-            <SectionHeader icon={User} title="Profile" description="How you appear in KoriAI" />
-          </SectionRow>
+      {/* Right Content */}
+      <div className="space-y-6">
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader icon={User} title="Profile Details" description="Personal information and public identity" color="text-emerald-500" />
+            </SectionRow>
 
-          <SectionRow>
-            <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
-              Display name
-            </label>
-            <Input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
-              className="rounded-xl"
-            />
-          </SectionRow>
-
-          <SectionRow last>
-            <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
-              Email
-            </label>
-            <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 dark:border-white/8 dark:bg-white/[0.04]">
-              <Mail size={14} strokeWidth={1.6} className="shrink-0 text-slate-400" />
-              <span className="flex-1 truncate text-[14px] text-slate-400 dark:text-slate-500">
-                {email}
-              </span>
-              <span className="shrink-0 text-[11px] text-slate-400 dark:text-slate-500">
-                Read-only
-              </span>
-            </div>
-          </SectionRow>
-        </SectionCard>
-
-        <SectionCard>
-          <SectionRow>
-            <SectionHeader
-              icon={BrainCircuit}
-              title="Korean level"
-              description="Your AI tutor adjusts difficulty to match"
-            />
-          </SectionRow>
-
-          <SectionRow last>
-            <div className="space-y-2">
-              {levels.map((level) => {
-                const active = koreanLevel === level.value
-                return (
-                  <button
-                    key={level.value}
-                    type="button"
-                    onClick={() => setKoreanLevel(level.value)}
-                    className={cn(
-                      "flex w-full items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.99]",
-                      active
-                        ? "border-emerald-300 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10"
-                        : "border-slate-200/70 hover:bg-slate-50 dark:border-white/[0.06] dark:hover:bg-white/[0.04]"
-                    )}
-                  >
-                    <span className="text-xl leading-none">{level.emoji}</span>
-                    <div className="flex-1">
-                      <p className={cn(
-                        "text-[13.5px] font-semibold",
-                        active ? "text-emerald-800 dark:text-emerald-300" : "text-slate-800 dark:text-slate-200"
-                      )}>
-                        {level.label}
-                      </p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400">{level.desc}</p>
-                    </div>
-                    {active
-                      ? <CheckCircle2 size={18} strokeWidth={2} className="shrink-0 text-emerald-500" />
-                      : <ChevronRight size={15} strokeWidth={1.6} className="shrink-0 text-slate-300 dark:text-slate-600" />
-                    }
-                  </button>
-                )
-              })}
-            </div>
-          </SectionRow>
-        </SectionCard>
-
-        <SectionCard>
-          <SectionRow>
-            <SectionHeader
-              icon={Cpu}
-              title="AI model"
-              description="Used for chat, corrections, and diary coaching"
-            />
-          </SectionRow>
-
-          <SectionRow last>
-            <div className="space-y-2">
-              {models.map((model) => {
-                const active = preferredModel === model.value && !customModel
-                return (
-                  <button
-                    key={model.value}
-                    type="button"
-                    onClick={() => { setPreferredModel(model.value); setCustomModel("") }}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all active:scale-[0.99]",
-                      active
-                        ? "border-sky-300 bg-sky-50 dark:border-sky-500/40 dark:bg-sky-500/10"
-                        : "border-slate-200/70 hover:bg-slate-50 dark:border-white/[0.06] dark:hover:bg-white/[0.04]"
-                    )}
-                  >
-                    <div className="flex-1">
-                      <p className={cn(
-                        "text-[13.5px] font-semibold",
-                        active ? "text-sky-800 dark:text-sky-300" : "text-slate-800 dark:text-slate-200"
-                      )}>
-                        {model.label}
-                      </p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400">{model.desc}</p>
-                    </div>
-                    {active && <CheckCircle2 size={18} strokeWidth={2} className="shrink-0 text-sky-500" />}
-                  </button>
-                )
-              })}
-
-              <div className="pt-1">
-                <label className="mb-1.5 block text-[12px] font-medium text-slate-400 dark:text-slate-500">
-                  Custom model ID
-                </label>
-                <Input
-                  value={customModel}
-                  onChange={(e) => setCustomModel(e.target.value)}
-                  placeholder="e.g. gpt-4-turbo"
-                  className="rounded-xl"
-                />
+            <SectionRow>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                    Display name
+                  </label>
+                  <Input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                    Email address
+                  </label>
+                  <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/5 px-4 py-3 opacity-60">
+                    <Mail size={16} className="text-muted-foreground" strokeWidth={2.5} />
+                    <span className="flex-1 truncate text-sm font-bold text-foreground">
+                      {email}
+                    </span>
+                    <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      <ShieldCheck size={10} strokeWidth={3} />
+                      Verified
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </SectionRow>
-        </SectionCard>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader
+                icon={BrainCircuit}
+                title="Learning Level"
+                description="Adjusts AI complexity to match your fluency"
+                color="text-violet-500"
+              />
+            </SectionRow>
+
+            <SectionRow last>
+              <div className="grid gap-3">
+                {levels.map((level) => {
+                  const active = koreanLevel === level.value
+                  return (
+                    <button
+                      key={level.value}
+                      type="button"
+                      onClick={() => setKoreanLevel(level.value)}
+                      className={cn(
+                        "group relative flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98]",
+                        active
+                          ? "border-emerald-500/40 bg-emerald-500/5 shadow-inner ring-1 ring-emerald-500/20"
+                          : "border-border bg-accent/5 hover:border-emerald-500/20 hover:bg-background"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl transition-transform group-hover:scale-110",
+                        active ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-background shadow-sm"
+                      )}>
+                        {level.emoji}
+                      </div>
+                      <div className="flex-1">
+                        <p className={cn(
+                          "text-sm font-black tracking-tight",
+                          active ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {level.label}
+                        </p>
+                        <p className="text-[11px] font-medium text-muted-foreground/60">{level.desc}</p>
+                      </div>
+                      {active ? (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+                          <CheckCircle2 size={14} strokeWidth={3} />
+                        </div>
+                      ) : (
+                        <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/20 transition-transform group-hover:translate-x-1" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader
+                icon={Cpu}
+                title="Model Intelligence"
+                description="Powering your conversation and feedback"
+                color="text-sky-500"
+              />
+            </SectionRow>
+
+            <SectionRow last>
+              <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {models.map((model) => {
+                    const active = preferredModel === model.value && !customModel
+                    return (
+                      <button
+                        key={model.value}
+                        type="button"
+                        onClick={() => { setPreferredModel(model.value); setCustomModel("") }}
+                        className={cn(
+                          "group relative flex flex-col gap-1 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98]",
+                          active
+                            ? "border-sky-500/40 bg-sky-500/5 shadow-inner ring-1 ring-sky-500/20"
+                            : "border-border bg-accent/5 hover:border-sky-500/20 hover:bg-background"
+                        )}
+                      >
+                        <p className={cn(
+                          "text-sm font-black tracking-tight",
+                          active ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {model.label}
+                        </p>
+                        <p className="text-[11px] font-medium text-muted-foreground/60">{model.desc}</p>
+                        {active && (
+                          <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="pt-2">
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                    Advanced Custom Model
+                  </label>
+                  <Input
+                    value={customModel}
+                    onChange={(e) => setCustomModel(e.target.value)}
+                    placeholder="e.g. gpt-4-turbo"
+                    className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-mono text-xs focus:bg-background transition-all"
+                  />
+                </div>
+              </div>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
       </div>
-    </form>
+    </motion.form>
   )
 }
