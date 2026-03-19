@@ -40,7 +40,7 @@ function detectLanguagePreference(input: string): ResponseLanguage | null {
 }
 
 function buildMessageForApi(content: string, language: ResponseLanguage, isTechnical: boolean): string {
-  let instructions = []
+  const instructions = []
   
   if (language === "english") {
     instructions.push("Reply in English unless I ask for another language.")
@@ -129,22 +129,35 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
       return
     }
 
+    const streamingId = crypto.randomUUID()
+    setMessages((current) => [
+      ...current,
+      { id: streamingId, role: "assistant", content: "", createdAt: new Date().toISOString() },
+    ])
+
     setIsSending(true)
     try {
-      const response = await chatApi.sendMessage(
+      await chatApi.streamMessage(
         conversationId,
-        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode)
+        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode),
+        (token) => {
+          setMessages((current) =>
+            current.map((m) => (m.id === streamingId ? { ...m, content: m.content + token } : m))
+          )
+        },
+        (_) => {
+          // user message already shown
+        },
+        (assistantMessageId) => {
+          setMessages((current) =>
+            current.map((m) => (m.id === streamingId ? { ...m, id: assistantMessageId } : m))
+          )
+        },
       )
       setError("")
-      const assistantMessage: ChatMessage = {
-        id: String(response.assistantMessageId),
-        role: "assistant",
-        content: response.assistantReply,
-        createdAt: new Date().toISOString(),
-      }
-      setMessages((current) => [...current, assistantMessage])
     } catch {
       setError("Failed to send message.")
+      setMessages((current) => current.filter((m) => m.id !== streamingId))
       setMessages((current) => [
         ...current,
         {

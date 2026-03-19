@@ -310,7 +310,7 @@ export default function DashboardPage() {
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                   {getToday()}
                 </p>
-                <h1 className="mt-3 max-w-[10ch] text-[1.65rem] font-extrabold leading-[1.1] tracking-tight sm:max-w-[11ch] sm:text-[2.25rem] lg:text-[2.5rem] 2xl:text-[2.8rem]">
+                <h1 className="mt-3 text-[1.5rem] font-extrabold leading-none tracking-tight sm:text-[2.25rem] lg:text-[2.5rem] 2xl:text-[2.8rem]">
                   {getGreeting()}, 👋
                 </h1>
                 <div className="mt-3 max-w-xl text-[13px] font-medium leading-5 text-slate-400 sm:text-[14px] sm:leading-6 lg:text-base">

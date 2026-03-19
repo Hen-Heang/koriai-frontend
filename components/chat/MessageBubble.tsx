@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
-import { CheckCircle2, Languages } from "lucide-react"
+import { CheckCircle2, Languages, Sparkles } from "lucide-react"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 
 // ─── Inline parser ────────────────────────────────────────────────────────────
@@ -224,76 +224,89 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-      className={cn("flex items-end gap-2.5", isUser && "flex-row-reverse")}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      className={cn(
+        "group -mx-4 flex w-[calc(100%+2rem)] gap-4 px-4 py-8 sm:-mx-8 sm:w-[calc(100%+4rem)] sm:px-8 sm:py-10",
+        !isUser && "bg-accent/5 dark:bg-slate-900/40"
+      )}
     >
-      {/* Avatar - Compact */}
-      <div
-        className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-white shadow-sm mb-1",
-          isUser
-            ? "bg-emerald-600"
-            : "bg-linear-to-br from-violet-500 to-indigo-600"
-        )}
-      >
-        {isUser ? "U" : "AI"}
-      </div>
-
-      {/* Content column */}
-      <div
-        className={cn(
-          "flex min-w-0 flex-col gap-1.5",
-          isUser ? "max-w-[85%] items-end sm:max-w-[70%]" : "max-w-[85%] sm:max-w-[75%]"
-        )}
-      >
-        {/* Bubble */}
-        <article
-          className={cn(
-            "w-full rounded-[1.5rem] px-4 py-3 shadow-sm",
-            isUser
-              ? "rounded-br-md bg-emerald-600 text-white"
-              : "rounded-bl-md border border-border bg-card text-foreground dark:bg-slate-900/60"
-          )}
-        >
-          <div className="space-y-3">
-            {renderBlocks(message.content, isUser)}
+      <div className="mx-auto flex w-full max-w-3xl gap-4 sm:gap-6">
+        {/* Avatar Section */}
+        <div className="shrink-0 pt-1">
+          <div
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-xl text-[10px] font-black text-white shadow-sm sm:h-9 sm:w-9",
+              isUser
+                ? "bg-slate-500"
+                : "bg-linear-to-br from-emerald-500 to-teal-600"
+            )}
+          >
+            {isUser ? (
+              <span className="text-[14px]">👤</span>
+            ) : (
+              <Sparkles size={18} strokeWidth={2.5} />
+            )}
           </div>
-        </article>
+        </div>
 
-        {/* Correction card - High End */}
-        {message.correction ? (
-          <div className="w-full overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] shadow-sm">
-            <div className="flex items-center gap-2 border-b border-amber-500/10 bg-amber-500/5 px-3 py-2">
-              <CheckCircle2 size={14} className="text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Correction</p>
+        {/* Content Section */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex items-center justify-between">
+             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+               {isUser ? "You" : "KoriAI Tutor"}
+             </span>
+             <span className="text-[10px] font-bold text-muted-foreground/20">
+               {new Date(message.createdAt).toLocaleTimeString([], {
+                 hour: "2-digit",
+                 minute: "2-digit",
+               })}
+             </span>
+          </div>
+
+          <article className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
+            <div className="space-y-4">
+              {renderBlocks(message.content, isUser)}
             </div>
-            <div className="p-3">
-              <div className="text-[13px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">
-                {renderInline(message.correction)}
+          </article>
+
+          {/* Correction card - High End Inline */}
+          {message.correction ? (
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mt-2 overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] shadow-sm"
+            >
+              <div className="flex items-center gap-2 border-b border-amber-500/10 bg-amber-500/5 px-4 py-2.5">
+                <CheckCircle2 size={14} className="text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Suggested Improvement</p>
               </div>
-              {message.translation && (
-                <div className="mt-2 flex items-start gap-2 rounded-lg bg-white/40 p-2 dark:bg-black/20">
-                  <Languages size={12} className="mt-0.5 shrink-0 text-amber-600/60" />
-                  <p className="text-[11px] font-medium leading-normal text-amber-800/80 dark:text-amber-200/70">
-                    {message.translation}
-                  </p>
+              <div className="p-4">
+                <div className="text-[14px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">
+                  {renderInline(message.correction)}
                 </div>
-              )}
-            </div>
-          </div>
-        ) : null}
+                {message.translation && (
+                  <div className="mt-3 flex items-start gap-3 rounded-xl bg-white/50 p-3 dark:bg-black/30">
+                    <Languages size={14} className="mt-0.5 shrink-0 text-amber-600/60" />
+                    <p className="text-[12px] font-medium leading-relaxed text-amber-800/80 dark:text-amber-200/70 italic">
+                      {message.translation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ) : null}
 
-        {/* Action row - Minimal */}
-        <div className={cn("flex items-center gap-3 px-1", isUser && "flex-row-reverse")}>
-          {!isUser && <SpeakButton text={message.content} className="h-6 w-6 rounded-lg bg-accent/50 p-0 text-muted-foreground hover:bg-accent hover:text-foreground" />}
-          <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/40">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+          {/* Action row - Minimal / Appears on hover */}
+          {!isUser && (
+            <div className="mt-2 flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <SpeakButton 
+                text={message.content} 
+                className="h-8 w-8 rounded-lg border border-border/60 bg-background/50 p-0 text-muted-foreground hover:bg-accent hover:text-foreground" 
+              />
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

@@ -5,11 +5,11 @@ Frontend for a Korean AI learning platform built with Next.js App Router.
 This repo currently focuses on the frontend side:
 - landing page
 - auth screens
-- dashboard
-- AI chat
+- dashboard (Personalized for Developers)
+- AI chat (with specialized Dev Mode)
 - correction flow
 - diary feedback
-- vocabulary review
+- vocabulary review (Technical & Workplace categories)
 - scenario practice
 - settings
 
@@ -27,6 +27,26 @@ This repo currently focuses on the frontend side:
 - Next Themes
 - Recharts
 - Sonner
+- Framer Motion (motion/react)
+
+## Recent Enhancements (Workplace & Technical Focus)
+
+The platform has been optimized for **software developers** who need to master Korean for professional environments.
+
+### 1. Developer-First Features
+- **Dev Mode (AI Chat):** A specialized toggle that adjusts the AI tutor's persona to use IT terminology, office honorifics, and technical context (e.g., Stand-ups, PR Reviews).
+- **Technical Vocabulary:** New categories for "IT & Software" and "Workplace" added to the AI deck builder.
+- **Pro Dashboard:** Quick Start actions prioritized for professional development.
+
+### 2. Modern AI UX (Gemini-Inspired)
+- **Conversation Stream:** Moved away from "SMS bubbles" to a full-width, clean layout similar to ChatGPT and Gemini for better technical readability.
+- **Pill-Shaped Input:** A sleek, minimal input area with integrated utility icons (+, Mic) and action buttons.
+- **Compact Chips:** Minimalist suggestion pills for quick interaction without visual clutter.
+
+### 3. iPhone 12 Pro Max Optimization
+- **Immersive Full-Screen Chat:** Mobile navigation and headers automatically hide during active chat sessions to maximize screen real estate.
+- **Safe-Area Awareness:** UI elements are anchored correctly to respect the notch and home indicator.
+- **Back Navigation:** Dedicated mobile back button added to the immersive chat header.
 
 ## Run Locally
 
@@ -72,7 +92,7 @@ OPENAI_API_KEY=your_openai_key
 ```
 
 Notes:
-- `NEXT_PUBLIC_API_BASE_URL` is already used by [lib/api.ts](C:/Practice/koriai-frontend/lib/api.ts).
+- `NEXT_PUBLIC_API_BASE_URL` is already used by [lib/api.ts](lib/api.ts).
 - `NEXTAUTH_URL` and `NEXTAUTH_SECRET` will matter once auth is connected end-to-end.
 - `OPENAI_API_KEY` should only be used through a backend or secure server route, not directly from the browser.
 
@@ -100,13 +120,15 @@ app/
 components/
   providers/
   chat/
+    ChatWindow.tsx      <- Optimized Immersive Layout
+    MessageBubble.tsx   <- Stream-style conversation
   dashboard/
   diary/
   vocab/
   ui/
 
 hooks/
-  useChat.ts
+  useChat.ts            <- Includes technical mode logic
   useProgress.ts
   useVocab.ts
 
@@ -125,7 +147,7 @@ lib/
 - `lib/auth.ts` contains a frontend auth config stub.
 - `hooks/*` currently use mock/demo data where backend APIs are not connected yet.
 - Dark mode is enabled with `next-themes`.
-- Mobile layout has been adjusted for iPhone-sized screens with a sheet-based navigation pattern.
+- Mobile layout has been adjusted for iPhone-sized screens with an immersive, distraction-free chat pattern.
 
 ## Feature Checklist
 
@@ -133,18 +155,19 @@ lib/
 - [x] Login page
 - [x] Register page
 - [x] Main app shell
-- [x] Dashboard UI
-- [x] Chat UI
+- [x] Dashboard UI (Pro optimized)
+- [x] Chat UI (Gemini style)
+- [x] Dev Mode toggle & logic
 - [x] Conversation detail page
 - [x] Correction page UI
 - [x] Diary page UI
-- [x] Vocabulary page UI
+- [x] Vocabulary page UI (IT/Workplace categories)
 - [x] Scenarios list UI
 - [x] Scenario detail UI
 - [x] Settings page UI
 - [x] Dark mode toggle
-- [x] Mobile navigation sheet
-- [x] Responsive layout baseline
+- [x] Mobile immersive navigation
+- [x] Responsive layout (iPhone 12 Pro Max tuned)
 - [ ] Real backend API integration
 - [ ] Real auth flow
 - [ ] Persistent chat history
@@ -172,25 +195,14 @@ lib/
 ## Devices Targeted
 
 The UI has been tuned primarily for:
-- iPhone 12 Pro Max
+- iPhone 12 Pro Max (428x926px)
 - MacBook Pro / Apple Silicon laptops
 
 That includes:
 - safer mobile spacing
-- mobile navigation sheet
+- immersive chat (hides navigation)
 - dark mode support
 - glassy, Apple-inspired visual treatment
-
-## Git Notes
-
-Do not commit generated build/cache folders such as:
-
-```text
-.next
-.next-stale
-```
-
-Only commit source files, config, and lockfiles.
 
 ## Deployment
 
@@ -209,25 +221,13 @@ pnpm build
 pnpm start
 ```
 
-Production considerations:
-- do not expose private API keys in client code
-- point `NEXT_PUBLIC_API_BASE_URL` to your backend gateway
-- configure `NEXTAUTH_URL` to your deployed frontend domain
-- keep `.next` and `.next-stale` out of git
-
 ## Screens / UX Notes
 
 Current design direction:
 - dark mode and light mode supported
 - Apple-inspired glassy surfaces
 - tuned for iPhone 12 Pro Max and MacBook-class screens
-- sidebar on desktop, sheet navigation on mobile
-
-Suggested future README additions:
-- screenshots or GIFs for each feature page
-- API contract examples
-- backend integration guide
-- testing instructions when tests are added
+- sidebar on desktop, full-screen immersive view on mobile chat
 
 ## Next Steps
 
@@ -236,4 +236,6 @@ Recommended next work:
 - replace mock hook data with live queries
 - add tests for major flows
 - finish responsive polish for all feature pages
-- refine dark mode consistently across every screen
+---
+
+Built with ❤️ by **Hen Heang** — 2026.

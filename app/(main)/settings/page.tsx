@@ -461,6 +461,13 @@ export default function SettingsPage() {
             </SectionRow>
           </SectionCard>
         </motion.div>
+
+        {/* Mobile-only copyright */}
+        <motion.div variants={itemVariants} className="pt-4 text-center xl:hidden">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
+            © 2026 Hen Heang · FullStack Developer
+          </p>
+        </motion.div>
       </div>
     </motion.form>
   )

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowUp, SquarePen, Sparkles, Terminal, Cpu, Briefcase, ChevronLeft } from "lucide-react"
+import { ArrowUp, SquarePen, Sparkles, Terminal, Cpu, Briefcase, ChevronLeft, Plus, Mic } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"
@@ -233,8 +233,8 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* ── iPhone Native-Style Input Bar ── */}
-      <div className="shrink-0 bg-background/20 px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-10 sm:pb-10">
+      {/* ── Gemini-style Input Bar ── */}
+      <div className="shrink-0 bg-background/0 px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-10 sm:pb-10">
         <div className="mx-auto w-full max-w-3xl">
           {error ? (
             <motion.p 
@@ -248,49 +248,62 @@ export function ChatWindow({
           
           <form
             onSubmit={handleSubmit}
-            className="group relative flex items-end gap-2 rounded-[2rem] border border-border/80 bg-background/80 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] ring-1 ring-white/10 transition-all focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 dark:bg-slate-900/80"
+            className="group relative flex items-center gap-1 rounded-[2.5rem] border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
+            <Button 
+              type="button" 
+              size="icon" 
+              variant="ghost" 
+              className="h-10 w-10 shrink-0 rounded-full text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
+            >
+              <Plus size={22} />
+            </Button>
+
             <Textarea
               ref={textareaRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Message KoriAI..."
+              placeholder="Ask KoriAI anything..."
               aria-label="Chat message"
-              className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-4 py-3 text-[15px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
+              className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-[15px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
               disabled={!conversationId || isStreaming || isLoadingMessages}
               rows={1}
             />
             
-            <AnimatePresence mode="wait">
-              {draft.trim() ? (
-                <motion.div
-                  key="send-button"
-                  initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={{ opacity: 0, scale: 0.5, rotate: 45 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                >
-                  <Button
-                    type="submit"
-                    size="icon"
-                    aria-label="Send message"
-                    className="h-10 w-10 shrink-0 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 active:scale-90 transition-colors"
-                    disabled={!conversationId || isStreaming || isLoadingMessages}
-                  >
-                    <ArrowUp size={20} strokeWidth={3} />
-                  </Button>
-                </motion.div>
-              ) : (
-                <div key="placeholder-spacer" className="h-10 w-10 shrink-0 flex items-center justify-center">
-                   <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/10" />
-                </div>
-              )}
-            </AnimatePresence>
+            <div className="flex items-center gap-1 pr-1">
+              <Button 
+                type="button" 
+                size="icon" 
+                variant="ghost" 
+                className="h-10 w-10 shrink-0 rounded-full text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
+              >
+                <Mic size={20} />
+              </Button>
+
+              <Button
+                type="submit"
+                size="icon"
+                aria-label="Send message"
+                className={cn(
+                  "h-10 w-10 shrink-0 rounded-full transition-all duration-300",
+                  draft.trim() 
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 active:scale-90"
+                    : "bg-muted text-muted-foreground/20"
+                )}
+                disabled={!draft.trim() || !conversationId || isStreaming || isLoadingMessages}
+              >
+                {isStreaming ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <ArrowUp size={20} strokeWidth={2.5} />
+                )}
+              </Button>
+            </div>
           </form>
           
-          <p className="mt-3 text-center text-[9px] font-black uppercase tracking-[0.25em] text-muted-foreground/25 max-sm:hidden">
-            Enter to Send · Shift+Enter for New Line
+          <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/40 sm:text-[11px]">
+            KoriAI can make mistakes. Consider checking important information.
           </p>
         </div>
       </div>

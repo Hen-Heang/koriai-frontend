@@ -187,8 +187,8 @@ export default function MainLayout({
 
           {/* Theme + bottom */}
           <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
-            <span className="text-[11px] font-bold text-muted-foreground/40">
-              © 2026 KoriAI
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">
+              © 2026 Hen Heang · FullStack Developer
             </span>
             <ThemeToggle />
           </div>
@@ -200,20 +200,27 @@ export default function MainLayout({
           {/* Mobile top bar - Hidden on chat for full screen immersive experience */}
           {!isChatRoute && (
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
-              <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
-                  <Image
-                    src="/koriai-logo.svg"
-                    alt=""
-                    width={18}
-                    height={18}
-                    className="invert brightness-0"
-                  />
+              <div className="flex items-center gap-3">
+                <Link href="/" className="group flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+                    <Image
+                      src="/koriai-logo.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="invert brightness-0"
+                    />
+                  </div>
+                </Link>
+                <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight text-foreground leading-none">
+                    KoriAI
+                  </span>
+                  <span className="mt-0.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+                    by Hen Heang
+                  </span>
                 </div>
-                <span className="text-base font-black tracking-tight text-foreground">
-                  KoriAI
-                </span>
-              </Link>
+              </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link
