@@ -117,6 +117,8 @@ export default function MainLayout({
     return null
   }
 
+  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/")
+
   return (
     <div className="min-h-[100dvh] bg-background">
       <div className="mx-auto flex w-full max-w-[92rem] lg:grid lg:grid-cols-[280px_1fr]">
@@ -195,37 +197,39 @@ export default function MainLayout({
         {/* ── Main column ── */}
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
 
-          {/* Mobile top bar */}
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
-            <Link href="/" className="group flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
-                <Image
-                  src="/koriai-logo.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="invert brightness-0"
-                />
-              </div>
-              <span className="text-base font-black tracking-tight text-foreground">
-                KoriAI
-              </span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Link
-                href="/settings"
-                className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card shadow-sm transition-all active:scale-95",
-                  pathname === "/settings"
-                    ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/5"
-                    : "text-muted-foreground"
-                )}
-              >
-                <Settings size={18} strokeWidth={2.5} />
+          {/* Mobile top bar - Hidden on chat for full screen immersive experience */}
+          {!isChatRoute && (
+            <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
+              <Link href="/" className="group flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+                  <Image
+                    src="/koriai-logo.svg"
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="invert brightness-0"
+                  />
+                </div>
+                <span className="text-base font-black tracking-tight text-foreground">
+                  KoriAI
+                </span>
               </Link>
-            </div>
-          </header>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Link
+                  href="/settings"
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card shadow-sm transition-all active:scale-95",
+                    pathname === "/settings"
+                      ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/5"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <Settings size={18} strokeWidth={2.5} />
+                </Link>
+              </div>
+            </header>
+          )}
 
           {/* Desktop top bar */}
           <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-5 backdrop-blur-xl lg:flex">
@@ -249,88 +253,99 @@ export default function MainLayout({
           {/* Page content */}
           <main
             className={cn(
-              "flex-1 overflow-x-hidden px-3.5 pt-5 sm:px-6 lg:px-8 lg:pt-8",
+              "flex-1 overflow-x-hidden",
+              isChatRoute 
+                ? "px-0 pt-0" // Full bleed for chat on mobile
+                : "px-3.5 pt-5 sm:px-6 lg:px-8 lg:pt-8",
               isKeyboardOpen
                 ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-10"
-                : "pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10"
+                : isChatRoute
+                  ? "pb-0" // Chat window has its own padding/safe-areas
+                  : "pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10"
             )}
           >
-            <div className="mx-auto w-full max-w-6xl">{children}</div>
+            <div className={cn(
+              "mx-auto w-full",
+              isChatRoute ? "h-full max-w-none" : "max-w-6xl"
+            )}>
+              {children}
+            </div>
           </main>
         </div>
       </div>
 
       {/* ── Mobile bottom tab bar (Telegram-style Switcher) ── */}
-      <nav
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out lg:hidden",
-          isKeyboardOpen ? "pointer-events-none translate-y-20 opacity-0" : "translate-y-0 opacity-100"
-        )}
-        style={{
-          paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
-        }}
-        aria-hidden={isKeyboardOpen}
-      >
-        <div className="mx-auto max-w-md px-3.5">
-          <div className="relative flex items-center justify-around rounded-[2rem] border border-white/15 bg-background/40 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-[32px] ring-1 ring-white/10 dark:bg-slate-900/60">
-            
-            {/* Sliding Active Indicator (Telegram-style) */}
-            <AnimatePresence initial={false}>
-              {activeTabIndex !== -1 && (
-                <motion.div
-                  className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
-                  initial={false}
-                  animate={{
-                    left: `${(activeTabIndex * 100) / bottomTabs.length}%`,
-                    width: `${100 / bottomTabs.length}%`,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 380,
-                    damping: 30,
-                    mass: 1
-                  }}
-                />
-              )}
-            </AnimatePresence>
+      {!isChatRoute && (
+        <nav
+          className={cn(
+            "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out lg:hidden",
+            isKeyboardOpen ? "pointer-events-none translate-y-20 opacity-0" : "translate-y-0 opacity-100"
+          )}
+          style={{
+            paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
+          }}
+          aria-hidden={isKeyboardOpen}
+        >
+          <div className="mx-auto max-w-md px-3.5">
+            <div className="relative flex items-center justify-around rounded-[2rem] border border-white/15 bg-background/40 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-[32px] ring-1 ring-white/10 dark:bg-slate-900/60">
+              
+              {/* Sliding Active Indicator (Telegram-style) */}
+              <AnimatePresence initial={false}>
+                {activeTabIndex !== -1 && (
+                  <motion.div
+                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                    initial={false}
+                    animate={{
+                      left: `${(activeTabIndex * 100) / bottomTabs.length}%`,
+                      width: `${100 / bottomTabs.length}%`,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30,
+                      mass: 1
+                    }}
+                  />
+                )}
+              </AnimatePresence>
 
-            {bottomTabs.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(`${href}/`)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
-                    active
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-muted-foreground/50 hover:text-muted-foreground"
-                  )}
-                >
-                  <div className="flex h-5.5 w-5.5 items-center justify-center">
-                    <Icon 
-                      size={20} 
-                      strokeWidth={active ? 2.8 : 2.2} 
-                      className={cn(
-                        "transition-all duration-300",
-                        active ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "scale-100"
-                      )}
-                    />
-                  </div>
-                  <span
+              {bottomTabs.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || pathname.startsWith(`${href}/`)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
                     className={cn(
-                      "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
-                      active ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                      "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
+                      active
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground/50 hover:text-muted-foreground"
                     )}
                   >
-                    {label}
-                  </span>
-                </Link>
-              )
-            })}
+                    <div className="flex h-5.5 w-5.5 items-center justify-center">
+                      <Icon 
+                        size={20} 
+                        strokeWidth={active ? 2.8 : 2.2} 
+                        className={cn(
+                          "transition-all duration-300",
+                          active ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "scale-100"
+                        )}
+                      />
+                    </div>
+                    <span
+                      className={cn(
+                        "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                        active ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </nav>
-    </div>
+        </nav>
+      )}    </div>
   )
 }

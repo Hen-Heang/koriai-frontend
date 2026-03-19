@@ -45,10 +45,10 @@ export function PageHero({
               {eyebrow}
             </p>
           </div>
-          <h1 className="mt-3 text-[2rem] font-black tracking-tight text-foreground sm:mt-4 sm:text-[2.8rem] lg:text-5xl xl:text-6xl">
+          <h1 className="mt-3 text-[1.8rem] font-extrabold tracking-tight text-foreground sm:mt-4 sm:text-[2.25rem] lg:text-4xl xl:text-5xl">
             {title}
           </h1>
-          <p className="mt-3 max-w-2xl text-[14px] font-medium leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-relaxed lg:text-lg">
+          <p className="mt-3 max-w-2xl text-[13px] font-medium leading-5 text-muted-foreground sm:mt-4 sm:text-[15px] sm:leading-relaxed lg:text-base">
             {description}
           </p>
         </div>
@@ -63,10 +63,10 @@ export function PageHero({
                     key={stat.label}
                     className="rounded-[1.1rem] border border-border bg-background/50 p-3 shadow-sm backdrop-blur-sm dark:bg-white/5 sm:min-w-[8rem] sm:rounded-2xl sm:p-4"
                   >
-                    <p className="text-base font-black tracking-tight text-foreground sm:text-lg">
+                    <p className="text-sm font-extrabold tracking-tight text-foreground sm:text-base">
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground/60 sm:tracking-widest">
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60 sm:tracking-widest">
                       {stat.label}
                     </p>
                   </div>

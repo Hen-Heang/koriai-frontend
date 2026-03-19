@@ -34,7 +34,7 @@ export default function ChatPage() {
   }, [])
 
   const containerHeight =
-    "h-[calc(100dvh-8.75rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] min-h-[32rem] lg:h-[calc(100dvh-10rem)] lg:min-h-[36rem]"
+    "h-[100dvh] lg:h-[calc(100dvh-10rem)] lg:min-h-[36rem]"
 
   if (error && !conversationId) {
     return (

@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { ArrowUp, SquarePen, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowUp, SquarePen, Sparkles, Terminal, Cpu, Briefcase, ChevronLeft } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"
@@ -10,12 +11,20 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useChat } from "@/hooks/useChat"
 import type { ChatMessage } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-const SUGGESTIONS = [
+const GENERAL_SUGGESTIONS = [
   { emoji: "👋", label: "Greetings", text: "Teach me 5 everyday Korean greetings with pronunciation tips." },
   { emoji: "✍️", label: "Beginner chat", text: "I'm a beginner. Give me a simple Korean conversation I can practice right now." },
   { emoji: "🔤", label: "Grammar", text: "Explain the difference between 이/가 and 은/는 with short examples." },
   { emoji: "🛠️", label: "Fix my Korean", text: "Please correct this sentence and explain why: 저는 어제 학교에 갔어요 친구랑." },
+]
+
+const TECHNICAL_SUGGESTIONS = [
+  { emoji: "💻", label: "PR Review", text: "How do I ask a colleague to review my Pull Request politely in Korean?" },
+  { emoji: "📅", label: "Stand-up", text: "Help me prepare a short daily stand-up update in Korean: I finished the login bug and I'm starting the API integration today." },
+  { emoji: "🚀", label: "Deployment", text: "What are some common Korean terms used during a production deployment or system maintenance?" },
+  { emoji: "🤝", label: "Technical Help", text: "How do I ask a senior developer for help with a complex bug without sounding too demanding?" },
 ]
 
 type ChatWindowProps = {
@@ -43,7 +52,12 @@ export function ChatWindow({
     messages,
     sendMessage,
     setDraft,
+    isTechnicalMode,
+    setIsTechnicalMode,
   } = useChat({ conversationId, initialMessages })
+
+  const router = useRouter()
+  const suggestions = isTechnicalMode ? TECHNICAL_SUGGESTIONS : GENERAL_SUGGESTIONS
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -80,11 +94,21 @@ export function ChatWindow({
   const isEmpty = messages.length === 0 && !isLoadingMessages
 
   return (
-    <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden rounded-[2.5rem] border border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md">
+    <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-[2.5rem] md:border">
 
       {/* ── Desktop/Mobile Optimized Header ── */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 backdrop-blur-xl sm:px-6">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
+            onClick={() => router.push("/dashboard")}
+            title="Back to home"
+          >
+            <ChevronLeft size={24} strokeWidth={2.5} />
+          </Button>
+
           <div className="relative shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-emerald-500 to-teal-600 text-[10px] font-black text-white shadow-lg shadow-emerald-500/20">
               AI
@@ -101,6 +125,22 @@ export function ChatWindow({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {/* Technical Mode Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTechnicalMode(!isTechnicalMode)}
+            className={cn(
+              "flex h-9 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-all",
+              isTechnicalMode 
+                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                : "border-border/60 bg-background/50 text-muted-foreground/60"
+            )}
+          >
+            {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
+            <span className="hidden sm:inline">{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
+          </Button>
+
           {onNewChat && (
             <Button
               variant="ghost"
@@ -133,41 +173,37 @@ export function ChatWindow({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-1 flex-col justify-center gap-6 py-4 sm:gap-8 sm:py-8"
+              className="flex flex-1 flex-col items-center justify-center gap-8 py-10 sm:py-16"
             >
-              <div className="space-y-3 text-center sm:space-y-4">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[1.6rem] bg-emerald-500/10 text-2xl shadow-inner ring-1 ring-emerald-500/20 sm:h-20 sm:w-20 sm:rounded-[2.5rem] sm:text-4xl">
-                  🇰🇷
+              <div className="space-y-3 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-3xl shadow-inner ring-1 ring-emerald-500/20">
+                  {isTechnicalMode ? "💻" : "🇰🇷"}
                 </div>
-                <div>
-                  <h2 className="text-[2rem] font-black tracking-tight text-foreground sm:text-3xl">KoriAI Tutor</h2>
-                  <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-muted-foreground/60 sm:text-[15px] sm:leading-relaxed">
-                    Your personal native-level assistant. What should we practice today?
-                  </p>
-                </div>
+                <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
+                  {isTechnicalMode ? "Dev Tutor" : "KoriAI"}
+                </h2>
+                <p className="mx-auto max-w-xs text-[13px] font-medium leading-relaxed text-muted-foreground/60">
+                  {isTechnicalMode 
+                    ? "Master technical Korean for your career."
+                    : "How can I help you practice today?"}
+                </p>
               </div>
 
-              <div className="grid w-full grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2">
-                {SUGGESTIONS.map((s, i) => (
+              <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2 px-4">
+                {suggestions.map((s, i) => (
                   <motion.button
                     key={s.label}
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.03 }}
                     type="button"
                     disabled={!conversationId || isStreaming}
                     onClick={() => sendSuggestion(s.text)}
-                    className="group relative flex min-h-[8.75rem] flex-col items-start gap-1.5 rounded-[1.4rem] border border-border/60 bg-accent/5 px-4 py-3.5 text-left transition-all hover:border-emerald-500/40 hover:bg-background hover:shadow-xl hover:shadow-emerald-500/[0.03] disabled:opacity-40 active:scale-[0.98] sm:min-h-[9.5rem] sm:gap-2 sm:rounded-[1.75rem] sm:px-5 sm:py-4.5"
+                    className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-emerald-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
                   >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-background shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-110 sm:h-8 sm:w-8 sm:rounded-xl">
-                        <span className="text-base sm:text-lg">{s.emoji}</span>
-                      </div>
-                      <ArrowUp size={14} className="translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-40" strokeWidth={3} />
-                    </div>
-                    <span className="mt-1 text-[15px] font-black text-foreground sm:mt-2 sm:text-base">{s.label}</span>
-                    <span className="line-clamp-3 text-[13px] leading-6 text-muted-foreground/60 sm:line-clamp-2 sm:text-sm">
-                      {s.text}
+                    <span className="text-sm">{s.emoji}</span>
+                    <span className="text-[13px] font-semibold text-foreground/80 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                      {s.label}
                     </span>
                   </motion.button>
                 ))}
@@ -198,7 +234,7 @@ export function ChatWindow({
       </div>
 
       {/* ── iPhone Native-Style Input Bar ── */}
-      <div className="shrink-0 bg-background/20 px-4 pb-6 pt-2 backdrop-blur-xl sm:px-10 sm:pb-10">
+      <div className="shrink-0 bg-background/20 px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-10 sm:pb-10">
         <div className="mx-auto w-full max-w-3xl">
           {error ? (
             <motion.p 

@@ -14,16 +14,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 const CATEGORIES = [
+  { id: "Workplace", label: "Workplace", emoji: "💼" },
+  { id: "IT & Software", label: "IT & Software", emoji: "💻" },
   { id: "Greetings", label: "Greetings", emoji: "👋" },
   { id: "Food & Drinks", label: "Food & Drinks", emoji: "🍱" },
   { id: "Travel & Transport", label: "Travel", emoji: "✈️" },
   { id: "Shopping", label: "Shopping", emoji: "🛍️" },
   { id: "Health & Body", label: "Health", emoji: "🏥" },
-  { id: "Work & Business", label: "Business", emoji: "💼" },
   { id: "Family & Relationships", label: "Family", emoji: "👨‍👩‍👧‍👦" },
   { id: "Weather & Nature", label: "Nature", emoji: "🏔️" },
   { id: "Numbers & Time", label: "Time", emoji: "🕙" },
-  { id: "K-Drama Phrases", label: "K-Drama", emoji: "🎬" },
 ]
 
 const containerVariants = {

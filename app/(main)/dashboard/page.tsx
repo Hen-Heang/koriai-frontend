@@ -12,8 +12,10 @@ import {
   Sparkles,
   SpellCheck2,
   Target,
+  Terminal,
   TrendingUp,
   Zap,
+  Cpu,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -187,24 +189,24 @@ const quickActions = [
     tag: null,
   },
   {
-    href: "/speaking",
-    label: "Speaking",
-    description: "Shadow, record, and improve your flow.",
-    icon: Mic,
-    gradient: "from-rose-500 to-orange-500",
-    glow: "shadow-rose-500/10",
-    iconBg: "bg-rose-500/10 text-rose-600 dark:bg-rose-400/10 dark:text-rose-400",
-    tag: "Try today",
+    href: "/chat",
+    label: "Dev Chat",
+    description: "Focus on technical and workplace communication.",
+    icon: Terminal,
+    gradient: "from-amber-600 to-orange-600",
+    glow: "shadow-amber-500/10",
+    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400",
+    tag: "Pro Focus",
   },
   {
     href: "/vocab",
-    label: "Vocabulary",
-    description: "Review saved words before they fade.",
-    icon: BookOpen,
-    gradient: "from-amber-500 to-yellow-500",
-    glow: "shadow-amber-500/10",
-    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400",
-    tag: null,
+    label: "IT Vocab",
+    description: "Master software development terminology.",
+    icon: Cpu,
+    gradient: "from-blue-600 to-indigo-600",
+    glow: "shadow-blue-500/10",
+    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
+    tag: "Technical",
   },
 ]
 
@@ -308,24 +310,24 @@ export default function DashboardPage() {
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                   {getToday()}
                 </p>
-                <h1 className="mt-3 max-w-[10ch] text-[1.9rem] font-black leading-[1.05] tracking-tight sm:max-w-[11ch] sm:text-[2.5rem] lg:text-[2.8rem] 2xl:text-[3.2rem]">
+                <h1 className="mt-3 max-w-[10ch] text-[1.65rem] font-extrabold leading-[1.1] tracking-tight sm:max-w-[11ch] sm:text-[2.25rem] lg:text-[2.5rem] 2xl:text-[2.8rem]">
                   {getGreeting()}, 👋
                 </h1>
-                <div className="mt-3 max-w-xl text-[14px] font-medium leading-6 text-slate-400 sm:text-[15px] sm:leading-7 lg:text-lg">
-                  Ready to level up? You&apos;re <span className="text-white font-black underline decoration-emerald-500/50 underline-offset-4">{val(stats.dailyGoalProgress, "%")}</span> through today&apos;s target.
+                <div className="mt-3 max-w-xl text-[13px] font-medium leading-5 text-slate-400 sm:text-[14px] sm:leading-6 lg:text-base">
+                  Ready to level up? You&apos;re <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">{val(stats.dailyGoalProgress, "%")}</span> through today&apos;s target.
                 </div>
               </div>
 
               {/* Status pill */}
-              <div className="flex w-full flex-col items-start gap-1.5 rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl sm:w-auto sm:min-w-[11rem] sm:items-center sm:rounded-[1.75rem] sm:px-5 sm:py-3.5">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50">
-                  <Sparkles size={14} className="text-emerald-400" />
+              <div className="flex w-full flex-col items-start gap-1 rounded-[1.2rem] border border-white/10 bg-white/5 px-3.5 py-2.5 backdrop-blur-xl sm:w-auto sm:min-w-[10rem] sm:items-center sm:rounded-[1.5rem] sm:px-4.5 sm:py-3">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">
+                  <Sparkles size={12} className="text-emerald-400" />
                   Status
                 </div>
                 {loading ? (
-                  <Skeleton className="h-8 w-24 bg-white/10" />
+                  <Skeleton className="h-7 w-20 bg-white/10" />
                 ) : (
-                  <p className="text-xl font-black text-white sm:text-2xl">{completionTone}</p>
+                  <p className="text-lg font-extrabold text-white sm:text-xl">{completionTone}</p>
                 )}
               </div>
             </div>
@@ -335,7 +337,7 @@ export default function DashboardPage() {
                 {
                   icon: Flame,
                   label: "Streak",
-                  value: val(stats.streakDays, "", "h-10 w-14 bg-white/10"),
+                  value: val(stats.streakDays, "", "h-8 w-12 bg-white/10"),
                   sub: "Days active",
                   color: "from-orange-500/20 to-amber-500/5",
                   iconColor: "text-orange-400",
@@ -343,7 +345,7 @@ export default function DashboardPage() {
                 {
                   icon: Target,
                   label: "Progress",
-                  value: val(stats.dailyGoalProgress, "%", "h-10 w-20 bg-white/10"),
+                  value: val(stats.dailyGoalProgress, "%", "h-8 w-18 bg-white/10"),
                   sub: "Daily goal",
                   color: "from-emerald-500/20 to-teal-500/5",
                   iconColor: "text-emerald-400",
@@ -352,7 +354,7 @@ export default function DashboardPage() {
                 {
                   icon: Zap,
                   label: "Saved",
-                  value: val(stats.wordsSaved, "", "h-10 w-14 bg-white/10"),
+                  value: val(stats.wordsSaved, "", "h-8 w-12 bg-white/10"),
                   sub: "New words",
                   color: "from-sky-500/20 to-blue-500/5",
                   iconColor: "text-sky-400",
@@ -361,22 +363,22 @@ export default function DashboardPage() {
                 <div
                   key={stat.label}
                   className={cn(
-                    "group/stat relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-gradient-to-br p-4 transition-all hover:border-white/20 sm:rounded-[1.6rem] sm:p-4.5",
+                    "group/stat relative overflow-hidden rounded-[1.2rem] border border-white/10 bg-gradient-to-br p-3.5 transition-all hover:border-white/20 sm:rounded-[1.4rem] sm:p-4",
                     stat.color
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-white/5 text-white ring-1 ring-white/10 transition-transform group-hover/stat:scale-110 sm:h-10 sm:w-10 sm:rounded-2xl">
-                      <stat.icon size={18} className={stat.iconColor} strokeWidth={2.5} />
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] bg-white/5 text-white ring-1 ring-white/10 transition-transform group-hover/stat:scale-110 sm:h-9 sm:w-9 sm:rounded-xl">
+                      <stat.icon size={16} className={stat.iconColor} strokeWidth={2.5} />
                     </div>
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/50">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
                       {stat.label}
                     </span>
                   </div>
-                  <div className="mt-3 text-[1.75rem] font-black text-white sm:mt-4 sm:text-[2.15rem] lg:text-[2.35rem]">
+                  <div className="mt-2.5 text-[1.45rem] font-extrabold text-white sm:mt-3 sm:text-[1.75rem] lg:text-[1.95rem]">
                     {stat.value}
                   </div>
-                  <p className="mt-1 text-[13px] font-bold text-slate-500 sm:text-sm">{stat.sub}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-slate-500 sm:text-[13px]">{stat.sub}</p>
                   
                   {stat.progress !== undefined && (
                     <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/5 sm:mt-5 sm:h-2">
@@ -515,7 +517,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
           {quickActions.map((action) => (
             <Link
-              key={action.href}
+              key={action.label}
               href={action.href}
               aria-label={`Open ${action.label}: ${action.description}`}
               className={cn(

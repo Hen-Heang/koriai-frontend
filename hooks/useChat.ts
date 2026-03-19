@@ -39,22 +39,29 @@ function detectLanguagePreference(input: string): ResponseLanguage | null {
   return null
 }
 
-function buildMessageForApi(content: string, language: ResponseLanguage): string {
+function buildMessageForApi(content: string, language: ResponseLanguage, isTechnical: boolean): string {
+  let instructions = []
+  
   if (language === "english") {
-    return `${content}\n\n[Response preference: Reply in English unless I ask for another language.]`
+    instructions.push("Reply in English unless I ask for another language.")
+  } else if (language === "korean") {
+    instructions.push("Reply in Korean unless I ask for another language.")
   }
 
-  if (language === "korean") {
-    return `${content}\n\n[Response preference: Reply in Korean unless I ask for another language.]`
+  if (isTechnical) {
+    instructions.push("I am a software developer. Use technical and workplace Korean terms (IT terminology, office honorifics) where appropriate. Explain advanced terms in a developer-friendly way.")
   }
 
-  return content
+  if (instructions.length === 0) return content
+
+  return `${content}\n\n[Response preference: ${instructions.join(" ")}]`
 }
 
 export function useChat({ conversationId, initialMessages = [] }: UseChatOptions) {
   const [messages, setMessages] = useState(initialMessages)
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
+  const [isTechnicalMode, setIsTechnicalMode] = useState(false)
   const [error, setError] = useState("")
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -126,7 +133,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     try {
       const response = await chatApi.sendMessage(
         conversationId,
-        buildMessageForApi(nextContent, nextLanguage)
+        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode)
       )
       setError("")
       const assistantMessage: ChatMessage = {
@@ -163,5 +170,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     messages,
     sendMessage,
     setDraft,
+    isTechnicalMode,
+    setIsTechnicalMode,
   }
 }
