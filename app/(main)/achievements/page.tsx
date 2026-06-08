@@ -1,0 +1,241 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import type { LucideIcon } from "lucide-react"
+import {
+  BookOpen,
+  Flame,
+  Headphones,
+  Library,
+  Lock,
+  MessagesSquare,
+  NotebookText,
+  Sparkles,
+  SpellCheck2,
+  Sprout,
+  Trophy,
+} from "lucide-react"
+import { motion } from "motion/react"
+
+import { PageHero } from "@/components/app/page-hero"
+import { Skeleton } from "@/components/ui/skeleton"
+import { achievementsApi, getApiErrorMessage } from "@/lib/api"
+import { cn } from "@/lib/utils"
+import type { AchievementSummary } from "@/lib/types"
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+} as const
+
+const ICONS: Record<string, LucideIcon> = {
+  sprout: Sprout,
+  book: BookOpen,
+  library: Library,
+  flame: Flame,
+  "spell-check": SpellCheck2,
+  notebook: NotebookText,
+  headphones: Headphones,
+  messages: MessagesSquare,
+  trophy: Trophy,
+}
+
+export default function AchievementsPage() {
+  const [summary, setSummary] = useState<AchievementSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    let active = true
+    achievementsApi
+      .getSummary()
+      .then((data) => {
+        if (active) setSummary(data)
+      })
+      .catch((err) => {
+        if (active) setError(getApiErrorMessage(err, "Could not load achievements."))
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const level = summary?.level
+  const nextPct =
+    level && level.xpForNextLevel && level.xpForNextLevel > 0
+      ? Math.min(100, Math.round((level.xpIntoLevel / level.xpForNextLevel) * 100))
+      : 100
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-8 pb-12"
+    >
+      <motion.div variants={itemVariants}>
+        <PageHero
+          eyebrow="Achievements"
+          title="Your Progress & XP"
+          description="Earn XP and unlock badges as you build a daily Korean habit, grow your vocabulary, and master workplace communication."
+          stats={[
+            { label: "Level", value: level ? `${level.level} · ${level.name}` : "—" },
+            { label: "Total XP", value: level ? `${level.totalXp}` : "—" },
+            {
+              label: "Unlocked",
+              value: summary ? `${summary.unlockedCount}/${summary.totalCount}` : "—",
+            },
+          ]}
+        />
+      </motion.div>
+
+      {error && (
+        <motion.div
+          variants={itemVariants}
+          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
+        >
+          {error}
+        </motion.div>
+      )}
+
+      {loading ? (
+        <>
+          <Skeleton className="h-28 w-full rounded-[2rem]" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+            ))}
+          </div>
+        </>
+      ) : summary ? (
+        <>
+          {/* Level progress */}
+          <motion.div
+            variants={itemVariants}
+            className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-600/20">
+                  <Trophy size={22} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                    Level {level?.level}
+                  </p>
+                  <h3 className="text-lg font-extrabold text-foreground">{level?.name}</h3>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-foreground">{level?.totalXp}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                  Total XP
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all"
+                  style={{ width: `${nextPct}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                {level?.xpForNextLevel
+                  ? `${level.xpIntoLevel} / ${level.xpForNextLevel} XP toward ${level.nextLevelName}`
+                  : "Max level reached — you're a Master!"}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Badge grid */}
+          <motion.div
+            variants={itemVariants}
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {summary.achievements.map((a) => {
+              const Icon = ICONS[a.icon] ?? Trophy
+              return (
+                <div
+                  key={a.code}
+                  className={cn(
+                    "relative overflow-hidden rounded-2xl border p-5 transition-all",
+                    a.unlocked
+                      ? "border-emerald-500/30 bg-emerald-500/5 shadow-sm"
+                      : "border-border bg-card/40 dark:bg-slate-900/20"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-2xl",
+                        a.unlocked
+                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                          : "bg-muted text-muted-foreground/50"
+                      )}
+                    >
+                      {a.unlocked ? (
+                        <Icon size={22} strokeWidth={2.5} />
+                      ) : (
+                        <Lock size={20} strokeWidth={2.5} />
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+                        a.unlocked
+                          ? "bg-emerald-600 text-white"
+                          : "bg-muted text-muted-foreground/70"
+                      )}
+                    >
+                      +{a.xp} XP
+                    </span>
+                  </div>
+                  <h4
+                    className={cn(
+                      "mt-4 text-base font-black",
+                      a.unlocked ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {a.title}
+                  </h4>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{a.description}</p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50">
+                    {a.category}
+                  </p>
+                </div>
+              )
+            })}
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="rounded-[2rem] border border-border bg-card/50 p-6 backdrop-blur-sm dark:bg-slate-900/20"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Sparkles size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-foreground">Keep the streak alive</h4>
+                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
+                  Every correction, diary entry, chat, saved word, and listening lesson earns
+                  progress toward your next badge. Show up daily to climb the levels.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      ) : null}
+    </motion.div>
+  )
+}

@@ -172,6 +172,42 @@ export const vocabApi = {
     api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
 }
 
+// Daily Phrase
+export const dailyPhraseApi = {
+  getToday: () => api.get("/daily-phrase/today").then((r) => r.data.data),
+  getHistory: () => api.get("/daily-phrase/history").then((r) => r.data.data),
+  markLearned: (id: string, learned = true) =>
+    api.post(`/daily-phrase/${id}/learned?learned=${learned}`).then((r) => r.data.data),
+  addToFlashcards: (id: string) =>
+    api.post(`/daily-phrase/${id}/flashcard`).then((r) => r.data.data),
+}
+
+// Workplace Message Generator
+export const messageGenApi = {
+  getCategories: () =>
+    api.get("/message-generator/categories").then((r) => r.data.data) as Promise<string[]>,
+  generate: (intent: string, category?: string) =>
+    api.post("/message-generator/generate", { intent, category }).then((r) => r.data.data),
+}
+
+// Listening Practice
+export const listeningApi = {
+  getTopics: () =>
+    api.get("/listening/topics").then((r) => r.data.data) as Promise<string[]>,
+  generate: (topic: string) =>
+    api.post(`/listening/generate?topic=${encodeURIComponent(topic)}`).then((r) => r.data.data),
+  getLessons: () => api.get("/listening/lessons").then((r) => r.data.data),
+  getLesson: (id: string) => api.get(`/listening/lessons/${id}`).then((r) => r.data.data),
+  submitAttempt: (lessonId: string, answers: number[]) =>
+    api.post("/listening/attempts", { lessonId: Number(lessonId), answers }).then((r) => r.data.data),
+}
+
+// Achievements / Gamification
+export const achievementsApi = {
+  getSummary: () => api.get("/achievements").then((r) => r.data.data),
+  check: () => api.post("/achievements/check").then((r) => r.data.data),
+}
+
 // Dashboard / Progress
 export const progressApi = {
   getDashboard: () => api.get("/dashboard/progress").then((r) => r.data.data),
@@ -182,6 +218,65 @@ export const progressApi = {
 export const scenarioApi = {
   getList: () => api.get("/scenarios").then((r) => r.data.data),
   getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
+}
+
+// Conversations (generic conversation store — distinct from /chat/conversations)
+export const conversationApi = {
+  create: (data: {
+    userId: number
+    title: string
+    conversationType: string
+    modelUsed: string
+    scenarioId?: number
+  }) => api.post("/conversations", data).then((r) => r.data.data),
+
+  getById: (id: number) =>
+    api.get(`/conversations/${id}`).then((r) => r.data.data),
+
+  listByUser: (userId: number, limit = 20, offset = 0) =>
+    api
+      .get(`/conversations?userId=${userId}&limit=${limit}&offset=${offset}`)
+      .then((r) => r.data.data),
+
+  updateTitle: (id: number, title: string) =>
+    api.put(`/conversations/${id}/title`, { title }).then((r) => r.data.data),
+
+  delete: (id: number) =>
+    api.delete(`/conversations/${id}`).then((r) => r.data.data) as Promise<{
+      deleted: boolean
+    }>,
+}
+
+// Messages (generic message store — distinct from /chat messages)
+export const messageApi = {
+  create: (data: {
+    conversationId: number
+    role: string
+    content: string
+    tokensUsed: number
+    corrections?: string
+  }) => api.post("/messages", data).then((r) => r.data.data),
+
+  getById: (id: number) =>
+    api.get(`/messages/${id}`).then((r) => r.data.data),
+
+  listByConversation: (conversationId: number, limit = 50, offset = 0) =>
+    api
+      .get(`/messages/conversation/${conversationId}?limit=${limit}&offset=${offset}`)
+      .then((r) => r.data.data),
+
+  countByConversation: (conversationId: number) =>
+    api
+      .get(`/messages/conversation/${conversationId}/count`)
+      .then((r) => r.data.data) as Promise<{ count: number }>,
+}
+
+// Workplace Korean Analyzer (Module 9)
+export const analyzerApi = {
+  analyze: (text: string, source?: string) =>
+    api.post("/analyzer/analyze", { text, source }).then((r) => r.data.data),
+  history: (limit = 30) =>
+    api.get(`/analyzer/history?limit=${limit}`).then((r) => r.data.data),
 }
 
 // TTS

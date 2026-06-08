@@ -6,15 +6,20 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpen,
+  CalendarDays,
   Gauge,
+  Headphones,
   History,
   MessageCircle,
   Mic,
-  NotebookText,
+  // NotebookText, // used by hidden Diary nav — keep for easy restore
+  ScanText,
   Settings,
   Sparkles,
-  SpellCheck2,
+  // SpellCheck2, // used by hidden Correction nav — keep for easy restore
   Theater,
+  Trophy,
+  Wand2,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
@@ -25,11 +30,16 @@ import { cn } from "@/lib/utils"
 const allLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
   { href: "/chat", label: "AI Chat", icon: MessageCircle },
-  { href: "/correct", label: "Correction", icon: SpellCheck2 },
-  { href: "/diary", label: "Diary", icon: NotebookText },
+  { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
+  { href: "/generator", label: "Message Gen", icon: Wand2 },
+  { href: "/analyzer", label: "Analyzer", icon: ScanText },
+  // { href: "/correct", label: "Correction", icon: SpellCheck2 }, // hidden
+  // { href: "/diary", label: "Diary", icon: NotebookText }, // hidden
   { href: "/speaking", label: "Speaking", icon: Mic },
+  { href: "/listening", label: "Listening", icon: Headphones },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
   { href: "/scenarios", label: "Scenarios", icon: Theater },
+  { href: "/achievements", label: "Achievements", icon: Trophy },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
@@ -37,8 +47,8 @@ const allLinks = [
 const bottomTabs = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
   { href: "/chat", label: "Chat", icon: MessageCircle },
-  { href: "/correct", label: "Correct", icon: SpellCheck2 },
-  { href: "/diary", label: "Diary", icon: NotebookText },
+  // { href: "/correct", label: "Correct", icon: SpellCheck2 }, // hidden
+  // { href: "/diary", label: "Diary", icon: NotebookText }, // hidden
   { href: "/vocab", label: "Vocab", icon: BookOpen },
 ]
 

@@ -8,7 +8,7 @@ import {
   Flame,
   MessageCircle,
   Mic,
-  NotebookText,
+  // NotebookText, // used by hidden Diary quick action — keep for easy restore
   Sparkles,
   SpellCheck2,
   Target,
@@ -126,7 +126,7 @@ function DashboardLoadingState() {
                 <Skeleton className="h-16 rounded-2xl" />
               </div>
             </div>
-          </div>
+          </div>  
           <div className="rounded-[2rem] border border-border bg-card p-6 shadow-xl sm:rounded-[2.5rem]">
             <Skeleton className="h-5 w-40" />
             <div className="mt-6 space-y-3">
@@ -168,26 +168,28 @@ const quickActions = [
     iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
     tag: "Most used",
   },
-  {
-    href: "/correct",
-    label: "Correction",
-    description: "Clean up grammar and natural phrasing.",
-    icon: SpellCheck2,
-    gradient: "from-sky-500 to-blue-500",
-    glow: "shadow-sky-500/10",
-    iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
-    tag: null,
-  },
-  {
-    href: "/diary",
-    label: "Diary",
-    description: "Turn thoughts into Korean writing practice.",
-    icon: NotebookText,
-    gradient: "from-violet-500 to-fuchsia-500",
-    glow: "shadow-violet-500/10",
-    iconBg: "bg-violet-500/10 text-violet-600 dark:bg-violet-400/10 dark:text-violet-400",
-    tag: null,
-  },
+  // --- hidden: Correction quick action ---
+  // {
+  //   href: "/correct",
+  //   label: "Correction",
+  //   description: "Clean up grammar and natural phrasing.",
+  //   icon: SpellCheck2,
+  //   gradient: "from-sky-500 to-blue-500",
+  //   glow: "shadow-sky-500/10",
+  //   iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
+  //   tag: null,
+  // },
+  // --- hidden: Diary quick action ---
+  // {
+  //   href: "/diary",
+  //   label: "Diary",
+  //   description: "Turn thoughts into Korean writing practice.",
+  //   icon: NotebookText,
+  //   gradient: "from-violet-500 to-fuchsia-500",
+  //   glow: "shadow-violet-500/10",
+  //   iconBg: "bg-violet-500/10 text-violet-600 dark:bg-violet-400/10 dark:text-violet-400",
+  //   tag: null,
+  // },
   {
     href: "/chat",
     label: "Dev Chat",

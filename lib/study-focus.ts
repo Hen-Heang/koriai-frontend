@@ -32,22 +32,24 @@ export function getStudyFocus(stats: DashboardStats): StudyFocus {
   }
 
   if (stats.correctionsThisWeek < 3) {
+    // Originally pointed to "/correct" (now hidden); repointed to chat tutor.
     return {
       badge: "Sharpen accuracy",
-      title: "Run a writing correction today",
+      title: "Get feedback on your own sentences",
       description:
-        "You have enough exposure. The next gain comes from fixing repeated grammar and phrasing mistakes in your own sentences.",
-      ctaLabel: "Check my writing",
-      ctaHref: "/correct",
+        "You have enough exposure. The next gain comes from producing your own Korean and letting the tutor fix repeated grammar and phrasing mistakes.",
+      ctaLabel: "Open chat tutor",
+      ctaHref: "/chat",
     }
   }
 
+  // Originally pointed to "/diary" (now hidden); repointed to message generator.
   return {
     badge: "Keep momentum",
     title: "Turn today into output practice",
     description:
-      "Your consistency looks solid. Write a short diary entry to turn passive understanding into active Korean production.",
-    ctaLabel: "Write diary entry",
-    ctaHref: "/diary",
+      "Your consistency looks solid. Draft a workplace message to turn passive understanding into active Korean production.",
+    ctaLabel: "Generate a message",
+    ctaHref: "/generator",
   }
 }

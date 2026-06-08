@@ -33,7 +33,7 @@ describe("getStudyFocus", () => {
     })
   })
 
-  it("falls back to diary practice when the learner is already on track", () => {
+  it("falls back to output practice when the learner is already on track", () => {
     expect(
       getStudyFocus({
         streakDays: 10,
@@ -43,7 +43,7 @@ describe("getStudyFocus", () => {
         dailyGoalProgress: 80,
       })
     ).toMatchObject({
-      ctaHref: "/diary",
+      ctaHref: "/generator",
       badge: "Keep momentum",
     })
   })
