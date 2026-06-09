@@ -54,8 +54,17 @@ api.interceptors.response.use(
 
 // Auth
 export const authApi = {
-  register: (data: { email: string; password: string; displayName: string; koreanLevel: string }) =>
-    api.post("/auth/register", data).then((r) => r.data.data),
+  register: (data: {
+    email: string
+    password: string
+    displayName: string
+    koreanLevel: string
+    country?: string
+    nativeLanguage?: string
+    occupation?: string
+    yearsOfExperience?: number
+    learningGoal?: string
+  }) => api.post("/auth/register", data).then((r) => r.data.data),
 
   login: (data: { email: string; password: string }) =>
     api.post("/auth/login", data).then((r) => r.data.data),
@@ -146,8 +155,18 @@ export const userApi = {
   getById: (id: number) =>
     api.get(`/users/${id}`).then((r) => r.data.data),
 
-  updateProfile: (id: number, displayName: string, koreanLevel: string) =>
-    api.put(`/users/${id}/profile`, { displayName, koreanLevel }).then((r) => r.data.data),
+  updateProfile: (
+    id: number,
+    data: {
+      displayName: string
+      koreanLevel: string
+      country?: string
+      nativeLanguage?: string
+      occupation?: string
+      yearsOfExperience?: number
+      learningGoal?: string
+    }
+  ) => api.put(`/users/${id}/profile`, data).then((r) => r.data.data),
 
   updatePreferredModel: (id: number, preferredModel: string) =>
     api.put(`/users/${id}/preferred-model`, { preferredModel }).then((r) => r.data.data),

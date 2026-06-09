@@ -13,8 +13,12 @@ export interface VocabItem {
   id: string
   term: string
   meaning: string
+  khmTranslation?: string
+  pronunciation?: string
   example?: string
   exampleTranslation?: string
+  audioUrl?: string
+  difficultyLevel?: "Easy" | "Medium" | "Hard"
   mastery: number
   nextReview: string
   tags: string[]
@@ -141,6 +145,23 @@ export interface DashboardStats {
   wordsSaved: number
   correctionsThisWeek: number
   dailyGoalProgress: number
+  listeningScore?: number
+  speakingScore?: number
+  meetingScore?: number
+  aiConversationScore?: number
+}
+
+export interface UserProfile {
+  id: number
+  displayName: string
+  email: string
+  country?: string
+  nativeLanguage?: string
+  koreanLevel: string
+  occupation?: string
+  yearsOfExperience?: number
+  learningGoal?: string
+  preferredModel?: string
 }
 
 export interface Conversation {

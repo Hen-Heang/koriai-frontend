@@ -45,18 +45,38 @@ export function VocabCard({ item, onReview }: VocabCardProps) {
             <h3 className="truncate text-2xl font-black tracking-tight text-foreground sm:text-3xl">
               {item.term}
             </h3>
-            <SpeakButton 
-              text={item.term} 
-              className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90" 
+            <SpeakButton
+              text={item.term}
+              className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90"
             />
           </div>
+          {item.pronunciation && (
+            <p className="mt-0.5 text-xs font-bold text-muted-foreground/50 italic">[{item.pronunciation}]</p>
+          )}
           <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight sm:text-xl">
             {item.meaning}
           </p>
+          {item.khmTranslation && (
+            <p className="mt-1 text-sm font-medium text-violet-600 dark:text-violet-400">
+              {item.khmTranslation}
+            </p>
+          )}
         </div>
-        
-        <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
-          {mastery}%
+
+        <div className="flex flex-col items-end gap-1.5">
+          <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
+            {mastery}%
+          </div>
+          {item.difficultyLevel && (
+            <span className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
+              item.difficultyLevel === "Easy" ? "bg-emerald-500/10 text-emerald-600" :
+              item.difficultyLevel === "Medium" ? "bg-amber-500/10 text-amber-600" :
+              "bg-red-500/10 text-red-600"
+            )}>
+              {item.difficultyLevel}
+            </span>
+          )}
         </div>
       </div>
 

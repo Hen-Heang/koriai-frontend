@@ -14,15 +14,15 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 const CATEGORIES = [
+  { id: "Daily Life", label: "Daily Life", emoji: "🌅" },
   { id: "Workplace", label: "Workplace", emoji: "💼" },
-  { id: "IT & Software", label: "IT & Software", emoji: "💻" },
+  { id: "Developer", label: "Developer", emoji: "💻" },
+  { id: "Meeting & Standup", label: "Meeting", emoji: "🗣️" },
   { id: "Greetings", label: "Greetings", emoji: "👋" },
-  { id: "Food & Drinks", label: "Food & Drinks", emoji: "🍱" },
+  { id: "Food & Drinks", label: "Food", emoji: "🍱" },
   { id: "Travel & Transport", label: "Travel", emoji: "✈️" },
   { id: "Shopping", label: "Shopping", emoji: "🛍️" },
   { id: "Health & Body", label: "Health", emoji: "🏥" },
-  { id: "Family & Relationships", label: "Family", emoji: "👨‍👩‍👧‍👦" },
-  { id: "Weather & Nature", label: "Nature", emoji: "🏔️" },
   { id: "Numbers & Time", label: "Time", emoji: "🕙" },
 ]
 

@@ -20,6 +20,7 @@ import {
   Theater,
   Trophy,
   Wand2,
+  Layers3,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils"
 
 const allLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/chat", label: "AI Chat", icon: MessageCircle },
+  { href: "/chat", label: "AI Coach", icon: MessageCircle },
   { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
   { href: "/generator", label: "Message Gen", icon: Wand2 },
   { href: "/analyzer", label: "Analyzer", icon: ScanText },
@@ -38,7 +39,8 @@ const allLinks = [
   { href: "/speaking", label: "Speaking", icon: Mic },
   { href: "/listening", label: "Listening", icon: Headphones },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
-  { href: "/scenarios", label: "Scenarios", icon: Theater },
+  { href: "/flashcards", label: "Flashcards", icon: Layers3 },
+  { href: "/scenarios", label: "Meeting Sim", icon: Theater },
   { href: "/achievements", label: "Achievements", icon: Trophy },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },

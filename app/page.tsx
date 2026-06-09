@@ -23,32 +23,32 @@ import { Button } from "@/components/ui/button"
 
 const features = [
   {
-    title: "AI Korean Chat",
-    description: "Talk naturally with an AI tutor that keeps replies structured and focused on your level.",
+    title: "AI Workplace Coach",
+    description: "Ask \"How do Korean developers say this?\" and get real workplace phrases with grammar and politeness explained.",
     icon: MessageSquareText,
     color: "from-emerald-500/20 to-teal-500/10",
     iconColor: "text-emerald-600 dark:text-emerald-400",
     iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
   },
   {
-    title: "Sentence Correction",
-    description: "Paste your Korean writing and get clean rewrites with explanations you can actually learn from.",
+    title: "Meeting Simulator",
+    description: "Practice daily standups, code reviews, and sprint planning with an AI that plays your Korean team lead.",
     icon: Languages,
     color: "from-sky-500/20 to-blue-500/10",
     iconColor: "text-sky-600 dark:text-sky-400",
     iconBg: "bg-sky-100 dark:bg-sky-500/15",
   },
   {
-    title: "Diary Coaching",
-    description: "Turn daily journal entries into structured feedback on tone, vocabulary, and natural phrasing.",
+    title: "Message Generator",
+    description: "Type your intent in English and get multiple natural Korean variations with formality levels explained.",
     icon: NotebookPen,
     color: "from-violet-500/20 to-purple-500/10",
     iconColor: "text-violet-600 dark:text-violet-400",
     iconBg: "bg-violet-100 dark:bg-violet-500/15",
   },
   {
-    title: "Vocabulary Review",
-    description: "Words you save from real sessions come back at the right moment through spaced repetition.",
+    title: "Developer Vocabulary",
+    description: "Master 배포, 서버, API, and 400+ IT terms with spaced repetition and Khmer/English translations.",
     icon: BookOpenCheck,
     color: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-600 dark:text-amber-400",
@@ -57,15 +57,15 @@ const features = [
 ]
 
 const chatMessages = [
-  { role: "you", text: "I want to practice ordering coffee in Korean." },
+  { role: "you", text: "How do I say \"I finished the deployment\" in Korean?" },
   {
     role: "ai",
-    text: "Try: \"아이스 아메리카노 한 잔 주세요.\" — Want me to break down the grammar?",
+    text: "배포 완료했습니다. — Natural and professional. 배포 = deployment, 완료 = completed.",
   },
-  { role: "you", text: "Yes please, and what does 주세요 mean exactly?" },
+  { role: "you", text: "What if I want to sound more formal in a meeting?" },
   {
     role: "ai",
-    text: "주세요 is the polite form of 주다 (to give). Literally \"please give me.\" It's the go-to for polite requests.",
+    text: "배포 완료하였습니다. — More formal. Use this when reporting to a senior or team lead (팀장님).",
   },
 ]
 
@@ -144,18 +144,18 @@ export default function Home() {
               >
                 <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
                   <BrainCircuit size={14} strokeWidth={2.5} />
-                  Next-Gen Language Learning
+                  For Foreign Engineers in Korea
                 </motion.div>
 
                 <motion.h1 variants={itemVariants} className="mt-6 text-[3rem] font-black leading-[1.1] tracking-tight text-foreground sm:text-[4.5rem]">
-                  Master Korean with{" "}
+                  Speak Korean at{" "}
                   <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-                    AI precision.
+                    work, naturally.
                   </span>
                 </motion.h1>
 
                 <motion.p variants={itemVariants} className="mt-8 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-xl">
-                  Practice conversation, refine your writing, and build a lasting vocabulary with an AI tutor designed to feel like a real native speaker.
+                  Built for foreign software engineers working in Korea. Learn standup phrases, technical vocabulary, meeting communication, and workplace messages — the way real Korean developers speak.
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -182,8 +182,8 @@ export default function Home() {
                 {/* Trust / Stats */}
                 <motion.div variants={itemVariants} className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
                   {[
-                    { icon: Zap, label: "Instant Feedback", color: "text-amber-500" },
-                    { icon: Globe, label: "Natural Phrasing", color: "text-blue-500" },
+                    { icon: Zap, label: "Developer Focus", color: "text-amber-500" },
+                    { icon: Globe, label: "Workplace Korean", color: "text-blue-500" },
                     { icon: Smartphone, label: "Mobile Ready", color: "text-emerald-500" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-2.5">
@@ -304,10 +304,10 @@ export default function Home() {
                 Core Capabilities
               </p>
               <h2 className="mt-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl">
-                Learning tools that <span className="text-muted-foreground/40 italic font-medium">actually</span> work.
+                Everything you need to <span className="text-muted-foreground/40 italic font-medium">thrive</span> in a Korean tech team.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                We've combined advanced AI with proven language acquisition techniques to help you reach fluency faster than ever.
+                12 learning modules designed around the real challenges foreign engineers face in Korean workplaces — from daily standups to deployment discussions.
               </p>
             </motion.div>
 
@@ -360,9 +360,9 @@ export default function Home() {
                 </h2>
                 <div className="space-y-6">
                   {[
-                    { title: "Context-Aware Corrections", desc: "Don't just get fixed—understand why with AI explanations." },
-                    { title: "Personalized Daily Goals", desc: "Adaptive targets that keep you consistent without burning out." },
-                    { title: "Native-Level Scenarios", desc: "Practice real-life situations from ordering food to job interviews." },
+                    { title: "Workplace Phrase Analyzer", desc: "Paste any Slack or KakaoTalk message and get full context: politeness level, business meaning, and suggested replies." },
+                    { title: "Developer Vocabulary SRS", desc: "배포, API, 오류 and 400+ IT terms with Khmer/English translations, spaced repetition, and audio." },
+                    { title: "Listening & Speaking Practice", desc: "AI-generated standup and code review audio with quizzes, plus voice scoring for pronunciation accuracy." },
                   ].map((benefit) => (
                     <div key={benefit.title} className="flex gap-4">
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 mt-1">
@@ -388,7 +388,7 @@ export default function Home() {
                         <Zap size={32} fill="currentColor" />
                       </div>
                       <p className="text-lg font-bold text-foreground">Interactive Demo Coming Soon</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Join 5,000+ learners mastering Korean today.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Join engineers from Cambodia, Vietnam, and 20+ countries mastering workplace Korean.</p>
                    </div>
                 </div>
               </motion.div>
@@ -411,10 +411,10 @@ export default function Home() {
 
               <div className="relative z-10">
                 <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  Ready to sound like a native?
+                  Ready to survive your next standup?
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-                  Stop memorizing and start speaking. Join KoriAI today and take your Korean to the next level with your personal AI tutor.
+                  Stop struggling in meetings. KoriAI gives you the workplace Korean you need to communicate confidently with your Korean team — starting today.
                 </p>
                 <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                   <Button
