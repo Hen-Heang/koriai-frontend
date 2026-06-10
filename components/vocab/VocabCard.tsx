@@ -243,7 +243,6 @@ export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
       <SentenceChallenge
         cardId={item.id}
         term={item.term}
-        meaning={item.meaning}
         onGetChallenge={(id) => vocabApi.getSentenceChallenge(id)}
         onCheckSentence={(id, challengePrompt, attempt) =>
           vocabApi.checkSentence(id, { challengePrompt, attempt })

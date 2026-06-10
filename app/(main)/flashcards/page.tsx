@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import {
-  Layers3,
   BookOpen,
   Volume2,
   Languages,

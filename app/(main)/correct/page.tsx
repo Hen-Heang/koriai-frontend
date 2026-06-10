@@ -99,6 +99,7 @@ export default function CorrectPage() {
   async function handleAnalyze() {
     if (!text.trim()) return
     setLoading(true)
+    setError("")
     setSaveMessage("")
     setResult(null)
     try {
@@ -237,6 +238,16 @@ export default function CorrectPage() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
+            >
+              {error}
+            </motion.div>
+          )}
 
           <AnimatePresence mode="wait">
             {result && (

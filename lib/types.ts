@@ -11,6 +11,7 @@ export interface ChatMessage {
 
 export interface VocabItem {
   id: string
+  category: string
   term: string
   meaning: string
   pronunciation?: string

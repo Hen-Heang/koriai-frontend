@@ -16,7 +16,6 @@ import {
   Activity,
   Globe,
   Briefcase,
-  Target,
 } from "lucide-react"
 import { motion } from "motion/react"
 

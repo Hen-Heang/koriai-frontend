@@ -9,6 +9,7 @@ function normalizeWord(raw: unknown): VocabItem {
   const source = (raw ?? {}) as Record<string, unknown>
   return {
     id: String(source.id ?? crypto.randomUUID()),
+    category: String(source.category ?? "Saved phrases"),
     term: String(source.term ?? ""),
     meaning: String(source.meaning ?? ""),
     example: source.example ? String(source.example) : undefined,
@@ -33,14 +34,16 @@ export function useVocab() {
       vocabApi.getDueWords(),
     ])
 
-    const savedWords = Array.isArray(savedData)
-      ? savedData.map((item) => normalizeWord(item))
-      : []
-    const dueWords = Array.isArray(dueData)
-      ? dueData.map((item) => normalizeWord(item))
-      : []
+    return {
+      savedWords: Array.isArray(savedData) ? savedData.map(normalizeWord) : [],
+      dueWords: Array.isArray(dueData) ? dueData.map(normalizeWord) : [],
+    }
+  }
 
-    return { dueWords, savedWords }
+  async function refresh() {
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
   }
 
   useEffect(() => {
@@ -72,16 +75,12 @@ export function useVocab() {
 
   const markReviewed = async (id: string) => {
     await vocabApi.markReviewed(id)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
   }
 
   const generate = async (category: string) => {
     const generated = await vocabApi.generate(category)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
     return generated
   }
 
@@ -90,16 +89,12 @@ export function useVocab() {
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => {
     await vocabApi.update(id, data)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
   }
 
   const importList = async (category: string, text: string) => {
     const imported = await vocabApi.importList(category, text)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
     return Array.isArray(imported) ? imported.length : 0
   }
 

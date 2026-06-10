@@ -34,8 +34,7 @@ export default function DailyPhrasePage() {
     setLoading(true)
     setError("")
     try {
-      const data = await dailyPhraseApi.getToday()
-      setPhrase(data)
+      setPhrase(await dailyPhraseApi.getToday())
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not load today's phrase."))
     } finally {
@@ -44,8 +43,29 @@ export default function DailyPhrasePage() {
   }
 
   useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let active = true
+
+    dailyPhraseApi
+      .getToday()
+      .then((data) => {
+        if (active) {
+          setPhrase(data)
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          setError(getApiErrorMessage(err, "Could not load today's phrase."))
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   async function handleSave() {
@@ -222,7 +242,6 @@ export default function DailyPhrasePage() {
             <SentenceChallenge
               cardId={phrase.id}
               term={phrase.phrase}
-              meaning={phrase.meaning}
               onGetChallenge={(id) => dailyPhraseApi.getPractice(id)}
               onCheckSentence={(id, challengePrompt, attempt) =>
                 dailyPhraseApi.checkPractice(id, { challengePrompt, attempt })

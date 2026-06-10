@@ -21,12 +21,11 @@ type Phase = "idle" | "loading-challenge" | "writing" | "checking" | "result"
 type Props = {
   cardId: string
   term: string
-  meaning: string
   onGetChallenge: (cardId: string) => Promise<SentenceChallengeResponse>
   onCheckSentence: (cardId: string, challengePrompt: string, attempt: string) => Promise<SentenceCheckResponse>
 }
 
-export function SentenceChallenge({ cardId, term, meaning, onGetChallenge, onCheckSentence }: Props) {
+export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentence }: Props) {
   const [open, setOpen] = useState(false)
   const [phase, setPhase] = useState<Phase>("idle")
   const [challenge, setChallenge] = useState<SentenceChallengeResponse | null>(null)

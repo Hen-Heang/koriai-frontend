@@ -189,7 +189,7 @@ export default function SpeakingPage() {
       recognition.stop()
       recognitionRef.current = null
     }
-  }, [])
+  }, [refreshStreak])
 
   function resetAttempt() {
     recognitionRef.current?.stop()
