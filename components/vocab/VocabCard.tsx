@@ -1,17 +1,104 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { VocabItem } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
-import { Calendar, Tag, ChevronRight, BookOpen } from "lucide-react"
+import { Calendar, Tag, ChevronRight, BookOpen, Pencil, Check, X, Loader2 } from "lucide-react"
+import { SentenceChallenge } from "@/components/vocab/SentenceChallenge"
+import { vocabApi } from "@/lib/api"
 
 type VocabCardProps = {
   item: VocabItem
   onReview?: (id: string) => void
+  onUpdate?: (
+    id: string,
+    data: { term: string; meaning: string; example?: string; pronunciation?: string }
+  ) => void | Promise<void>
 }
 
-export function VocabCard({ item, onReview }: VocabCardProps) {
+function EditForm({
+  item,
+  onSave,
+  onCancel,
+}: {
+  item: VocabItem
+  onSave: (data: { term: string; meaning: string; example?: string; pronunciation?: string }) => Promise<void>
+  onCancel: () => void
+}) {
+  const [term, setTerm] = useState(item.term)
+  const [meaning, setMeaning] = useState(item.meaning)
+  const [pronunciation, setPronunciation] = useState(item.pronunciation ?? "")
+  const [example, setExample] = useState(item.example ?? "")
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
+  async function handleSave() {
+    if (!term.trim() || !meaning.trim()) return
+    setSaving(true)
+    setError("")
+    try {
+      await onSave({
+        term: term.trim(),
+        meaning: meaning.trim(),
+        pronunciation: pronunciation.trim() || undefined,
+        example: example.trim() || undefined,
+      })
+    } catch {
+      setError("Could not save changes.")
+      setSaving(false)
+    }
+  }
+
+  const inputClass =
+    "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-emerald-500/40 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+
+  return (
+    <div className="space-y-2.5 pt-2">
+      <div>
+        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
+        <input value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} className={cn(inputClass, "mt-1 text-lg font-bold")} />
+      </div>
+      <div>
+        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
+        <input value={meaning} onChange={(e) => setMeaning(e.target.value)} className={cn(inputClass, "mt-1")} />
+      </div>
+      <div>
+        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
+        <input value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className={cn(inputClass, "mt-1")} />
+      </div>
+      <div>
+        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
+        <textarea value={example} onChange={(e) => setExample(e.target.value)} rows={2} className={cn(inputClass, "mt-1 resize-none")} />
+      </div>
+      {error && <p className="text-xs font-bold text-destructive">{error}</p>}
+      <div className="flex gap-2 pt-1">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || !term.trim() || !meaning.trim()}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
+        >
+          {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={3} />}
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent active:scale-95"
+        >
+          <X size={13} strokeWidth={3} />
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
+  const [editing, setEditing] = useState(false)
   const mastery = Math.max(0, Math.min(100, item.mastery))
   const masteryColor =
     mastery >= 80
@@ -39,63 +126,83 @@ export function VocabCard({ item, onReview }: VocabCardProps) {
         />
       </div>
 
-      <div className="flex items-start justify-between gap-4 pt-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="truncate text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-              {item.term}
-            </h3>
-            <SpeakButton
-              text={item.term}
-              className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90"
-            />
-          </div>
-          {item.pronunciation && (
-            <p className="mt-0.5 text-xs font-bold text-muted-foreground/50 italic">[{item.pronunciation}]</p>
-          )}
-          <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight sm:text-xl">
-            {item.meaning}
-          </p>
-          {item.khmTranslation && (
-            <p className="mt-1 text-sm font-medium text-violet-600 dark:text-violet-400">
-              {item.khmTranslation}
-            </p>
-          )}
-        </div>
+      {editing && onUpdate ? (
+        <EditForm
+          item={item}
+          onSave={async (data) => {
+            await onUpdate(item.id, data)
+            setEditing(false)
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      ) : (
+        <>
+          <div className="flex items-start justify-between gap-4 pt-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-3">
+                <h3 className="truncate text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                  {item.term}
+                </h3>
+                <SpeakButton
+                  text={item.term}
+                  className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90"
+                />
+              </div>
+              {item.pronunciation && (
+                <p className="mt-0.5 text-xs font-bold text-muted-foreground/50 italic">[{item.pronunciation}]</p>
+              )}
+              <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight sm:text-xl">
+                {item.meaning}
+              </p>
+            </div>
 
-        <div className="flex flex-col items-end gap-1.5">
-          <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
-            {mastery}%
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1.5">
+                {onUpdate && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/40 transition-all hover:bg-accent/50 hover:text-foreground active:scale-90"
+                    aria-label="Edit word"
+                  >
+                    <Pencil size={14} strokeWidth={2.5} />
+                  </button>
+                )}
+                <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
+                  {mastery}%
+                </div>
+              </div>
+              {item.difficultyLevel && (
+                <span className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
+                  item.difficultyLevel === "Easy" ? "bg-emerald-500/10 text-emerald-600" :
+                  item.difficultyLevel === "Medium" ? "bg-amber-500/10 text-amber-600" :
+                  "bg-red-500/10 text-red-600"
+                )}>
+                  {item.difficultyLevel}
+                </span>
+              )}
+            </div>
           </div>
-          {item.difficultyLevel && (
-            <span className={cn(
-              "rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
-              item.difficultyLevel === "Easy" ? "bg-emerald-500/10 text-emerald-600" :
-              item.difficultyLevel === "Medium" ? "bg-amber-500/10 text-amber-600" :
-              "bg-red-500/10 text-red-600"
-            )}>
-              {item.difficultyLevel}
-            </span>
-          )}
-        </div>
-      </div>
 
-      {/* Context/Example */}
-      {item.example && (
-        <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
-          <div className="flex items-center gap-2 mb-2">
-            <BookOpen size={12} className="text-muted-foreground/40" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Usage Context</span>
-          </div>
-          <p className="text-sm font-bold leading-relaxed text-foreground/80 sm:text-[15px]">
-            {item.example}
-          </p>
-          {item.exampleTranslation && (
-            <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed">
-              {item.exampleTranslation}
-            </p>
+          {/* Context/Example */}
+          {item.example && (
+            <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen size={12} className="text-muted-foreground/40" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Usage Context</span>
+              </div>
+              <p className="text-sm font-bold leading-relaxed text-foreground/80 sm:text-[15px]">
+                {item.example}
+              </p>
+              {item.exampleTranslation && (
+                <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed">
+                  {item.exampleTranslation}
+                </p>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Metadata */}
@@ -132,6 +239,16 @@ export function VocabCard({ item, onReview }: VocabCardProps) {
           <ChevronRight size={16} strokeWidth={3} />
         </button>
       )}
+
+      <SentenceChallenge
+        cardId={item.id}
+        term={item.term}
+        meaning={item.meaning}
+        onGetChallenge={(id) => vocabApi.getSentenceChallenge(id)}
+        onCheckSentence={(id, challengePrompt, attempt) =>
+          vocabApi.checkSentence(id, { challengePrompt, attempt })
+        }
+      />
     </div>
   )
 }

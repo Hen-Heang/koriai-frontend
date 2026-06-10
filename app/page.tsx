@@ -12,8 +12,6 @@ import {
   ArrowRight,
   Send,
   Zap,
-  Globe,
-  Smartphone,
   CheckCircle2,
 } from "lucide-react"
 import { motion } from "motion/react"
@@ -60,13 +58,19 @@ const chatMessages = [
   { role: "you", text: "How do I say \"I finished the deployment\" in Korean?" },
   {
     role: "ai",
-    text: "배포 완료했습니다. — Natural and professional. 배포 = deployment, 완료 = completed.",
+    text: "배포 완료했습니다 ✓ — Natural & professional. 배포 = deployment, 완료 = completed.",
   },
-  { role: "you", text: "What if I want to sound more formal in a meeting?" },
+  { role: "you", text: "More formal for team lead?" },
   {
     role: "ai",
-    text: "배포 완료하였습니다. — More formal. Use this when reporting to a senior or team lead (팀장님).",
+    text: "배포 완료하였습니다 — Use with 팀장님. Sounds polished and respectful in standups.",
   },
+]
+
+const statsData = [
+  { value: "400+", label: "IT vocab terms" },
+  { value: "12", label: "Learning modules" },
+  { value: "20+", label: "Countries" },
 ]
 
 const containerVariants = {
@@ -147,25 +151,36 @@ export default function Home() {
                   For Foreign Engineers in Korea
                 </motion.div>
 
-                <motion.h1 variants={itemVariants} className="mt-6 text-[3rem] font-black leading-[1.1] tracking-tight text-foreground sm:text-[4.5rem]">
-                  Speak Korean at{" "}
-                  <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-                    work, naturally.
+                <motion.h1 variants={itemVariants} className="mt-6 text-[2.8rem] font-black leading-[1.08] tracking-tight text-foreground sm:text-[4.2rem]">
+                  Stop freezing up in{" "}
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+                      Korean standups.
+                    </span>
+                    <motion.span
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.8, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute -bottom-1 left-0 right-0 h-[3px] origin-left rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 opacity-60"
+                    />
                   </span>
                 </motion.h1>
 
-                <motion.p variants={itemVariants} className="mt-8 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-xl">
-                  Built for foreign software engineers working in Korea. Learn standup phrases, technical vocabulary, meeting communication, and workplace messages — the way real Korean developers speak.
+                <motion.p variants={itemVariants} className="mt-7 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-[520px]">
+                  KoriAI teaches you workplace Korean the way your team actually speaks it — from{" "}
+                  <span className="font-semibold text-foreground/80">daily standups</span> and{" "}
+                  <span className="font-semibold text-foreground/80">Slack messages</span> to{" "}
+                  <span className="font-semibold text-foreground/80">code review phrases</span>.
                 </motion.p>
 
-                <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-4 sm:flex-row">
+                <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-3 sm:flex-row">
                   <Button
                     asChild
                     size="lg"
                     className="h-14 rounded-2xl bg-emerald-600 px-8 text-base font-bold text-white shadow-xl shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Link href="/register">
-                      Start learning free
+                      Start learning — it&apos;s free
                       <ArrowRight size={18} className="ml-2" />
                     </Link>
                   </Button>
@@ -173,26 +188,37 @@ export default function Home() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="h-14 rounded-2xl border-border bg-background/50 px-8 text-base font-bold backdrop-blur-sm transition-all hover:bg-accent hover:scale-[1.02] active:scale-[0.98]"
+                    className="h-14 rounded-2xl border-border bg-background/50 px-8 text-base font-medium backdrop-blur-sm transition-all hover:bg-accent hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <Link href="/dashboard">Open dashboard</Link>
+                    <Link href="/dashboard">See the dashboard</Link>
                   </Button>
                 </motion.div>
 
-                {/* Trust / Stats */}
-                <motion.div variants={itemVariants} className="mt-12 flex flex-wrap gap-x-10 gap-y-6">
-                  {[
-                    { icon: Zap, label: "Developer Focus", color: "text-amber-500" },
-                    { icon: Globe, label: "Workplace Korean", color: "text-blue-500" },
-                    { icon: Smartphone, label: "Mobile Ready", color: "text-emerald-500" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2.5">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-background shadow-sm ring-1 ring-border`}>
-                        <item.icon size={16} className={item.color} strokeWidth={2.5} />
+                {/* Stats row */}
+                <motion.div variants={itemVariants} className="mt-10 flex items-center gap-6 sm:gap-8">
+                  {statsData.map((stat, i) => (
+                    <div key={stat.label} className="flex items-center gap-4">
+                      {i > 0 && <div className="h-8 w-px bg-border/60" />}
+                      <div>
+                        <p className="text-2xl font-black leading-none text-foreground">{stat.value}</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">{stat.label}</p>
                       </div>
-                      <span className="text-sm font-bold text-foreground/80">{item.label}</span>
                     </div>
                   ))}
+                </motion.div>
+
+                {/* Trust signals */}
+                <motion.div variants={itemVariants} className="mt-8 flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {["🇰🇭", "🇻🇳", "🇮🇩", "🇵🇭"].map((flag, i) => (
+                      <div key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-accent text-sm shadow-sm">
+                        {flag}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-semibold text-foreground">Engineers from 20+ countries</span> mastering workplace Korean
+                  </p>
                 </motion.div>
               </motion.div>
 
@@ -206,31 +232,63 @@ export default function Home() {
                 {/* Glow */}
                 <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-sky-500/20 blur-3xl" />
 
+                {/* Floating vocab chip */}
+                <motion.div
+                  initial={{ opacity: 0, x: 30, y: -10 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.1 }}
+                  className="absolute -right-4 top-16 z-10 hidden rounded-2xl border border-border bg-background px-4 py-2.5 shadow-xl lg:flex items-center gap-2.5"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                    <BookOpenCheck size={14} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-foreground">배포</p>
+                    <p className="text-[10px] text-muted-foreground">deployment</p>
+                  </div>
+                  <div className="ml-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">+2 XP</div>
+                </motion.div>
+
+                {/* Floating streak chip */}
+                <motion.div
+                  initial={{ opacity: 0, x: -30, y: 10 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.3 }}
+                  className="absolute -left-4 bottom-24 z-10 hidden rounded-2xl border border-border bg-background px-4 py-2.5 shadow-xl lg:flex items-center gap-2.5"
+                >
+                  <div className="text-lg">🔥</div>
+                  <div>
+                    <p className="text-[11px] font-bold text-foreground">7-day streak</p>
+                    <p className="text-[10px] text-muted-foreground">Keep it up!</p>
+                  </div>
+                </motion.div>
+
                 {/* Phone frame mockup */}
                 <div className="relative mx-auto w-full max-w-[360px]">
                   <div className="relative overflow-hidden rounded-[3rem] border-[8px] border-slate-900 bg-background shadow-2xl dark:border-slate-800">
                     {/* Notch */}
                     <div className="absolute left-1/2 top-0 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-slate-900 dark:bg-slate-800" />
-                    
+
                     <div className="flex h-[640px] flex-col">
                       {/* App header */}
                       <div className="flex items-center justify-between border-b border-border/50 bg-background/80 px-6 pb-4 pt-10 backdrop-blur-md">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white shadow-lg">
-                            AI
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+                            <Sparkles size={16} className="text-white" strokeWidth={2.5} />
                           </div>
                           <div>
-                            <p className="text-[13px] font-bold leading-none text-foreground">KoriAI Tutor</p>
-                            <p className="mt-1 text-[10px] font-medium text-emerald-500">Always online</p>
+                            <p className="text-[13px] font-bold leading-none text-foreground">AI Coach</p>
+                            <p className="mt-1 text-[10px] font-medium text-emerald-500">● Online now</p>
                           </div>
                         </div>
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/50 text-muted-foreground">
-                          <Zap size={14} />
+                        <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1">
+                          <span className="text-[11px]">🔥</span>
+                          <span className="text-[11px] font-bold text-amber-600">7</span>
                         </div>
                       </div>
 
                       {/* Messages */}
-                      <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                      <div className="flex-1 space-y-3.5 overflow-y-auto p-5 pb-3">
                         {chatMessages.map((msg, i) => (
                           <div
                             key={i}
@@ -242,7 +300,7 @@ export default function Home() {
                               </div>
                             )}
                             <div
-                              className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+                              className={`max-w-[85%] rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed shadow-sm ${
                                 msg.role === "you"
                                   ? "rounded-tr-sm bg-emerald-600 font-medium text-white"
                                   : "rounded-tl-sm border border-border bg-accent/30 text-foreground"
@@ -259,11 +317,11 @@ export default function Home() {
                             <Sparkles size={12} />
                           </div>
                           <div className="flex gap-1 rounded-2xl rounded-tl-sm border border-border bg-accent/30 px-4 py-3.5">
-                            {[0, 1, 2].map((i) => (
+                            {[0, 1, 2].map((j) => (
                               <motion.span
-                                key={i}
+                                key={j}
                                 animate={{ y: [0, -4, 0] }}
-                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                                transition={{ duration: 0.6, repeat: Infinity, delay: j * 0.15 }}
                                 className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
                               />
                             ))}
@@ -271,11 +329,20 @@ export default function Home() {
                         </div>
                       </div>
 
+                      {/* Quick phrase chips */}
+                      <div className="flex gap-2 overflow-x-auto px-5 pb-2 no-scrollbar">
+                        {["오늘 배포했어요", "회의 중입니다", "잠깐만요"].map((phrase) => (
+                          <div key={phrase} className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                            {phrase}
+                          </div>
+                        ))}
+                      </div>
+
                       {/* Input bar */}
-                      <div className="border-t border-border/50 bg-background/80 p-4 backdrop-blur-md">
+                      <div className="border-t border-border/50 bg-background/80 p-4 pt-3 backdrop-blur-md">
                         <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/30 px-4 py-3">
                           <span className="flex-1 text-[13px] text-muted-foreground font-medium">
-                            Ask me about Korean...
+                            Ask in English...
                           </span>
                           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
                             <Send size={14} />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { BookmarkPlus, CheckCircle2, Info, Lightbulb, RefreshCw } from "lucide-react"
+import { BookmarkPlus, CheckCircle2, Info, Lightbulb, RefreshCw, PenLine } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { dailyPhraseApi, getApiErrorMessage } from "@/lib/api"
 import type { DailyPhrase } from "@/lib/types"
+import { SentenceChallenge } from "@/components/vocab/SentenceChallenge"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -206,6 +207,28 @@ export default function DailyPhrasePage() {
               </div>
             </motion.div>
           )}
+
+          {/* Sentence Practice */}
+          <motion.div variants={itemVariants} className="rounded-[2rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                <PenLine size={16} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-foreground">Write it yourself</h4>
+                <p className="text-xs font-medium text-muted-foreground/60">Use today&apos;s phrase in your own sentence</p>
+              </div>
+            </div>
+            <SentenceChallenge
+              cardId={phrase.id}
+              term={phrase.phrase}
+              meaning={phrase.meaning}
+              onGetChallenge={(id) => dailyPhraseApi.getPractice(id)}
+              onCheckSentence={(id, challengePrompt, attempt) =>
+                dailyPhraseApi.checkPractice(id, { challengePrompt, attempt })
+              }
+            />
+          </motion.div>
         </>
       ) : null}
 

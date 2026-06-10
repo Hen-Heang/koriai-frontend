@@ -7,18 +7,18 @@ import type { VocabItem } from "@/lib/types"
 
 function normalizeWord(raw: unknown): VocabItem {
   const source = (raw ?? {}) as Record<string, unknown>
-  const id = String(source.id ?? source.vocabId ?? crypto.randomUUID())
-  const term = String(source.term ?? source.word ?? "")
-  const meaning = String(source.meaning ?? source.definition ?? "")
-  const example = source.example ? String(source.example) : undefined
-  const exampleTranslation = source.exampleTranslation ? String(source.exampleTranslation) : undefined
-  const mastery = Number(source.mastery ?? source.masteryRate ?? 0)
-  const nextReview = String(source.nextReview ?? source.nextReviewDate ?? "-")
-  const tags = Array.isArray(source.tags)
-    ? source.tags.map((tag) => String(tag))
-    : []
-
-  return { id, term, meaning, example, exampleTranslation, mastery, nextReview, tags }
+  return {
+    id: String(source.id ?? crypto.randomUUID()),
+    term: String(source.term ?? ""),
+    meaning: String(source.meaning ?? ""),
+    example: source.example ? String(source.example) : undefined,
+    exampleTranslation: source.exampleTranslation ? String(source.exampleTranslation) : undefined,
+    pronunciation: source.pronunciation ? String(source.pronunciation) : undefined,
+    difficultyLevel: source.difficultyLevel as VocabItem["difficultyLevel"],
+    mastery: Number(source.mastery ?? 0),
+    nextReview: String(source.nextReview ?? "-"),
+    tags: Array.isArray(source.tags) ? source.tags.map((tag) => String(tag)) : [],
+  }
 }
 
 export function useVocab() {
@@ -85,12 +85,32 @@ export function useVocab() {
     return generated
   }
 
+  const updateWord = async (
+    id: string,
+    data: { term: string; meaning: string; example?: string; pronunciation?: string }
+  ) => {
+    await vocabApi.update(id, data)
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
+  }
+
+  const importList = async (category: string, text: string) => {
+    const imported = await vocabApi.importList(category, text)
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
+    return Array.isArray(imported) ? imported.length : 0
+  }
+
   return {
     dueToday,
     error,
     loading,
     markReviewed,
     generate,
+    importList,
+    updateWord,
     words,
   }
 }

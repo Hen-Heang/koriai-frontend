@@ -2,18 +2,28 @@ import { cn } from "@/lib/utils"
 
 type DailyGoalRingProps = {
   progress: number
+  reviewsToday?: number
+  correctionsToday?: number
   label?: string
   className?: string
 }
 
 export function DailyGoalRing({
   progress,
+  reviewsToday = 0,
+  correctionsToday = 0,
   label = "Daily Goal",
   className,
 }: DailyGoalRingProps) {
   const clamped = Math.max(0, Math.min(progress, 100))
   const status =
     clamped >= 100 ? "Completed" : clamped >= 65 ? "On pace" : "Keep going"
+  const detail =
+    clamped >= 100
+      ? "Done for today 🎉"
+      : correctionsToday > 0
+        ? `${reviewsToday}/5 reviews · 1 sentence written`
+        : `${reviewsToday}/5 reviews or 1 sentence`
 
   return (
     <div
@@ -28,7 +38,7 @@ export function DailyGoalRing({
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
             {label}
           </p>
-          <p className="mt-1 text-[13px] font-medium text-muted-foreground sm:text-sm">Target: 45m today</p>
+          <p className="mt-1 text-[13px] font-medium text-muted-foreground sm:text-sm">{detail}</p>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/20 sm:px-3 sm:text-[11px]">
           {status}

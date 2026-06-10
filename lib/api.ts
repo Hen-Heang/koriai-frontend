@@ -172,14 +172,6 @@ export const userApi = {
     api.put(`/users/${id}/preferred-model`, { preferredModel }).then((r) => r.data.data),
 }
 
-// Diary
-export const diaryApi = {
-  createOrUpdate: (entryDate: string, originalText: string) =>
-    api.post("/diary", { entryDate, originalText }).then((r) => r.data.data),
-  getByMonth: (month: string) =>
-    api.get(`/diary?month=${month}`).then((r) => r.data.data),
-}
-
 // Vocabulary
 export const vocabApi = {
   getSavedWords: () => api.get("/vocab").then((r) => r.data.data),
@@ -189,6 +181,14 @@ export const vocabApi = {
     api.post("/vocab/save", data).then((r) => r.data.data),
   generate: (category: string, count = 10) =>
     api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
+  importList: (category: string, text: string) =>
+    api.post("/vocab/import", { category, text }).then((r) => r.data.data),
+  update: (id: string, data: { term: string; meaning: string; example?: string; pronunciation?: string; category?: string }) =>
+    api.put(`/vocab/${id}`, data).then((r) => r.data.data),
+  getSentenceChallenge: (id: string) =>
+    api.get(`/vocab/${id}/sentence-challenge`).then((r) => r.data.data),
+  checkSentence: (id: string, data: { challengePrompt: string; attempt: string }) =>
+    api.post(`/vocab/${id}/check-sentence`, data).then((r) => r.data.data),
 }
 
 // Daily Phrase
@@ -199,6 +199,10 @@ export const dailyPhraseApi = {
     api.post(`/daily-phrase/${id}/learned?learned=${learned}`).then((r) => r.data.data),
   addToFlashcards: (id: string) =>
     api.post(`/daily-phrase/${id}/flashcard`).then((r) => r.data.data),
+  getPractice: (id: string) =>
+    api.get(`/daily-phrase/${id}/practice`).then((r) => r.data.data),
+  checkPractice: (id: string, data: { challengePrompt: string; attempt: string }) =>
+    api.post(`/daily-phrase/${id}/check-practice`, data).then((r) => r.data.data),
 }
 
 // Workplace Message Generator
@@ -231,63 +235,14 @@ export const achievementsApi = {
 export const progressApi = {
   getDashboard: () => api.get("/dashboard/progress").then((r) => r.data.data),
   getStreak: () => api.get("/dashboard/streak").then((r) => r.data.data) as Promise<{ streakDays: number; activityToday: boolean }>,
+  getActivityDays: (month: string) =>
+    api.get(`/dashboard/activity?month=${month}`).then((r) => r.data.data) as Promise<string[]>,
 }
 
 // Scenarios
 export const scenarioApi = {
   getList: () => api.get("/scenarios").then((r) => r.data.data),
   getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
-}
-
-// Conversations (generic conversation store — distinct from /chat/conversations)
-export const conversationApi = {
-  create: (data: {
-    userId: number
-    title: string
-    conversationType: string
-    modelUsed: string
-    scenarioId?: number
-  }) => api.post("/conversations", data).then((r) => r.data.data),
-
-  getById: (id: number) =>
-    api.get(`/conversations/${id}`).then((r) => r.data.data),
-
-  listByUser: (userId: number, limit = 20, offset = 0) =>
-    api
-      .get(`/conversations?userId=${userId}&limit=${limit}&offset=${offset}`)
-      .then((r) => r.data.data),
-
-  updateTitle: (id: number, title: string) =>
-    api.put(`/conversations/${id}/title`, { title }).then((r) => r.data.data),
-
-  delete: (id: number) =>
-    api.delete(`/conversations/${id}`).then((r) => r.data.data) as Promise<{
-      deleted: boolean
-    }>,
-}
-
-// Messages (generic message store — distinct from /chat messages)
-export const messageApi = {
-  create: (data: {
-    conversationId: number
-    role: string
-    content: string
-    tokensUsed: number
-    corrections?: string
-  }) => api.post("/messages", data).then((r) => r.data.data),
-
-  getById: (id: number) =>
-    api.get(`/messages/${id}`).then((r) => r.data.data),
-
-  listByConversation: (conversationId: number, limit = 50, offset = 0) =>
-    api
-      .get(`/messages/conversation/${conversationId}?limit=${limit}&offset=${offset}`)
-      .then((r) => r.data.data),
-
-  countByConversation: (conversationId: number) =>
-    api
-      .get(`/messages/conversation/${conversationId}/count`)
-      .then((r) => r.data.data) as Promise<{ count: number }>,
 }
 
 // Workplace Korean Analyzer (Module 9)

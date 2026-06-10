@@ -13,22 +13,13 @@ export interface VocabItem {
   id: string
   term: string
   meaning: string
-  khmTranslation?: string
   pronunciation?: string
   example?: string
   exampleTranslation?: string
-  audioUrl?: string
   difficultyLevel?: "Easy" | "Medium" | "Hard"
   mastery: number
   nextReview: string
   tags: string[]
-}
-
-export interface DiaryFeedback {
-  id: string
-  title: string
-  description: string
-  example?: string
 }
 
 export interface Scenario {
@@ -145,45 +136,9 @@ export interface DashboardStats {
   wordsSaved: number
   correctionsThisWeek: number
   dailyGoalProgress: number
-  listeningScore?: number
-  speakingScore?: number
-  meetingScore?: number
-  aiConversationScore?: number
-}
-
-export interface UserProfile {
-  id: number
-  displayName: string
-  email: string
-  country?: string
-  nativeLanguage?: string
-  koreanLevel: string
-  occupation?: string
-  yearsOfExperience?: number
-  learningGoal?: string
-  preferredModel?: string
-}
-
-export interface Conversation {
-  id: number
-  userId: number
-  scenarioId?: number | null
-  title: string
-  conversationType: string
-  modelUsed: string
-  messageCount: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Message {
-  id: number
-  conversationId: number
-  role: string
-  content: string
-  corrections?: string | null
-  tokensUsed: number
-  createdAt: string
+  reviewsToday: number
+  correctionsToday: number
+  dueReviews: number
 }
 
 export interface AnalysisBreakdownItem {
@@ -196,6 +151,24 @@ export interface SuggestedReply {
   korean: string
   english: string
   formality: string
+}
+
+export interface SentenceChallengeResponse {
+  cardId: string
+  term: string
+  meaning: string
+  challengePrompt: string
+  contextHint: string
+  exampleAnswer: string
+}
+
+export interface SentenceCheckResponse {
+  score: number
+  correct: boolean
+  feedback: string
+  correctedSentence: string
+  betterAlternative: string
+  grammarNote: string
 }
 
 export interface MessageAnalysis {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BookOpenCheck, Layers3, Sparkles, Activity } from "lucide-react"
+import { BookOpenCheck, ClipboardPaste, Layers3, Sparkles, Activity } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
@@ -46,10 +46,14 @@ const itemVariants = {
 } as const
 
 export default function VocabPage() {
-  const { dueToday, error, loading, markReviewed, words, generate } = useVocab()
+  const { dueToday, error, loading, markReviewed, words, generate, importList, updateWord } = useVocab()
   const { refreshStreak } = useStreak()
   const [generating, setGenerating] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("")
+  const [importDeckName, setImportDeckName] = useState("")
+  const [importText, setImportText] = useState("")
+  const [importing, setImporting] = useState(false)
+  const [importMessage, setImportMessage] = useState("")
 
   async function handleGenerate() {
     if (!selectedCategory) return
@@ -57,6 +61,28 @@ export default function VocabPage() {
     await generate(selectedCategory)
     refreshStreak()
     setGenerating(false)
+  }
+
+  async function handleImport() {
+    if (!importDeckName.trim() || !importText.trim()) return
+    setImporting(true)
+    setImportMessage("")
+    try {
+      const count = await importList(importDeckName.trim(), importText.trim())
+      setImportMessage(
+        count > 0
+          ? `Imported ${count} words into "${importDeckName.trim()}".`
+          : "No vocabulary entries found in that text."
+      )
+      if (count > 0) {
+        setImportText("")
+        refreshStreak()
+      }
+    } catch {
+      setImportMessage("Import failed. Please try again.")
+    } finally {
+      setImporting(false)
+    }
   }
 
   const heroStats = loading
@@ -162,6 +188,65 @@ export default function VocabPage() {
             </div>
           </motion.div>
 
+          {/* Textbook Import Section */}
+          <motion.div variants={itemVariants} className="rounded-[2.5rem] border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600 dark:text-violet-400">Textbook Import</p>
+                </div>
+                <h3 className="mt-4 text-2xl font-black text-foreground">Paste Your Lesson</h3>
+                <p className="mt-2 text-[15px] font-medium leading-relaxed text-muted-foreground">
+                  Copy a word list from your textbook (사회통합프로그램, TOPIK, class notes) and paste it here.
+                  AI turns it into flashcards — your translations are kept exactly as written.
+                </p>
+              </div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
+                <ClipboardPaste size={24} strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <input
+                type="text"
+                value={importDeckName}
+                onChange={(e) => setImportDeckName(e.target.value)}
+                placeholder='Deck name, e.g. "사회통합 1과 — 대인 관계"'
+                maxLength={100}
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              />
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={"Paste the lesson word list…\n\n1. 공감 (ការយល់ស្របគ្នា)\n2. 관계 (ទំនាក់ទំនង)\n..."}
+                rows={6}
+                maxLength={8000}
+                className="w-full resize-y rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              />
+              <div className="flex flex-wrap items-center gap-4">
+                <Button
+                  className="h-12 rounded-2xl bg-violet-600 px-7 text-sm font-black text-white shadow-xl shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95"
+                  onClick={handleImport}
+                  disabled={!importDeckName.trim() || !importText.trim() || importing}
+                >
+                  {importing ? (
+                    <>
+                      <Activity size={18} className="mr-2 animate-pulse" /> Importing...
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardPaste size={18} strokeWidth={2.5} className="mr-2" /> Import Words
+                    </>
+                  )}
+                </Button>
+                {importMessage && (
+                  <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{importMessage}</span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
           {/* Vocabulary List Section */}
           <div className="space-y-6">
             <div className="px-4">
@@ -201,7 +286,7 @@ export default function VocabPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               {words.map((item) => (
                 <motion.div key={item.id} variants={itemVariants}>
-                  <VocabCard item={item} />
+                  <VocabCard item={item} onUpdate={updateWord} />
                 </motion.div>
               ))}
             </div>

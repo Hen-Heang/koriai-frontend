@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SpeakButton } from "@/components/ui/SpeakButton"
-import { correctionApi, diaryApi } from "@/lib/api"
+import { correctionApi, progressApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,20 +32,7 @@ type CorrectionEntry = {
   englishTranslation?: string
 }
 
-type DiaryEntry = {
-  id: string
-  entryDate: string
-  originalText: string
-  correctedText?: string
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function toYearMonth(date: Date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  return `${y}-${m}`
-}
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -129,9 +116,9 @@ function GrammarTracker({ entries }: { entries: CorrectionEntry[] }) {
   )
 }
 
-function DiaryCalendar({ month, entries, onPrev, onNext }: {
+function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
   month: Date
-  entries: DiaryEntry[]
+  activeDays: Set<number>
   onPrev: () => void
   onNext: () => void
 }) {
@@ -142,23 +129,8 @@ function DiaryCalendar({ month, entries, onPrev, onNext }: {
   const today = new Date()
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === m
 
-  const entryDates = new Set(
-    entries.map((e) => {
-      const d = new Date(e.entryDate)
-      return d.getDate()
-    })
-  )
-
   const monthName = month.toLocaleDateString("en-US", { month: "long", year: "numeric" })
   const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-
-  const [selected, setSelected] = useState<DiaryEntry | null>(null)
-
-  function handleDayClick(day: number) {
-    if (!entryDates.has(day)) return
-    const match = entries.find((e) => new Date(e.entryDate).getDate() === day)
-    setSelected(match ?? null)
-  }
 
   return (
     <div className="space-y-4">
@@ -195,58 +167,31 @@ function DiaryCalendar({ month, entries, onPrev, onNext }: {
         {/* Day cells */}
         {Array.from({ length: days }).map((_, i) => {
           const day = i + 1
-          const hasEntry = entryDates.has(day)
+          const isActive = activeDays.has(day)
           const isToday = isCurrentMonth && today.getDate() === day
 
           return (
-            <button
+            <div
               key={day}
-              onClick={() => handleDayClick(day)}
-              disabled={!hasEntry}
               className={cn(
-                "relative flex aspect-square items-center justify-center rounded-xl text-[13px] font-bold transition-all",
-                hasEntry
-                  ? "cursor-pointer bg-emerald-500 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-400 active:scale-95"
+                "relative flex aspect-square items-center justify-center rounded-xl text-[13px] font-bold",
+                isActive
+                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
                   : isToday
                     ? "ring-2 ring-emerald-500/40 text-emerald-600 font-black"
-                    : "text-muted-foreground/50 cursor-default"
+                    : "text-muted-foreground/50"
               )}
             >
               {day}
-            </button>
+            </div>
           )
         })}
       </div>
 
       {/* Entry count */}
       <p className="text-center text-[11px] font-bold text-muted-foreground/50">
-        {entries.length} {entries.length === 1 ? "entry" : "entries"} this month
+        {activeDays.size} {activeDays.size === 1 ? "practice day" : "practice days"} this month
       </p>
-
-      {/* Selected entry preview */}
-      <AnimatePresence>
-        {selected && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="rounded-2xl border border-border bg-accent/5 p-4 space-y-2"
-          >
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-              {formatDate(selected.entryDate)}
-            </p>
-            <p className="text-sm font-medium leading-relaxed text-foreground/80 line-clamp-4">
-              {selected.originalText}
-            </p>
-            <button
-              onClick={() => setSelected(null)}
-              className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground"
-            >
-              Close
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
@@ -260,10 +205,9 @@ const itemVariants = {
 
 export default function HistoryPage() {
   const [corrections, setCorrections] = useState<CorrectionEntry[]>([])
-  const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([])
   const [loadingCorrections, setLoadingCorrections] = useState(true)
-  const [loadingDiary, setLoadingDiary] = useState(true)
   const [calendarMonth, setCalendarMonth] = useState(new Date())
+  const [activeDays, setActiveDays] = useState<Set<number>>(new Set())
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -274,18 +218,7 @@ export default function HistoryPage() {
       .finally(() => setLoadingCorrections(false))
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    diaryApi
-      .getByMonth(toYearMonth(calendarMonth))
-      .then((data) => { if (!cancelled) setDiaryEntries(Array.isArray(data) ? data : []) })
-      .catch(() => { if (!cancelled) setDiaryEntries([]) })
-      .finally(() => { if (!cancelled) setLoadingDiary(false) })
-    return () => { cancelled = true }
-  }, [calendarMonth])
-
   function prevMonth() {
-    setLoadingDiary(true)
     setCalendarMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))
   }
 
@@ -293,10 +226,21 @@ export default function HistoryPage() {
     const now = new Date()
     const next = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
     if (next <= now) {
-      setLoadingDiary(true)
       setCalendarMonth(next)
     }
   }
+
+  useEffect(() => {
+    const month = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, "0")}`
+    let cancelled = false
+    progressApi
+      .getActivityDays(month)
+      .then((days) => {
+        if (!cancelled) setActiveDays(new Set(days.map((d) => Number(d.slice(8)))))
+      })
+      .catch(() => { if (!cancelled) setActiveDays(new Set()) })
+    return () => { cancelled = true }
+  }, [calendarMonth])
 
   const grammarPatterns = aggregateGrammar(corrections)
 
@@ -311,11 +255,11 @@ export default function HistoryPage() {
         <PageHero
           eyebrow="Progress Lab"
           title="Your Study History"
-          description="Track your past corrections, review diary entries, and spot recurring grammar patterns."
+          description="Track your past corrections, see your practice days, and spot recurring grammar patterns."
           stats={[
             { label: "Corrections", value: String(corrections.length) },
             { label: "Patterns Found", value: String(grammarPatterns.length) },
-            { label: "Diary Entries", value: String(diaryEntries.length) },
+            { label: "Practice Days", value: String(activeDays.size) },
           ]}
         />
       </motion.div>
@@ -487,7 +431,7 @@ export default function HistoryPage() {
           </motion.div>
         </div>
 
-        {/* ── Right column: Diary Calendar ── */}
+        {/* ── Right column: Practice Calendar ── */}
         <div>
           <motion.div variants={itemVariants}>
             <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 lg:sticky lg:top-8 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
@@ -497,15 +441,15 @@ export default function HistoryPage() {
                     <CalendarDays size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h2 className="text-base font-black">Diary Calendar</h2>
+                    <h2 className="text-base font-black">Practice Calendar</h2>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                      Days you wrote
+                      Days you practiced
                     </p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-5">
-                {loadingDiary ? (
+                {loadingCorrections ? (
                   <div className="space-y-4">
                     {/* Month nav */}
                     <div className="flex items-center justify-between">
@@ -522,9 +466,9 @@ export default function HistoryPage() {
                     <Skeleton className="mx-auto h-3 w-32" />
                   </div>
                 ) : (
-                  <DiaryCalendar
+                  <PracticeCalendar
                     month={calendarMonth}
-                    entries={diaryEntries}
+                    activeDays={activeDays}
                     onPrev={prevMonth}
                     onNext={nextMonth}
                   />

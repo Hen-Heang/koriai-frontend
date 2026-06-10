@@ -8,18 +8,17 @@ import {
   BookOpen,
   CalendarDays,
   Gauge,
-  Headphones,
+  // Headphones, // hidden Listening nav
   History,
   MessageCircle,
-  Mic,
-  // NotebookText, // used by hidden Diary nav — keep for easy restore
-  ScanText,
+  // Mic, // hidden Speaking nav
+  // ScanText, // hidden Analyzer nav
   Settings,
   Sparkles,
-  // SpellCheck2, // used by hidden Correction nav — keep for easy restore
-  Theater,
-  Trophy,
-  Wand2,
+  SpellCheck2,
+  // Theater, // hidden Meeting Sim nav
+  // Trophy, // hidden Achievements nav
+  // Wand2, // hidden Message Gen nav
   Layers3,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -30,28 +29,27 @@ import { cn } from "@/lib/utils"
 
 const allLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/chat", label: "AI Coach", icon: MessageCircle },
-  { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
-  { href: "/generator", label: "Message Gen", icon: Wand2 },
-  { href: "/analyzer", label: "Analyzer", icon: ScanText },
-  // { href: "/correct", label: "Correction", icon: SpellCheck2 }, // hidden
-  // { href: "/diary", label: "Diary", icon: NotebookText }, // hidden
-  { href: "/speaking", label: "Speaking", icon: Mic },
-  { href: "/listening", label: "Listening", icon: Headphones },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
   { href: "/flashcards", label: "Flashcards", icon: Layers3 },
-  { href: "/scenarios", label: "Meeting Sim", icon: Theater },
-  { href: "/achievements", label: "Achievements", icon: Trophy },
+  { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
+  { href: "/correct", label: "Correction", icon: SpellCheck2 },
+  { href: "/chat", label: "AI Coach", icon: MessageCircle },
+  // ── hidden while focusing on vocabulary — restore when needed ──
+  // { href: "/generator", label: "Message Gen", icon: Wand2 },
+  // { href: "/analyzer", label: "Analyzer", icon: ScanText },
+  // { href: "/speaking", label: "Speaking", icon: Mic },
+  // { href: "/listening", label: "Listening", icon: Headphones },
+  // { href: "/scenarios", label: "Meeting Sim", icon: Theater },
+  // { href: "/achievements", label: "Achievements", icon: Trophy },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 const bottomTabs = [
-  { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/chat", label: "Chat", icon: MessageCircle },
-  // { href: "/correct", label: "Correct", icon: SpellCheck2 }, // hidden
-  // { href: "/diary", label: "Diary", icon: NotebookText }, // hidden
+  { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
+  { href: "/flashcards", label: "Cards", icon: Layers3 },
+  { href: "/correct", label: "Correct", icon: SpellCheck2 },
 ]
 
 export default function MainLayout({

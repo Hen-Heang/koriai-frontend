@@ -2634,6 +2634,18 @@
         <option name="homepage" value="https://zippystarter.com" />
         <option name="urlTemplate" value="https://zippystarter.com/r/{name}.json" />
       </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-delego" />
+        <option name="name" value="Delego" />
+        <option name="namespace" value="@delego" />
+        <option name="baseUrl" value="https://raw.githubusercontent.com/Delego-Dev/registry/main/public/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="Design-system registry for Delego — intent-bound action authorization for AI agents. Theme (OKLCH) plus signature components: decision pill, signed receipt, status badge, field." />
+        <option name="homepage" value="https://github.com/Delego-Dev/registry" />
+        <option name="urlTemplate" value="https://raw.githubusercontent.com/Delego-Dev/registry/main/public/r/{name}.json" />
+      </RegistryConfigState>
     </registryConfigs>
   </component>
 </project>
