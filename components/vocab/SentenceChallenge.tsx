@@ -167,7 +167,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                     disabled={phase === "checking"}
                     placeholder={`Write your Korean sentence using "${term}"…`}
                     rows={3}
-                    className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 disabled:opacity-60 transition-colors"
+                    className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 disabled:opacity-60 transition-colors sm:text-sm"
                   />
 
                   <button

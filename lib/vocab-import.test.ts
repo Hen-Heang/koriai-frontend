@@ -5,11 +5,11 @@ import { prepareVocabImport } from "./vocab-import"
 describe("prepareVocabImport", () => {
   it("strips numbering and bullets while keeping translations as written", () => {
     const result = prepareVocabImport(
-      "1. 공감 (ការយល់ស្របគ្នា)\n2) 관계 (ទំនាក់ទំនង)\n• 배포 - deployment\n- 서버 : server"
+      "1. 공감 (empathy)\n2) 관계 (relationship)\n• 배포 - deployment\n- 서버 : server"
     )
     expect(result.entries).toEqual([
-      "공감 (ការយល់ស្របគ្នា)",
-      "관계 (ទំនាក់ទំនង)",
+      "공감 (empathy)",
+      "관계 (relationship)",
       "배포 - deployment",
       "서버 : server",
     ])

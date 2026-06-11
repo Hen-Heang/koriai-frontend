@@ -17,7 +17,8 @@ import {
 import { motion, AnimatePresence } from "motion/react"
 
 import { cn } from "@/lib/utils"
-import { chatApi } from "@/lib/api"
+import { vocabApi } from "@/lib/api"
+import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from "@/lib/srs"
 import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
@@ -34,64 +35,112 @@ type ReviewSessionProps = {
   dueToday: VocabItem[]
   allWords: VocabItem[]
   loading?: boolean
-  onReview: (id: string) => void | Promise<void>
+  onRate: (id: string, rating: ReviewRating) => void | Promise<void>
+}
+
+// Anki-style grade buttons: label + the interval the card jumps to.
+const GRADE_STYLES: Record<ReviewRating, { label: string; classes: string }> = {
+  AGAIN: {
+    label: "Again",
+    classes:
+      "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400",
+  },
+  HARD: {
+    label: "Hard",
+    classes:
+      "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400",
+  },
+  GOOD: {
+    label: "Good",
+    classes:
+      "border-transparent bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500",
+  },
+  EASY: {
+    label: "Easy",
+    classes:
+      "border-sky-200 bg-sky-50 text-sky-600 hover:bg-sky-100 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-400",
+  },
+}
+
+function GradeButtons({
+  card,
+  onGrade,
+}: {
+  card: VocabItem
+  onGrade: (rating: ReviewRating) => void
+}) {
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {RATINGS.map((rating) => (
+        <button
+          key={rating}
+          type="button"
+          onClick={() => onGrade(rating)}
+          className={cn(
+            "flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border transition-all active:scale-95",
+            GRADE_STYLES[rating].classes
+          )}
+        >
+          <span className="text-xs font-black uppercase tracking-wider">
+            {GRADE_STYLES[rating].label}
+          </span>
+          <span className="text-[10px] font-bold opacity-70">
+            {formatInterval(previewIntervalDays(card, rating))}
+          </span>
+        </button>
+      ))}
+    </div>
+  )
 }
 
 // ─── Flashcard ────────────────────────────────────────────────────────────────
 function FlashCard({
   card,
   reversed = false,
-  onKnew,
-  onLearning,
+  onGrade,
 }: {
   card: VocabItem
   reversed?: boolean
-  onKnew: () => void | Promise<void>
-  onLearning: () => void
+  onGrade: (rating: ReviewRating) => void | Promise<void>
 }) {
   const [flipped, setFlipped] = useState(false)
   const [hint, setHint] = useState<string | null>(null)
   const [loadingHint, setLoadingHint] = useState(false)
 
-  const handleLearning = useCallback(() => {
-    setFlipped(false)
-    setHint(null)
-    onLearning()
-  }, [onLearning])
+  const grade = useCallback(
+    (rating: ReviewRating) => {
+      setFlipped(false)
+      setHint(null)
+      onGrade(rating)
+    },
+    [onGrade]
+  )
 
-  const handleKnew = useCallback(() => {
-    setFlipped(false)
-    setHint(null)
-    onKnew()
-  }, [onKnew])
-
-  // Space/Enter flips, then 1 = Again, 2 = Got it
+  // Space/Enter flips, then 1-4 grade Again/Hard/Good/Easy (Anki keys)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (!flipped && (e.key === " " || e.key === "Enter")) {
         e.preventDefault()
         setFlipped(true)
-      } else if (flipped && e.key === "1") {
-        handleLearning()
-      } else if (flipped && e.key === "2") {
-        handleKnew()
+      } else if (flipped && ["1", "2", "3", "4"].includes(e.key)) {
+        grade(RATINGS[Number(e.key) - 1])
       }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [flipped, handleKnew, handleLearning])
+  }, [flipped, grade])
 
   async function fetchHint() {
     if (hint || loadingHint) return
     setLoadingHint(true)
     try {
-      const conv = await chatApi.createConversation("Vocab Hint", "FREE_CHAT")
-      const res = await chatApi.sendMessage(
-        conv.id,
-        `Give me one short, natural Korean sentence using the word "${card.term}" (${card.meaning}). Reply with only the sentence and its English translation, nothing else. Format: Korean sentence / English translation`
+      const res = await vocabApi.lookup(card.term)
+      setHint(
+        res.example
+          ? `${res.example}${res.exampleTranslation ? ` / ${res.exampleTranslation}` : ""}`
+          : res.definition
       )
-      setHint(res.assistantReply)
     } catch {
       setHint("Could not load hint. Please try again.")
     } finally {
@@ -102,20 +151,20 @@ function FlashCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Flip card */}
-      <div className="perspective-1000 h-80 sm:h-96">
+      <div className="perspective-[1000px] h-80 sm:h-96">
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="relative h-full w-full preserve-3d"
+          className="relative h-full w-full transform-3d"
         >
           {/* Front */}
           <button
             type="button"
             onClick={() => setFlipped(true)}
-            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[3rem] border border-border bg-card p-8 text-center shadow-xl dark:bg-slate-900/60"
+            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[2rem] border border-border bg-card p-6 text-center shadow-xl dark:bg-slate-900/60 sm:rounded-[3rem] sm:p-8"
           >
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">{reversed ? "English" : "Korean"}</span>
-            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{reversed ? card.meaning : card.term}</p>
+            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">{reversed ? card.meaning : card.term}</p>
             <div className="mt-10 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-5 py-2.5 text-xs font-bold text-muted-foreground/60 transition-colors hover:bg-accent/10">
               Tap to Reveal
             </div>
@@ -123,10 +172,10 @@ function FlashCard({
 
           {/* Back */}
           <div
-            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[3rem] border border-emerald-500/20 bg-card p-8 text-center shadow-2xl dark:bg-slate-900/80"
+            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-2xl dark:bg-slate-900/80 sm:rounded-[3rem] sm:p-8"
           >
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">{reversed ? "Korean" : "Meaning"}</span>
-            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground sm:text-4xl">{reversed ? card.term : card.meaning}</p>
+            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl">{reversed ? card.term : card.meaning}</p>
             
             {card.example && (
               <div className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-accent/5 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
@@ -165,25 +214,8 @@ function FlashCard({
               )}
             </div>
 
-            {/* Decision Buttons */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={handleLearning}
-                className="flex h-16 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
-              >
-                <XCircle size={20} strokeWidth={2.5} />
-                Again
-              </button>
-              <button
-                type="button"
-                onClick={handleKnew}
-                className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
-              >
-                <CheckCircle2 size={20} strokeWidth={2.5} />
-                Got it
-              </button>
-            </div>
+            {/* Grading Buttons (Anki-style, keys 1-4) */}
+            <GradeButtons card={card} onGrade={grade} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -217,7 +249,7 @@ function ChoiceCard({
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Select Meaning</span>
-        <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{card.term}</p>
+        <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">{card.term}</p>
         <div className="mt-6">
           <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
         </div>
@@ -250,7 +282,7 @@ function ChoiceCard({
               )}
             >
               <span className={cn(
-                "text-[15px] font-bold",
+                "min-w-0 text-[15px] font-bold [overflow-wrap:anywhere]",
                 !answered ? "text-foreground" : isCorrect ? "text-emerald-700 dark:text-emerald-400" : isSelected ? "text-red-700 dark:text-red-400" : "text-muted-foreground"
               )}>
                 {choice.meaning}
@@ -317,7 +349,7 @@ function RecallCard({
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Type in Korean</span>
-        <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground sm:text-5xl">{card.meaning}</p>
+        <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{card.meaning}</p>
         {card.pronunciation && answered && (
           <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
         )}
@@ -400,7 +432,7 @@ function RecallCard({
                 )}>
                   {result === "correct" ? "Correct" : "Answer"}
                 </p>
-                <p className="mt-1 break-keep text-2xl font-black tracking-tight text-foreground">{card.term}</p>
+                <p className="mt-1 break-keep text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere]">{card.term}</p>
                 {card.example && (
                   <p className="mt-2 text-sm font-bold leading-relaxed text-muted-foreground/70">{card.example}</p>
                 )}
@@ -424,13 +456,13 @@ function RecallCard({
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewSessionProps) {
+export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSessionProps) {
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
   const [reversed, setReversed] = useState(false)
   const [queue, setQueue] = useState<VocabItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [stats, setStats] = useState({ knew: 0, learning: 0 })
+  const [lapsedIds, setLapsedIds] = useState<Set<string>>(new Set())
 
   const canUseChoice = allWords.length >= 4
 
@@ -438,33 +470,48 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
     const deck = dueToday.length > 0 ? dueToday : allWords
     setQueue(shuffle(deck))
     setCurrentIndex(0)
-    setStats({ knew: 0, learning: 0 })
+    setLapsedIds(new Set())
     setPhase("quiz")
   }
 
-  const handleKnew = useCallback(async () => {
-    const card = queue[currentIndex]
-    setStats((s) => ({ ...s, knew: s.knew + 1 }))
-    try { await onReview(card.id) } catch { /* ignore */ }
-    if (currentIndex + 1 >= queue.length) {
-      setPhase("done")
-    } else {
-      setCurrentIndex((i) => i + 1)
-    }
-  }, [queue, currentIndex, onReview])
+  const handleGrade = useCallback(
+    (rating: ReviewRating) => {
+      const card = queue[currentIndex]
+      if (!card) return
+      // Fire-and-forget so grading feels instant; the hook reconciles state.
+      void Promise.resolve(onRate(card.id, rating)).catch(() => {})
 
-  const handleLearning = useCallback(() => {
-    setStats((s) => ({ ...s, learning: s.learning + 1 }))
-    setQueue((q) => {
-      const next = [...q]
-      const card = next.splice(currentIndex, 1)[0]
-      next.push(card)
-      return next
-    })
-    if (currentIndex >= queue.length - 1) {
-      setCurrentIndex(0)
-    }
-  }, [queue, currentIndex])
+      if (rating === "AGAIN") {
+        setLapsedIds((prev) => new Set(prev).add(card.id))
+        // Mirror the backend lapse so the card's grade previews are correct
+        // when it comes back around later in this session.
+        const lapsed: VocabItem = {
+          ...card,
+          repetitions: 0,
+          intervalDays: 0,
+          easeFactor: Math.max(1.3, card.easeFactor - 0.2),
+          lapses: card.lapses + 1,
+        }
+        setQueue((q) => {
+          const next = [...q]
+          next.splice(currentIndex, 1)
+          next.push(lapsed)
+          return next
+        })
+        if (currentIndex >= queue.length - 1) {
+          setCurrentIndex(0)
+        }
+        return
+      }
+
+      if (currentIndex + 1 >= queue.length) {
+        setPhase("done")
+      } else {
+        setCurrentIndex((i) => i + 1)
+      }
+    },
+    [queue, currentIndex, onRate]
+  )
 
   const total = queue.length
 
@@ -547,7 +594,8 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
 
   // ── done ──────────────────────────────────────────────────────────────────
   if (phase === "done") {
-    const pct = total > 0 ? Math.round((stats.knew / total) * 100) : 0
+    const knew = Math.max(0, total - lapsedIds.size)
+    const pct = total > 0 ? Math.round((knew / total) * 100) : 0
     const headline = pct >= 80 ? "Perfect Loop" : pct >= 50 ? "Solid Growth" : "Keep Building"
     
     return (
@@ -570,7 +618,7 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
           <div>
             <h2 className="text-4xl font-black tracking-tight text-foreground">{headline}</h2>
             <p className="mt-3 text-[15px] font-medium text-muted-foreground/60 leading-relaxed">
-              You retained <span className="text-emerald-600 font-black">{stats.knew}</span> out of <span className="text-foreground font-black">{total}</span> words. 
+              You knew <span className="text-emerald-600 font-black">{knew}</span> of <span className="text-foreground font-black">{total}</span> words on the first try.
               Keep this momentum up to strengthen long-term memory.
             </p>
           </div>
@@ -651,22 +699,21 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
             {mode === "recall" ? (
               <RecallCard
                 card={card}
-                onKnew={handleKnew}
-                onLearning={handleLearning}
+                onKnew={() => handleGrade("GOOD")}
+                onLearning={() => handleGrade("AGAIN")}
               />
             ) : mode === "flashcard" || !canUseChoice ? (
               <FlashCard
                 card={card}
                 reversed={reversed}
-                onKnew={handleKnew}
-                onLearning={handleLearning}
+                onGrade={handleGrade}
               />
             ) : (
               <ChoiceCard
                 card={card}
                 allWords={allWords}
-                onKnew={handleKnew}
-                onLearning={handleLearning}
+                onKnew={() => handleGrade("GOOD")}
+                onLearning={() => handleGrade("AGAIN")}
               />
             )}
           </motion.div>

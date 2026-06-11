@@ -21,6 +21,10 @@ export interface VocabItem {
   mastery: number
   nextReview: string
   tags: string[]
+  easeFactor: number
+  intervalDays: number
+  repetitions: number
+  lapses: number
 }
 
 export interface Scenario {

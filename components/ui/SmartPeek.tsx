@@ -5,7 +5,9 @@ import { Popover as PopoverPrimitive } from "radix-ui"
 import { motion, AnimatePresence } from "motion/react"
 import { BookmarkPlus, Loader2, CheckCircle2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AiGenerating } from "@/components/ui/ai-loading"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { vocabApi } from "@/lib/api"
 
 type PeekData = {
@@ -107,9 +109,16 @@ export function SmartPeek({
                 className="overflow-hidden rounded-[1.5rem] border border-border bg-card/90 p-4 shadow-2xl backdrop-blur-xl dark:bg-slate-900/90"
               >
                 {loading ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <Loader2 size={24} className="animate-spin text-emerald-500" />
-                    <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">AI Analyzing Word</p>
+                  <div className="space-y-3 py-1">
+                    <AiGenerating
+                      stages={["Looking up the word…", "Writing an example…"]}
+                      stageDuration={1600}
+                    />
+                    <div className="space-y-2 pt-1">
+                      <Skeleton className="h-6 w-24" />
+                      <Skeleton className="h-4 w-44" />
+                      <Skeleton className="h-12 w-full rounded-xl" />
+                    </div>
                   </div>
                 ) : data ? (
                   <div className="space-y-4">

@@ -50,8 +50,8 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
             <div className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600 dark:text-violet-400">Textbook Import</p>
           </div>
-          <h3 className="mt-4 text-2xl font-black text-foreground">Paste Your Lesson</h3>
-          <p className="mt-2 text-[15px] font-medium leading-relaxed text-muted-foreground">
+          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">Paste Your Lesson</h3>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Copy a word list from your textbook (사회통합프로그램, TOPIK, class notes) and paste it here.
             AI turns it into flashcards — your translations are kept exactly as written.
           </p>
@@ -68,15 +68,15 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
           onChange={(e) => setDeckName(e.target.value)}
           placeholder='Deck name, e.g. "사회통합 1과 — 대인 관계"'
           maxLength={100}
-          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors"
+          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors sm:text-sm"
         />
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={"Paste the lesson word list…\n\n1. 공감 (ការយល់ស្របគ្នា)\n2. 관계 (ទំនាក់ទំនង)\n..."}
+          placeholder={"Paste the lesson word list…\n\n1. 공감 (empathy)\n2. 관계 (relationship)\n..."}
           rows={6}
           maxLength={8000}
-          className="w-full resize-y rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors"
+          className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors sm:resize-y sm:text-sm"
         />
         {text.trim() && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] font-bold">
@@ -117,7 +117,7 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
             )}
           </Button>
           {message && (
-            <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{message}</span>
+            <span className="text-center text-xs font-bold text-violet-600 dark:text-violet-400 sm:text-left">{message}</span>
           )}
         </div>
       </div>

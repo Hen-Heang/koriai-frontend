@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { VocabItem } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
-import { Calendar, Tag, ChevronRight, BookOpen, Pencil, Check, X, Loader2 } from "lucide-react"
+import { Calendar, Tag, ChevronRight, BookOpen, Pencil, Check, X, Loader2, Trash2 } from "lucide-react"
 import { SentenceChallenge } from "@/components/vocab/SentenceChallenge"
 import { vocabApi } from "@/lib/api"
 
@@ -16,6 +17,7 @@ type VocabCardProps = {
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => void | Promise<void>
+  onDelete?: (id: string) => void | Promise<void>
 }
 
 function EditForm({
@@ -52,7 +54,7 @@ function EditForm({
   }
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-emerald-500/40 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+    "w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-emerald-500/40 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-colors sm:text-sm"
 
   return (
     <div className="space-y-2.5 pt-2">
@@ -97,9 +99,31 @@ function EditForm({
   )
 }
 
-export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
+export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps) {
   const [editing, setEditing] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const mastery = Math.max(0, Math.min(100, item.mastery))
+
+  // Confirm state reverts on its own if the user doesn't follow through
+  useEffect(() => {
+    if (!confirmingDelete) return
+    const timer = setTimeout(() => setConfirmingDelete(false), 4000)
+    return () => clearTimeout(timer)
+  }, [confirmingDelete])
+
+  async function handleDelete() {
+    if (!onDelete || deleting) return
+    setDeleting(true)
+    try {
+      await onDelete(item.id)
+      toast.success(`Deleted "${item.term}"`)
+    } catch {
+      toast.error("Could not delete word. Please try again.")
+      setDeleting(false)
+      setConfirmingDelete(false)
+    }
+  }
   const masteryColor =
     mastery >= 80
       ? "bg-emerald-500"
@@ -115,7 +139,7 @@ export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
       : "bg-red-500/10 text-red-600 ring-red-500/20 dark:text-red-400"
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+    <div className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-4 shadow-sm transition-all dark:bg-slate-900/40 dark:backdrop-blur-md sm:p-5 sm:hover:-translate-y-1 sm:hover:shadow-xl">
       {/* Mastery Progress Bar (Top) */}
       <div className="absolute inset-x-0 top-0 h-1 bg-accent/10">
         <motion.div
@@ -137,26 +161,26 @@ export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
         />
       ) : (
         <>
-          <div className="flex items-start justify-between gap-4 pt-2">
+          <div className="flex items-start justify-between gap-3 pt-2 sm:gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
-                <h3 className="truncate text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                <h3 className="min-w-0 break-keep text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere] sm:truncate sm:text-3xl">
                   {item.term}
                 </h3>
                 <SpeakButton
                   text={item.term}
-                  className="h-10 w-10 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90"
+                  className="h-10 w-10 shrink-0 rounded-xl bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-90"
                 />
               </div>
               {item.pronunciation && (
                 <p className="mt-0.5 text-xs font-bold text-muted-foreground/50 italic">[{item.pronunciation}]</p>
               )}
-              <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight sm:text-xl">
+              <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight [overflow-wrap:anywhere] sm:text-xl">
                 {item.meaning}
               </p>
             </div>
 
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
               <div className="flex items-center gap-1.5">
                 {onUpdate && (
                   <button
@@ -167,6 +191,28 @@ export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
                   >
                     <Pencil size={14} strokeWidth={2.5} />
                   </button>
+                )}
+                {onDelete && (
+                  confirmingDelete ? (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[10px] font-black uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
+                    >
+                      {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} strokeWidth={2.5} />}
+                      {deleting ? "Deleting" : "Sure?"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/40 transition-all hover:bg-red-500/10 hover:text-red-500 active:scale-90"
+                      aria-label="Delete word"
+                    >
+                      <Trash2 size={14} strokeWidth={2.5} />
+                    </button>
+                  )
                 )}
                 <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
                   {mastery}%
@@ -192,11 +238,11 @@ export function VocabCard({ item, onReview, onUpdate }: VocabCardProps) {
                 <BookOpen size={12} className="text-muted-foreground/40" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Usage Context</span>
               </div>
-              <p className="text-sm font-bold leading-relaxed text-foreground/80 sm:text-[15px]">
+              <p className="text-sm font-bold leading-relaxed text-foreground/80 [overflow-wrap:anywhere] sm:text-[15px]">
                 {item.example}
               </p>
               {item.exampleTranslation && (
-                <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed">
+                <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed [overflow-wrap:anywhere]">
                   {item.exampleTranslation}
                 </p>
               )}

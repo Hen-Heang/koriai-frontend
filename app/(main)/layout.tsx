@@ -314,14 +314,15 @@ export default function MainLayout({
           aria-hidden={isKeyboardOpen}
         >
           <div className="mx-auto max-w-md px-3.5">
-            <div className="relative flex items-center justify-around rounded-[2rem] border border-white/15 bg-background/40 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-[32px] ring-1 ring-white/10 dark:bg-slate-900/60">
+            <div className="relative flex items-center justify-around rounded-[2rem] border border-border/80 bg-background/70 p-1.5 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-[32px] ring-1 ring-black/[0.04] dark:border-white/15 dark:bg-slate-900/60 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:ring-white/10">
               
               {/* Sliding Active Indicator (Telegram-style) */}
               <AnimatePresence initial={false}>
                 {activeTabIndex !== -1 && (
                   <motion.div
-                    className="absolute z-0 h-[calc(100%-12px)] w-[calc((100%-0.75rem)/4)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
                     initial={false}
+                    style={{ width: `calc((100% - 0.75rem) / ${bottomTabs.length})` }}
                     animate={{
                       // % offsets resolve against the padding box, but the tabs sit
                       // inside the p-1.5 content box — offset by the 0.375rem padding.

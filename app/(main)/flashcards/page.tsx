@@ -5,7 +5,6 @@ import {
   BookOpen,
   Volume2,
   Languages,
-  Globe,
   Sparkles,
 } from "lucide-react"
 import { motion } from "motion/react"
@@ -15,7 +14,7 @@ import { ReviewSession } from "@/components/vocab/ReviewSession"
 import { useVocab } from "@/hooks/useVocab"
 import { cn } from "@/lib/utils"
 
-type FlashcardMode = "korean-english" | "english-korean" | "korean-khmer" | "audio-meaning"
+type FlashcardMode = "korean-english" | "english-korean" | "audio-meaning"
 
 const MODES: {
   id: FlashcardMode
@@ -45,15 +44,6 @@ const MODES: {
     available: false,
   },
   {
-    id: "korean-khmer",
-    label: "Korean → Khmer",
-    description: "Practice with Khmer translations for native Khmer speakers.",
-    icon: Globe,
-    color: "text-violet-600 dark:text-violet-400",
-    iconBg: "bg-violet-500/10",
-    available: false,
-  },
-  {
     id: "audio-meaning",
     label: "Audio → Meaning",
     description: "Listen to pronunciation and recall the meaning.",
@@ -65,7 +55,7 @@ const MODES: {
 ]
 
 export default function FlashcardsPage() {
-  const { dueToday, words, loading, markReviewed } = useVocab()
+  const { dueToday, words, loading, rateWord } = useVocab()
   const [selectedMode, setSelectedMode] = useState<FlashcardMode>("korean-english")
 
   const heroStats = loading
@@ -95,7 +85,7 @@ export default function FlashcardsPage() {
       />
 
       <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Mode Selector */}
           <div className="rounded-[2.5rem] border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8">
             <div className="flex items-center gap-2 mb-6">
@@ -170,12 +160,12 @@ export default function FlashcardsPage() {
         </div>
 
         {/* Review Session Sidebar */}
-        <div className="xl:sticky xl:top-8 xl:self-start">
+        <div className="min-w-0 xl:sticky xl:top-8 xl:self-start">
           <ReviewSession
             dueToday={dueToday}
             allWords={words}
             loading={loading}
-            onReview={markReviewed}
+            onRate={rateWord}
           />
         </div>
       </div>

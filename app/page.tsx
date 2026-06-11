@@ -46,7 +46,7 @@ const features = [
   },
   {
     title: "Developer Vocabulary",
-    description: "Master 배포, 서버, API, and 400+ IT terms with spaced repetition and Khmer/English translations.",
+    description: "Master 배포, 서버, API, and 400+ IT terms with spaced repetition and English translations.",
     icon: BookOpenCheck,
     color: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-600 dark:text-amber-400",
@@ -428,7 +428,7 @@ export default function Home() {
                 <div className="space-y-6">
                   {[
                     { title: "Workplace Phrase Analyzer", desc: "Paste any Slack or KakaoTalk message and get full context: politeness level, business meaning, and suggested replies." },
-                    { title: "Developer Vocabulary SRS", desc: "배포, API, 오류 and 400+ IT terms with Khmer/English translations, spaced repetition, and audio." },
+                    { title: "Developer Vocabulary SRS", desc: "배포, API, 오류 and 400+ IT terms with English translations, spaced repetition, and audio." },
                     { title: "Listening & Speaking Practice", desc: "AI-generated standup and code review audio with quizzes, plus voice scoring for pronunciation accuracy." },
                   ].map((benefit) => (
                     <div key={benefit.title} className="flex gap-4">

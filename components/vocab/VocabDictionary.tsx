@@ -17,6 +17,7 @@ type VocabDictionaryProps = {
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => void | Promise<void>
+  onDelete?: (id: string) => void | Promise<void>
 }
 
 const itemVariants = {
@@ -74,7 +75,7 @@ const MASTERY_FILTERS: { value: MasteryFilter; label: string }[] = [
   { value: "mastered", label: "Mastered" },
 ]
 
-export function VocabDictionary({ words, loading, onUpdate }: VocabDictionaryProps) {
+export function VocabDictionary({ words, loading, onUpdate, onDelete }: VocabDictionaryProps) {
   const [query, setQuery] = useState("")
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
   const isFiltering = query.trim().length > 0 || masteryFilter !== "all"
@@ -103,7 +104,7 @@ export function VocabDictionary({ words, loading, onUpdate }: VocabDictionaryPro
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search words, meanings, tags..."
-              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-sm font-bold text-foreground placeholder:text-muted-foreground/40 transition-colors focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:bg-slate-900/40"
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 transition-colors focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:bg-slate-900/40 sm:text-sm"
             />
             {query && (
               <button
@@ -149,6 +150,7 @@ export function VocabDictionary({ words, loading, onUpdate }: VocabDictionaryPro
               defaultOpen={index === 0}
               forceOpen={isFiltering}
               onUpdate={onUpdate}
+              onDelete={onDelete}
             />
           </motion.div>
         ))}

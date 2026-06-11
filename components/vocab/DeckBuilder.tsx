@@ -47,8 +47,8 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
             <div className="h-2 w-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-600 dark:text-teal-400">Card Generator</p>
           </div>
-          <h3 className="mt-4 text-2xl font-black text-foreground">AI Deck Builder</h3>
-          <p className="mt-2 text-[15px] font-medium leading-relaxed text-muted-foreground">
+          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">AI Deck Builder</h3>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Select a category to expand your vocabulary with relevant high-frequency terms.
           </p>
         </div>

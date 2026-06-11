@@ -6,6 +6,7 @@ import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
 import { TipCard } from "@/components/app/tip-card"
+import { AiGenerating } from "@/components/ui/ai-loading"
 import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -116,7 +117,14 @@ export default function DailyPhrasePage() {
       {loading ? (
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="rounded-[2rem] border border-border bg-card p-7 shadow-sm dark:bg-slate-900/40">
-            <Skeleton className="h-4 w-24" />
+            <AiGenerating
+              stages={[
+                "Picking today's workplace phrase…",
+                "Writing the meaning and romanization…",
+                "Finding similar expressions…",
+              ]}
+            />
+            <Skeleton className="mt-7 h-4 w-24" />
             <Skeleton className="mt-5 h-9 w-3/4" />
             <Skeleton className="mt-3 h-5 w-1/2" />
             <Skeleton className="mt-6 h-20 w-full rounded-2xl" />

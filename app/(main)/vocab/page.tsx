@@ -30,7 +30,7 @@ const itemVariants = {
 } as const
 
 export default function VocabPage() {
-  const { dueToday, error, loading, markReviewed, words, generate, importList, updateWord } = useVocab()
+  const { dueToday, error, loading, rateWord, words, generate, importList, updateWord, deleteWord } = useVocab()
   const { refreshStreak } = useStreak()
 
   async function handleGenerate(category: string) {
@@ -75,7 +75,7 @@ export default function VocabPage() {
       )}
 
       <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
-        <div className="order-2 space-y-8 xl:order-1">
+        <div className="order-2 min-w-0 space-y-8 xl:order-1">
           <motion.div variants={itemVariants}>
             <DeckBuilder
               dueCount={dueToday.length}
@@ -91,15 +91,15 @@ export default function VocabPage() {
             />
           </motion.div>
 
-          <VocabDictionary words={words} loading={loading} onUpdate={updateWord} />
+          <VocabDictionary words={words} loading={loading} onUpdate={updateWord} onDelete={deleteWord} />
         </div>
 
-        <motion.div variants={itemVariants} className="order-1 xl:order-2 xl:sticky xl:top-8 xl:self-start">
+        <motion.div variants={itemVariants} className="order-1 min-w-0 xl:order-2 xl:sticky xl:top-8 xl:self-start">
           <ReviewSession
             dueToday={dueToday}
             allWords={words}
             loading={loading}
-            onReview={markReviewed}
+            onRate={rateWord}
           />
         </motion.div>
       </div>

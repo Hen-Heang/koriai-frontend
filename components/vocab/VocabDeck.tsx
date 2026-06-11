@@ -19,6 +19,7 @@ type VocabDeckProps = {
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => void | Promise<void>
+  onDelete?: (id: string) => void | Promise<void>
 }
 
 function masteryColor(mastery: number) {
@@ -27,7 +28,7 @@ function masteryColor(mastery: number) {
   return "bg-red-500/10 text-red-500 dark:text-red-400"
 }
 
-export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, onUpdate }: VocabDeckProps) {
+export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, onUpdate, onDelete }: VocabDeckProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const isOpen = open || forceOpen
@@ -42,7 +43,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
+        className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
           <FolderOpen size={18} strokeWidth={2.5} />
@@ -86,7 +87,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                   <div key={item.id}>
                     {isExpanded ? (
                       <div className="bg-accent/[0.03] p-3 sm:p-4">
-                        <VocabCard item={item} onUpdate={onUpdate} />
+                        <VocabCard item={item} onUpdate={onUpdate} onDelete={onDelete} />
                         <button
                           type="button"
                           onClick={() => setExpandedId(null)}
@@ -101,7 +102,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                         tabIndex={0}
                         onClick={() => setExpandedId(item.id)}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpandedId(item.id) }}
-                        className="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-accent/5 sm:px-6"
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/5 sm:px-6"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline gap-2">

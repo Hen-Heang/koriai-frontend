@@ -23,6 +23,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { SmartPeek } from "@/components/ui/SmartPeek"
+import { AiGenerating } from "@/components/ui/ai-loading"
+import { Skeleton } from "@/components/ui/skeleton"
 import { correctionApi, vocabApi } from "@/lib/api"
 import { useStreak } from "@/hooks/useStreak"
 import { cn } from "@/lib/utils"
@@ -250,8 +252,32 @@ export default function CorrectPage() {
           )}
 
           <AnimatePresence mode="wait">
+            {loading && (
+              <motion.div
+                key="analyzing"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:p-8"
+              >
+                <AiGenerating
+                  stages={[
+                    "Reading your Korean…",
+                    "Checking grammar and spelling…",
+                    "Comparing natural phrasing…",
+                    "Writing explanations…",
+                  ]}
+                />
+                <div className="mt-6 space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-16 w-full rounded-2xl" />
+                  <Skeleton className="h-16 w-full rounded-2xl" />
+                  <Skeleton className="h-4 w-3/5" />
+                </div>
+              </motion.div>
+            )}
             {result && (
-              <motion.div 
+              <motion.div
                 key="result"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
