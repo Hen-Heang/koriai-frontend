@@ -10,6 +10,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Extend the layout under the notch/home indicator so env(safe-area-inset-*)
+  // resolves to real values — without this every safe-area padding is 0 on iOS.
+  viewportFit: "cover",
   interactiveWidget: "resizes-content",
 }
 

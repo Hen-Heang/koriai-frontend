@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import {
   ArrowLeft,
+  ArrowLeftRight,
   BrainCircuit,
   CheckCircle2,
   ChevronRight,
+  Eye,
   Lightbulb,
   RotateCcw,
   Sparkles,
@@ -16,19 +18,16 @@ import { motion, AnimatePresence } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { chatApi } from "@/lib/api"
+import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
-
-function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
-}
 
 function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   const distractors = shuffle(pool.filter((w) => w.id !== correct.id)).slice(0, 3)
   return shuffle([correct, ...distractors])
 }
 
-type Mode = "flashcard" | "choice"
+type Mode = "flashcard" | "choice" | "recall"
 type Phase = "idle" | "quiz" | "done"
 
 type ReviewSessionProps = {
@@ -41,16 +40,47 @@ type ReviewSessionProps = {
 // ─── Flashcard ────────────────────────────────────────────────────────────────
 function FlashCard({
   card,
+  reversed = false,
   onKnew,
   onLearning,
 }: {
   card: VocabItem
+  reversed?: boolean
   onKnew: () => void | Promise<void>
   onLearning: () => void
 }) {
   const [flipped, setFlipped] = useState(false)
   const [hint, setHint] = useState<string | null>(null)
   const [loadingHint, setLoadingHint] = useState(false)
+
+  const handleLearning = useCallback(() => {
+    setFlipped(false)
+    setHint(null)
+    onLearning()
+  }, [onLearning])
+
+  const handleKnew = useCallback(() => {
+    setFlipped(false)
+    setHint(null)
+    onKnew()
+  }, [onKnew])
+
+  // Space/Enter flips, then 1 = Again, 2 = Got it
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (!flipped && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault()
+        setFlipped(true)
+      } else if (flipped && e.key === "1") {
+        handleLearning()
+      } else if (flipped && e.key === "2") {
+        handleKnew()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [flipped, handleKnew, handleLearning])
 
   async function fetchHint() {
     if (hint || loadingHint) return
@@ -84,8 +114,8 @@ function FlashCard({
             onClick={() => setFlipped(true)}
             className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[3rem] border border-border bg-card p-8 text-center shadow-xl dark:bg-slate-900/60"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">Korean</span>
-            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{card.term}</p>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">{reversed ? "English" : "Korean"}</span>
+            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{reversed ? card.meaning : card.term}</p>
             <div className="mt-10 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-5 py-2.5 text-xs font-bold text-muted-foreground/60 transition-colors hover:bg-accent/10">
               Tap to Reveal
             </div>
@@ -95,8 +125,8 @@ function FlashCard({
           <div
             className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[3rem] border border-emerald-500/20 bg-card p-8 text-center shadow-2xl dark:bg-slate-900/80"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">Meaning</span>
-            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground sm:text-4xl">{card.meaning}</p>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">{reversed ? "Korean" : "Meaning"}</span>
+            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground sm:text-4xl">{reversed ? card.term : card.meaning}</p>
             
             {card.example && (
               <div className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-accent/5 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
@@ -139,7 +169,7 @@ function FlashCard({
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => { setFlipped(false); setHint(null); onLearning() }}
+                onClick={handleLearning}
                 className="flex h-16 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
               >
                 <XCircle size={20} strokeWidth={2.5} />
@@ -147,7 +177,7 @@ function FlashCard({
               </button>
               <button
                 type="button"
-                onClick={() => { setFlipped(false); setHint(null); onKnew() }}
+                onClick={handleKnew}
                 className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
               >
                 <CheckCircle2 size={20} strokeWidth={2.5} />
@@ -255,10 +285,149 @@ function ChoiceCard({
   )
 }
 
+// ─── Typed recall ──────────────────────────────────────────────────────────────
+function RecallCard({
+  card,
+  onKnew,
+  onLearning,
+}: {
+  card: VocabItem
+  onKnew: () => void | Promise<void>
+  onLearning: () => void
+}) {
+  const [answer, setAnswer] = useState("")
+  const [result, setResult] = useState<"correct" | "incorrect" | null>(null)
+  const answered = result !== null
+
+  function submit() {
+    if (answered || !answer.trim()) return
+    setResult(isCorrectTerm(answer, card.term) ? "correct" : "incorrect")
+  }
+
+  function next() {
+    if (result === "correct") {
+      onKnew()
+    } else {
+      onLearning()
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Prompt Card */}
+      <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Type in Korean</span>
+        <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground sm:text-5xl">{card.meaning}</p>
+        {card.pronunciation && answered && (
+          <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
+        )}
+      </div>
+
+      {/* Answer Input */}
+      <div className="space-y-3">
+        <input
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return
+            e.preventDefault()
+            if (answered) {
+              next()
+            } else {
+              submit()
+            }
+          }}
+          disabled={answered}
+          autoFocus
+          lang="ko"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="한국어로 입력하세요..."
+          className={cn(
+            "h-16 w-full rounded-2xl border bg-card px-5 text-center text-xl font-black tracking-tight text-foreground placeholder:text-base placeholder:font-bold placeholder:text-muted-foreground/30 focus:outline-none transition-colors",
+            !answered
+              ? "border-border focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
+              : result === "correct"
+              ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+              : "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400"
+          )}
+        />
+
+        {!answered && (
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!answer.trim()}
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
+            >
+              <CheckCircle2 size={18} strokeWidth={2.5} />
+              Check
+            </button>
+            <button
+              type="button"
+              onClick={() => setResult("incorrect")}
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent active:scale-95"
+            >
+              <Eye size={16} strokeWidth={2.5} />
+              Show
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Result + Next */}
+      <AnimatePresence>
+        {answered && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3 rounded-2xl border p-4",
+                result === "correct"
+                  ? "border-emerald-500/20 bg-emerald-500/5"
+                  : "border-red-500/20 bg-red-500/5"
+              )}
+            >
+              <div className="min-w-0">
+                <p className={cn(
+                  "text-[10px] font-black uppercase tracking-[0.2em]",
+                  result === "correct" ? "text-emerald-600" : "text-red-500"
+                )}>
+                  {result === "correct" ? "Correct" : "Answer"}
+                </p>
+                <p className="mt-1 break-keep text-2xl font-black tracking-tight text-foreground">{card.term}</p>
+                {card.example && (
+                  <p className="mt-2 text-sm font-bold leading-relaxed text-muted-foreground/70">{card.example}</p>
+                )}
+              </div>
+              <SpeakButton text={card.term} className="h-11 w-11 shrink-0 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
+            </div>
+
+            <button
+              type="button"
+              onClick={next}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
+            >
+              Next Word
+              <ChevronRight size={20} strokeWidth={3} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewSessionProps) {
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
+  const [reversed, setReversed] = useState(false)
   const [queue, setQueue] = useState<VocabItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [stats, setStats] = useState({ knew: 0, learning: 0 })
@@ -331,24 +500,34 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
           </div>
 
           {/* Mode Selector - iOS style */}
-          {canUseChoice && (
-            <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
-              {(["flashcard", "choice"] as Mode[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    "flex-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
-                    mode === m
-                      ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {m === "flashcard" ? "Flashcard" : "Quiz"}
-                </button>
-              ))}
-            </div>
+          <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
+            {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={cn(
+                  "flex-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
+                  mode === m
+                    ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : "Recall"}
+              </button>
+            ))}
+          </div>
+
+          {/* Direction toggle for flashcards */}
+          {mode === "flashcard" && (
+            <button
+              type="button"
+              onClick={() => setReversed((r) => !r)}
+              className="mx-auto -mt-2 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground active:scale-95"
+            >
+              <ArrowLeftRight size={13} strokeWidth={3} />
+              {reversed ? "English → Korean" : "Korean → English"}
+            </button>
           )}
 
           {/* Action Button */}
@@ -469,9 +648,16 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
             exit={{ opacity: 0, scale: 0.98, x: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {mode === "flashcard" || !canUseChoice ? (
+            {mode === "recall" ? (
+              <RecallCard
+                card={card}
+                onKnew={handleKnew}
+                onLearning={handleLearning}
+              />
+            ) : mode === "flashcard" || !canUseChoice ? (
               <FlashCard
                 card={card}
+                reversed={reversed}
                 onKnew={handleKnew}
                 onLearning={handleLearning}
               />

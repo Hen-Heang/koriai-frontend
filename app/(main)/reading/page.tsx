@@ -2,16 +2,26 @@
 
 import Link from "next/link"
 import { useSyncExternalStore } from "react"
-import { BookOpenText, CheckCircle2, ChevronRight, CircleDashed, Clock3 } from "lucide-react"
+import {
+  BookOpenText,
+  CheckCircle2,
+  ChevronRight,
+  CircleDashed,
+  Clock3,
+  Plus,
+} from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
-import { READING_UNITS } from "@/lib/reading-data"
 import {
   READING_CATEGORIES,
+  getAllReadingUnits,
   getReadingProgress,
   getReadingProgressServerSnapshot,
+  getReadingUnitsServerSnapshot,
+  isBuiltinReadingUnit,
   subscribeReadingProgress,
+  subscribeReadingUnits,
   type ReadingCategory,
   type ReadingProgressEntry,
 } from "@/lib/reading"
@@ -57,10 +67,13 @@ export default function ReadingPage() {
     getReadingProgress,
     getReadingProgressServerSnapshot
   )
+  const units = useSyncExternalStore(
+    subscribeReadingUnits,
+    getAllReadingUnits,
+    getReadingUnitsServerSnapshot
+  )
 
-  const completedCount = READING_UNITS.filter(
-    (u) => progress[u.id]?.status === "completed"
-  ).length
+  const completedCount = units.filter((u) => progress[u.id]?.status === "completed").length
 
   return (
     <motion.div
@@ -73,19 +86,27 @@ export default function ReadingPage() {
         <PageHero
           eyebrow="Reading"
           title="Reading Units"
-          description="Real Korean articles, podcast transcripts, and stories — organized into units. Read with tap-to-translate and audio, save the vocabulary, then pass the quiz to complete each unit."
+          description="Real Korean articles, podcast transcripts, and stories — organized into units. Read with tap-to-translate and audio, save the vocabulary, then pass the quiz to complete each unit. Add your own texts too."
+          actions={
+            <Link
+              href="/reading/new"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+            >
+              <Plus size={14} strokeWidth={3} /> New unit
+            </Link>
+          }
           stats={[
-            { label: "Units", value: String(READING_UNITS.length) },
-            { label: "Completed", value: `${completedCount}/${READING_UNITS.length}` },
+            { label: "Units", value: String(units.length) },
+            { label: "Completed", value: `${completedCount}/${units.length}` },
             { label: "Flow", value: "Read · Vocab · Quiz" },
           ]}
         />
       </motion.div>
 
       {CATEGORY_ORDER.map((category) => {
-        const units = READING_UNITS.filter((u) => u.category === category)
-        if (units.length === 0) return null
-        const done = units.filter((u) => progress[u.id]?.status === "completed").length
+        const categoryUnits = units.filter((u) => u.category === category)
+        if (categoryUnits.length === 0) return null
+        const done = categoryUnits.filter((u) => progress[u.id]?.status === "completed").length
 
         return (
           <motion.section key={category} variants={itemVariants} className="space-y-3">
@@ -99,12 +120,12 @@ export default function ReadingPage() {
                 </p>
               </div>
               <span className="text-xs font-black text-muted-foreground/70">
-                {done}/{units.length} done
+                {done}/{categoryUnits.length} done
               </span>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {units.map((unit) => {
+              {categoryUnits.map((unit) => {
                 const entry = progress[unit.id] ?? { status: "not_started" as const }
                 return (
                   <Link
@@ -121,7 +142,14 @@ export default function ReadingPage() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         <BookOpenText size={18} strokeWidth={2.5} />
                       </div>
-                      <StatusBadge entry={entry} />
+                      <div className="flex items-center gap-1.5">
+                        {!isBuiltinReadingUnit(unit.id) && (
+                          <span className="inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                            Custom
+                          </span>
+                        )}
+                        <StatusBadge entry={entry} />
+                      </div>
                     </div>
 
                     <h4 className="mt-4 text-lg font-extrabold tracking-tight text-foreground">
@@ -141,18 +169,19 @@ export default function ReadingPage() {
                         <span>·</span>
                         <span>{unit.quiz.length} questions</span>
                       </div>
-                      <ChevronRight
-                        size={16}
-                        strokeWidth={3}
-                        className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-500"
-                      />
+                      <div className="flex shrink-0 items-center gap-2">
+                        {typeof entry.quizScore === "number" && (
+                          <span className="text-[10px] font-black text-muted-foreground/50">
+                            Quiz {entry.quizScore}/{entry.quizTotal}
+                          </span>
+                        )}
+                        <ChevronRight
+                          size={16}
+                          strokeWidth={3}
+                          className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-500"
+                        />
+                      </div>
                     </div>
-
-                    {typeof entry.quizScore === "number" && (
-                      <span className="absolute right-5 top-16 text-[10px] font-black text-muted-foreground/50">
-                        Quiz {entry.quizScore}/{entry.quizTotal}
-                      </span>
-                    )}
                   </Link>
                 )
               })}

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import {
   ArrowLeft,
@@ -13,23 +13,30 @@ import {
   GraduationCap,
   Lightbulb,
   Loader2,
+  Pencil,
   RotateCcw,
+  Trash2,
   XCircle,
 } from "lucide-react"
 import { motion } from "motion/react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { getApiErrorMessage, vocabApi } from "@/lib/api"
-import { READING_UNITS } from "@/lib/reading-data"
 import {
   READING_CATEGORIES,
+  deleteReadingUnit,
+  getAllReadingUnits,
   getReadingProgress,
   getReadingProgressServerSnapshot,
+  getReadingUnitsServerSnapshot,
+  markUnitCompleted,
   markUnitQuizResult,
   markUnitStarted,
   subscribeReadingProgress,
+  subscribeReadingUnits,
 } from "@/lib/reading"
 import { cn } from "@/lib/utils"
 
@@ -63,7 +70,13 @@ function PeekableText({ text }: { text: string }) {
 
 export default function ReadingUnitPage() {
   const params = useParams<{ id: string }>()
-  const unit = useMemo(() => READING_UNITS.find((u) => u.id === params.id), [params.id])
+  const router = useRouter()
+  const units = useSyncExternalStore(
+    subscribeReadingUnits,
+    getAllReadingUnits,
+    getReadingUnitsServerSnapshot
+  )
+  const unit = useMemo(() => units.find((u) => u.id === params.id), [units, params.id])
 
   const progressMap = useSyncExternalStore(
     subscribeReadingProgress,
@@ -160,6 +173,14 @@ export default function ReadingUnitPage() {
     setScore(0)
   }
 
+  function handleDelete() {
+    if (!unit) return
+    if (!window.confirm(`Delete "${unit.title}"? This cannot be undone.`)) return
+    deleteReadingUnit(unit.id)
+    toast.success("Unit deleted.")
+    router.push("/reading")
+  }
+
   const allAnswered = Object.keys(answers).length === unit.quiz.length
   const passed = submitted && score >= Math.ceil(unit.quiz.length * 0.6)
 
@@ -180,18 +201,37 @@ export default function ReadingUnitPage() {
         </Link>
 
         <div className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
-              {READING_CATEGORIES[unit.category].label}
-            </span>
-            <span className="inline-flex rounded-full bg-muted px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
-              {unit.level}
-            </span>
-            {progress.status === "completed" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">
-                <CheckCircle2 size={11} strokeWidth={3} /> Completed
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+                {READING_CATEGORIES[unit.category].label}
               </span>
-            )}
+              <span className="inline-flex rounded-full bg-muted px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                {unit.level}
+              </span>
+              {progress.status === "completed" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">
+                  <CheckCircle2 size={11} strokeWidth={3} /> Completed
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/reading/${unit.id}/edit`}
+                title="Edit unit"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground shadow-sm transition-all hover:text-foreground active:scale-95"
+              >
+                <Pencil size={15} strokeWidth={2.5} />
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                title="Delete unit"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground shadow-sm transition-all hover:border-destructive/30 hover:text-destructive active:scale-95"
+              >
+                <Trash2 size={15} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 flex items-center gap-3">
@@ -234,14 +274,14 @@ export default function ReadingUnitPage() {
           <div className="flex items-center gap-2">
             <BookOpenText size={16} strokeWidth={2.5} className="text-emerald-600 dark:text-emerald-400" />
             <h3 className="text-base font-black tracking-tight text-foreground">Read</h3>
-            <span className="text-[10px] font-bold text-muted-foreground/60">
+            <span className="hidden text-[10px] font-bold text-muted-foreground/60 sm:inline">
               Tap any word to look it up · tap 🔊 to listen
             </span>
           </div>
           <button
             type="button"
             onClick={() => setAllTranslations((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-600 hover:underline dark:text-emerald-400"
+            className="inline-flex shrink-0 items-center gap-1.5 py-2 text-xs font-black text-emerald-600 hover:underline dark:text-emerald-400"
           >
             {allTranslations ? <EyeOff size={13} strokeWidth={3} /> : <Eye size={13} strokeWidth={3} />}
             {allTranslations ? "Hide all translations" : "Show all translations"}
@@ -289,8 +329,9 @@ export default function ReadingUnitPage() {
       </motion.section>
 
       {/* ── Vocabulary section ── */}
+      {unit.vocab.length > 0 && (
       <motion.section variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <div className="flex items-center gap-2">
             <BookmarkPlus size={16} strokeWidth={2.5} className="text-emerald-600 dark:text-emerald-400" />
             <h3 className="text-base font-black tracking-tight text-foreground">
@@ -361,6 +402,7 @@ export default function ReadingUnitPage() {
           })}
         </div>
       </motion.section>
+      )}
 
       {/* ── Quiz section ── */}
       <motion.section variants={itemVariants} className="space-y-3">
@@ -370,10 +412,33 @@ export default function ReadingUnitPage() {
             Comprehension Quiz
           </h3>
           <span className="text-[10px] font-bold text-muted-foreground/60">
-            Pass to complete the unit
+            {unit.quiz.length > 0 ? "Pass to complete the unit" : "No quiz in this unit"}
           </span>
         </div>
 
+        {unit.quiz.length === 0 ? (
+          <div className="flex flex-col items-start gap-3 rounded-[1.8rem] border border-border bg-card p-5 dark:bg-slate-900/40 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-muted-foreground">
+              This unit has no quiz — mark it as completed once you have finished reading.
+              You can add questions any time with the edit button above.
+            </p>
+            {progress.status === "completed" ? (
+              <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-black text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 size={16} strokeWidth={2.5} /> Completed
+              </span>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => markUnitCompleted(unit.id)}
+                className="h-10 shrink-0 rounded-xl bg-emerald-600 px-5 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-500 active:scale-95"
+              >
+                <CheckCircle2 size={14} className="mr-1.5" strokeWidth={2.5} />
+                Mark as completed
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
         {submitted && (
           <div
             className={cn(
@@ -451,7 +516,7 @@ export default function ReadingUnitPage() {
                     )
                   })}
                 </div>
-                {submitted && (
+                {submitted && q.explanation && (
                   <div className="mt-3 flex items-start gap-2 rounded-xl bg-accent/50 p-3 text-xs font-medium leading-relaxed text-muted-foreground">
                     <Lightbulb size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-amber-500" />
                     {q.explanation}
@@ -473,6 +538,8 @@ export default function ReadingUnitPage() {
               ? "Submit answers"
               : `Answer all questions (${Object.keys(answers).length}/${unit.quiz.length})`}
           </Button>
+        )}
+          </>
         )}
       </motion.section>
     </motion.div>

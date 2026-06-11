@@ -51,6 +51,7 @@ const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
   { href: "/flashcards", label: "Cards", icon: Layers3 },
+  { href: "/reading", label: "Read", icon: BookOpenText },
   { href: "/correct", label: "Correct", icon: SpellCheck2 },
 ]
 
@@ -80,17 +81,24 @@ export default function MainLayout({
     }
 
     const viewport = window.visualViewport
-    const baseHeight = viewport?.height ?? window.innerHeight
+    let baseHeight = viewport?.height ?? window.innerHeight
 
     function updateKeyboardState() {
       const currentHeight = viewport?.height ?? window.innerHeight
-      const heightDelta = baseHeight - currentHeight
       const activeElement = document.activeElement as HTMLElement | null
       const isEditable =
         activeElement?.tagName === "INPUT" ||
         activeElement?.tagName === "TEXTAREA" ||
         activeElement?.isContentEditable
 
+      // While nothing editable is focused the keyboard can't be open, so the
+      // current height is the true baseline — re-capturing it here keeps the
+      // detection correct after rotation or browser-chrome resizes.
+      if (!isEditable) {
+        baseHeight = currentHeight
+      }
+
+      const heightDelta = baseHeight - currentHeight
       setIsKeyboardOpen(Boolean(isEditable && heightDelta > 120))
     }
 
@@ -312,11 +320,12 @@ export default function MainLayout({
               <AnimatePresence initial={false}>
                 {activeTabIndex !== -1 && (
                   <motion.div
-                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                    className="absolute z-0 h-[calc(100%-12px)] w-[calc((100%-0.75rem)/4)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
                     initial={false}
                     animate={{
-                      left: `${(activeTabIndex * 100) / bottomTabs.length}%`,
-                      width: `${100 / bottomTabs.length}%`,
+                      // % offsets resolve against the padding box, but the tabs sit
+                      // inside the p-1.5 content box — offset by the 0.375rem padding.
+                      left: `calc(0.375rem + ${activeTabIndex} * (100% - 0.75rem) / ${bottomTabs.length})`,
                     }}
                     transition={{
                       type: "spring",

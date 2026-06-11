@@ -13,6 +13,8 @@ type VocabDeckProps = {
   name: string
   items: VocabItem[]
   defaultOpen?: boolean
+  /** Keeps the deck expanded regardless of its toggle state (e.g. while searching). */
+  forceOpen?: boolean
   onUpdate?: (
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
@@ -25,9 +27,10 @@ function masteryColor(mastery: number) {
   return "bg-red-500/10 text-red-500 dark:text-red-400"
 }
 
-export function VocabDeck({ name, items, defaultOpen = false, onUpdate }: VocabDeckProps) {
+export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, onUpdate }: VocabDeckProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const isOpen = open || forceOpen
 
   const avgMastery = items.length
     ? Math.round(items.reduce((sum, w) => sum + w.mastery, 0) / items.length)
@@ -61,14 +64,14 @@ export function VocabDeck({ name, items, defaultOpen = false, onUpdate }: VocabD
           strokeWidth={2.5}
           className={cn(
             "shrink-0 text-muted-foreground/40 transition-transform duration-200",
-            open && "rotate-180"
+            isOpen && "rotate-180"
           )}
         />
       </button>
 
       {/* Word rows */}
       <AnimatePresence>
-        {open && (
+        {isOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { BookmarkPlus, Loader2, CheckCircle2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { chatApi, vocabApi } from "@/lib/api"
+import { vocabApi } from "@/lib/api"
 
 type PeekData = {
   word: string
@@ -14,6 +14,10 @@ type PeekData = {
   example?: string
   hanja?: string
 }
+
+// Lookups are pure word→definition queries, so cache them for the whole
+// session — re-tapping a word (or meeting it again in another text) is free.
+const lookupCache = new Map<string, PeekData>()
 
 export function SmartPeek({ 
   word, 
@@ -30,21 +34,22 @@ export function SmartPeek({
 
   const fetchData = React.useCallback(async () => {
     if (data || loading) return
+    const cached = lookupCache.get(word)
+    if (cached) {
+      setData(cached)
+      return
+    }
     setLoading(true)
     try {
-      const conv = await chatApi.createConversation(`Lookup: ${word}`, "FREE_CHAT")
-      const res = await chatApi.sendMessage(
-        conv.id,
-        `Define the Korean word "${word}". Provide a concise English translation, a natural example sentence, and its Hanja root if applicable. Format: Translation | Example | Hanja (or N/A)`
-      )
-      
-      const parts = res.assistantReply.split("|").map((p: string) => p.trim())
-      setData({
+      const res = await vocabApi.lookup(word)
+      const peek: PeekData = {
         word,
-        definition: parts[0] || "No definition found.",
-        example: parts[1] !== "N/A" ? parts[1] : undefined,
-        hanja: parts[2] !== "N/A" ? parts[2] : undefined
-      })
+        definition: res.definition || "No definition found.",
+        example: res.example ?? undefined,
+        hanja: res.hanja ?? undefined,
+      }
+      lookupCache.set(word, peek)
+      setData(peek)
     } catch {
       setData({ word, definition: "Could not fetch definition." })
     } finally {
@@ -118,7 +123,11 @@ export function SmartPeek({
                         </div>
                         <p className="mt-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">{data.definition}</p>
                       </div>
-                      <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+                      <button
+                        onClick={() => setOpen(false)}
+                        aria-label="Close"
+                        className="-mr-2 -mt-2 rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                      >
                         <X size={14} strokeWidth={3} />
                       </button>
                     </div>

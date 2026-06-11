@@ -1,11 +1,13 @@
 "use client"
 
-import { useMemo } from "react"
-import { Layers3 } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Layers3, Search, SearchX, X } from "lucide-react"
 import { motion } from "motion/react"
 
+import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { VocabDeck } from "@/components/vocab/VocabDeck"
+import { filterVocab, type MasteryFilter } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 
 type VocabDictionaryProps = {
@@ -65,15 +67,76 @@ function DeckSkeleton() {
   )
 }
 
+const MASTERY_FILTERS: { value: MasteryFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "weak", label: "Weak" },
+  { value: "learning", label: "Learning" },
+  { value: "mastered", label: "Mastered" },
+]
+
 export function VocabDictionary({ words, loading, onUpdate }: VocabDictionaryProps) {
-  const decks = useMemo(() => groupByCategory(words), [words])
+  const [query, setQuery] = useState("")
+  const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
+  const isFiltering = query.trim().length > 0 || masteryFilter !== "all"
+
+  const filtered = useMemo(
+    () => filterVocab(words, query, masteryFilter),
+    [words, query, masteryFilter]
+  )
+  const decks = useMemo(() => groupByCategory(filtered), [filtered])
 
   return (
     <div className="space-y-6">
       <div className="px-4">
         <h4 className="text-sm font-black uppercase tracking-[0.25em] text-muted-foreground/60">Your Dictionary</h4>
-        <p className="mt-1 text-xs font-bold text-muted-foreground/30">{words.length} items collected</p>
+        <p className="mt-1 text-xs font-bold text-muted-foreground/30">
+          {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
+        </p>
       </div>
+
+      {words.length > 0 && (
+        <div className="space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search size={16} strokeWidth={2.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search words, meanings, tags..."
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-sm font-bold text-foreground placeholder:text-muted-foreground/40 transition-colors focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:bg-slate-900/40"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
+                <X size={14} strokeWidth={3} />
+              </button>
+            )}
+          </div>
+
+          {/* Mastery filter chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {MASTERY_FILTERS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMasteryFilter(value)}
+                className={cn(
+                  "rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95",
+                  masteryFilter === value
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && !words.length ? <DeckSkeleton /> : null}
 
@@ -84,11 +147,21 @@ export function VocabDictionary({ words, loading, onUpdate }: VocabDictionaryPro
               name={category}
               items={items}
               defaultOpen={index === 0}
+              forceOpen={isFiltering}
               onUpdate={onUpdate}
             />
           </motion.div>
         ))}
       </div>
+
+      {!loading && words.length > 0 && !filtered.length ? (
+        <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-accent/5 p-10 text-center">
+          <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/30" />
+          <p className="text-sm font-bold text-muted-foreground/60">
+            No words match your search.
+          </p>
+        </div>
+      ) : null}
 
       {!loading && !words.length ? (
         <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-accent/5 p-10 text-center sm:rounded-[3rem] sm:p-16">

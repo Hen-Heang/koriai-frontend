@@ -179,6 +179,14 @@ export const vocabApi = {
   markReviewed: (id: string, correct = true) => api.post(`/vocab/${id}/review?correct=${correct}`).then((r) => r.data.data),
   save: (data: { category?: string; term: string; meaning: string; example?: string }) =>
     api.post("/vocab/save", data).then((r) => r.data.data),
+  lookup: (word: string) =>
+    api.get(`/vocab/lookup?word=${encodeURIComponent(word)}`).then((r) => r.data.data) as Promise<{
+      word: string
+      definition: string
+      example?: string | null
+      exampleTranslation?: string | null
+      hanja?: string | null
+    }>,
   generate: (category: string, count = 10) =>
     api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
   importList: (category: string, text: string) =>
@@ -243,6 +251,32 @@ export const progressApi = {
 export const scenarioApi = {
   getList: () => api.get("/scenarios").then((r) => r.data.data),
   getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
+}
+
+// Reading Units (user-created units, CRUD)
+export type ReadingUnitPayload = Omit<import("@/lib/reading").ReadingUnit, "id">
+
+export const readingApi = {
+  getUnits: () =>
+    api.get("/reading/units").then((r) => r.data.data) as Promise<
+      import("@/lib/reading").ReadingUnit[]
+    >,
+  getUnit: (id: string) =>
+    api.get(`/reading/units/${id}`).then((r) => r.data.data) as Promise<
+      import("@/lib/reading").ReadingUnit
+    >,
+  createUnit: (data: ReadingUnitPayload) =>
+    api.post("/reading/units", data).then((r) => r.data.data) as Promise<
+      import("@/lib/reading").ReadingUnit
+    >,
+  updateUnit: (id: string, data: ReadingUnitPayload) =>
+    api.put(`/reading/units/${id}`, data).then((r) => r.data.data) as Promise<
+      import("@/lib/reading").ReadingUnit
+    >,
+  deleteUnit: (id: string) =>
+    api.delete(`/reading/units/${id}`).then((r) => r.data.data) as Promise<{
+      deleted: boolean
+    }>,
 }
 
 // Workplace Korean Analyzer (Module 9)
