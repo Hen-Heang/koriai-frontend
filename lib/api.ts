@@ -220,57 +220,6 @@ export const scenarioApi = {
   getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
 }
 
-// Conversations (generic conversation store — distinct from /chat/conversations)
-export const conversationApi = {
-  create: (data: {
-    userId: number
-    title: string
-    conversationType: string
-    modelUsed: string
-    scenarioId?: number
-  }) => api.post("/conversations", data).then((r) => r.data.data),
-
-  getById: (id: number) =>
-    api.get(`/conversations/${id}`).then((r) => r.data.data),
-
-  listByUser: (userId: number, limit = 20, offset = 0) =>
-    api
-      .get(`/conversations?userId=${userId}&limit=${limit}&offset=${offset}`)
-      .then((r) => r.data.data),
-
-  updateTitle: (id: number, title: string) =>
-    api.put(`/conversations/${id}/title`, { title }).then((r) => r.data.data),
-
-  delete: (id: number) =>
-    api.delete(`/conversations/${id}`).then((r) => r.data.data) as Promise<{
-      deleted: boolean
-    }>,
-}
-
-// Messages (generic message store — distinct from /chat messages)
-export const messageApi = {
-  create: (data: {
-    conversationId: number
-    role: string
-    content: string
-    tokensUsed: number
-    corrections?: string
-  }) => api.post("/messages", data).then((r) => r.data.data),
-
-  getById: (id: number) =>
-    api.get(`/messages/${id}`).then((r) => r.data.data),
-
-  listByConversation: (conversationId: number, limit = 50, offset = 0) =>
-    api
-      .get(`/messages/conversation/${conversationId}?limit=${limit}&offset=${offset}`)
-      .then((r) => r.data.data),
-
-  countByConversation: (conversationId: number) =>
-    api
-      .get(`/messages/conversation/${conversationId}/count`)
-      .then((r) => r.data.data) as Promise<{ count: number }>,
-}
-
 // Workplace Korean Analyzer (Module 9)
 export const analyzerApi = {
   analyze: (text: string, source?: string) =>

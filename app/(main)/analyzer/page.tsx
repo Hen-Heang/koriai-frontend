@@ -20,10 +20,13 @@ import { motion, AnimatePresence } from "motion/react"
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ErrorBanner } from "@/components/ui/error-banner"
 import { Textarea } from "@/components/ui/textarea"
 import { SpeakButton } from "@/components/ui/SpeakButton"
-import { analyzerApi, getApiErrorMessage } from "@/lib/api"
+import { useCopy } from "@/hooks/useCopy"
 import { useStreak } from "@/hooks/useStreak"
+import { analyzerApi, getApiErrorMessage } from "@/lib/api"
+import { containerVariants, itemVariants } from "@/lib/motion"
 import type { MessageAnalysis } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -35,6 +38,12 @@ const sources = [
   "Other",
 ]
 
+const howToTips = [
+  { label: "Pick a source", text: "Tag where the message came from so context matches the platform's tone.", icon: ScanText, color: "text-emerald-500" },
+  { label: "Read the breakdown", text: "Each honorific and phrase is explained so you learn the nuance, not just the meaning.", icon: ListTree, color: "text-amber-500" },
+  { label: "Reply with confidence", text: "Copy or listen to a suggested reply that matches the right formality.", icon: MessageSquareReply, color: "text-sky-500" },
+]
+
 const starterPrompts = [
   "담당자분께 전달드렸습니다. 확인 후 회신 부탁드립니다.",
   "이번 배포 건은 QA 끝나고 진행하는 게 좋을 것 같습니다.",
@@ -42,32 +51,13 @@ const starterPrompts = [
   "해당 이슈는 제가 보고 있는데, 재현이 잘 안 되네요. 혹시 로그 공유 가능하실까요?",
 ]
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
-} as const
-
 export default function AnalyzerPage() {
   const [text, setText] = useState("")
   const [source, setSource] = useState<string | null>(null)
   const [result, setResult] = useState<MessageAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [copied, setCopied] = useState<number | null>(null)
+  const { copied, copy } = useCopy(2000)
   const { refreshStreak } = useStreak()
 
   async function handleAnalyze() {
@@ -84,12 +74,6 @@ export default function AnalyzerPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  function handleCopyReply(index: number, korean: string) {
-    navigator.clipboard.writeText(korean)
-    setCopied(index)
-    setTimeout(() => setCopied(null), 2000)
   }
 
   function handleClear() {
@@ -197,15 +181,7 @@ export default function AnalyzerPage() {
             </Card>
           </motion.div>
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-bold text-destructive"
-            >
-              {error}
-            </motion.p>
-          )}
+          {error && <ErrorBanner>{error}</ErrorBanner>}
 
           <AnimatePresence mode="wait">
             {result && (
@@ -349,7 +325,7 @@ export default function AnalyzerPage() {
                               <Button
                                 size="icon"
                                 variant="secondary"
-                                onClick={() => handleCopyReply(i, reply.korean)}
+                                onClick={() => copy(reply.korean, i)}
                                 className={cn(
                                   "h-9 w-9 rounded-xl font-bold transition-all active:scale-95",
                                   copied === i ? "bg-emerald-500 text-white" : "bg-background shadow-sm ring-1 ring-border"
@@ -383,11 +359,7 @@ export default function AnalyzerPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-5 pt-6">
-                {[
-                  { label: "Pick a source", text: "Tag where the message came from so context matches the platform's tone.", icon: ScanText, color: "text-emerald-500" },
-                  { label: "Read the breakdown", text: "Each honorific and phrase is explained so you learn the nuance, not just the meaning.", icon: ListTree, color: "text-amber-500" },
-                  { label: "Reply with confidence", text: "Copy or listen to a suggested reply that matches the right formality.", icon: MessageSquareReply, color: "text-sky-500" },
-                ].map((tip) => (
+                {howToTips.map((tip) => (
                   <div key={tip.label} className="flex gap-3">
                     <div className={cn("mt-0.5 shrink-0", tip.color)}>
                       <tip.icon size={16} strokeWidth={3} />

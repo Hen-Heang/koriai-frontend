@@ -5,21 +5,16 @@ import { BookmarkPlus, CheckCircle2, Info, Lightbulb, RefreshCw } from "lucide-r
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { TipCard } from "@/components/app/tip-card"
 import { Button } from "@/components/ui/button"
+import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { dailyPhraseApi, getApiErrorMessage } from "@/lib/api"
+import { staggerContainer, itemVariants } from "@/lib/motion"
 import type { DailyPhrase } from "@/lib/types"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-} as const
+const containerVariants = staggerContainer(0.1)
 
 export default function DailyPhrasePage() {
   const [phrase, setPhrase] = useState<DailyPhrase | null>(null)
@@ -95,14 +90,7 @@ export default function DailyPhrasePage() {
         />
       </motion.div>
 
-      {error && (
-        <motion.div
-          variants={itemVariants}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
-        >
-          {error}
-        </motion.div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading ? (
         <motion.div variants={itemVariants} className="space-y-4">
@@ -192,15 +180,13 @@ export default function DailyPhrasePage() {
                 {phrase.similarExpressions.map((s, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 dark:bg-white/4"
+                    className="rounded-2xl border border-border bg-card px-4 py-3 dark:bg-white/4"
                   >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-foreground">{s.phrase}</p>
-                        <SpeakButton text={s.phrase} />
-                      </div>
-                      <p className="mt-0.5 text-sm text-muted-foreground">{s.meaning}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-bold text-foreground">{s.phrase}</p>
+                      <SpeakButton text={s.phrase} />
                     </div>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{s.meaning}</p>
                   </div>
                 ))}
               </div>
@@ -209,23 +195,12 @@ export default function DailyPhrasePage() {
         </>
       ) : null}
 
-      <motion.div
-        variants={itemVariants}
-        className="rounded-[2rem] border border-border bg-card/50 p-6 backdrop-blur-sm dark:bg-slate-900/20"
-      >
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Lightbulb size={20} strokeWidth={2.5} />
-          </div>
-          <div>
-            <h4 className="text-base font-black text-foreground">Make it stick</h4>
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
-              Say today&apos;s phrase out loud three times, then try to use it once in your next
-              standup or team chat. Add it to your flashcards so it comes back in your spaced
-              repetition reviews.
-            </p>
-          </div>
-        </div>
+      <motion.div variants={itemVariants}>
+        <TipCard icon={Lightbulb} title="Make it stick">
+          Say today&apos;s phrase out loud three times, then try to use it once in your next
+          standup or team chat. Add it to your flashcards so it comes back in your spaced
+          repetition reviews.
+        </TipCard>
       </motion.div>
 
       {!loading && (

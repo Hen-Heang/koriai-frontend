@@ -1,27 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Copy, Check, Info, Sparkles, Wand2 } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { TipCard } from "@/components/app/tip-card"
 import { Button } from "@/components/ui/button"
+import { ChipSelect } from "@/components/ui/chip-select"
+import { ErrorBanner } from "@/components/ui/error-banner"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SpeakButton } from "@/components/ui/SpeakButton"
+import { useChoices } from "@/hooks/useChoices"
+import { useCopy } from "@/hooks/useCopy"
 import { messageGenApi, getApiErrorMessage } from "@/lib/api"
-import { cn } from "@/lib/utils"
+import { staggerContainer, itemVariants } from "@/lib/motion"
 import type { GeneratedMessages } from "@/lib/types"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-} as const
+const containerVariants = staggerContainer(0.1)
 
 const FALLBACK_CATEGORIES = [
   "Reporting Progress",
@@ -33,27 +30,15 @@ const FALLBACK_CATEGORIES = [
 ]
 
 export default function GeneratorPage() {
-  const [categories, setCategories] = useState<string[]>(FALLBACK_CATEGORIES)
-  const [category, setCategory] = useState<string>(FALLBACK_CATEGORIES[0])
+  const { options: categories, selected: category, setSelected: setCategory } = useChoices(
+    messageGenApi.getCategories,
+    FALLBACK_CATEGORIES
+  )
   const [intent, setIntent] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [result, setResult] = useState<GeneratedMessages | null>(null)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
-
-  useEffect(() => {
-    messageGenApi
-      .getCategories()
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCategories(data)
-          setCategory(data[0])
-        }
-      })
-      .catch(() => {
-        /* keep fallback categories */
-      })
-  }, [])
+  const { copied: copiedIndex, copy } = useCopy()
 
   async function handleGenerate() {
     if (!intent.trim()) return
@@ -67,16 +52,6 @@ export default function GeneratorPage() {
       setError(getApiErrorMessage(err, "Could not generate messages. Please try again."))
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function handleCopy(text: string, index: number) {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedIndex(index)
-      setTimeout(() => setCopiedIndex(null), 1500)
-    } catch {
-      /* clipboard unavailable */
     }
   }
 
@@ -107,23 +82,7 @@ export default function GeneratorPage() {
         <label className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
           Category
         </label>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCategory(c)}
-              className={cn(
-                "rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
-                category === c
-                  ? "border-emerald-500/40 bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                  : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
-              )}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        <ChipSelect options={categories} value={category} onChange={setCategory} className="mt-3" />
 
         <label className="mt-6 block text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
           What do you want to say?
@@ -151,14 +110,7 @@ export default function GeneratorPage() {
         </div>
       </motion.div>
 
-      {error && (
-        <motion.div
-          variants={itemVariants}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
-        >
-          {error}
-        </motion.div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading && (
         <motion.div variants={itemVariants} className="space-y-3">
@@ -190,7 +142,7 @@ export default function GeneratorPage() {
                     <SpeakButton text={v.korean} />
                     <button
                       type="button"
-                      onClick={() => handleCopy(v.korean, i)}
+                      onClick={() => copy(v.korean, i)}
                       title="Copy"
                       className="inline-flex items-center justify-center rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
@@ -219,21 +171,10 @@ export default function GeneratorPage() {
           </motion.div>
 
           {result.note && (
-            <motion.div
-              variants={itemVariants}
-              className="rounded-[2rem] border border-border bg-card/50 p-6 backdrop-blur-sm dark:bg-slate-900/20"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles size={20} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-foreground">Which one should I use?</h4>
-                  <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
-                    {result.note}
-                  </p>
-                </div>
-              </div>
+            <motion.div variants={itemVariants}>
+              <TipCard icon={Sparkles} title="Which one should I use?">
+                {result.note}
+              </TipCard>
             </motion.div>
           )}
         </>

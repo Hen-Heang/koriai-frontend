@@ -18,26 +18,27 @@ import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
+import { ChipSelect } from "@/components/ui/chip-select"
+import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useChoices } from "@/hooks/useChoices"
 import { listeningApi, ttsApi, getApiErrorMessage } from "@/lib/api"
+import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { ListeningAttemptResult, ListeningLesson } from "@/lib/types"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-} as const
-
 const FALLBACK_TOPICS = ["Daily Standup", "Code Review", "Team Meeting", "Bug Discussion", "Deployment"]
 
+const PLAYBACK_RATES = [
+  { label: "Normal", rate: 1, icon: null },
+  { label: "Slow", rate: 0.65, icon: Gauge },
+]
+
 export default function ListeningPage() {
-  const [topics, setTopics] = useState<string[]>(FALLBACK_TOPICS)
-  const [topic, setTopic] = useState<string>(FALLBACK_TOPICS[0])
+  const { options: topics, selected: topic, setSelected: setTopic } = useChoices(
+    listeningApi.getTopics,
+    FALLBACK_TOPICS
+  )
   const [lesson, setLesson] = useState<ListeningLesson | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -49,37 +50,25 @@ export default function ListeningPage() {
 
   // Audio playback
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
+  const audioPromiseRef = useRef<Promise<HTMLAudioElement | null> | null>(null)
   const [audioLoading, setAudioLoading] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [rate, setRate] = useState(1)
 
   useEffect(() => {
-    listeningApi
-      .getTopics()
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setTopics(data)
-          setTopic(data[0])
-        }
-      })
-      .catch(() => {
-        /* keep fallback */
-      })
-  }, [])
-
-  useEffect(() => {
     return () => {
       audioRef.current?.pause()
-      if (audioUrl) URL.revokeObjectURL(audioUrl)
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
     }
-  }, [audioUrl])
+  }, [])
 
   function resetLessonState() {
     audioRef.current?.pause()
     audioRef.current = null
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
-    setAudioUrl(null)
+    audioPromiseRef.current = null
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    audioUrlRef.current = null
     setPlaying(false)
     setShowTranscript(false)
     setAnswers({})
@@ -100,24 +89,30 @@ export default function ListeningPage() {
     }
   }
 
-  async function ensureAudio(): Promise<HTMLAudioElement | null> {
-    if (audioRef.current) return audioRef.current
-    if (!lesson) return null
+  function ensureAudio(): Promise<HTMLAudioElement | null> {
+    if (audioRef.current) return Promise.resolve(audioRef.current)
+    // Reuse the in-flight load so rapid Play/Slow clicks don't fire duplicate TTS requests
+    if (audioPromiseRef.current) return audioPromiseRef.current
+    if (!lesson) return Promise.resolve(null)
     setAudioLoading(true)
-    try {
-      const script = lesson.lines.map((l) => l.korean).join(" ")
-      const url = await ttsApi.speak(script)
-      const audio = new Audio(url)
-      audio.onended = () => setPlaying(false)
-      audioRef.current = audio
-      setAudioUrl(url)
-      return audio
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Could not load audio."))
-      return null
-    } finally {
-      setAudioLoading(false)
-    }
+    audioPromiseRef.current = (async () => {
+      try {
+        const script = lesson.lines.map((l) => l.korean).join(" ")
+        const url = await ttsApi.speak(script)
+        const audio = new Audio(url)
+        audio.onended = () => setPlaying(false)
+        audioRef.current = audio
+        audioUrlRef.current = url
+        return audio
+      } catch (err) {
+        setError(getApiErrorMessage(err, "Could not load audio."))
+        return null
+      } finally {
+        audioPromiseRef.current = null
+        setAudioLoading(false)
+      }
+    })()
+    return audioPromiseRef.current
   }
 
   async function handlePlay(targetRate: number) {
@@ -187,23 +182,7 @@ export default function ListeningPage() {
         <label className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
           Topic
         </label>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {topics.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTopic(t)}
-              className={cn(
-                "rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
-                topic === t
-                  ? "border-emerald-500/40 bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                  : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+        <ChipSelect options={topics} value={topic} onChange={setTopic} className="mt-3" />
         <div className="mt-5 flex justify-end">
           <Button
             type="button"
@@ -217,14 +196,7 @@ export default function ListeningPage() {
         </div>
       </motion.div>
 
-      {error && (
-        <motion.div
-          variants={itemVariants}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
-        >
-          {error}
-        </motion.div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading && (
         <motion.div variants={itemVariants} className="rounded-[2rem] border border-border bg-card p-7 dark:bg-slate-900/40">
@@ -269,30 +241,21 @@ export default function ListeningPage() {
                     <Play size={18} />
                   )}
                 </Button>
-                <Button
-                  type="button"
-                  onClick={() => handlePlay(1)}
-                  className={cn(
-                    "h-10 rounded-xl px-4 text-xs font-black active:scale-95",
-                    rate === 1
-                      ? "bg-foreground text-background"
-                      : "border border-border bg-background text-foreground hover:bg-accent"
-                  )}
-                >
-                  Normal
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handlePlay(0.65)}
-                  className={cn(
-                    "h-10 rounded-xl px-4 text-xs font-black active:scale-95",
-                    rate === 0.65
-                      ? "bg-foreground text-background"
-                      : "border border-border bg-background text-foreground hover:bg-accent"
-                  )}
-                >
-                  <Gauge size={14} className="mr-1.5" /> Slow
-                </Button>
+                {PLAYBACK_RATES.map(({ label, rate: r, icon: Icon }) => (
+                  <Button
+                    key={label}
+                    type="button"
+                    onClick={() => handlePlay(r)}
+                    className={cn(
+                      "h-10 rounded-xl px-4 text-xs font-black active:scale-95",
+                      rate === r
+                        ? "bg-foreground text-background"
+                        : "border border-border bg-background text-foreground hover:bg-accent"
+                    )}
+                  >
+                    {Icon && <Icon size={14} className="mr-1.5" />} {label}
+                  </Button>
+                ))}
               </div>
             </div>
 

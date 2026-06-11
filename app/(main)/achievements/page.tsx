@@ -18,20 +18,15 @@ import {
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { TipCard } from "@/components/app/tip-card"
+import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { achievementsApi, getApiErrorMessage } from "@/lib/api"
+import { staggerContainer, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { AchievementSummary } from "@/lib/types"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-} as const
+const containerVariants = staggerContainer(0.06)
 
 const ICONS: Record<string, LucideIcon> = {
   sprout: Sprout,
@@ -97,14 +92,7 @@ export default function AchievementsPage() {
         />
       </motion.div>
 
-      {error && (
-        <motion.div
-          variants={itemVariants}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
-        >
-          {error}
-        </motion.div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading ? (
         <>
@@ -217,22 +205,11 @@ export default function AchievementsPage() {
             })}
           </motion.div>
 
-          <motion.div
-            variants={itemVariants}
-            className="rounded-[2rem] border border-border bg-card/50 p-6 backdrop-blur-sm dark:bg-slate-900/20"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles size={20} strokeWidth={2.5} />
-              </div>
-              <div>
-                <h4 className="text-base font-black text-foreground">Keep the streak alive</h4>
-                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
-                  Every correction, diary entry, chat, saved word, and listening lesson earns
-                  progress toward your next badge. Show up daily to climb the levels.
-                </p>
-              </div>
-            </div>
+          <motion.div variants={itemVariants}>
+            <TipCard icon={Sparkles} title="Keep the streak alive">
+              Every correction, diary entry, chat, saved word, and listening lesson earns
+              progress toward your next badge. Show up daily to climb the levels.
+            </TipCard>
           </motion.div>
         </>
       ) : null}

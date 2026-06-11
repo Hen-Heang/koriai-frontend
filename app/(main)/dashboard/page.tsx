@@ -126,7 +126,7 @@ function DashboardLoadingState() {
                 <Skeleton className="h-16 rounded-2xl" />
               </div>
             </div>
-          </div>  
+          </div>
           <div className="rounded-[2rem] border border-border bg-card p-6 shadow-xl sm:rounded-[2.5rem]">
             <Skeleton className="h-5 w-40" />
             <div className="mt-6 space-y-3">

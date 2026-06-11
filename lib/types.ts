@@ -143,28 +143,6 @@ export interface DashboardStats {
   dailyGoalProgress: number
 }
 
-export interface Conversation {
-  id: number
-  userId: number
-  scenarioId?: number | null
-  title: string
-  conversationType: string
-  modelUsed: string
-  messageCount: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Message {
-  id: number
-  conversationId: number
-  role: string
-  content: string
-  corrections?: string | null
-  tokensUsed: number
-  createdAt: string
-}
-
 export interface AnalysisBreakdownItem {
   fragment: string
   meaning: string

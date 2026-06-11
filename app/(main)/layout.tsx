@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpen,
+  BookOpenText,
   CalendarDays,
   Gauge,
   Headphones,
@@ -35,6 +36,7 @@ const allLinks = [
   { href: "/analyzer", label: "Analyzer", icon: ScanText },
   // { href: "/correct", label: "Correction", icon: SpellCheck2 }, // hidden
   // { href: "/diary", label: "Diary", icon: NotebookText }, // hidden
+  { href: "/reading", label: "Reading", icon: BookOpenText },
   { href: "/speaking", label: "Speaking", icon: Mic },
   { href: "/listening", label: "Listening", icon: Headphones },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
