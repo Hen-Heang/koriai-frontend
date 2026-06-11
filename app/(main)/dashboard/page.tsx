@@ -6,13 +6,9 @@ import {
   BookOpen,
   Clock,
   Flame,
-  MessageCircle,
-  Mic,
-  // NotebookText, // used by hidden Diary quick action — keep for easy restore
   Sparkles,
   SpellCheck2,
   Target,
-  Terminal,
   TrendingUp,
   Zap,
   Cpu,
@@ -159,56 +155,44 @@ function getToday() {
 
 const quickActions = [
   {
-    href: "/chat",
-    label: "AI Chat",
-    description: "Practice free conversation with instant help.",
-    icon: MessageCircle,
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "shadow-emerald-500/10",
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
-    tag: "Most used",
-  },
-  // --- hidden: Correction quick action ---
-  // {
-  //   href: "/correct",
-  //   label: "Correction",
-  //   description: "Clean up grammar and natural phrasing.",
-  //   icon: SpellCheck2,
-  //   gradient: "from-sky-500 to-blue-500",
-  //   glow: "shadow-sky-500/10",
-  //   iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
-  //   tag: null,
-  // },
-  // --- hidden: Diary quick action ---
-  // {
-  //   href: "/diary",
-  //   label: "Diary",
-  //   description: "Turn thoughts into Korean writing practice.",
-  //   icon: NotebookText,
-  //   gradient: "from-violet-500 to-fuchsia-500",
-  //   glow: "shadow-violet-500/10",
-  //   iconBg: "bg-violet-500/10 text-violet-600 dark:bg-violet-400/10 dark:text-violet-400",
-  //   tag: null,
-  // },
-  {
-    href: "/chat",
-    label: "Dev Chat",
-    description: "Focus on technical and workplace communication.",
-    icon: Terminal,
-    gradient: "from-amber-600 to-orange-600",
-    glow: "shadow-amber-500/10",
-    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400",
-    tag: "Pro Focus",
-  },
-  {
     href: "/vocab",
-    label: "IT Vocab",
-    description: "Master software development terminology.",
+    label: "Vocabulary",
+    description: "Build your deck and practice sentences with each word.",
     icon: Cpu,
     gradient: "from-blue-600 to-indigo-600",
     glow: "shadow-blue-500/10",
     iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
-    tag: "Technical",
+    tag: "Core focus",
+  },
+  {
+    href: "/flashcards",
+    label: "Flashcards",
+    description: "Review due words with spaced repetition.",
+    icon: Zap,
+    gradient: "from-amber-600 to-orange-600",
+    glow: "shadow-amber-500/10",
+    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400",
+    tag: "Daily review",
+  },
+  {
+    href: "/daily-phrase",
+    label: "Daily Phrase",
+    description: "One workplace phrase a day — learn it, then write with it.",
+    icon: Sparkles,
+    gradient: "from-emerald-500 to-teal-500",
+    glow: "shadow-emerald-500/10",
+    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
+    tag: "New today",
+  },
+  {
+    href: "/correct",
+    label: "Correction",
+    description: "Write Korean sentences and get AI corrections.",
+    icon: SpellCheck2,
+    gradient: "from-sky-500 to-blue-500",
+    glow: "shadow-sky-500/10",
+    iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
+    tag: "Daily practice",
   },
 ]
 
@@ -256,19 +240,19 @@ export default function DashboardPage() {
 
   const nextSteps = [
     {
-      href: studyFocus.ctaHref,
-      title: studyFocus.ctaLabel,
-      detail: studyFocus.description,
+      href: "/correct",
+      title: "Write one sentence",
+      detail: "Describe your work day in Korean and get an instant AI correction.",
     },
     {
-      href: "/speaking",
-      title: "Do one speaking round",
-      detail: "Build recall speed with one short shadowing session.",
+      href: "/flashcards",
+      title: "Clear today's reviews",
+      detail: "Knock out the words due in your spaced repetition queue.",
     },
     {
-      href: "/vocab",
-      title: "Review saved words",
-      detail: "Revisit your deck while the current streak is active.",
+      href: "/daily-phrase",
+      title: "Learn today's phrase",
+      detail: "Pick up one workplace expression and write a sentence with it.",
     },
   ]
 
@@ -321,7 +305,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Status pill */}
-              <div className="flex w-full flex-col items-start gap-1 rounded-[1.2rem] border border-white/10 bg-white/5 px-3.5 py-2.5 backdrop-blur-xl sm:w-auto sm:min-w-[10rem] sm:items-center sm:rounded-[1.5rem] sm:px-4.5 sm:py-3">
+              <div className="flex w-full flex-col items-start gap-1 rounded-[1.2rem] border border-white/10 bg-slate-900/80 px-3.5 py-2.5 sm:w-auto sm:min-w-[10rem] sm:items-center sm:rounded-[1.5rem] sm:px-4.5 sm:py-3">
                 <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">
                   <Sparkles size={12} className="text-emerald-400" />
                   Status
@@ -334,7 +318,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-3.5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
               {[
                 {
                   icon: Flame,
@@ -365,22 +349,22 @@ export default function DashboardPage() {
                 <div
                   key={stat.label}
                   className={cn(
-                    "group/stat relative overflow-hidden rounded-[1.2rem] border border-white/10 bg-gradient-to-br p-3.5 transition-all hover:border-white/20 sm:rounded-[1.4rem] sm:p-4",
+                    "group/stat relative overflow-hidden rounded-[1.2rem] border border-white/10 bg-gradient-to-br p-2.5 transition-all hover:border-white/20 sm:rounded-[1.4rem] sm:p-4",
                     stat.color
                   )}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] bg-white/5 text-white ring-1 ring-white/10 transition-transform group-hover/stat:scale-110 sm:h-9 sm:w-9 sm:rounded-xl">
-                      <stat.icon size={16} className={stat.iconColor} strokeWidth={2.5} />
+                  <div className="flex items-center gap-1.5 sm:gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-[0.85rem] bg-white/5 text-white ring-1 ring-white/10 transition-transform group-hover/stat:scale-110 sm:h-9 sm:w-9 sm:rounded-xl">
+                      <stat.icon size={14} className={stat.iconColor} strokeWidth={2.5} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+                    <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-white/50 sm:inline">
                       {stat.label}
                     </span>
                   </div>
-                  <div className="mt-2.5 text-[1.45rem] font-extrabold text-white sm:mt-3 sm:text-[1.75rem] lg:text-[1.95rem]">
+                  <div className="mt-2 text-xl font-extrabold text-white sm:mt-3 sm:text-[1.75rem] lg:text-[1.95rem]">
                     {stat.value}
                   </div>
-                  <p className="mt-0.5 text-[12px] font-semibold text-slate-500 sm:text-[13px]">{stat.sub}</p>
+                  <p className="mt-0.5 text-[10px] font-semibold text-slate-500 sm:text-[13px]">{stat.sub}</p>
                   
                   {stat.progress !== undefined && (
                     <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/5 sm:mt-5 sm:h-2">
@@ -399,13 +383,15 @@ export default function DashboardPage() {
             {/* CTA row */}
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-3">
               <UIButton asChild size="lg" className="h-12 w-full rounded-2xl bg-emerald-600 px-5 text-sm font-black text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] sm:h-13 sm:w-auto sm:px-7 sm:text-base">
-                <Link href={studyFocus.ctaHref}>
-                  {studyFocus.ctaLabel}
+                <Link href="/flashcards">
+                  {stats.dueReviews > 0
+                    ? `Start today's review (${stats.dueReviews} due)`
+                    : "Start today's review"}
                   <ArrowRight size={18} className="ml-2" />
                 </Link>
               </UIButton>
               <UIButton asChild variant="outline" size="lg" className="h-12 w-full rounded-2xl border-white/10 bg-white/5 px-5 text-sm font-black text-white backdrop-blur-md hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98] sm:h-13 sm:w-auto sm:px-7 sm:text-base">
-                <Link href="/speaking">Voice Practice</Link>
+                <Link href={studyFocus.ctaHref}>{studyFocus.ctaLabel}</Link>
               </UIButton>
             </div>
           </div>
@@ -567,7 +553,11 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-6 sm:gap-8">
           <div className="grid gap-6 sm:grid-cols-2 sm:gap-8 xl:grid-cols-1">
-            <DailyGoalRing progress={stats.dailyGoalProgress} />
+            <DailyGoalRing
+              progress={stats.dailyGoalProgress}
+              reviewsToday={stats.reviewsToday}
+              correctionsToday={stats.correctionsToday}
+            />
             <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
           </div>
 

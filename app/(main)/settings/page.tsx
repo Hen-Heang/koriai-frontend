@@ -13,7 +13,9 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  Activity
+  Activity,
+  Globe,
+  Briefcase,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -96,6 +98,11 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
   const [koreanLevel, setKoreanLevel] = useState("BEGINNER")
+  const [country, setCountry] = useState("")
+  const [nativeLanguage, setNativeLanguage] = useState("")
+  const [occupation, setOccupation] = useState("")
+  const [yearsOfExperience, setYearsOfExperience] = useState("")
+  const [learningGoal, setLearningGoal] = useState("")
   const [preferredModel, setPreferredModel] = useState("gpt-5-mini")
   const [customModel, setCustomModel] = useState("")
   const [loading, setLoading] = useState(true)
@@ -112,6 +119,11 @@ export default function SettingsPage() {
         setDisplayName(data.displayName ?? "")
         setEmail(data.email ?? "")
         setKoreanLevel(data.koreanLevel ?? "BEGINNER")
+        setCountry(data.country ?? "")
+        setNativeLanguage(data.nativeLanguage ?? "")
+        setOccupation(data.occupation ?? "")
+        setYearsOfExperience(data.yearsOfExperience != null ? String(data.yearsOfExperience) : "")
+        setLearningGoal(data.learningGoal ?? "")
         const model = data.preferredModel ?? "gpt-5-mini"
         setPreferredModel(model)
         if (!models.some((m) => m.value === model)) setCustomModel(model)
@@ -129,7 +141,15 @@ export default function SettingsPage() {
     setError("")
     setSaved(false)
     try {
-      await userApi.updateProfile(userId, displayName, koreanLevel)
+      await userApi.updateProfile(userId, {
+        displayName,
+        koreanLevel,
+        country: country || undefined,
+        nativeLanguage: nativeLanguage || undefined,
+        occupation: occupation || undefined,
+        yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
+        learningGoal: learningGoal || undefined,
+      })
       await userApi.updatePreferredModel(userId, activeModel)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -340,6 +360,59 @@ export default function SettingsPage() {
                       Verified
                     </span>
                   </div>
+                </div>
+              </div>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader icon={Globe} title="Background" description="Your origin and native language" color="text-sky-500" />
+            </SectionRow>
+            <SectionRow last>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Country</label>
+                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Cambodia" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Native Language</label>
+                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                    <option value="">Select language</option>
+                    {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+              </div>
+            </SectionRow>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader icon={Briefcase} title="Work Details" description="Your role and experience in tech" color="text-amber-500" />
+            </SectionRow>
+            <SectionRow last>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Occupation</label>
+                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                    <option value="">Select role</option>
+                    {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Years of Experience</label>
+                  <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Learning Goal</label>
+                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                    <option value="">Select your main goal</option>
+                    {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
                 </div>
               </div>
             </SectionRow>

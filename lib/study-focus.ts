@@ -25,31 +25,29 @@ export function getStudyFocus(stats: DashboardStats): StudyFocus {
       badge: "Grow your deck",
       title: "Save more words from real practice",
       description:
-        "Your vocabulary deck is still light. Generate a themed set, then keep words you actually use in conversations and diary entries.",
+        "Your vocabulary deck is still light. Generate a themed set, then keep words you actually use in conversations and corrections.",
       ctaLabel: "Build vocab deck",
       ctaHref: "/vocab",
     }
   }
 
   if (stats.correctionsThisWeek < 3) {
-    // Originally pointed to "/correct" (now hidden); repointed to chat tutor.
     return {
       badge: "Sharpen accuracy",
       title: "Get feedback on your own sentences",
       description:
-        "You have enough exposure. The next gain comes from producing your own Korean and letting the tutor fix repeated grammar and phrasing mistakes.",
-      ctaLabel: "Open chat tutor",
-      ctaHref: "/chat",
+        "You have enough exposure. The next gain comes from producing your own Korean and letting the AI fix repeated grammar and phrasing mistakes.",
+      ctaLabel: "Write & correct",
+      ctaHref: "/correct",
     }
   }
 
-  // Originally pointed to "/diary" (now hidden); repointed to message generator.
   return {
     badge: "Keep momentum",
     title: "Turn today into output practice",
     description:
-      "Your consistency looks solid. Draft a workplace message to turn passive understanding into active Korean production.",
-    ctaLabel: "Generate a message",
-    ctaHref: "/generator",
+      "Your consistency looks solid. Learn today's phrase and write your own sentence with it to turn passive understanding into active Korean production.",
+    ctaLabel: "Open daily phrase",
+    ctaHref: "/daily-phrase",
   }
 }

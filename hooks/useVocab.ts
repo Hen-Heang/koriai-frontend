@@ -7,18 +7,19 @@ import type { VocabItem } from "@/lib/types"
 
 function normalizeWord(raw: unknown): VocabItem {
   const source = (raw ?? {}) as Record<string, unknown>
-  const id = String(source.id ?? source.vocabId ?? crypto.randomUUID())
-  const term = String(source.term ?? source.word ?? "")
-  const meaning = String(source.meaning ?? source.definition ?? "")
-  const example = source.example ? String(source.example) : undefined
-  const exampleTranslation = source.exampleTranslation ? String(source.exampleTranslation) : undefined
-  const mastery = Number(source.mastery ?? source.masteryRate ?? 0)
-  const nextReview = String(source.nextReview ?? source.nextReviewDate ?? "-")
-  const tags = Array.isArray(source.tags)
-    ? source.tags.map((tag) => String(tag))
-    : []
-
-  return { id, term, meaning, example, exampleTranslation, mastery, nextReview, tags }
+  return {
+    id: String(source.id ?? crypto.randomUUID()),
+    category: String(source.category ?? "Saved phrases"),
+    term: String(source.term ?? ""),
+    meaning: String(source.meaning ?? ""),
+    example: source.example ? String(source.example) : undefined,
+    exampleTranslation: source.exampleTranslation ? String(source.exampleTranslation) : undefined,
+    pronunciation: source.pronunciation ? String(source.pronunciation) : undefined,
+    difficultyLevel: source.difficultyLevel as VocabItem["difficultyLevel"],
+    mastery: Number(source.mastery ?? 0),
+    nextReview: String(source.nextReview ?? "-"),
+    tags: Array.isArray(source.tags) ? source.tags.map((tag) => String(tag)) : [],
+  }
 }
 
 export function useVocab() {
@@ -33,14 +34,16 @@ export function useVocab() {
       vocabApi.getDueWords(),
     ])
 
-    const savedWords = Array.isArray(savedData)
-      ? savedData.map((item) => normalizeWord(item))
-      : []
-    const dueWords = Array.isArray(dueData)
-      ? dueData.map((item) => normalizeWord(item))
-      : []
+    return {
+      savedWords: Array.isArray(savedData) ? savedData.map(normalizeWord) : [],
+      dueWords: Array.isArray(dueData) ? dueData.map(normalizeWord) : [],
+    }
+  }
 
-    return { dueWords, savedWords }
+  async function refresh() {
+    const { dueWords, savedWords } = await fetchWords()
+    setWords(savedWords)
+    setDueToday(dueWords)
   }
 
   useEffect(() => {
@@ -72,17 +75,27 @@ export function useVocab() {
 
   const markReviewed = async (id: string) => {
     await vocabApi.markReviewed(id)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
   }
 
   const generate = async (category: string) => {
     const generated = await vocabApi.generate(category)
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
+    await refresh()
     return generated
+  }
+
+  const updateWord = async (
+    id: string,
+    data: { term: string; meaning: string; example?: string; pronunciation?: string }
+  ) => {
+    await vocabApi.update(id, data)
+    await refresh()
+  }
+
+  const importList = async (category: string, text: string) => {
+    const imported = await vocabApi.importList(category, text)
+    await refresh()
+    return Array.isArray(imported) ? imported.length : 0
   }
 
   return {
@@ -91,6 +104,8 @@ export function useVocab() {
     loading,
     markReviewed,
     generate,
+    importList,
+    updateWord,
     words,
   }
 }

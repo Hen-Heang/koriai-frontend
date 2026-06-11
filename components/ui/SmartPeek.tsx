@@ -45,7 +45,7 @@ export function SmartPeek({
         example: parts[1] !== "N/A" ? parts[1] : undefined,
         hanja: parts[2] !== "N/A" ? parts[2] : undefined
       })
-    } catch (err) {
+    } catch {
       setData({ word, definition: "Could not fetch definition." })
     } finally {
       setLoading(false)
@@ -63,7 +63,7 @@ export function SmartPeek({
         category: "Peek Lookup"
       })
       setSaved(true)
-    } catch (err) {
+    } catch {
       // ignore
     } finally {
       setSaving(false)

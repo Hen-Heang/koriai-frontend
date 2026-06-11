@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowUp, SquarePen, Sparkles, Terminal, Cpu, Briefcase, ChevronLeft, Plus, Mic } from "lucide-react"
+import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, Plus, Mic } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"

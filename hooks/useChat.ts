@@ -58,26 +58,38 @@ function buildMessageForApi(content: string, language: ResponseLanguage, isTechn
 }
 
 export function useChat({ conversationId, initialMessages = [] }: UseChatOptions) {
-  const [messages, setMessages] = useState(initialMessages)
+  const [messages, setMessages] = useState(conversationId ? [] : initialMessages)
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
   const [isTechnicalMode, setIsTechnicalMode] = useState(false)
   const [error, setError] = useState("")
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(Boolean(conversationId))
   const [isSending, setIsSending] = useState(false)
+
+  // Reset during render when switching conversations, so stale messages
+  // never flash while the new history loads.
+  const [activeConversationId, setActiveConversationId] = useState(conversationId)
+  if (activeConversationId !== conversationId) {
+    setActiveConversationId(conversationId)
+    setMessages([])
+    setDraft("")
+    setError("")
+    setIsLoadingMessages(Boolean(conversationId))
+  }
 
   useEffect(() => {
     if (!conversationId) {
       return
     }
 
-    setMessages([])
-    setDraft("")
-    setError("")
-    setIsLoadingMessages(true)
+    let active = true
+
     chatApi
       .getMessages(conversationId)
       .then((data) => {
+        if (!active) {
+          return
+        }
         setError("")
         const history = Array.isArray(data) ? data : []
         const normalized = history.map((item, index) => {
@@ -97,8 +109,20 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
         })
         setMessages(normalized)
       })
-      .catch(() => setError("Failed to load messages."))
-      .finally(() => setIsLoadingMessages(false))
+      .catch(() => {
+        if (active) {
+          setError("Failed to load messages.")
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingMessages(false)
+        }
+      })
+
+    return () => {
+      active = false
+    }
   }, [conversationId])
 
   const sendMessage = async (content?: string) => {
@@ -145,7 +169,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
             current.map((m) => (m.id === streamingId ? { ...m, content: m.content + token } : m))
           )
         },
-        (_) => {
+        () => {
           // user message already shown
         },
         (assistantMessageId) => {

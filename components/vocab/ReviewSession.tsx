@@ -2,21 +2,18 @@
 
 import { useState, useMemo, useCallback } from "react"
 import {
-  BookOpenCheck,
+  ArrowLeft,
   BrainCircuit,
   CheckCircle2,
   ChevronRight,
   Lightbulb,
   RotateCcw,
   Sparkles,
-  XCircle,
   Trophy,
-  ArrowLeft,
-  Volume2
+  XCircle,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { chatApi } from "@/lib/api"
 import type { VocabItem } from "@/lib/types"
@@ -88,7 +85,7 @@ function FlashCard({
             className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[3rem] border border-border bg-card p-8 text-center shadow-xl dark:bg-slate-900/60"
           >
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">Korean</span>
-            <p className="text-5xl font-black tracking-tight text-foreground sm:text-7xl">{card.term}</p>
+            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{card.term}</p>
             <div className="mt-10 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-5 py-2.5 text-xs font-bold text-muted-foreground/60 transition-colors hover:bg-accent/10">
               Tap to Reveal
             </div>
@@ -99,7 +96,7 @@ function FlashCard({
             className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[3rem] border border-emerald-500/20 bg-card p-8 text-center shadow-2xl dark:bg-slate-900/80"
           >
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">Meaning</span>
-            <p className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">{card.meaning}</p>
+            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground sm:text-4xl">{card.meaning}</p>
             
             {card.example && (
               <div className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-accent/5 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
@@ -188,9 +185,9 @@ function ChoiceCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
-      <div className="flex flex-col items-center justify-center rounded-[3rem] border border-border bg-accent/5 p-10 text-center dark:bg-white/5">
+      <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Select Meaning</span>
-        <p className="text-5xl font-black tracking-tight text-foreground sm:text-6xl">{card.term}</p>
+        <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">{card.term}</p>
         <div className="mt-6">
           <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
         </div>
@@ -212,7 +209,7 @@ function ChoiceCard({
               onClick={() => pick(choice.id)}
               disabled={answered}
               className={cn(
-                "group flex w-full items-center justify-between rounded-2xl border px-6 py-5 text-left transition-all active:scale-[0.98]",
+                "group flex w-full items-center justify-between gap-3 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98] sm:px-6 sm:py-5",
                 !answered
                   ? "border-border bg-card hover:border-emerald-500/40 hover:bg-emerald-500/[0.02]"
                   : isCorrect
@@ -306,9 +303,9 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
   if (phase === "idle") {
     const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
     return (
-      <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+      <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-[2.5rem]">
         {/* Top Header */}
-        <div className="bg-emerald-500/[0.03] px-8 py-8 text-center border-b border-border/60">
+        <div className="bg-emerald-500/[0.03] px-5 py-7 text-center border-b border-border/60 sm:px-8 sm:py-8">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
             <BrainCircuit size={32} strokeWidth={2.5} />
           </div>
@@ -320,7 +317,7 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
           </p>
         </div>
 
-        <div className="flex flex-col gap-6 p-6 sm:p-8">
+        <div className="flex flex-col gap-6 p-5 sm:p-8">
           {/* Deck Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
@@ -375,8 +372,8 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
     const headline = pct >= 80 ? "Perfect Loop" : pct >= 50 ? "Solid Growth" : "Keep Building"
     
     return (
-      <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40">
-        <div className="flex flex-col items-center gap-8 px-8 py-12 text-center sm:py-16">
+      <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 sm:rounded-[2.5rem]">
+        <div className="flex flex-col items-center gap-8 px-5 py-10 text-center sm:px-8 sm:py-16">
           <div className="relative">
             <div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-emerald-500/10 text-emerald-600 shadow-inner ring-1 ring-emerald-500/20">
               <Trophy size={48} strokeWidth={2} />
@@ -436,9 +433,9 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
   if (!card) return null
 
   return (
-    <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md">
+    <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-[2.5rem]">
       {/* Session Progress Header */}
-      <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-6 py-5">
+      <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 sm:px-6 sm:py-5">
         <button 
           onClick={() => setPhase("idle")}
           className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
@@ -463,7 +460,7 @@ export function ReviewSession({ dueToday, allWords, loading, onReview }: ReviewS
         />
       </div>
 
-      <div className="p-6 sm:p-10">
+      <div className="p-4 sm:p-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={card.id + currentIndex}

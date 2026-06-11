@@ -11,15 +11,9 @@ const emptyStats: DashboardStats = {
   wordsSaved: 0,
   correctionsThisWeek: 0,
   dailyGoalProgress: 0,
-}
-
-function normalizePoint(raw: unknown): ProgressPoint {
-  const source = (raw ?? {}) as Record<string, unknown>
-  return {
-    day: String(source.day ?? source.label ?? source.date ?? ""),
-    minutes: Number(source.minutes ?? source.studyMinutes ?? 0),
-    accuracy: Number(source.accuracy ?? source.accuracyRate ?? 0),
-  }
+  reviewsToday: 0,
+  correctionsToday: 0,
+  dueReviews: 0,
 }
 
 export function useProgress() {
@@ -32,23 +26,8 @@ export function useProgress() {
     progressApi
       .getDashboard()
       .then((data) => {
-        const rawChartData: unknown[] = Array.isArray(data?.chartData)
-          ? data.chartData
-          : Array.isArray(data?.weeklyProgress)
-            ? data.weeklyProgress
-            : []
-        setChartData(rawChartData.map((item) => normalizePoint(item)))
-        setStats({
-          streakDays: Number(data?.stats?.streakDays ?? data?.streakDays ?? 0),
-          weeklyMinutes: Number(data?.stats?.weeklyMinutes ?? data?.weeklyMinutes ?? 0),
-          wordsSaved: Number(data?.stats?.wordsSaved ?? data?.wordsSaved ?? 0),
-          correctionsThisWeek: Number(
-            data?.stats?.correctionsThisWeek ?? data?.correctionsThisWeek ?? 0
-          ),
-          dailyGoalProgress: Number(
-            data?.stats?.dailyGoalProgress ?? data?.dailyGoalProgress ?? 0
-          ),
-        })
+        setChartData(Array.isArray(data?.chartData) ? data.chartData : [])
+        setStats({ ...emptyStats, ...data?.stats })
       })
       .catch(() => setError("Failed to load progress data."))
       .finally(() => setLoading(false))
