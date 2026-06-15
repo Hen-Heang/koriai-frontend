@@ -29,29 +29,52 @@ import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { isAuthenticated } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
-const allLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/vocab", label: "Vocabulary", icon: BookOpen },
-  { href: "/reading", label: "Reading", icon: BookOpenText },
-  { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
-  { href: "/interview", label: "Exam Prep", icon: GraduationCap },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/chat", label: "AI Coach", icon: MessageCircle },
-  // ── hidden while focusing on vocabulary — restore when needed ──
-  // { href: "/generator", label: "Message Gen", icon: Wand2 },
-  // { href: "/analyzer", label: "Analyzer", icon: ScanText },
-  // { href: "/speaking", label: "Speaking", icon: Mic },
-  // { href: "/listening", label: "Listening", icon: Headphones },
-  // { href: "/scenarios", label: "Meeting Sim", icon: Theater },
-  // { href: "/achievements", label: "Achievements", icon: Trophy },
-  // ── History moved into Settings — reach it from the Settings page ──
-  // { href: "/history", label: "History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
+// Grouped nav so the sidebar stays scannable as features come back online.
+// Each section renders under a subtle uppercase label.
+const navSections = [
+  {
+    // Goals is the primary surface — keep it at the very top of the sidebar.
+    label: "Plan",
+    links: [
+      { href: "/goals", label: "Goals", icon: Target },
+      { href: "/dashboard", label: "Dashboard", icon: Gauge },
+    ],
+  },
+  {
+    label: "Learn",
+    links: [
+      { href: "/vocab", label: "Vocabulary", icon: BookOpen },
+      { href: "/reading", label: "Reading", icon: BookOpenText },
+      { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
+      { href: "/interview", label: "Exam Prep", icon: GraduationCap },
+      { href: "/chat", label: "AI Coach", icon: MessageCircle },
+      // ── hidden while focusing on vocabulary — restore when needed ──
+      // { href: "/generator", label: "Message Gen", icon: Wand2 },
+      // { href: "/analyzer", label: "Analyzer", icon: ScanText },
+      // { href: "/speaking", label: "Speaking", icon: Mic },
+      // { href: "/listening", label: "Listening", icon: Headphones },
+      // { href: "/scenarios", label: "Meeting Sim", icon: Theater },
+      // { href: "/achievements", label: "Achievements", icon: Trophy },
+    ],
+  },
+  {
+    label: "Account",
+    links: [
+      // ── History moved into Settings — reach it from the Settings page ──
+      // { href: "/history", label: "History", icon: History },
+      { href: "/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ]
 
+// Flat list kept for the desktop top-bar title lookup.
+const allLinks = navSections.flatMap((section) => section.links)
+
+// Goals sits in the center slot so it reads as the app's primary action.
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/interview", label: "Exam", icon: GraduationCap },
   { href: "/reading", label: "Read", icon: BookOpenText },
 ]
@@ -172,44 +195,70 @@ export default function MainLayout({
           <div className="mx-6 h-px bg-border/60" />
 
           {/* Nav */}
-          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
-            {allLinks.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(`${href}/`)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-bold transition-all",
-                    active
-                      ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/20"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground dark:hover:bg-white/5"
-                  )}
-                >
-                  <Icon size={18} strokeWidth={2.5} className="shrink-0" />
-                  {label}
-                </Link>
-              )
-            })}
+          <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+            {navSections.map((section) => (
+              <div key={section.label} className="space-y-1">
+                <p className="px-4 pb-1 text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground/40">
+                  {section.label}
+                </p>
+                {section.links.map(({ href, label, icon: Icon }) => {
+                  const active = pathname === href || pathname.startsWith(`${href}/`)
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center gap-3 rounded-2xl px-4 py-2.5 text-[14px] font-bold transition-all",
+                        active
+                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground dark:hover:bg-white/5"
+                      )}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="sidebar-active-bar"
+                          className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-white"
+                          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                        />
+                      )}
+                      <Icon
+                        size={18}
+                        strokeWidth={2.5}
+                        className={cn(
+                          "shrink-0 transition-transform",
+                          active ? "scale-105" : "group-hover:scale-110 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
+                        )}
+                      />
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
           </nav>
 
           {/* AI badge */}
-          <div className="m-4 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-              <Sparkles size={14} strokeWidth={2.5} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                AI Active
-              </span>
+          <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 shadow-sm">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <Sparkles size={12} strokeWidth={2.5} />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">AI Active</span>
+              </div>
+              <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground/70">
+                Monitoring your fluency live
+              </p>
             </div>
-            <p className="mt-3 text-[12px] font-medium leading-relaxed text-muted-foreground/80">
-              Tutor is monitoring your fluency patterns in real-time.
-            </p>
           </div>
 
           {/* Theme + bottom */}
           <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">
-              © 2026 Hen Heang · FullStack Developer
+              © 2026 Hen Heang
             </span>
             <ThemeToggle />
           </div>
@@ -286,12 +335,12 @@ export default function MainLayout({
               "flex-1 overflow-x-hidden",
               isChatRoute 
                 ? "px-0 pt-0" // Full bleed for chat on mobile
-                : "px-3.5 pt-5 sm:px-6 lg:px-8 lg:pt-8",
+                : "px-4 pt-4 sm:px-6 lg:px-8 lg:pt-8",
               isKeyboardOpen
                 ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-10"
                 : isChatRoute
                   ? "pb-0" // Chat window has its own padding/safe-areas
-                  : "pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10"
+                  : "pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-10"
             )}
           >
             <div className={cn(
@@ -343,6 +392,42 @@ export default function MainLayout({
 
               {bottomTabs.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(`${href}/`)
+                // Goals is the app's primary action — render it as an elevated
+                // center pill so it stands out from the other tabs.
+                const isPrimary = href === "/goals"
+
+                if (isPrimary) {
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      aria-label={label}
+                      className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90"
+                    >
+                      <div
+                        className={cn(
+                          "-mt-6 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg ring-4 ring-background transition-all duration-300 dark:ring-slate-900",
+                          active
+                            ? "scale-105 bg-emerald-600 text-white shadow-emerald-600/40"
+                            : "bg-emerald-500 text-white shadow-emerald-500/30 hover:scale-105"
+                        )}
+                      >
+                        <Icon size={22} strokeWidth={2.6} />
+                      </div>
+                      <span
+                        className={cn(
+                          "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                          active
+                            ? "font-black text-emerald-600 opacity-100 dark:text-emerald-400"
+                            : "font-bold text-muted-foreground/60 opacity-80"
+                        )}
+                      >
+                        {label}
+                      </span>
+                    </Link>
+                  )
+                }
+
                 return (
                   <Link
                     key={href}
@@ -355,9 +440,9 @@ export default function MainLayout({
                     )}
                   >
                     <div className="flex h-5.5 w-5.5 items-center justify-center">
-                      <Icon 
-                        size={20} 
-                        strokeWidth={active ? 2.8 : 2.2} 
+                      <Icon
+                        size={20}
+                        strokeWidth={active ? 2.8 : 2.2}
                         className={cn(
                           "transition-all duration-300",
                           active ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "scale-100"

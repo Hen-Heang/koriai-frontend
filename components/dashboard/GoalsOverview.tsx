@@ -2,8 +2,10 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
+import { motion } from "motion/react"
 import { ArrowRight, ClipboardList, Plus, Target } from "lucide-react"
 
+import { Button as UIButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DeadlineStatusBadge } from "@/components/goals/DeadlineStatusBadge"
 import { useGoals } from "@/hooks/useGoals"
@@ -36,50 +38,46 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm",
+        "flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.5rem] lg:p-8",
         className
       )}
     >
-      <div className="flex items-center gap-3.5 border-b border-border/60 bg-background/30 px-5 py-4">
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-2.5">
-          <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <Target size={20} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black tracking-tight text-foreground">Your Goals</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+              {activeGoals.length} Active
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h2 className="text-base font-bold tracking-tight text-foreground">Your Goals</h2>
-          <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-            {isLoading ? "Loading…" : `${activeGoals.length} active`}
-          </p>
-        </div>
-        <Link
-          href="/goals"
-          className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-emerald-600 transition-colors hover:text-emerald-500 dark:text-emerald-400"
-        >
-          View all <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        <UIButton asChild variant="ghost" size="sm" className="rounded-xl font-bold">
+          <Link href="/goals">View All</Link>
+        </UIButton>
       </div>
 
-      <div className="flex-1 space-y-2 p-4">
+      <div className="mt-6 flex-1 space-y-3">
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-3xl" />
             ))}
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+          <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Target size={28} strokeWidth={1.75} />
             </div>
             <h3 className="text-base font-black tracking-tight">No active goals</h3>
-            <p className="mb-5 mt-1 max-w-[220px] text-xs font-medium leading-relaxed text-muted-foreground">
-              Set a goal, break it into tasks, and track every deadline in one place.
+            <p className="mb-6 mt-1 max-w-[200px] text-xs font-medium text-muted-foreground">
+              Set a goal and track your progress in one place.
             </p>
-            <Link
-              href="/goals/create"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-emerald-500"
-            >
-              <Plus className="h-4 w-4" /> Create a goal
-            </Link>
+            <UIButton asChild size="sm" className="rounded-xl font-bold">
+              <Link href="/goals/create">Create a goal</Link>
+            </UIButton>
           </div>
         ) : (
           visible.map((goal) => {
@@ -90,39 +88,35 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
               <Link
                 key={goal.id}
                 href={`/goals/${goal.id}`}
-                className="group flex items-center gap-3 rounded-2xl border border-border bg-background/40 px-3 py-3 transition-colors hover:bg-accent/50"
+                className="group flex items-center gap-4 rounded-3xl border border-border bg-background/40 p-4 transition-all hover:bg-accent/50 lg:p-5"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl font-black text-primary">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-black text-primary transition-transform group-hover:scale-110">
                   {icon || (goal.title ? goal.title.charAt(0).toUpperCase() : "G")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary">
+                    <p className="truncate text-base font-black text-foreground transition-colors group-hover:text-primary">
                       {goal.title}
                     </p>
                     <span className="shrink-0 text-xs font-black tabular-nums text-primary">
                       {progress}%
                     </span>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/[0.08]">
-                      <div
-                        className="h-full origin-left rounded-full transition-transform duration-700"
-                        style={{
-                          width: `${progress}%`,
-                          background: progressGradient(progress),
-                        }}
-                      />
-                    </div>
-                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-muted-foreground">
-                      <ClipboardList className="h-3 w-3" />
-                      {goal.taskCounts
-                        ? `${goal.taskCounts.completed}/${goal.taskCounts.total}`
-                        : "0/0"}
-                    </span>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-foreground/5">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full rounded-full bg-primary"
+                      style={{ background: progressGradient(progress) }}
+                    />
                   </div>
-                  <div className="mt-1.5">
+                  <div className="mt-2 flex items-center justify-between">
                     <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />
+                    <span className="flex items-center gap-1 text-[10px] font-black uppercase text-muted-foreground/60">
+                      <ClipboardList className="h-3 w-3" />
+                      {goal.taskCounts?.completed}/{goal.taskCounts?.total}
+                    </span>
                   </div>
                 </div>
               </Link>

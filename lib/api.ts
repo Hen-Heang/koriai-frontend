@@ -156,9 +156,23 @@ export const correctionApi = {
 }
 
 // Users
+export interface SearchUser {
+  id: number
+  displayName: string | null
+  email: string | null
+  avatarUrl: string | null
+}
+
 export const userApi = {
   getById: (id: number) =>
     api.get(`/users/${id}`).then((r) => r.data.data),
+
+  // Goal-sharing user lookup — backend excludes the current user. Used by the
+  // invite-member flow on the goal detail page.
+  search: (query: string) =>
+    api
+      .get("/users/search", { params: { q: query } })
+      .then((r) => r.data.data) as Promise<SearchUser[]>,
 
   updateProfile: (
     id: number,
@@ -346,6 +360,13 @@ export const goalsApi = {
     api.post(`/goals/${id}/star`).then((r) => r.data.data) as Promise<{ isStarred: boolean }>,
   getTasks: (id: string) =>
     api.get(`/goals/${id}/tasks`).then((r) => r.data.data) as Promise<Task[]>,
+  // Sends a goal invitation to another user. The receiver gets it through the
+  // goal-notifications feed and responds via notificationsApi.respond.
+  // Backend: POST /api/goal-notifications/invite with { goalId, receiverUserId }.
+  invite: (id: string, receiverId: number) =>
+    api
+      .post("/goal-notifications/invite", { goalId: id, receiverUserId: receiverId })
+      .then((r) => r.data.data),
 }
 
 export interface CreateTaskPayload {
@@ -379,8 +400,8 @@ export const tasksApi = {
 
 // Goal notifications. Backend serializes these as camelCase (no @JsonNaming),
 // unlike the snake_case goals/tasks payloads. Realtime is deferred — the client
-// polls + invalidates instead (see INTEGRATION.md). Sending invites is part of
-// the deferred sharing feature; only list/read/respond are wired here.
+// polls + invalidates instead (see INTEGRATION.md). Sending invites is wired via
+// goalsApi.invite; this feed delivers them and respond() accepts/rejects.
 export interface GoalNotification {
   id: string
   type: string

@@ -262,7 +262,7 @@ function DayColumn({
               top,
               height: Math.max(height - 2, 18),
               left: `calc(${p.lane * widthPct}% + 2px)`,
-              width: `calc(${widthPct}% - 4px)`,
+              width: `calc(${p.span * widthPct}% - 4px)`,
               backgroundColor: hexWithAlpha(color, 0.16),
               borderColor: hexWithAlpha(color, 0.4),
               borderLeftColor: color,

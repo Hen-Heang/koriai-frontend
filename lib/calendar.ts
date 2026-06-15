@@ -199,6 +199,8 @@ export interface PositionedTask {
   endMin: number
   lane: number
   lanes: number
+  /** How many lanes this event expands across (fills free space to its right). */
+  span: number
 }
 
 /** Lay out a day's timed tasks into side-by-side lanes (Google-Calendar style). */
@@ -215,7 +217,21 @@ export const layoutDayTasks = (tasks: Task[]): PositionedTask[] => {
 
   const flush = () => {
     const lanes = cluster.reduce((max, t) => Math.max(max, t.lane + 1), 0)
-    cluster.forEach((t) => (t.lanes = lanes))
+    cluster.forEach((t) => {
+      t.lanes = lanes
+      // Expand rightward into adjacent lanes that are free for this event's
+      // full duration, so a block fills the available width instead of being
+      // pinned to a single 1/lanes column when there's empty space beside it.
+      let span = 1
+      for (let l = t.lane + 1; l < lanes; l++) {
+        const blocked = cluster.some(
+          (o) => o !== t && o.lane === l && o.startMin < t.endMin && o.endMin > t.startMin
+        )
+        if (blocked) break
+        span++
+      }
+      t.span = span
+    })
     result.push(...cluster)
     cluster = []
     clusterEnd = -1
@@ -231,7 +247,7 @@ export const layoutDayTasks = (tasks: Task[]): PositionedTask[] => {
     let lane = laneEnds.findIndex((end) => end <= ev.startMin)
     if (lane === -1) lane = laneEnds.length
 
-    cluster.push({ task: ev.task, startMin: ev.startMin, endMin: ev.endMin, lane, lanes: 1 })
+    cluster.push({ task: ev.task, startMin: ev.startMin, endMin: ev.endMin, lane, lanes: 1, span: 1 })
     clusterEnd = Math.max(clusterEnd, ev.endMin)
   }
   if (cluster.length) flush()

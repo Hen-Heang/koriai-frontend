@@ -64,7 +64,6 @@ export default function GoalsPage() {
 
   const deadlineMessage = useMemo(() => getDeadlineNotificationMessage(sortedGoals), [sortedGoals])
 
-  // Cmd/Ctrl+K — global search seam (search feature deferred; see INTEGRATION.md).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -90,22 +89,23 @@ export default function GoalsPage() {
   }, [fetchGoals])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       <PageHero
         eyebrow="Planner"
         title="Goals"
         description="Set goals, break them into scheduled tasks, and track every deadline in one place."
+        className="rounded-[2rem] sm:rounded-[2.5rem]"
         actions={
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
+          <div className="flex w-full gap-3 sm:w-auto">
+            <Button asChild variant="outline" className="h-11 flex-1 rounded-2xl border-border bg-background/50 font-bold backdrop-blur-sm sm:flex-none sm:px-6">
               <Link href="/goals/calendar">
-                <CalendarDays size={16} strokeWidth={2.5} />
+                <CalendarDays size={18} strokeWidth={2.5} className="mr-2" />
                 Calendar
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="h-11 flex-1 rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 sm:flex-none sm:px-6">
               <Link href="/goals/create">
-                <Plus size={16} strokeWidth={2.5} />
+                <Plus size={18} strokeWidth={2.5} className="mr-2" />
                 New Goal
               </Link>
             </Button>
@@ -117,20 +117,17 @@ export default function GoalsPage() {
         ]}
       />
 
-      {/* Deadline banner */}
       {deadlineMessage && (
-        <div className="flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
-          <AlertTriangle size={18} strokeWidth={2.5} className="shrink-0" />
+        <div className="flex items-center gap-3 rounded-[1.5rem] border border-amber-500/20 bg-amber-500/5 px-5 py-4 text-sm font-bold text-amber-700 dark:text-amber-300">
+          <AlertTriangle size={20} strokeWidth={2.5} className="shrink-0 text-amber-500" />
           {deadlineMessage}
         </div>
       )}
 
-      {/* Goals (left) + Today's Tasks rail (right on xl, stacks below otherwise) */}
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+      <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
         <div className="min-w-0 space-y-6">
-          {/* Filter tabs + sorter */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex w-fit gap-1 rounded-2xl bg-foreground/5 p-1">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-fit gap-1 rounded-2xl bg-foreground/5 p-1 backdrop-blur-sm">
               {(["all", "active", "completed"] as const).map((tab) => {
                 const count =
                   tab === "all" ? allGoals.length : tab === "active" ? activeGoals.length : completedGoals.length
@@ -143,17 +140,17 @@ export default function GoalsPage() {
                       setCurrentPage(1)
                     }}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold capitalize transition-all sm:px-4 sm:gap-2",
+                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black uppercase tracking-widest transition-all",
                       isSelected
                         ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground/60 hover:text-foreground hover:bg-background/40"
                     )}
                   >
                     {tab}
                     <span
                       className={cn(
-                        "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-                        isSelected ? "bg-primary/10 text-primary" : "bg-foreground/5 text-muted-foreground"
+                        "rounded-lg px-2 py-0.5 text-[10px] font-black tabular-nums",
+                        isSelected ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-foreground/5 text-muted-foreground/40"
                       )}
                     >
                       {count}
@@ -165,7 +162,6 @@ export default function GoalsPage() {
             <GoalSorter sortOption={sortOption} onSortChange={updateSort} />
           </div>
 
-          {/* Goals */}
           <GoalList
             goals={displayGoals}
             isLoading={isLoading}
@@ -176,25 +172,26 @@ export default function GoalsPage() {
             onToggleStar={toggleStar}
           />
 
-          {/* Pagination */}
           {filteredTotalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-2">
+            <div className="flex items-center justify-center gap-4 pt-4">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
+                className="h-10 rounded-xl font-bold"
               >
                 Previous
               </Button>
-              <span className="px-2 text-sm font-medium text-muted-foreground tabular-nums">
-                {currentPage} / {filteredTotalPages}
+              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 tabular-nums">
+                Page {currentPage} of {filteredTotalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={currentPage >= filteredTotalPages}
                 onClick={() => setCurrentPage(currentPage + 1)}
+                className="h-10 rounded-xl font-bold"
               >
                 Next
               </Button>
@@ -202,8 +199,8 @@ export default function GoalsPage() {
           )}
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
-          <TodaysTasks />
+        <aside className="xl:sticky xl:top-8 xl:self-start">
+          <TodaysTasks className="shadow-2xl shadow-emerald-600/5" />
         </aside>
       </div>
 

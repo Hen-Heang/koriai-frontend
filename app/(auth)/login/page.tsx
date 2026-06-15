@@ -36,7 +36,7 @@ export default function LoginPage() {
     try {
       const data = await authApi.login({ email, password })
       setAuth(data.accessToken, data.userId, data.email)
-      router.push("/dashboard")
+      router.push("/goals")
     } catch (error) {
       setError(getApiErrorMessage(error, "Invalid email or password."))
     } finally {
@@ -174,7 +174,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <GoogleSignInButton onError={setError} redirectTo="/dashboard" />
+            <GoogleSignInButton onError={setError} redirectTo="/goals" />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
