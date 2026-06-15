@@ -377,6 +377,36 @@ export const tasksApi = {
   remove: (id: string) => api.delete(`/tasks/${id}`).then((r) => r.data.data),
 }
 
+// Goal notifications. Backend serializes these as camelCase (no @JsonNaming),
+// unlike the snake_case goals/tasks payloads. Realtime is deferred — the client
+// polls + invalidates instead (see INTEGRATION.md). Sending invites is part of
+// the deferred sharing feature; only list/read/respond are wired here.
+export interface GoalNotification {
+  id: string
+  type: string
+  goalId: string | null
+  senderId: number | null
+  receiverId: number | null
+  invitationStatus: string | null
+  read: boolean
+  url: string | null
+  senderDisplayName: string | null
+  goalTitle: string | null
+  createdAt: string | null
+}
+
+export const notificationsApi = {
+  list: (onlyUnread = false) =>
+    api
+      .get("/goal-notifications", { params: { onlyUnread } })
+      .then((r) => r.data.data) as Promise<GoalNotification[]>,
+  markRead: (id: string) => api.put(`/goal-notifications/${id}/read`).then((r) => r.data.data),
+  respond: (id: string, accept: boolean) =>
+    api
+      .put(`/goal-notifications/${id}/respond`, null, { params: { accept } })
+      .then((r) => r.data.data),
+}
+
 // TTS
 export const ttsApi = {
   speak: async (text: string, voice = "nova"): Promise<string> => {

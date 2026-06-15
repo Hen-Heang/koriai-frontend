@@ -6,6 +6,7 @@ import { z } from "zod"
 // flow but are kept in the schema so nothing silently drops.
 export const goalSchema = z.object({
   title: z.string().min(1, "Title is required"),
+  icon: z.string().optional(),
   description: z.string().optional(),
   target_date: z.date({ message: "Target date is required" }),
   start_date: z.date().optional(),
@@ -67,6 +68,7 @@ export interface GoalFormProps {
   onSuccess: (goal: unknown) => void
   initialData?: {
     title: string
+    icon?: string
     description: string
     target_date: string
     goal_type: string

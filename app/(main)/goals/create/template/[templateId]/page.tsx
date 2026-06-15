@@ -140,11 +140,12 @@ export default function TemplateFormPage() {
       {
         title: template.name,
         description: generatedDescription,
-        target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        target_date: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
         start_date: new Date(),
         metadata: {
           version: 1,
           goal_type: "general",
+          icon: template.icon,
           template_id: template.id,
           template_name: template.name,
           template_data: skipTemplateData ? {} : formData,

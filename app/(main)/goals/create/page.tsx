@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import EmojiIconPicker from "@/components/ui/emoji-icon-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -30,6 +31,7 @@ export default function CreateGoalPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [quickTitle, setQuickTitle] = useState("")
+  const [quickIcon, setQuickIcon] = useState<string | null>(null)
   const [noDuration, setNoDuration] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const { createGoal, isLoading: isQuickCreating } = useCreateGoal()
@@ -68,6 +70,7 @@ export default function CreateGoalPage() {
         goal_type: "general",
         start_date: new Date().toISOString(),
         no_duration: noDuration,
+        icon: quickIcon ?? undefined,
       },
     })
     if (result.success && result.goal?.id) {
@@ -104,18 +107,33 @@ export default function CreateGoalPage() {
                 >
                   Goal Title
                 </Label>
-                <Input
-                  id="quick-goal-title"
-                  placeholder="e.g., Master Quantum Computing"
-                  value={quickTitle}
-                  onChange={(e) => setQuickTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      void handleQuickCreate()
-                    }
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <EmojiIconPicker value={quickIcon} onChange={setQuickIcon} align="start">
+                    <button
+                      type="button"
+                      aria-label="Pick goal icon"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-xl transition-all hover:border-primary/40 hover:bg-primary/20"
+                    >
+                      {quickIcon ?? (
+                        <span className="text-sm font-black text-primary">
+                          {quickTitle.trim().charAt(0).toUpperCase() || "G"}
+                        </span>
+                      )}
+                    </button>
+                  </EmojiIconPicker>
+                  <Input
+                    id="quick-goal-title"
+                    placeholder="e.g., Master Quantum Computing"
+                    value={quickTitle}
+                    onChange={(e) => setQuickTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        void handleQuickCreate()
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-3">

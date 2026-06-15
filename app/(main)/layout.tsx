@@ -18,25 +18,22 @@ import {
   // ScanText, // hidden Analyzer nav
   Settings,
   Sparkles,
-  SpellCheck2,
   // Theater, // hidden Meeting Sim nav
   // Trophy, // hidden Achievements nav
   // Wand2, // hidden Message Gen nav
-  Layers3,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { isAuthenticated } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
 const allLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
   { href: "/vocab", label: "Vocabulary", icon: BookOpen },
-  { href: "/flashcards", label: "Flashcards", icon: Layers3 },
   { href: "/reading", label: "Reading", icon: BookOpenText },
   { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
-  { href: "/correct", label: "Correction", icon: SpellCheck2 },
   { href: "/interview", label: "Exam Prep", icon: GraduationCap },
   { href: "/goals", label: "Goals", icon: Target },
   { href: "/chat", label: "AI Coach", icon: MessageCircle },
@@ -56,7 +53,6 @@ const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
   { href: "/interview", label: "Exam", icon: GraduationCap },
-  { href: "/flashcards", label: "Cards", icon: Layers3 },
   { href: "/reading", label: "Read", icon: BookOpenText },
 ]
 
@@ -247,6 +243,7 @@ export default function MainLayout({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <NotificationBell />
                 <ThemeToggle />
                 <Link
                   href="/settings"
@@ -278,6 +275,7 @@ export default function MainLayout({
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[11px] font-black uppercase tracking-widest text-foreground/60 text-nowrap">AI Sync Active</span>
                </div>
+               <NotificationBell />
                <ThemeToggle />
             </div>
           </div>

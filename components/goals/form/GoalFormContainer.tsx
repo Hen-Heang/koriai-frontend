@@ -53,6 +53,7 @@ export function GoalFormContainer({
     resolver: zodResolver(goalSchema),
     defaultValues: {
       title: initialData?.title || "",
+      icon: initialData?.icon || "",
       description: initialData?.description || "",
       target_date: getInitialDate(),
       start_date: new Date(),
@@ -86,6 +87,7 @@ export function GoalFormContainer({
     const metadata: GoalMetadata = {
       version: 1,
       goal_type: values.goal_type,
+      icon: values.icon || undefined,
       priority: values.priority,
       category: values.category,
       start_date: values.start_date?.toISOString(),

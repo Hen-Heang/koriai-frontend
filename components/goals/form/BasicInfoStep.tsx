@@ -5,6 +5,7 @@ import type { UseFormReturn } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import EmojiIconPicker from "@/components/ui/emoji-icon-picker"
 import {
   FormControl,
   FormField,
@@ -79,13 +80,38 @@ export function BasicInfoStep({ form, onNextStep, selectedGoalType }: BasicInfoS
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">What&apos;s your goal?</FormLabel>
-            <FormControl>
-              <Input
-                placeholder={selectedGoalType === "travel" ? "e.g., Trip to Japan" : "e.g., Learn Spanish"}
-                className="h-11 text-base"
-                {...field}
+            <div className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name="icon"
+                render={({ field: iconField }) => (
+                  <EmojiIconPicker
+                    value={iconField.value ?? null}
+                    onChange={(emoji) => iconField.onChange(emoji ?? "")}
+                    align="start"
+                  >
+                    <button
+                      type="button"
+                      aria-label="Pick goal icon"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-xl transition-all hover:border-primary/40 hover:bg-primary/20"
+                    >
+                      {iconField.value || (
+                        <span className="text-sm font-black text-primary">
+                          {field.value?.trim().charAt(0).toUpperCase() || "G"}
+                        </span>
+                      )}
+                    </button>
+                  </EmojiIconPicker>
+                )}
               />
-            </FormControl>
+              <FormControl>
+                <Input
+                  placeholder={selectedGoalType === "travel" ? "e.g., Trip to Japan" : "e.g., Learn Spanish"}
+                  className="h-11 text-base"
+                  {...field}
+                />
+              </FormControl>
+            </div>
             <FormMessage />
           </FormItem>
         )}

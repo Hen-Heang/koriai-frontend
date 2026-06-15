@@ -2646,6 +2646,78 @@
         <option name="homepage" value="https://github.com/Delego-Dev/registry" />
         <option name="urlTemplate" value="https://raw.githubusercontent.com/Delego-Dev/registry/main/public/r/{name}.json" />
       </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-baraile-loader" />
+        <option name="name" value="Baraile-loader" />
+        <option name="namespace" value="@baraile-loader" />
+        <option name="baseUrl" value="https://shadcn-braille-loader.vercel.app/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="A simple braille-inspired loader components for shadcn/ui." />
+        <option name="homepage" value="https://shadcn-braille-loader.vercel.app" />
+        <option name="urlTemplate" value="https://shadcn-braille-loader.vercel.app/r/{name}.json" />
+      </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-beui" />
+        <option name="name" value="Beui" />
+        <option name="namespace" value="@beui" />
+        <option name="baseUrl" value="https://beui.saura3h.xyz/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="Bespoke motion components for React. Copy-paste components with shadcn-compatible installs, Tailwind CSS v4, and Motion." />
+        <option name="homepage" value="https://beui.saura3h.xyz" />
+        <option name="urlTemplate" value="https://beui.saura3h.xyz/r/{name}.json" />
+      </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-gpt-vis" />
+        <option name="name" value="Gpt-vis" />
+        <option name="namespace" value="@gpt-vis" />
+        <option name="baseUrl" value="https://gpt-vis.antv.vision/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="AI-native visualization components for LLM projects. Render 26 chart types from vis syntax strings or config objects." />
+        <option name="homepage" value="https://gpt-vis.antv.vision" />
+        <option name="urlTemplate" value="https://gpt-vis.antv.vision/r/{name}.json" />
+      </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-untld" />
+        <option name="name" value="Untld" />
+        <option name="namespace" value="@untld" />
+        <option name="baseUrl" value="https://ui.untldlabs.com/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="A set of beautifully designed components for modern web applications." />
+        <option name="homepage" value="https://ui.untldlabs.com" />
+        <option name="urlTemplate" value="https://ui.untldlabs.com/r/{name}.json" />
+      </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-contentbit" />
+        <option name="name" value="Contentbit" />
+        <option name="namespace" value="@contentbit" />
+        <option name="baseUrl" value="https://contentbit.dev/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="React components that render Content Blocks: plain Markdown with schema-validated directive blocks. Built for content written by humans, CMSes, and LLMs." />
+        <option name="homepage" value="https://contentbit.dev" />
+        <option name="urlTemplate" value="https://contentbit.dev/r/{name}.json" />
+      </RegistryConfigState>
+      <RegistryConfigState>
+        <option name="id" value="central-kaui" />
+        <option name="name" value="Kaui" />
+        <option name="namespace" value="@kaui" />
+        <option name="baseUrl" value="https://kaui-shadcn-registry.vercel.app/r" />
+        <option name="stylePath" value="/{name}.json" />
+        <option name="type" value="community" />
+        <option name="enabled" value="false" />
+        <option name="description" value="Personal well crafted components for Shadcn ui" />
+        <option name="homepage" value="https://kaui-shadcn-registry.vercel.app" />
+        <option name="urlTemplate" value="https://kaui-shadcn-registry.vercel.app/r/{name}.json" />
+      </RegistryConfigState>
     </registryConfigs>
   </component>
 </project>

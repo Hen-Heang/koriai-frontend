@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference copy of the Orbit/goalmap source used during integration — not part of this app.
+    "goalmap/**",
   ]),
 ]);
 

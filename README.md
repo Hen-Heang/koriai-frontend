@@ -86,6 +86,7 @@ Suggested variables:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_web_oauth_client_id
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=change-me
 OPENAI_API_KEY=your_openai_key
@@ -93,6 +94,12 @@ OPENAI_API_KEY=your_openai_key
 
 Notes:
 - `NEXT_PUBLIC_API_BASE_URL` is already used by [lib/api.ts](lib/api.ts).
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` powers the "Sign in with Google" button
+  ([components/google-sign-in-button.tsx](components/google-sign-in-button.tsx)). Create a
+  **Web application** OAuth client in Google Cloud Console → APIs & Services → Credentials,
+  add `http://localhost:3000` to its Authorized JavaScript origins, and set the **same** client
+  ID on the backend as `GOOGLE_CLIENT_IDS` (the backend verifies the ID token's audience).
+  Restart the dev server after changing it — `NEXT_PUBLIC_*` vars are read at startup.
 - `NEXTAUTH_URL` and `NEXTAUTH_SECRET` will matter once auth is connected end-to-end.
 - `OPENAI_API_KEY` should only be used through a backend or secure server route, not directly from the browser.
 

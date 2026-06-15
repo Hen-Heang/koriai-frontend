@@ -16,8 +16,10 @@ import {
 import { motion } from "motion/react"
 
 import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
+import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
 import { ProgressChart } from "@/components/dashboard/ProgressChart"
 import { StreakCard } from "@/components/dashboard/StreakCard"
+import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { Button as UIButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -157,22 +159,12 @@ const quickActions = [
   {
     href: "/vocab",
     label: "Vocabulary",
-    description: "Build your deck and practice sentences with each word.",
+    description: "Build your deck and clear due words with spaced repetition.",
     icon: Cpu,
     gradient: "from-blue-600 to-indigo-600",
     glow: "shadow-blue-500/10",
     iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
     tag: "Core focus",
-  },
-  {
-    href: "/flashcards",
-    label: "Flashcards",
-    description: "Review due words with spaced repetition.",
-    icon: Zap,
-    gradient: "from-amber-600 to-orange-600",
-    glow: "shadow-amber-500/10",
-    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400",
-    tag: "Daily review",
   },
   {
     href: "/daily-phrase",
@@ -185,14 +177,24 @@ const quickActions = [
     tag: "New today",
   },
   {
-    href: "/correct",
+    href: "/chat?prompt=" + encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n"),
     label: "Correction",
-    description: "Write Korean sentences and get AI corrections.",
+    description: "Write Korean sentences and get AI corrections from your coach.",
     icon: SpellCheck2,
     gradient: "from-sky-500 to-blue-500",
     glow: "shadow-sky-500/10",
     iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
     tag: "Daily practice",
+  },
+  {
+    href: "/goals",
+    label: "Goals & Tasks",
+    description: "Set goals, plan tasks, and track every deadline.",
+    icon: Target,
+    gradient: "from-emerald-500 to-green-600",
+    glow: "shadow-emerald-500/10",
+    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
+    tag: "Plan ahead",
   },
 ]
 
@@ -240,12 +242,12 @@ export default function DashboardPage() {
 
   const nextSteps = [
     {
-      href: "/correct",
+      href: "/chat?prompt=" + encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n"),
       title: "Write one sentence",
       detail: "Describe your work day in Korean and get an instant AI correction.",
     },
     {
-      href: "/flashcards",
+      href: "/vocab",
       title: "Clear today's reviews",
       detail: "Knock out the words due in your spaced repetition queue.",
     },
@@ -300,7 +302,7 @@ export default function DashboardPage() {
                   {getGreeting()}, 👋
                 </h1>
                 <div className="mt-3 max-w-xl text-[13px] font-medium leading-5 text-slate-400 sm:text-[14px] sm:leading-6 lg:text-base">
-                  Ready to level up? You&apos;re <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">{val(stats.dailyGoalProgress, "%")}</span> through today&apos;s target.
+                  Learn Korean, hit your goals, and clear your tasks — all in one place. You&apos;re <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">{val(stats.dailyGoalProgress, "%")}</span> through today&apos;s target.
                 </div>
               </div>
 
@@ -383,7 +385,7 @@ export default function DashboardPage() {
             {/* CTA row */}
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-3">
               <UIButton asChild size="lg" className="h-12 w-full rounded-2xl bg-emerald-600 px-5 text-sm font-black text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] sm:h-13 sm:w-auto sm:px-7 sm:text-base">
-                <Link href="/flashcards">
+                <Link href="/vocab">
                   {stats.dueReviews > 0
                     ? `Start today's review (${stats.dueReviews} due)`
                     : "Start today's review"}
@@ -541,6 +543,23 @@ export default function DashboardPage() {
               </div>
             </Link>
           ))}
+        </div>
+      </motion.section>
+
+      {/* ── Goals & Tasks ── */}
+      <motion.section variants={itemVariants}>
+        <div className="mb-5 sm:mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-600/80 dark:text-emerald-400/80 sm:text-xs sm:tracking-[0.35em]">
+            Plan &amp; Track
+          </p>
+          <h2 className="mt-2 text-[1.65rem] font-black tracking-tight text-foreground sm:mt-3 sm:text-[2.2rem] lg:text-4xl">
+            Your goals &amp; today&apos;s tasks
+          </h2>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-2 sm:gap-6">
+          <GoalsOverview />
+          <TodaysTasks />
         </div>
       </motion.section>
 

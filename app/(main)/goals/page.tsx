@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/goals/DeleteConfirmDialog"
 import { EditGoalSlidePanel } from "@/components/goals/EditGoalSlidePanel"
 import { GoalList } from "@/components/goals/GoalList"
 import { GoalSorter } from "@/components/goals/GoalSorter"
+import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { useGoals } from "@/hooks/useGoals"
 import { getDeadlineNotificationMessage, type Goal } from "@/lib/goals"
 import { cn } from "@/lib/utils"
@@ -124,78 +125,87 @@ export default function GoalsPage() {
         </div>
       )}
 
-      {/* Filter tabs + sorter */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex w-fit gap-1 rounded-2xl bg-foreground/5 p-1">
-          {(["all", "active", "completed"] as const).map((tab) => {
-            const count =
-              tab === "all" ? allGoals.length : tab === "active" ? activeGoals.length : completedGoals.length
-            const isSelected = goalFilter === tab
-            return (
-              <button
-                key={tab}
-                onClick={() => {
-                  setGoalFilter(tab)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold capitalize transition-all sm:px-4 sm:gap-2",
-                  isSelected
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+      {/* Goals (left) + Today's Tasks rail (right on xl, stacks below otherwise) */}
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        <div className="min-w-0 space-y-6">
+          {/* Filter tabs + sorter */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex w-fit gap-1 rounded-2xl bg-foreground/5 p-1">
+              {(["all", "active", "completed"] as const).map((tab) => {
+                const count =
+                  tab === "all" ? allGoals.length : tab === "active" ? activeGoals.length : completedGoals.length
+                const isSelected = goalFilter === tab
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setGoalFilter(tab)
+                      setCurrentPage(1)
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold capitalize transition-all sm:px-4 sm:gap-2",
+                      isSelected
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {tab}
+                    <span
+                      className={cn(
+                        "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
+                        isSelected ? "bg-primary/10 text-primary" : "bg-foreground/5 text-muted-foreground"
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <GoalSorter sortOption={sortOption} onSortChange={updateSort} />
+          </div>
+
+          {/* Goals */}
+          <GoalList
+            goals={displayGoals}
+            isLoading={isLoading}
+            isDeleting={isDeleting}
+            sortOption={sortOption}
+            onDeleteGoal={confirmDelete}
+            onEditGoal={handleEditGoal}
+            onToggleStar={toggleStar}
+          />
+
+          {/* Pagination */}
+          {filteredTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
               >
-                {tab}
-                <span
-                  className={cn(
-                    "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-                    isSelected ? "bg-primary/10 text-primary" : "bg-foreground/5 text-muted-foreground"
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+                Previous
+              </Button>
+              <span className="px-2 text-sm font-medium text-muted-foreground tabular-nums">
+                {currentPage} / {filteredTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= filteredTotalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-        <GoalSorter sortOption={sortOption} onSortChange={updateSort} />
+
+        <aside className="xl:sticky xl:top-6 xl:self-start">
+          <TodaysTasks />
+        </aside>
       </div>
-
-      {/* Goals */}
-      <GoalList
-        goals={displayGoals}
-        isLoading={isLoading}
-        isDeleting={isDeleting}
-        sortOption={sortOption}
-        onDeleteGoal={confirmDelete}
-        onEditGoal={handleEditGoal}
-        onToggleStar={toggleStar}
-      />
-
-      {/* Pagination */}
-      {filteredTotalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            Previous
-          </Button>
-          <span className="px-2 text-sm font-medium text-muted-foreground tabular-nums">
-            {currentPage} / {filteredTotalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= filteredTotalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
 
       <EditGoalSlidePanel
         isOpen={showEditPanel}

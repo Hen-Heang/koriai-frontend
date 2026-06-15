@@ -13,18 +13,27 @@ import { useChat } from "@/hooks/useChat"
 import type { ChatMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const GENERAL_SUGGESTIONS = [
+type Suggestion = {
+  emoji: string
+  label: string
+  text: string
+  // When true, the chip fills the composer (so the user can paste/append their
+  // own text) instead of sending immediately — used for the "correct my writing" flow.
+  prefill?: boolean
+}
+
+const GENERAL_SUGGESTIONS: Suggestion[] = [
   { emoji: "👋", label: "Greetings", text: "Teach me 5 everyday Korean greetings with pronunciation tips." },
   { emoji: "✍️", label: "Beginner chat", text: "I'm a beginner. Give me a simple Korean conversation I can practice right now." },
   { emoji: "🔤", label: "Grammar", text: "Explain the difference between 이/가 and 은/는 with short examples." },
-  { emoji: "🛠️", label: "Fix my Korean", text: "Please correct this sentence and explain why: 저는 어제 학교에 갔어요 친구랑." },
+  { emoji: "🛠️", label: "Fix my writing", text: "Please correct my Korean and explain each change in English.\n\nMy text:\n", prefill: true },
 ]
 
-const TECHNICAL_SUGGESTIONS = [
+const TECHNICAL_SUGGESTIONS: Suggestion[] = [
+  { emoji: "📝", label: "Fix my report", text: "Please correct my Korean writing and explain each change in English. Make it sound natural for a work report.\n\nMy text:\n", prefill: true },
   { emoji: "💻", label: "PR Review", text: "How do I ask a colleague to review my Pull Request politely in Korean?" },
   { emoji: "📅", label: "Stand-up", text: "Help me prepare a short daily stand-up update in Korean: I finished the login bug and I'm starting the API integration today." },
   { emoji: "🚀", label: "Deployment", text: "What are some common Korean terms used during a production deployment or system maintenance?" },
-  { emoji: "🤝", label: "Technical Help", text: "How do I ask a senior developer for help with a complex bug without sounding too demanding?" },
 ]
 
 type ChatWindowProps = {
@@ -32,6 +41,7 @@ type ChatWindowProps = {
   subtitle: string
   conversationId?: number
   initialMessages?: ChatMessage[]
+  initialDraft?: string
   onNewChat?: () => void
   isStartingNewChat?: boolean
 }
@@ -41,6 +51,7 @@ export function ChatWindow({
   subtitle,
   conversationId,
   initialMessages,
+  initialDraft,
   onNewChat,
   isStartingNewChat,
 }: ChatWindowProps) {
@@ -61,6 +72,21 @@ export function ChatWindow({
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // Seed the composer once when arriving via a deep link (e.g. dashboard
+  // "Correction" card → /chat?prompt=...) so the user lands ready to paste.
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (seededRef.current || !initialDraft) return
+    seededRef.current = true
+    setDraft(initialDraft)
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.focus()
+      const end = initialDraft.length
+      textarea.setSelectionRange(end, end)
+    }
+  }, [initialDraft, setDraft])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
@@ -86,9 +112,19 @@ export function ChatWindow({
     if (!isStreaming && !isLoadingMessages && draft.trim()) sendMessage()
   }
 
-  function sendSuggestion(text: string) {
+  function sendSuggestion(suggestion: Suggestion) {
     if (!conversationId || isStreaming || isLoadingMessages) return
-    sendMessage(text)
+    if (suggestion.prefill) {
+      setDraft(suggestion.text)
+      const textarea = textareaRef.current
+      if (textarea) {
+        textarea.focus()
+        const end = suggestion.text.length
+        textarea.setSelectionRange(end, end)
+      }
+      return
+    }
+    sendMessage(suggestion.text)
   }
 
   const isEmpty = messages.length === 0 && !isLoadingMessages
@@ -198,7 +234,7 @@ export function ChatWindow({
                     transition={{ delay: i * 0.03 }}
                     type="button"
                     disabled={!conversationId || isStreaming}
-                    onClick={() => sendSuggestion(s.text)}
+                    onClick={() => sendSuggestion(s)}
                     className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-emerald-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
                   >
                     <span className="text-sm">{s.emoji}</span>

@@ -73,4 +73,32 @@ export const TASK_COLOR_PRESETS = [
 
 export const DEFAULT_TASK_COLOR = TASK_COLOR_PRESETS[0]
 
-export const getTaskColor = (task: Pick<Task, "color">): string => task.color || DEFAULT_TASK_COLOR
+export const getTaskColor = (task?: Pick<Task, "color"> | null): string =>
+  task?.color && /^#[0-9a-fA-F]{6}$/.test(task.color) ? task.color : DEFAULT_TASK_COLOR
+
+// Named swatches for the TaskColorPicker (ported from Orbit's taskColors.ts).
+export interface TaskColorOption {
+  name: string
+  value: string
+}
+
+export const TASK_COLORS: TaskColorOption[] = [
+  { name: "Blue", value: "#3b82f6" },
+  { name: "Violet", value: "#8b5cf6" },
+  { name: "Pink", value: "#ec4899" },
+  { name: "Red", value: "#ef4444" },
+  { name: "Orange", value: "#f97316" },
+  { name: "Amber", value: "#f59e0b" },
+  { name: "Green", value: "#22c55e" },
+  { name: "Teal", value: "#14b8a6" },
+  { name: "Slate", value: "#64748b" },
+]
+
+/** Append an alpha channel (0–1) to a #rrggbb hex → #rrggbbaa. */
+export const hexWithAlpha = (hex: string, alpha: number): string => {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex
+  const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+    .toString(16)
+    .padStart(2, "0")
+  return `${hex}${a}`
+}

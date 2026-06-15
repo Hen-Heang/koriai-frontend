@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { Suspense, useCallback, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { MessageCircle, AlertCircle } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -9,6 +10,16 @@ import { chatApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatPageContent />
+    </Suspense>
+  )
+}
+
+function ChatPageContent() {
+  const searchParams = useSearchParams()
+  const initialDraft = searchParams.get("prompt") ?? undefined
   const [conversationId, setConversationId] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [isStartingNewChat, setIsStartingNewChat] = useState(false)
@@ -97,6 +108,7 @@ export default function ChatPage() {
         title="AI Language Tutor"
         subtitle="Active Session · Korean"
         conversationId={conversationId}
+        initialDraft={initialDraft}
         onNewChat={startNewChat}
         isStartingNewChat={isStartingNewChat}
       />
