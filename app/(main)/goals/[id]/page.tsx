@@ -373,7 +373,7 @@ export default function GoalDetailPage() {
       </div>
 
       {/* Content Tabs */}
-      <Tabs value={tab} onValueChange={changeTab} className="space-y-6 sm:space-y-8">
+      <Tabs value={tab} onValueChange={changeTab} className="flex-col space-y-6 sm:space-y-8">
         <div className="no-scrollbar overflow-x-auto pb-1">
           <TabsList className="inline-flex h-12 w-auto min-w-full justify-start gap-1 rounded-[1.25rem] bg-foreground/5 p-1.5 backdrop-blur-sm sm:h-14 sm:gap-2 sm:rounded-2xl sm:p-2 sm:justify-center">
             <TabsTrigger value="overview" className="rounded-lg px-3 text-[10px] font-black uppercase tracking-widest sm:rounded-xl sm:px-6 sm:text-xs">Overview</TabsTrigger>
