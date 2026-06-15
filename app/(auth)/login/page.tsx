@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { authApi, getApiErrorMessage } from "@/lib/api"
 import { setAuth } from "@/lib/auth-store"
+import { GoogleSignInButton } from "@/components/google-sign-in-button"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -169,11 +170,22 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border/60" />
               </div>
               <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                <span className="bg-card px-4 text-muted-foreground/60">Or continue with</span>
+              </div>
+            </div>
+
+            <GoogleSignInButton onError={setError} redirectTo="/dashboard" />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/60" />
+              </div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
                 <span className="bg-card px-4 text-muted-foreground/60">New to KoriAI?</span>
               </div>
             </div>
 
-            <Button 
+            <Button
               asChild 
               variant="outline" 
               className="h-14 w-full rounded-2xl border-border bg-background/50 font-bold hover:bg-accent active:scale-[0.98]"

@@ -38,27 +38,24 @@ type ReviewSessionProps = {
   onRate: (id: string, rating: ReviewRating) => void | Promise<void>
 }
 
-// Anki-style grade buttons: label + the interval the card jumps to.
+// Duolingo-style grade buttons: bright fill + darker bottom edge ("3D" press).
+// label + the interval the card jumps to.
 const GRADE_STYLES: Record<ReviewRating, { label: string; classes: string }> = {
   AGAIN: {
     label: "Again",
-    classes:
-      "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400",
+    classes: "bg-[#ff4b4b] border-[#e63b3b] text-white",
   },
   HARD: {
     label: "Hard",
-    classes:
-      "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400",
+    classes: "bg-[#ff9600] border-[#e08400] text-white",
   },
   GOOD: {
     label: "Good",
-    classes:
-      "border-transparent bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500",
+    classes: "bg-[#58cc02] border-[#46a302] text-white",
   },
   EASY: {
     label: "Easy",
-    classes:
-      "border-sky-200 bg-sky-50 text-sky-600 hover:bg-sky-100 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-400",
+    classes: "bg-[#1cb0f6] border-[#1499e0] text-white",
   },
 }
 
@@ -70,21 +67,21 @@ function GradeButtons({
   onGrade: (rating: ReviewRating) => void
 }) {
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 gap-2.5">
       {RATINGS.map((rating) => (
         <button
           key={rating}
           type="button"
           onClick={() => onGrade(rating)}
           className={cn(
-            "flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border transition-all active:scale-95",
+            "flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border-b-4 transition-all active:translate-y-[3px] active:border-b-0",
             GRADE_STYLES[rating].classes
           )}
         >
           <span className="text-xs font-black uppercase tracking-wider">
             {GRADE_STYLES[rating].label}
           </span>
-          <span className="text-[10px] font-bold opacity-70">
+          <span className="text-[10px] font-bold opacity-80">
             {formatInterval(previewIntervalDays(card, rating))}
           </span>
         </button>
@@ -150,7 +147,7 @@ function FlashCard({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Flip card */}
+      {/* Flip card — Duolingo-style chunky rounded card */}
       <div className="perspective-[1000px] h-80 sm:h-96">
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -161,30 +158,30 @@ function FlashCard({
           <button
             type="button"
             onClick={() => setFlipped(true)}
-            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[2rem] border border-border bg-card p-6 text-center shadow-xl dark:bg-slate-900/60 sm:rounded-[3rem] sm:p-8"
+            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-[2.5rem] sm:p-8"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6">{reversed ? "English" : "Korean"}</span>
+            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
             <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">{reversed ? card.meaning : card.term}</p>
-            <div className="mt-10 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-5 py-2.5 text-xs font-bold text-muted-foreground/60 transition-colors hover:bg-accent/10">
+            <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
               Tap to Reveal
             </div>
           </button>
 
           {/* Back */}
           <div
-            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-2xl dark:bg-slate-900/80 sm:rounded-[3rem] sm:p-8"
+            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-[2.5rem] sm:p-8"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mb-4">{reversed ? "Korean" : "Meaning"}</span>
+            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
             <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl">{reversed ? card.term : card.meaning}</p>
-            
+
             {card.example && (
-              <div className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-accent/5 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
+              <div className="mt-6 w-full max-w-sm rounded-2xl border-2 border-[#58cc02]/20 bg-card/80 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
                 {card.example}
               </div>
             )}
 
             <div className="mt-8">
-              <SpeakButton text={card.term} className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 shadow-sm ring-1 ring-emerald-500/20 active:scale-90" />
+              <SpeakButton text={card.term} className="h-14 w-14 rounded-2xl border-b-4 border-[#1499e0] bg-[#1cb0f6] text-white transition-all active:translate-y-[3px] active:border-b-0" />
             </div>
           </div>
         </motion.div>
@@ -198,15 +195,15 @@ function FlashCard({
             className="space-y-4"
           >
             {/* AI Hint Section */}
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <div className="rounded-2xl border-2 border-[#ffc800]/40 bg-[#ffc800]/10 p-4">
               {hint ? (
-                <p className="text-sm font-bold text-amber-700 dark:text-amber-200/90 leading-relaxed">{hint}</p>
+                <p className="text-sm font-bold leading-relaxed text-[#b88600] dark:text-[#ffd43b]">{hint}</p>
               ) : (
                 <button
                   type="button"
                   onClick={fetchHint}
                   disabled={loadingHint}
-                  className="flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#b88600] hover:text-[#9a7100] dark:text-[#ffd43b]"
                 >
                   <Lightbulb size={14} strokeWidth={2.5} className={loadingHint ? "animate-pulse" : ""} />
                   {loadingHint ? "Creating AI sentence..." : "Get AI example sentence"}
@@ -214,7 +211,7 @@ function FlashCard({
               )}
             </div>
 
-            {/* Grading Buttons (Anki-style, keys 1-4) */}
+            {/* Grading Buttons (Duolingo-style, keys 1-4) */}
             <GradeButtons card={card} onGrade={grade} />
           </motion.div>
         )}
@@ -463,6 +460,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   const [queue, setQueue] = useState<VocabItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lapsedIds, setLapsedIds] = useState<Set<string>>(new Set())
+  const [knewCount, setKnewCount] = useState(0)
 
   const canUseChoice = allWords.length >= 4
 
@@ -471,6 +469,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     setQueue(shuffle(deck))
     setCurrentIndex(0)
     setLapsedIds(new Set())
+    setKnewCount(0)
     setPhase("quiz")
   }
 
@@ -503,6 +502,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         }
         return
       }
+
+      setKnewCount((c) => c + 1)
 
       if (currentIndex + 1 >= queue.length) {
         setPhase("done")
@@ -663,7 +664,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-[2.5rem]">
       {/* Session Progress Header */}
       <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 sm:px-6 sm:py-5">
-        <button 
+        <button
           onClick={() => setPhase("idle")}
           className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
         >
@@ -675,7 +676,17 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
           </span>
         </div>
-        <div className="h-9 w-9" /> {/* Spacer */}
+        {/* Live tally: remembered vs. relearning */}
+        <div className="flex items-center gap-2.5 text-[11px] font-black tabular-nums">
+          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 size={13} strokeWidth={3} />
+            {knewCount}
+          </span>
+          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+            <RotateCcw size={13} strokeWidth={3} />
+            {lapsedIds.size}
+          </span>
+        </div>
       </div>
 
       {/* Smooth Progress Indicator */}

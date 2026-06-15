@@ -91,7 +91,7 @@ export default function VocabPage() {
             />
           </motion.div>
 
-          <VocabDictionary words={words} loading={loading} onUpdate={updateWord} onDelete={deleteWord} />
+          <VocabDictionary words={words} loading={loading} dueCount={dueToday.length} onUpdate={updateWord} onDelete={deleteWord} />
         </div>
 
         <motion.div variants={itemVariants} className="order-1 min-w-0 xl:order-2 xl:sticky xl:top-8 xl:self-start">

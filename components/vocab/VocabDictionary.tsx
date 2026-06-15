@@ -1,18 +1,26 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Layers3, Search, SearchX, X } from "lucide-react"
+import { ArrowDownUp, Layers3, Search, SearchX, X } from "lucide-react"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { VocabDeck } from "@/components/vocab/VocabDeck"
-import { filterVocab, type MasteryFilter } from "@/lib/vocab-review"
+import { VocabStats } from "@/components/vocab/VocabStats"
+import {
+  filterVocab,
+  matchesMastery,
+  sortVocab,
+  type MasteryFilter,
+  type SortOrder,
+} from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 
 type VocabDictionaryProps = {
   words: VocabItem[]
   loading: boolean
+  dueCount?: number
   onUpdate: (
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
@@ -75,16 +83,28 @@ const MASTERY_FILTERS: { value: MasteryFilter; label: string }[] = [
   { value: "mastered", label: "Mastered" },
 ]
 
-export function VocabDictionary({ words, loading, onUpdate, onDelete }: VocabDictionaryProps) {
+const SORT_ORDERS: { value: SortOrder; label: string }[] = [
+  { value: "alpha", label: "A → Z" },
+  { value: "mastery-asc", label: "Weakest first" },
+  { value: "mastery-desc", label: "Strongest first" },
+  { value: "due", label: "Due soonest" },
+]
+
+export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDelete }: VocabDictionaryProps) {
   const [query, setQuery] = useState("")
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("alpha")
   const isFiltering = query.trim().length > 0 || masteryFilter !== "all"
 
   const filtered = useMemo(
-    () => filterVocab(words, query, masteryFilter),
-    [words, query, masteryFilter]
+    () => sortVocab(filterVocab(words, query, masteryFilter), sortOrder),
+    [words, query, masteryFilter, sortOrder]
   )
   const decks = useMemo(() => groupByCategory(filtered), [filtered])
+
+  // Per-bucket counts so the filter chips can advertise how many words match.
+  const filterCount = (value: MasteryFilter) =>
+    value === "all" ? words.length : words.filter((w) => matchesMastery(w.mastery, value)).length
 
   return (
     <div className="space-y-6">
@@ -94,6 +114,8 @@ export function VocabDictionary({ words, loading, onUpdate, onDelete }: VocabDic
           {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
         </p>
       </div>
+
+      <VocabStats words={words} dueCount={dueCount} />
 
       {words.length > 0 && (
         <div className="space-y-3">
@@ -118,23 +140,45 @@ export function VocabDictionary({ words, loading, onUpdate, onDelete }: VocabDic
             )}
           </div>
 
-          {/* Mastery filter chips */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Mastery filter chips + sort */}
+          <div className="flex flex-wrap items-center gap-1.5">
             {MASTERY_FILTERS.map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setMasteryFilter(value)}
                 className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95",
+                  "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95",
                   masteryFilter === value
                     ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                     : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
                 )}
               >
                 {label}
+                <span className={cn(
+                  "tabular-nums",
+                  masteryFilter === value ? "text-emerald-600/70 dark:text-emerald-400/70" : "text-muted-foreground/30"
+                )}>
+                  {filterCount(value)}
+                </span>
               </button>
             ))}
+
+            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 transition-colors hover:text-foreground dark:bg-slate-900/40">
+              <ArrowDownUp size={12} strokeWidth={3} className="shrink-0" />
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                aria-label="Sort words"
+                className="cursor-pointer appearance-none bg-transparent py-1.5 pr-1 text-[11px] font-black uppercase tracking-widest text-foreground focus:outline-none"
+              >
+                {SORT_ORDERS.map(({ value, label }) => (
+                  <option key={value} value={value} className="font-bold normal-case tracking-normal text-foreground">
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
       )}

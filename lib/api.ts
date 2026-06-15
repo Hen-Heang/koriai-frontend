@@ -1,5 +1,7 @@
 import axios from "axios"
 import { clearAuth } from "@/lib/auth-store"
+import type { Goal } from "@/lib/goals"
+import type { Task } from "@/lib/tasks"
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api"
@@ -68,6 +70,9 @@ export const authApi = {
 
   login: (data: { email: string; password: string }) =>
     api.post("/auth/login", data).then((r) => r.data.data),
+
+  loginWithGoogle: (idToken: string) =>
+    api.post("/auth/google", { idToken }).then((r) => r.data.data),
 }
 
 // Chat
@@ -288,6 +293,88 @@ export const analyzerApi = {
     api.post("/analyzer/analyze", { text, source }).then((r) => r.data.data),
   history: (limit = 30) =>
     api.get(`/analyzer/history?limit=${limit}`).then((r) => r.data.data),
+}
+
+// Mock Interview / Exam Prep
+// The examiner Q&A itself runs over the chat backend (chatApi). These helpers
+// keep interview-specific persistence — the written script the candidate
+// submits before the exam — in one place per the api-layer convention.
+export interface InterviewScript {
+  topicId: string
+  sections: Record<string, string>
+  updatedAt: string
+}
+
+export const interviewApi = {
+  getScript: (topicId: string) =>
+    api
+      .get(`/interview/scripts/${encodeURIComponent(topicId)}`)
+      .then((r) => r.data.data) as Promise<InterviewScript | null>,
+  saveScript: (topicId: string, sections: Record<string, string>) =>
+    api
+      .put(`/interview/scripts/${encodeURIComponent(topicId)}`, { sections })
+      .then((r) => r.data.data) as Promise<InterviewScript>,
+}
+
+// ── Goal tracking (ported from Orbit / DailyGoalMap) ─────────────────────────
+// Replaces Orbit's direct-to-Supabase data layer. Backend endpoints live on the
+// Spring Boot service; goals/tasks are scoped to the JWT user. See INTEGRATION.md.
+
+export interface CreateGoalPayload {
+  title: string
+  description?: string
+  target_date?: string | null
+  no_duration?: boolean
+  status?: string
+  metadata: Goal["metadata"]
+}
+
+export type UpdateGoalPayload = Partial<CreateGoalPayload>
+
+export const goalsApi = {
+  list: (status?: string) =>
+    api
+      .get("/goals", { params: status ? { status } : undefined })
+      .then((r) => r.data.data) as Promise<Goal[]>,
+  get: (id: string) => api.get(`/goals/${id}`).then((r) => r.data.data) as Promise<Goal>,
+  create: (data: CreateGoalPayload) =>
+    api.post("/goals", data).then((r) => r.data.data) as Promise<Goal>,
+  update: (id: string, data: UpdateGoalPayload) =>
+    api.put(`/goals/${id}`, data).then((r) => r.data.data) as Promise<Goal>,
+  remove: (id: string) => api.delete(`/goals/${id}`).then((r) => r.data.data),
+  toggleStar: (id: string) =>
+    api.post(`/goals/${id}/star`).then((r) => r.data.data) as Promise<{ isStarred: boolean }>,
+  getTasks: (id: string) =>
+    api.get(`/goals/${id}/tasks`).then((r) => r.data.data) as Promise<Task[]>,
+}
+
+export interface CreateTaskPayload {
+  title?: string
+  description?: string
+  goal_id?: string | null
+  start_date: string
+  end_date: string
+  daily_start_time?: string | null
+  daily_end_time?: string | null
+  is_anytime?: boolean | null
+  duration_minutes?: number | null
+  color?: string | null
+  tags?: string[]
+  completed?: boolean
+}
+
+export type UpdateTaskPayload = Partial<CreateTaskPayload>
+
+export const tasksApi = {
+  // Range query backs both the calendar and the "today" widget.
+  // goalId omitted = all the user's tasks; goalId null = personal tasks only.
+  range: (params: { from?: string; to?: string; goalId?: string | null }) =>
+    api.get("/tasks", { params }).then((r) => r.data.data) as Promise<Task[]>,
+  create: (data: CreateTaskPayload) =>
+    api.post("/tasks", data).then((r) => r.data.data) as Promise<Task>,
+  update: (id: string, data: UpdateTaskPayload) =>
+    api.put(`/tasks/${id}`, data).then((r) => r.data.data) as Promise<Task>,
+  remove: (id: string) => api.delete(`/tasks/${id}`).then((r) => r.data.data),
 }
 
 // TTS

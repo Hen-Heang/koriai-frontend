@@ -16,6 +16,7 @@ import {
   Activity,
   Globe,
   Briefcase,
+  History,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -297,6 +298,31 @@ export default function SettingsPage() {
               {error}
             </div>
           )}
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <button
+              type="button"
+              onClick={() => router.push("/history")}
+              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-violet-500/5 active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-500 ring-1 ring-violet-500/20 transition-transform group-hover:scale-110">
+                  <History size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-foreground uppercase tracking-wider">
+                    Study History
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground/60">
+                    Corrections, calendar &amp; grammar patterns
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+            </button>
+          </SectionCard>
         </motion.div>
 
         <motion.div variants={itemVariants}>

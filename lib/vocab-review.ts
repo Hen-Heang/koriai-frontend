@@ -62,3 +62,55 @@ export function filterVocab(
     )
   })
 }
+
+export type SortOrder = "alpha" | "mastery-asc" | "mastery-desc" | "due"
+
+/**
+ * Returns a new array sorted by the chosen order. Ties fall back to the term
+ * so the result is stable regardless of the input order.
+ */
+export function sortVocab(words: VocabItem[], order: SortOrder): VocabItem[] {
+  const byTerm = (a: VocabItem, b: VocabItem) => a.term.localeCompare(b.term, "ko")
+  return [...words].sort((a, b) => {
+    switch (order) {
+      case "mastery-asc":
+        return a.mastery - b.mastery || byTerm(a, b)
+      case "mastery-desc":
+        return b.mastery - a.mastery || byTerm(a, b)
+      case "due":
+        return a.nextReview.localeCompare(b.nextReview) || byTerm(a, b)
+      default:
+        return byTerm(a, b)
+    }
+  })
+}
+
+export type VocabStats = {
+  total: number
+  weak: number
+  learning: number
+  mastered: number
+  averageMastery: number
+}
+
+/** Aggregates a deck into the mastery buckets used across the dictionary. */
+export function computeVocabStats(words: VocabItem[]): VocabStats {
+  const stats = words.reduce(
+    (acc, word) => {
+      acc.sum += word.mastery
+      if (word.mastery >= 80) acc.mastered += 1
+      else if (word.mastery >= 50) acc.learning += 1
+      else acc.weak += 1
+      return acc
+    },
+    { sum: 0, weak: 0, learning: 0, mastered: 0 }
+  )
+
+  return {
+    total: words.length,
+    weak: stats.weak,
+    learning: stats.learning,
+    mastered: stats.mastered,
+    averageMastery: words.length ? Math.round(stats.sum / words.length) : 0,
+  }
+}

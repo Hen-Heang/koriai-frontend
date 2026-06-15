@@ -9,8 +9,10 @@ import {
   BookOpenText,
   CalendarDays,
   Gauge,
+  GraduationCap,
+  Target,
   // Headphones, // hidden Listening nav
-  History,
+  // History, // moved into Settings page
   MessageCircle,
   // Mic, // hidden Speaking nav
   // ScanText, // hidden Analyzer nav
@@ -35,6 +37,8 @@ const allLinks = [
   { href: "/reading", label: "Reading", icon: BookOpenText },
   { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
   { href: "/correct", label: "Correction", icon: SpellCheck2 },
+  { href: "/interview", label: "Exam Prep", icon: GraduationCap },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/chat", label: "AI Coach", icon: MessageCircle },
   // ── hidden while focusing on vocabulary — restore when needed ──
   // { href: "/generator", label: "Message Gen", icon: Wand2 },
@@ -43,16 +47,17 @@ const allLinks = [
   // { href: "/listening", label: "Listening", icon: Headphones },
   // { href: "/scenarios", label: "Meeting Sim", icon: Theater },
   // { href: "/achievements", label: "Achievements", icon: Trophy },
-  { href: "/history", label: "History", icon: History },
+  // ── History moved into Settings — reach it from the Settings page ──
+  // { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
+  { href: "/interview", label: "Exam", icon: GraduationCap },
   { href: "/flashcards", label: "Cards", icon: Layers3 },
   { href: "/reading", label: "Read", icon: BookOpenText },
-  { href: "/correct", label: "Correct", icon: SpellCheck2 },
 ]
 
 export default function MainLayout({

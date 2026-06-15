@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import type { VocabItem } from "./types"
-import { filterVocab, isCorrectTerm, matchesMastery, shuffle } from "./vocab-review"
+import {
+  computeVocabStats,
+  filterVocab,
+  isCorrectTerm,
+  matchesMastery,
+  shuffle,
+  sortVocab,
+} from "./vocab-review"
 
 function word(overrides: Partial<VocabItem>): VocabItem {
   return {
@@ -12,6 +19,10 @@ function word(overrides: Partial<VocabItem>): VocabItem {
     mastery: 0,
     nextReview: "-",
     tags: [],
+    easeFactor: 2.5,
+    intervalDays: 0,
+    repetitions: 0,
+    lapses: 0,
     ...overrides,
   }
 }
@@ -107,5 +118,60 @@ describe("filterVocab", () => {
     expect(filterVocab(words, "", "weak").map((w) => w.id)).toEqual(["2"])
     expect(filterVocab(words, "work", "mastered").map((w) => w.id)).toEqual(["1"])
     expect(filterVocab(words, "work", "weak")).toHaveLength(0)
+  })
+})
+
+describe("sortVocab", () => {
+  const words = [
+    word({ id: "1", term: "회의", mastery: 90, nextReview: "2026-06-20" }),
+    word({ id: "2", term: "배포", mastery: 30, nextReview: "2026-06-15" }),
+    word({ id: "3", term: "출근", mastery: 60, nextReview: "2026-06-18" }),
+  ]
+
+  it("sorts by mastery ascending then descending", () => {
+    expect(sortVocab(words, "mastery-asc").map((w) => w.id)).toEqual(["2", "3", "1"])
+    expect(sortVocab(words, "mastery-desc").map((w) => w.id)).toEqual(["1", "3", "2"])
+  })
+
+  it("sorts by soonest next review", () => {
+    expect(sortVocab(words, "due").map((w) => w.id)).toEqual(["2", "3", "1"])
+  })
+
+  it("sorts alphabetically by Korean term", () => {
+    expect(sortVocab(words, "alpha").map((w) => w.term)).toEqual(["배포", "출근", "회의"])
+  })
+
+  it("does not mutate the input array", () => {
+    const input = [...words]
+    sortVocab(input, "mastery-asc")
+    expect(input.map((w) => w.id)).toEqual(["1", "2", "3"])
+  })
+})
+
+describe("computeVocabStats", () => {
+  it("buckets words and averages mastery", () => {
+    const stats = computeVocabStats([
+      word({ mastery: 90 }),
+      word({ mastery: 80 }),
+      word({ mastery: 60 }),
+      word({ mastery: 10 }),
+    ])
+    expect(stats).toEqual({
+      total: 4,
+      weak: 1,
+      learning: 1,
+      mastered: 2,
+      averageMastery: 60,
+    })
+  })
+
+  it("returns zeroed stats for an empty deck", () => {
+    expect(computeVocabStats([])).toEqual({
+      total: 0,
+      weak: 0,
+      learning: 0,
+      mastered: 0,
+      averageMastery: 0,
+    })
   })
 })
