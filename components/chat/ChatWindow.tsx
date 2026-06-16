@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, Plus, Mic } from "lucide-react"
+import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, Plus, Mic, Headphones, Square } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"
@@ -10,8 +10,25 @@ import { TypingIndicator } from "@/components/chat/TypingIndicator"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useChat } from "@/hooks/useChat"
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
+import { ttsApi } from "@/lib/api"
 import type { ChatMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+// Pulls just the Korean (Hangul-bearing) lines out of a coach reply so TTS
+// speaks the spoken part, not the EN:/RR:/FIX: subtitle lines.
+function extractKoreanForSpeech(content: string): string {
+  return content
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim()
+      if (!t || /^(EN|RR|FIX)\s*:/i.test(t)) return false
+      return /[가-힣]/.test(t)
+    })
+    .join(" ")
+    .replace(/\*\*/g, "")
+    .trim()
+}
 
 type Suggestion = {
   emoji: string
@@ -65,6 +82,8 @@ export function ChatWindow({
     setDraft,
     isTechnicalMode,
     setIsTechnicalMode,
+    voiceMode,
+    setVoiceMode,
   } = useChat({ conversationId, initialMessages })
 
   const router = useRouter()
@@ -72,6 +91,54 @@ export function ChatWindow({
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // ── Voice conversation: speech-to-text in, text-to-speech out ──
+  const {
+    supported: micSupported,
+    status: micStatus,
+    transcript: liveTranscript,
+    error: micError,
+    start: startListening,
+    stop: stopListening,
+  } = useSpeechRecognition({
+    lang: "ko-KR",
+    onResult: (spoken) => {
+      const text = spoken.trim()
+      if (text && conversationId && !isStreaming && !isLoadingMessages) {
+        sendMessage(text)
+      }
+    },
+  })
+  const isListening = micStatus === "listening"
+
+  function handleMicClick() {
+    if (!micSupported) return
+    if (isListening) {
+      stopListening()
+    } else {
+      if (!voiceMode) setVoiceMode(true)
+      startListening()
+    }
+  }
+
+  // Auto-play the coach's Korean reply once streaming finishes (voice mode only).
+  const prevStreamingRef = useRef(false)
+  const lastSpokenIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    const justFinished = prevStreamingRef.current && !isStreaming
+    prevStreamingRef.current = isStreaming
+    if (!justFinished || !voiceMode) return
+
+    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")
+    if (!lastAssistant || lastAssistant.id === lastSpokenIdRef.current) return
+    const korean = extractKoreanForSpeech(lastAssistant.content)
+    if (!korean) return
+    lastSpokenIdRef.current = lastAssistant.id
+    ttsApi
+      .speak(korean, "nova")
+      .then((url) => new Audio(url).play())
+      .catch(() => {})
+  }, [isStreaming, voiceMode, messages])
 
   // Seed the composer once when arriving via a deep link (e.g. dashboard
   // "Correction" card → /chat?prompt=...) so the user lands ready to paste.
@@ -146,15 +213,15 @@ export function ChatWindow({
           </Button>
 
           <div className="relative shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-emerald-500 to-teal-600 text-[10px] font-black text-white shadow-lg shadow-emerald-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-blue-500 to-indigo-600 text-[10px] font-black text-white shadow-lg shadow-blue-500/20">
               AI
             </div>
-            <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-400" />
+            <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
           </div>
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-black tracking-tight text-foreground leading-none">{title}</h3>
             <div className="mt-1.5 flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
               <p className="truncate text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{subtitle}</p>
             </div>
           </div>
@@ -169,12 +236,29 @@ export function ChatWindow({
             className={cn(
               "flex h-9 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-all",
               isTechnicalMode 
-                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400" 
                 : "border-border/60 bg-background/50 text-muted-foreground/60"
             )}
           >
             {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
             <span className="hidden sm:inline">{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
+          </Button>
+
+          {/* Voice Conversation Mode toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setVoiceMode(!voiceMode)}
+            title="Korean voice conversation: speak and hear replies with subtitles"
+            className={cn(
+              "flex h-9 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-all",
+              voiceMode
+                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                : "border-border/60 bg-background/50 text-muted-foreground/60"
+            )}
+          >
+            <Headphones size={14} />
+            <span className="hidden sm:inline">{voiceMode ? "Voice ON" : "Voice"}</span>
           </Button>
 
           {onNewChat && (
@@ -198,7 +282,7 @@ export function ChatWindow({
           {isLoadingMessages ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
               <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 shadow-inner">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shadow-inner">
                   <Sparkles size={24} className="animate-pulse" />
                 </div>
               </div>
@@ -212,7 +296,7 @@ export function ChatWindow({
               className="flex flex-1 flex-col items-center justify-center gap-8 py-10 sm:py-16"
             >
               <div className="space-y-3 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-3xl shadow-inner ring-1 ring-emerald-500/20">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl shadow-inner ring-1 ring-blue-500/20">
                   {isTechnicalMode ? "💻" : "🇰🇷"}
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
@@ -235,10 +319,10 @@ export function ChatWindow({
                     type="button"
                     disabled={!conversationId || isStreaming}
                     onClick={() => sendSuggestion(s)}
-                    className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-emerald-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+                    className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
                   >
                     <span className="text-sm">{s.emoji}</span>
-                    <span className="text-[13px] font-semibold text-foreground/80 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                    <span className="text-[13px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {s.label}
                     </span>
                   </motion.button>
@@ -247,8 +331,12 @@ export function ChatWindow({
             </motion.div>
           ) : (
             <div className="space-y-8 pb-10">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
+              {messages.map((message, i) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  live={isStreaming && i === messages.length - 1 && message.role === "assistant"}
+                />
               ))}
               <AnimatePresence>
                 {isStreaming && (
@@ -258,7 +346,7 @@ export function ChatWindow({
                     exit={{ opacity: 0 }}
                     className="flex items-center gap-4 sm:gap-6"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm sm:h-9 sm:w-9">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm sm:h-9 sm:w-9">
                       <Sparkles size={18} strokeWidth={2.5} />
                     </div>
                     <TypingIndicator />
@@ -283,10 +371,36 @@ export function ChatWindow({
               {error}
             </motion.p>
           ) : null}
-          
+
+          {(isListening || micError) && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={cn(
+                "mb-3 flex items-center gap-3 rounded-2xl border px-4 py-3",
+                micError
+                  ? "border-destructive/30 bg-destructive/5"
+                  : "border-blue-500/30 bg-blue-500/5"
+              )}
+            >
+              {micError ? (
+                <p className="text-[12px] font-medium text-destructive">{micError}</p>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                    <Mic size={12} className="animate-pulse" /> Listening
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
+                    {liveTranscript || "한국어로 말해 보세요…"}
+                  </p>
+                </>
+              )}
+            </motion.div>
+          )}
+
           <form
             onSubmit={handleSubmit}
-            className="group relative flex items-center gap-1 rounded-[2.5rem] border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+            className="group relative flex items-center gap-1 rounded-[2.5rem] border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
             <Button 
               type="button" 
@@ -310,14 +424,25 @@ export function ChatWindow({
             />
             
             <div className="flex items-center gap-1 pr-1">
-              <Button 
-                type="button" 
-                size="icon" 
-                variant="ghost" 
-                className="h-10 w-10 shrink-0 rounded-full text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
-              >
-                <Mic size={20} />
-              </Button>
+              {micSupported && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleMicClick}
+                  disabled={!conversationId || isStreaming || isLoadingMessages}
+                  title={isListening ? "Stop listening" : "Speak in Korean"}
+                  aria-label={isListening ? "Stop listening" : "Speak in Korean"}
+                  className={cn(
+                    "h-10 w-10 shrink-0 rounded-full transition-colors",
+                    isListening
+                      ? "bg-red-500 text-white hover:bg-red-500 animate-pulse"
+                      : "text-muted-foreground/60 hover:bg-accent hover:text-foreground"
+                  )}
+                >
+                  {isListening ? <Square size={16} /> : <Mic size={20} />}
+                </Button>
+              )}
 
               <Button
                 type="submit"
@@ -326,7 +451,7 @@ export function ChatWindow({
                 className={cn(
                   "h-10 w-10 shrink-0 rounded-full transition-all duration-300",
                   draft.trim() 
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 active:scale-90"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-90"
                     : "bg-muted text-muted-foreground/20"
                 )}
                 disabled={!draft.trim() || !conversationId || isStreaming || isLoadingMessages}

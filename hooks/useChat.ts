@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { chatApi } from "@/lib/api"
 import type { ChatMessage, MessageRole } from "@/lib/types"
@@ -39,10 +39,27 @@ function detectLanguagePreference(input: string): ResponseLanguage | null {
   return null
 }
 
-function buildMessageForApi(content: string, language: ResponseLanguage, isTechnical: boolean): string {
+// Voice mode = spoken Korean immersion. The labelled EN:/RR: lines let the UI
+// show subtitles and let TTS speak only the Korean part.
+const VOICE_MODE_INSTRUCTION =
+  "This is a spoken Korean conversation for speaking practice. Reply in natural, " +
+  "simple Korean appropriate to my level (1-3 short sentences) and always end with a " +
+  "short follow-up question so we keep talking. After the Korean, add the English " +
+  "translation on a new line starting with 'EN: ' and the Revised Romanization on a " +
+  "new line starting with 'RR: '. If I made a Korean mistake, gently give the correct " +
+  "version on a new line starting with 'FIX: '."
+
+function buildMessageForApi(
+  content: string,
+  language: ResponseLanguage,
+  isTechnical: boolean,
+  voiceMode: boolean,
+): string {
   const instructions = []
-  
-  if (language === "english") {
+
+  if (voiceMode) {
+    instructions.push(VOICE_MODE_INSTRUCTION)
+  } else if (language === "english") {
     instructions.push("Reply in English unless I ask for another language.")
   } else if (language === "korean") {
     instructions.push("Reply in Korean unless I ask for another language.")
@@ -62,9 +79,16 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
   const [isTechnicalMode, setIsTechnicalMode] = useState(false)
+  const [voiceMode, setVoiceMode] = useState(false)
   const [error, setError] = useState("")
   const [isLoadingMessages, setIsLoadingMessages] = useState(Boolean(conversationId))
   const [isSending, setIsSending] = useState(false)
+
+  // Tracks the in-flight stream so we can cancel it when the user navigates
+  // away or switches conversations, instead of leaking the fetch and writing
+  // to an unmounted component.
+  const abortRef = useRef<AbortController | null>(null)
+  useEffect(() => () => abortRef.current?.abort(), [])
 
   // Reset during render when switching conversations, so stale messages
   // never flash while the new history loads.
@@ -160,26 +184,67 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     ])
 
     setIsSending(true)
+
+    // Cancel any prior in-flight stream, then track this one for cleanup.
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    // Tokens arrive far faster than the screen refreshes. Buffer them and flush
+    // once per animation frame (~60fps) so a long reply triggers ~60 re-renders
+    // a second instead of one per token (which made replies stutter as they grew).
+    let pending = ""
+    let frame: number | null = null
+    const flush = () => {
+      frame = null
+      if (!pending) return
+      const chunk = pending
+      pending = ""
+      setMessages((current) =>
+        current.map((m) => (m.id === streamingId ? { ...m, content: m.content + chunk } : m))
+      )
+    }
+
     try {
       await chatApi.streamMessage(
         conversationId,
-        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode),
+        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode, voiceMode),
         (token) => {
-          setMessages((current) =>
-            current.map((m) => (m.id === streamingId ? { ...m, content: m.content + token } : m))
-          )
+          pending += token
+          if (frame === null) frame = requestAnimationFrame(flush)
         },
         () => {
           // user message already shown
         },
         (assistantMessageId) => {
+          if (frame !== null) {
+            cancelAnimationFrame(frame)
+            frame = null
+          }
+          flush()
           setMessages((current) =>
             current.map((m) => (m.id === streamingId ? { ...m, id: assistantMessageId } : m))
           )
         },
+        controller.signal,
       )
+      // Flush any tail tokens if the stream ended without a `done` event.
+      if (frame !== null) {
+        cancelAnimationFrame(frame)
+        frame = null
+      }
+      flush()
       setError("")
-    } catch {
+    } catch (err) {
+      if (frame !== null) {
+        cancelAnimationFrame(frame)
+        frame = null
+      }
+      // Aborted (navigation/new send) — drop the placeholder silently.
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setMessages((current) => current.filter((m) => m.id !== streamingId))
+        return
+      }
       setError("Failed to send message.")
       setMessages((current) => current.filter((m) => m.id !== streamingId))
       setMessages((current) => [
@@ -209,5 +274,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     setDraft,
     isTechnicalMode,
     setIsTechnicalMode,
+    voiceMode,
+    setVoiceMode,
   }
 }

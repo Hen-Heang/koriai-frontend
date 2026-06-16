@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { MessageCircle, AlertCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { motion } from "motion/react"
 
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -64,7 +64,7 @@ function ChatPageContent() {
           </div>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-2 text-xs font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-500 underline underline-offset-4"
+            className="mt-2 text-xs font-black uppercase tracking-widest text-blue-600 hover:text-blue-500 underline underline-offset-4"
           >
             Try refreshing
           </button>
@@ -73,41 +73,19 @@ function ChatPageContent() {
     )
   }
 
-  if (!conversationId) {
-    return (
-      <div className={cn("flex flex-col items-center justify-center gap-4", containerHeight)}>
-        <div className="relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-emerald-500/10 text-emerald-600 shadow-inner">
-            <MessageCircle size={28} strokeWidth={2.5} />
-          </div>
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute -inset-2 rounded-[2.25rem] border-2 border-emerald-500/20"
-          />
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <p className="text-sm font-black uppercase tracking-widest text-foreground">Initializing AI</p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="h-1 w-1 rounded-full bg-emerald-500" />
-            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="h-1 w-1 rounded-full bg-emerald-500" />
-            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="h-1 w-1 rounded-full bg-emerald-500" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
+  // Render the chat shell immediately (empty state + composer) instead of
+  // blocking the whole page on createConversation. The composer enables itself
+  // the moment the conversation id arrives (~one quick round trip).
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={containerHeight}
     >
       <ChatWindow
         title="AI Language Tutor"
-        subtitle="Active Session · Korean"
-        conversationId={conversationId}
+        subtitle={conversationId ? "Active Session · Korean" : "Connecting…"}
+        conversationId={conversationId ?? undefined}
         initialDraft={initialDraft}
         onNewChat={startNewChat}
         isStartingNewChat={isStartingNewChat}

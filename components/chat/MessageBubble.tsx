@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { memo, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types"
@@ -43,10 +43,15 @@ function parseInline(raw: string): InlineToken[] {
   return tokens
 }
 
-function SmartText({ text }: { text: string }) {
+function SmartText({ text, enabled = true }: { text: string; enabled?: boolean }) {
+  // While a reply is still streaming we render plain text instead of wrapping
+  // every word in a Radix popover — mounting hundreds of poppers per token
+  // flush is what makes long streaming replies feel janky.
+  if (!enabled) return <>{text}</>
+
   // Split by whitespace but keep the whitespace in the results
   const words = text.split(/(\s+)/)
-  
+
   return words.map((word, i) => {
     if (!word.trim()) return <span key={i}>{word}</span>
     
@@ -61,7 +66,7 @@ function SmartText({ text }: { text: string }) {
   })
 }
 
-function renderInline(raw: string, isUserBubble = false) {
+function renderInline(raw: string, isUserBubble = false, peek = true) {
   return parseInline(raw).map((token, i) => {
     switch (token.type) {
       case "bold":
@@ -83,7 +88,7 @@ function renderInline(raw: string, isUserBubble = false) {
           </code>
         )
       default:
-        return <SmartText key={i} text={token.text} />
+        return <SmartText key={i} text={token.text} enabled={peek} />
     }
   })
 }
@@ -167,7 +172,7 @@ function parseBlocks(content: string): Block[] {
   return blocks
 }
 
-function renderBlocks(content: string, isUserBubble = false) {
+function renderBlocks(content: string, isUserBubble = false, peek = true) {
   const blocks = parseBlocks(content)
 
   return blocks.map((block, idx) => {
@@ -180,7 +185,7 @@ function renderBlocks(content: string, isUserBubble = false) {
             block.level === 1 ? "text-lg" : "text-base",
             "mt-2 mb-1"
           )}>
-            {renderInline(block.text, isUserBubble)}
+            {renderInline(block.text, isUserBubble, peek)}
           </Tag>
         )
       }
@@ -190,7 +195,7 @@ function renderBlocks(content: string, isUserBubble = false) {
             {block.items.map((item, i) => (
               <li key={i} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-40" />
-                <span className="leading-relaxed">{renderInline(item, isUserBubble)}</span>
+                <span className="leading-relaxed">{renderInline(item, isUserBubble, peek)}</span>
               </li>
             ))}
           </ul>
@@ -203,7 +208,7 @@ function renderBlocks(content: string, isUserBubble = false) {
                 <span className="shrink-0 font-black text-[10px] opacity-40 mt-1">
                   {i + 1}
                 </span>
-                <span className="leading-relaxed">{renderInline(item, isUserBubble)}</span>
+                <span className="leading-relaxed">{renderInline(item, isUserBubble, peek)}</span>
               </li>
             ))}
           </ol>
@@ -213,7 +218,7 @@ function renderBlocks(content: string, isUserBubble = false) {
       case "paragraph":
         return (
           <p key={idx} className="text-[14px] font-medium leading-relaxed">
-            {renderInline(block.text, isUserBubble)}
+            {renderInline(block.text, isUserBubble, peek)}
           </p>
         )
     }
@@ -221,9 +226,17 @@ function renderBlocks(content: string, isUserBubble = false) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubbleImpl({ message, live = false }: { message: ChatMessage; live?: boolean }) {
   const isUser = message.role === "user"
   const [copied, setCopied] = useState(false)
+
+  // Parse markdown once per content change instead of on every parent re-render.
+  // `live` (a reply still streaming in) renders plain text — interactive
+  // word-lookup is switched on once the message finishes.
+  const body = useMemo(
+    () => renderBlocks(message.content, isUser, !live),
+    [message.content, isUser, live]
+  )
 
   async function handleCopy() {
     try {
@@ -253,7 +266,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               "flex h-8 w-8 items-center justify-center rounded-xl text-[10px] font-black text-white shadow-sm sm:h-9 sm:w-9",
               isUser
                 ? "bg-slate-500"
-                : "bg-linear-to-br from-emerald-500 to-teal-600"
+                : "bg-linear-to-br from-blue-500 to-indigo-600"
             )}
           >
             {isUser ? (
@@ -280,7 +293,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
           <article className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
             <div className="space-y-4">
-              {renderBlocks(message.content, isUser)}
+              {body}
             </div>
           </article>
 
@@ -325,7 +338,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/50 text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-90"
               >
                 {copied ? (
-                  <Check size={15} strokeWidth={2.5} className="text-emerald-500" />
+                  <Check size={15} strokeWidth={2.5} className="text-blue-500" />
                 ) : (
                   <Copy size={15} strokeWidth={2.5} />
                 )}
@@ -337,3 +350,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
     </motion.div>
   )
 }
+
+// Memoized so a token arriving on the streaming reply only re-renders that one
+// bubble — earlier messages keep a stable object reference and are skipped.
+export const MessageBubble = memo(MessageBubbleImpl)
