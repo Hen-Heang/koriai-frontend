@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
@@ -17,6 +17,8 @@ import {
   Globe,
   Briefcase,
   History,
+  Camera,
+  Loader2,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -110,6 +112,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const userId = getUserId()
@@ -128,9 +133,39 @@ export default function SettingsPage() {
         const model = data.preferredModel ?? "gpt-5-mini"
         setPreferredModel(model)
         if (!models.some((m) => m.value === model)) setCustomModel(model)
+        if (data.hasProfileImage) {
+          userApi.getProfileImageUrl(userId).then(setAvatarUrl).catch(() => {})
+        }
       })
       .finally(() => setLoading(false))
   }, [])
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = "" // allow re-selecting the same file later
+    if (!file) return
+    const userId = getUserId()
+    if (!userId) return
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Only JPEG, PNG, or WebP images are allowed.")
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Image must be 2 MB or smaller.")
+      return
+    }
+    setUploadingAvatar(true)
+    setError("")
+    try {
+      await userApi.uploadProfileImage(userId, file)
+      const url = await userApi.getProfileImageUrl(userId)
+      setAvatarUrl(url)
+    } catch {
+      setError("Could not upload image. Please try again.")
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   const activeModel = customModel || preferredModel
 
@@ -252,9 +287,34 @@ export default function SettingsPage() {
             <SectionRow last>
               <div className="flex items-center gap-5">
                 <div className="relative">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-2xl font-black text-white shadow-xl shadow-emerald-500/20">
-                    {initials}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    title="Change profile photo"
+                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-2xl font-black text-white shadow-xl shadow-emerald-500/20 active:scale-95"
+                  >
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                      {uploadingAvatar ? (
+                        <Loader2 size={18} className="animate-spin text-white" />
+                      ) : (
+                        <Camera size={18} className="text-white" />
+                      )}
+                    </span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                   <div className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
                     <CheckCircle2 size={12} className="text-white" strokeWidth={4} />
                   </div>

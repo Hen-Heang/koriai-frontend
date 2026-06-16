@@ -189,6 +189,23 @@ export const userApi = {
 
   updatePreferredModel: (id: number, preferredModel: string) =>
     api.put(`/users/${id}/preferred-model`, { preferredModel }).then((r) => r.data.data),
+
+  uploadProfileImage: (id: number, file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return api
+      .post(`/users/${id}/profile-image`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data)
+  },
+
+  // The image endpoint is auth-protected, so fetch it as a blob (token attached
+  // by the interceptor) and return an object URL the <img> tag can render.
+  getProfileImageUrl: async (id: number): Promise<string> => {
+    const response = await api.get(`/users/${id}/profile-image`, { responseType: "blob" })
+    return URL.createObjectURL(response.data)
+  },
 }
 
 // Vocabulary
