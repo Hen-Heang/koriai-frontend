@@ -29,7 +29,7 @@ const FALLBACK_CATEGORIES = [
   "Bug Reports",
 ]
 
-export default function GeneratorPage() {
+export function MessageGenerator() {
   const { options: categories, selected: category, setSelected: setCategory } = useChoices(
     messageGenApi.getCategories,
     FALLBACK_CATEGORIES
@@ -102,7 +102,7 @@ export default function GeneratorPage() {
             type="button"
             onClick={handleGenerate}
             disabled={loading || !intent.trim()}
-            className="h-11 rounded-xl bg-emerald-600 px-6 text-sm font-black text-white hover:bg-emerald-500 active:scale-95"
+            className="h-11 rounded-xl bg-blue-600 px-6 text-sm font-black text-white hover:bg-blue-500 active:scale-95"
           >
             <Wand2 size={16} className="mr-2" strokeWidth={2.5} />
             {loading ? "Generating..." : "Generate"}
@@ -134,7 +134,7 @@ export default function GeneratorPage() {
               >
                 <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-accent/5 px-4 py-2.5">
                   {v.formality && (
-                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-emerald-600 dark:text-emerald-400">
+                    <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-600 dark:text-blue-400">
                       {v.formality}
                     </span>
                   )}
@@ -147,7 +147,7 @@ export default function GeneratorPage() {
                       className="inline-flex items-center justify-center rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       {copiedIndex === i ? (
-                        <Check className="size-3.5 text-emerald-500" />
+                        <Check className="size-3.5 text-blue-500" />
                       ) : (
                         <Copy className="size-3.5" />
                       )}

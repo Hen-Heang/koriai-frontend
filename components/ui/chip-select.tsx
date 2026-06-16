@@ -23,7 +23,7 @@ export function ChipSelect({
           className={cn(
             "rounded-full border px-4 py-2 text-xs font-bold transition-all active:scale-95",
             value === option
-              ? "border-emerald-500/40 bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+              ? "border-blue-500/40 bg-blue-600 text-white shadow-md shadow-blue-600/20"
               : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
           )}
         >

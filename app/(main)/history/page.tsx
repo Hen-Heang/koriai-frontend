@@ -176,9 +176,9 @@ function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
               className={cn(
                 "relative flex aspect-square items-center justify-center rounded-xl text-[13px] font-bold",
                 isActive
-                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                  ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
                   : isToday
-                    ? "ring-2 ring-emerald-500/40 text-emerald-600 font-black"
+                    ? "ring-2 ring-blue-500/40 text-blue-600 font-black"
                     : "text-muted-foreground/50"
               )}
             >
@@ -385,9 +385,9 @@ export default function HistoryPage() {
                                     <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-red-500/60">Original</p>
                                     <p className="text-sm font-medium leading-relaxed text-foreground/70">{entry.originalText}</p>
                                   </div>
-                                  <div className="rounded-2xl bg-emerald-500/5 p-4">
+                                  <div className="rounded-2xl bg-blue-500/5 p-4">
                                     <div className="mb-2 flex items-center justify-between">
-                                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600/60">Corrected</p>
+                                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600/60">Corrected</p>
                                       <SpeakButton text={entry.correctedText} className="h-7 w-7 rounded-lg" />
                                     </div>
                                     <p className="text-sm font-black leading-relaxed text-foreground">{entry.correctedText}</p>

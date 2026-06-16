@@ -335,7 +335,7 @@ export default function InterviewScriptPage() {
             <ArrowLeft size={18} />
           </Link>
 
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
             <FileText size={18} strokeWidth={2.5} />
           </div>
 
@@ -346,9 +346,9 @@ export default function InterviewScriptPage() {
             </p>
             <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
               {synced ? (
-                <CloudCheck size={13} className="shrink-0 text-emerald-500" />
+                <CloudCheck size={13} className="shrink-0 text-blue-500" />
               ) : (
-                <Cloud size={13} className="shrink-0 text-emerald-500" />
+                <Cloud size={13} className="shrink-0 text-blue-500" />
               )}
               <span className="truncate">
                 {synced
@@ -370,7 +370,7 @@ export default function InterviewScriptPage() {
             >
               {copied ? (
                 <>
-                  <Check size={15} className="mr-1.5 text-emerald-500" /> Copied
+                  <Check size={15} className="mr-1.5 text-blue-500" /> Copied
                 </>
               ) : (
                 <>
@@ -427,20 +427,20 @@ export default function InterviewScriptPage() {
                       className={cn(
                         "group flex w-full items-center gap-2.5 rounded-lg border-l-2 py-1.5 pl-3 pr-2 text-left transition-colors",
                         active
-                          ? "border-emerald-500 bg-emerald-500/10"
+                          ? "border-blue-500 bg-blue-500/10"
                           : "border-transparent hover:bg-accent"
                       )}
                     >
                       <span
                         className={cn(
                           "h-1.5 w-1.5 shrink-0 rounded-full transition-colors",
-                          filled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                          filled ? "bg-blue-500" : "bg-muted-foreground/30"
                         )}
                       />
                       <span
                         className={cn(
                           "truncate text-[13px] font-bold transition-colors",
-                          active ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground group-hover:text-foreground"
+                          active ? "text-blue-700 dark:text-blue-400" : "text-muted-foreground group-hover:text-foreground"
                         )}
                       >
                         {index + 1}. {label}
@@ -495,7 +495,7 @@ export default function InterviewScriptPage() {
                     data-doc-section
                     className={cn(
                       "scroll-mt-20 rounded-r-lg border-l-2 pl-4 transition-colors",
-                      active ? "border-emerald-500/60" : "border-transparent"
+                      active ? "border-blue-500/60" : "border-transparent"
                     )}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -582,7 +582,7 @@ export default function InterviewScriptPage() {
               <button
                 type="button"
                 onClick={addCustomSection}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3.5 text-sm font-bold text-muted-foreground transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:text-emerald-600"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3.5 text-sm font-bold text-muted-foreground transition-colors hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-600"
               >
                 <Plus size={16} strokeWidth={2.5} /> Add section
               </button>

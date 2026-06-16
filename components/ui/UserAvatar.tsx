@@ -19,14 +19,14 @@ type UserAvatarProps = {
  * The signed-in user's photo, with an initials fallback. Reads from the shared
  * session-cached profile-image hook, so it can be dropped anywhere (navbar,
  * chat header, …) without triggering extra network calls. Styled to match the
- * settings avatar: emerald→teal gradient with a small "active" check badge.
+ * settings avatar: blue gradient with a small green "active" check badge.
  */
 export function UserAvatar({ className, href, title = "Your profile" }: UserAvatarProps) {
   const { url, initials } = useProfileImage()
 
   const box = cn(
-    "flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-xs font-black text-white shadow-lg shadow-emerald-500/20 ring-1 ring-border/50 transition-all",
-    href && "group-hover:ring-emerald-500/40",
+    "flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-xs font-black text-white shadow-lg shadow-blue-500/20 ring-1 ring-border/50 transition-all",
+    href && "group-hover:ring-blue-500/40",
     className
   )
 

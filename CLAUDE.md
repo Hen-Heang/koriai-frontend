@@ -15,7 +15,7 @@ pnpm dev          # dev server at localhost:3000
 pnpm build        # production build
 pnpm lint         # eslint
 npx vitest run    # run all tests (no "test" script in package.json)
-npx vitest run lib/speaking.test.ts   # run a single test file
+npx vitest run lib/vocab-review.test.ts   # run a single test file
 ```
 
 Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no vitest config file; defaults apply.

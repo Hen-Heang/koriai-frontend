@@ -39,7 +39,7 @@ const sources = [
 ]
 
 const howToTips = [
-  { label: "Pick a source", text: "Tag where the message came from so context matches the platform's tone.", icon: ScanText, color: "text-emerald-500" },
+  { label: "Pick a source", text: "Tag where the message came from so context matches the platform's tone.", icon: ScanText, color: "text-blue-500" },
   { label: "Read the breakdown", text: "Each honorific and phrase is explained so you learn the nuance, not just the meaning.", icon: ListTree, color: "text-amber-500" },
   { label: "Reply with confidence", text: "Copy or listen to a suggested reply that matches the right formality.", icon: MessageSquareReply, color: "text-sky-500" },
 ]
@@ -51,7 +51,7 @@ const starterPrompts = [
   "해당 이슈는 제가 보고 있는데, 재현이 잘 안 되네요. 혹시 로그 공유 가능하실까요?",
 ]
 
-export default function AnalyzerPage() {
+export function MessageAnalyzer() {
   const [text, setText] = useState("")
   const [source, setSource] = useState<string | null>(null)
   const [result, setResult] = useState<MessageAnalysis | null>(null)
@@ -110,7 +110,7 @@ export default function AnalyzerPage() {
               <CardHeader className="border-b border-border/60 bg-accent/5 px-5 pb-4 pt-5 sm:px-6 sm:pb-6">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 shadow-sm ring-1 ring-emerald-500/20">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
                       <ScanText size={18} strokeWidth={2.5} />
                     </div>
                     <div>
@@ -144,7 +144,7 @@ export default function AnalyzerPage() {
                         className={cn(
                           "rounded-full px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-95",
                           active
-                            ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                             : "border border-border bg-background text-muted-foreground hover:text-foreground"
                         )}
                       >
@@ -168,7 +168,7 @@ export default function AnalyzerPage() {
                   <Button
                     onClick={handleAnalyze}
                     disabled={loading || !text.trim()}
-                    className="h-11 w-full rounded-[1.15rem] bg-emerald-600 px-6 text-sm font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 sm:h-12 sm:w-auto sm:rounded-[1.25rem] sm:px-8"
+                    className="h-11 w-full rounded-[1.15rem] bg-blue-600 px-6 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95 sm:h-12 sm:w-auto sm:rounded-[1.25rem] sm:px-8"
                   >
                     {loading ? (
                       <><Activity size={18} className="mr-2 animate-pulse" /> Analyzing...</>
@@ -194,8 +194,8 @@ export default function AnalyzerPage() {
               >
                 {/* Meaning card */}
                 <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card shadow-2xl dark:bg-slate-900/60">
-                  <div className="flex items-center justify-between border-b border-border/60 bg-emerald-500/5 px-6 py-4">
-                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center justify-between border-b border-border/60 bg-blue-500/5 px-6 py-4">
+                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                       <BadgeCheck size={16} strokeWidth={3} />
                       <p className="text-[10px] font-black uppercase tracking-widest">Analysis Complete</p>
                     </div>
@@ -219,8 +219,8 @@ export default function AnalyzerPage() {
                         {result.literalMeaning}
                       </p>
                     </div>
-                    <div className="bg-emerald-500/[0.02] p-6 sm:p-8">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600/40">Natural Meaning</p>
+                    <div className="bg-blue-500/[0.02] p-6 sm:p-8">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600/40">Natural Meaning</p>
                       <p className="mt-2 text-sm font-black leading-relaxed text-foreground">
                         {result.naturalMeaning}
                       </p>
@@ -275,10 +275,10 @@ export default function AnalyzerPage() {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm transition-all hover:border-emerald-500/20 hover:shadow-lg dark:bg-slate-900/40"
+                          className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm transition-all hover:border-blue-500/20 hover:shadow-lg dark:bg-slate-900/40"
                         >
                           <div className="flex flex-wrap items-center gap-3 border-b border-border/60 bg-accent/5 px-5 py-4">
-                            <span className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[13px] font-black text-emerald-600 dark:text-emerald-400">
+                            <span className="rounded-lg bg-blue-500/10 px-3 py-1.5 text-[13px] font-black text-blue-600 dark:text-blue-400">
                               {item.fragment}
                             </span>
                             <span className="text-[12px] font-bold text-sky-600/80 dark:text-sky-400/80">{item.meaning}</span>
@@ -328,7 +328,7 @@ export default function AnalyzerPage() {
                                 onClick={() => copy(reply.korean, i)}
                                 className={cn(
                                   "h-9 w-9 rounded-xl font-bold transition-all active:scale-95",
-                                  copied === i ? "bg-emerald-500 text-white" : "bg-background shadow-sm ring-1 ring-border"
+                                  copied === i ? "bg-blue-500 text-white" : "bg-background shadow-sm ring-1 ring-border"
                                 )}
                                 title="Copy reply"
                               >

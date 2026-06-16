@@ -47,7 +47,7 @@ const CATEGORY_ORDER: ReadingCategory[] = ["DAILY_LIFE", "CULTURE", "BEGINNER_ST
 function StatusBadge({ entry }: { entry: ReadingProgressEntry }) {
   if (entry.status === "completed") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
         <CheckCircle2 size={11} strokeWidth={3} /> Completed
       </span>
     )
@@ -109,7 +109,7 @@ export default function ReadingPage() {
           actions={
             <Link
               href="/reading/new"
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
             >
               <Plus size={14} strokeWidth={3} /> New unit
             </Link>
@@ -153,7 +153,7 @@ export default function ReadingPage() {
           </p>
           <Link
             href="/reading/new"
-            className="mt-1 inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+            className="mt-1 inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
           >
             <Plus size={14} strokeWidth={3} /> New unit
           </Link>
@@ -191,12 +191,12 @@ export default function ReadingPage() {
                     className={cn(
                       "group relative flex flex-col rounded-[1.8rem] border bg-card p-5 shadow-sm transition-all hover:shadow-lg active:scale-[0.99] dark:bg-slate-900/40",
                       entry.status === "completed"
-                        ? "border-emerald-500/30"
-                        : "border-border hover:border-emerald-500/30"
+                        ? "border-blue-500/30"
+                        : "border-border hover:border-blue-500/30"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                         <BookOpenText size={18} strokeWidth={2.5} />
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -230,7 +230,7 @@ export default function ReadingPage() {
                         <ChevronRight
                           size={16}
                           strokeWidth={3}
-                          className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-500"
+                          className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500"
                         />
                       </div>
                     </div>

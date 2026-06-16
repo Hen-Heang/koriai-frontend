@@ -103,7 +103,7 @@ export default function GoalsPage() {
                 Calendar
               </Link>
             </Button>
-            <Button asChild className="h-11 flex-1 rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 sm:flex-none sm:px-6">
+            <Button asChild className="h-11 flex-1 rounded-2xl bg-blue-600 font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-500 sm:flex-none sm:px-6">
               <Link href="/goals/create">
                 <Plus size={18} strokeWidth={2.5} className="mr-2" />
                 New Goal
@@ -150,7 +150,7 @@ export default function GoalsPage() {
                     <span
                       className={cn(
                         "rounded-lg px-2 py-0.5 text-[10px] font-black tabular-nums",
-                        isSelected ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-foreground/5 text-muted-foreground/40"
+                        isSelected ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-foreground/5 text-muted-foreground/40"
                       )}
                     >
                       {count}
@@ -200,7 +200,7 @@ export default function GoalsPage() {
         </div>
 
         <aside className="xl:sticky xl:top-8 xl:self-start">
-          <TodaysTasks className="shadow-2xl shadow-emerald-600/5" />
+          <TodaysTasks className="shadow-2xl shadow-blue-600/5" />
         </aside>
       </div>
 

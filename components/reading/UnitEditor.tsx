@@ -55,7 +55,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2 px-1">
-      <Icon size={16} strokeWidth={2.5} className="text-emerald-600 dark:text-emerald-400" />
+      <Icon size={16} strokeWidth={2.5} className="text-blue-600 dark:text-blue-400" />
       <h3 className="text-base font-black tracking-tight text-foreground">{title}</h3>
       {hint && <span className="text-[10px] font-bold text-muted-foreground/60">{hint}</span>}
     </div>
@@ -300,7 +300,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                     className={cn(
                       "rounded-xl border px-3.5 py-2 text-xs font-black transition-all active:scale-95",
                       category === key
-                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                     )}
                   >
@@ -320,7 +320,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                     className={cn(
                       "rounded-xl border px-3.5 py-2 text-xs font-black transition-all active:scale-95",
                       level === l
-                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                     )}
                   >
@@ -492,7 +492,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                       className={cn(
                         "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
                         q.answerIndex === oi
-                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                           : "border-border text-muted-foreground/40 hover:text-muted-foreground"
                       )}
                     >
@@ -561,7 +561,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-11 rounded-2xl bg-emerald-600 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-500 active:scale-[0.99] disabled:opacity-60"
+            className="h-11 rounded-2xl bg-blue-600 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-500 active:scale-[0.99] disabled:opacity-60"
           >
             {saving ? (
               <Loader2 size={14} className="mr-2 animate-spin" />

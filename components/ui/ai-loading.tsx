@@ -36,10 +36,10 @@ export function AiGenerating({
       role="status"
       aria-live="polite"
     >
-      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
         <Sparkles size={16} className="animate-pulse" />
         <motion.span
-          className="absolute -inset-1 rounded-[0.9rem] border border-emerald-500/40"
+          className="absolute -inset-1 rounded-[0.9rem] border border-blue-500/40"
           animate={{ scale: [1, 1.18, 1], opacity: [0.6, 0, 0.6] }}
           transition={{ repeat: Infinity, duration: 1.8, ease: "easeOut" }}
         />
@@ -61,7 +61,7 @@ export function AiGenerating({
 
         <div className="relative h-1 w-full max-w-48 overflow-hidden rounded-full bg-muted">
           <motion.span
-            className="absolute inset-y-0 w-1/3 rounded-full bg-linear-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0"
+            className="absolute inset-y-0 w-1/3 rounded-full bg-linear-to-r from-blue-500/0 via-blue-500 to-blue-500/0"
             animate={{ left: ["-33%", "100%"] }}
             transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
           />

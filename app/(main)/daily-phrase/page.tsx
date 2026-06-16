@@ -139,7 +139,7 @@ export default function DailyPhrasePage() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {phrase.formality && (
-                  <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+                  <span className="inline-flex rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
                     {phrase.formality}
                   </span>
                 )}
@@ -176,7 +176,7 @@ export default function DailyPhrasePage() {
                 disabled={marking}
                 className={
                   phrase.learned
-                    ? "h-10 rounded-xl bg-emerald-600 px-5 text-xs font-black text-white hover:bg-emerald-500 active:scale-95"
+                    ? "h-10 rounded-xl bg-blue-600 px-5 text-xs font-black text-white hover:bg-blue-500 active:scale-95"
                     : "h-10 rounded-xl border border-border bg-background px-5 text-xs font-black text-foreground hover:bg-accent active:scale-95"
                 }
               >
@@ -193,7 +193,7 @@ export default function DailyPhrasePage() {
                 {saving ? "Saving..." : "Add to flashcards"}
               </Button>
               {saveMessage && (
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                   {saveMessage}
                 </span>
               )}
@@ -260,7 +260,7 @@ export default function DailyPhrasePage() {
           <button
             type="button"
             onClick={load}
-            className="ml-auto inline-flex items-center gap-1.5 font-bold text-emerald-600 hover:underline dark:text-emerald-400"
+            className="ml-auto inline-flex items-center gap-1.5 font-bold text-blue-600 hover:underline dark:text-blue-400"
           >
             <RefreshCw size={13} /> Refresh
           </button>

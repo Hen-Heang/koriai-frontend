@@ -168,9 +168,9 @@ const quickActions = [
     label: "Daily Phrase",
     description: "One workplace phrase a day — learn it, then write with it.",
     icon: Sparkles,
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "shadow-emerald-500/10",
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
+    gradient: "from-blue-500 to-indigo-500",
+    glow: "shadow-blue-500/10",
+    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
     tag: "New today",
   },
   {
@@ -188,9 +188,9 @@ const quickActions = [
     label: "Goals & Tasks",
     description: "Set goals, plan tasks, and track every deadline.",
     icon: Target,
-    gradient: "from-emerald-500 to-green-600",
-    glow: "shadow-emerald-500/10",
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
+    gradient: "from-blue-500 to-blue-600",
+    glow: "shadow-blue-500/10",
+    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
     tag: "Plan ahead",
   },
 ]
@@ -257,7 +257,7 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 sm:text-[11px]">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 sm:text-[11px]">
             {getToday()}
           </p>
           <h1 className="mt-1 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             <Flame size={14} className="text-orange-500" />
             <span className="text-xs font-bold sm:text-sm">{stats.streakDays} day streak</span>
           </div>
-          <UIButton asChild size="sm" className="h-9 rounded-full bg-emerald-600 px-4 font-bold hover:bg-emerald-500">
+          <UIButton asChild size="sm" className="h-9 rounded-full bg-blue-600 px-4 font-bold hover:bg-blue-500">
             <Link href="/vocab">
               Continue
               <ArrowRight size={14} className="ml-1" />
@@ -288,12 +288,12 @@ export default function DashboardPage() {
         >
           {/* Decorative Gradients */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-             <div className="absolute -left-1/4 -top-1/4 h-[150%] w-[150%] bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.15),transparent_40%)]" />
-             <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-[100px]" />
+             <div className="absolute -left-1/4 -top-1/4 h-[150%] w-[150%] bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.15),transparent_40%)]" />
+             <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
           </div>
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-400">
               <Sparkles size={12} />
               Personal Plan
             </div>
@@ -305,7 +305,7 @@ export default function DashboardPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <UIButton asChild size="lg" className="h-11 rounded-2xl bg-emerald-600 px-6 font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 sm:h-12">
+              <UIButton asChild size="lg" className="h-11 rounded-2xl bg-blue-600 px-6 font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-500 sm:h-12">
                 <Link href={studyFocus.ctaHref}>{studyFocus.ctaLabel}</Link>
               </UIButton>
               <UIButton asChild variant="outline" size="lg" className="h-11 rounded-2xl border-white/10 bg-white/5 px-6 font-bold backdrop-blur-md hover:bg-white/10 sm:h-12">
@@ -368,13 +368,13 @@ export default function DashboardPage() {
             <div className="mt-4 space-y-4">
               {nextSteps.map((step, i) => (
                 <Link key={i} href={step.href} className="group flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-[12px] font-black group-hover:bg-emerald-500 group-hover:text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-[12px] font-black group-hover:bg-blue-500 group-hover:text-white">
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{step.title}</p>
+                    <p className="truncate text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
                   </div>
-                  <ArrowRight size={14} className="text-muted-foreground/20 group-hover:translate-x-1 group-hover:text-emerald-500" />
+                  <ArrowRight size={14} className="text-muted-foreground/20 group-hover:translate-x-1 group-hover:text-blue-500" />
                 </Link>
               ))}
             </div>

@@ -5,9 +5,9 @@ import Link from "next/link"
 import {
   BookOpenCheck,
   BrainCircuit,
-  Languages,
+  Target,
   MessageSquareText,
-  NotebookPen,
+  GraduationCap,
   Sparkles,
   ArrowRight,
   Send,
@@ -21,36 +21,36 @@ import { Button } from "@/components/ui/button"
 
 const features = [
   {
-    title: "AI Workplace Coach",
-    description: "Ask \"How do Korean developers say this?\" and get real workplace phrases with grammar and politeness explained.",
-    icon: MessageSquareText,
-    color: "from-emerald-500/20 to-teal-500/10",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
+    title: "Goals & Dashboard",
+    description: "Set goals, break them into daily to-dos, and track your streak on a clean, focused dashboard.",
+    icon: Target,
+    color: "from-blue-500/20 to-indigo-500/10",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-500/15",
   },
   {
-    title: "Meeting Simulator",
-    description: "Practice daily standups, code reviews, and sprint planning with an AI that plays your Korean team lead.",
-    icon: Languages,
+    title: "AI Korean Coach",
+    description: "Ask anything in English and get natural Korean back — grammar, politeness levels, and examples, 24/7.",
+    icon: MessageSquareText,
     color: "from-sky-500/20 to-blue-500/10",
     iconColor: "text-sky-600 dark:text-sky-400",
     iconBg: "bg-sky-100 dark:bg-sky-500/15",
   },
   {
-    title: "Message Generator",
-    description: "Type your intent in English and get multiple natural Korean variations with formality levels explained.",
-    icon: NotebookPen,
-    color: "from-violet-500/20 to-purple-500/10",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    iconBg: "bg-violet-100 dark:bg-violet-500/15",
-  },
-  {
-    title: "Developer Vocabulary",
-    description: "Master 배포, 서버, API, and 400+ IT terms with spaced repetition and English translations.",
+    title: "Vocabulary & Reading",
+    description: "Master 400+ words with spaced repetition and audio, plus bite-size reading lessons that stick.",
     icon: BookOpenCheck,
     color: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-600 dark:text-amber-400",
     iconBg: "bg-amber-100 dark:bg-amber-500/15",
+  },
+  {
+    title: "Daily Phrase & Exam Prep",
+    description: "A fresh phrase every day plus interview and exam practice to keep your Korean sharp.",
+    icon: GraduationCap,
+    color: "from-violet-500/20 to-purple-500/10",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    iconBg: "bg-violet-100 dark:bg-violet-500/15",
   },
 ]
 
@@ -68,9 +68,9 @@ const chatMessages = [
 ]
 
 const statsData = [
-  { value: "400+", label: "IT vocab terms" },
-  { value: "12", label: "Learning modules" },
-  { value: "20+", label: "Countries" },
+  { value: "400+", label: "Vocab terms" },
+  { value: "7", label: "Tools in one app" },
+  { value: "24/7", label: "AI Coach" },
 ]
 
 const containerVariants = {
@@ -95,12 +95,12 @@ const itemVariants = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background text-foreground selection:bg-emerald-500/30">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground selection:bg-blue-500/30">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-radial from-emerald-300/20 via-teal-200/5 to-transparent blur-3xl dark:from-emerald-600/15 dark:via-teal-500/5" />
+        <div className="absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-radial from-blue-300/20 via-indigo-200/5 to-transparent blur-3xl dark:from-blue-600/15 dark:via-indigo-500/5" />
         <div className="absolute right-0 top-0 h-[400px] w-[400px] rounded-full bg-gradient-radial from-sky-300/15 via-blue-200/5 to-transparent blur-3xl dark:from-sky-600/10 dark:via-blue-500/5" />
-        <div className="absolute bottom-0 left-0 h-[300px] w-[500px] rounded-full bg-gradient-radial from-violet-300/10 to-transparent blur-3xl dark:from-violet-600/5" />
+        <div className="absolute bottom-0 left-0 h-[300px] w-[500px] rounded-full bg-gradient-radial from-indigo-300/10 to-transparent blur-3xl dark:from-indigo-600/5" />
       </div>
 
       <div className="relative z-10">
@@ -108,17 +108,17 @@ export default function Home() {
         <header className="sticky top-0 z-50 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
             <Link href="/" className="group flex items-center gap-3">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
                 <Image
-                  src="/koriai-logo.svg"
+                  src="/hengo-icon.svg"
                   alt=""
-                  width={24}
-                  height={24}
-                  className="invert brightness-0"
+                  width={36}
+                  height={36}
+                  className="h-full w-full"
                 />
               </div>
               <span className="text-lg font-bold tracking-tight text-foreground">
-                KoriAI
+                Hengo
               </span>
             </Link>
 
@@ -128,7 +128,7 @@ export default function Home() {
               <Button asChild size="sm" variant="ghost" className="hidden font-medium text-muted-foreground hover:text-foreground sm:inline-flex">
                 <Link href="/login">Sign in</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full bg-emerald-600 px-5 font-bold text-white hover:bg-emerald-500 shadow-md">
+              <Button asChild size="sm" className="rounded-full bg-blue-600 px-5 font-bold text-white hover:bg-blue-500 shadow-md">
                 <Link href="/register">Get started</Link>
               </Button>
             </div>
@@ -146,41 +146,41 @@ export default function Home() {
                 variants={containerVariants}
                 className="flex flex-col"
               >
-                <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">
                   <BrainCircuit size={14} strokeWidth={2.5} />
-                  For Foreign Engineers in Korea
+                  Plan · Learn · Grow daily
                 </motion.div>
 
                 <motion.h1 variants={itemVariants} className="mt-6 text-[2.8rem] font-black leading-[1.08] tracking-tight text-foreground sm:text-[4.2rem]">
-                  Stop freezing up in{" "}
+                  Set goals, build habits, and{" "}
                   <span className="relative inline-block">
-                    <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-                      Korean standups.
+                    <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
+                      learn Korean.
                     </span>
                     <motion.span
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
                       transition={{ duration: 0.8, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute -bottom-1 left-0 right-0 h-[3px] origin-left rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 opacity-60"
+                      className="absolute -bottom-1 left-0 right-0 h-[3px] origin-left rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-60"
                     />
                   </span>
                 </motion.h1>
 
                 <motion.p variants={itemVariants} className="mt-7 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-[520px]">
-                  KoriAI teaches you workplace Korean the way your team actually speaks it — from{" "}
-                  <span className="font-semibold text-foreground/80">daily standups</span> and{" "}
-                  <span className="font-semibold text-foreground/80">Slack messages</span> to{" "}
-                  <span className="font-semibold text-foreground/80">code review phrases</span>.
+                  Hengo brings your{" "}
+                  <span className="font-semibold text-foreground/80">goals</span>,{" "}
+                  <span className="font-semibold text-foreground/80">daily to-dos</span>, and{" "}
+                  <span className="font-semibold text-foreground/80">Korean learning</span> into one app — plan your day, keep your streak, and study with an AI coach.
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-3 sm:flex-row">
                   <Button
                     asChild
                     size="lg"
-                    className="h-14 rounded-2xl bg-emerald-600 px-8 text-base font-bold text-white shadow-xl shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98]"
+                    className="h-14 rounded-2xl bg-blue-600 px-8 text-base font-bold text-white shadow-xl shadow-blue-500/25 transition-all hover:bg-blue-500 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Link href="/register">
-                      Start learning — it&apos;s free
+                      Get started — it&apos;s free
                       <ArrowRight size={18} className="ml-2" />
                     </Link>
                   </Button>
@@ -217,7 +217,7 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">Engineers from 20+ countries</span> mastering workplace Korean
+                    <span className="font-semibold text-foreground">Learners worldwide</span> planning their goals and studying Korean daily
                   </p>
                 </motion.div>
               </motion.div>
@@ -230,7 +230,7 @@ export default function Home() {
                 className="relative"
               >
                 {/* Glow */}
-                <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-sky-500/20 blur-3xl" />
+                <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-sky-500/20 blur-3xl" />
 
                 {/* Floating vocab chip */}
                 <motion.div
@@ -246,7 +246,7 @@ export default function Home() {
                     <p className="text-[11px] font-bold text-foreground">배포</p>
                     <p className="text-[10px] text-muted-foreground">deployment</p>
                   </div>
-                  <div className="ml-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">+2 XP</div>
+                  <div className="ml-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">+2 XP</div>
                 </motion.div>
 
                 {/* Floating streak chip */}
@@ -273,12 +273,12 @@ export default function Home() {
                       {/* App header */}
                       <div className="flex items-center justify-between border-b border-border/50 bg-background/80 px-6 pb-4 pt-10 backdrop-blur-md">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
                             <Sparkles size={16} className="text-white" strokeWidth={2.5} />
                           </div>
                           <div>
                             <p className="text-[13px] font-bold leading-none text-foreground">AI Coach</p>
-                            <p className="mt-1 text-[10px] font-medium text-emerald-500">● Online now</p>
+                            <p className="mt-1 text-[10px] font-medium text-blue-500">● Online now</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1">
@@ -295,14 +295,14 @@ export default function Home() {
                             className={`flex ${msg.role === "you" ? "justify-end" : "justify-start"}`}
                           >
                             {msg.role === "ai" && (
-                              <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                              <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
                                 <Sparkles size={12} />
                               </div>
                             )}
                             <div
                               className={`max-w-[85%] rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed shadow-sm ${
                                 msg.role === "you"
-                                  ? "rounded-tr-sm bg-emerald-600 font-medium text-white"
+                                  ? "rounded-tr-sm bg-blue-600 font-medium text-white"
                                   : "rounded-tl-sm border border-border bg-accent/30 text-foreground"
                               }`}
                             >
@@ -313,7 +313,7 @@ export default function Home() {
 
                         {/* Animated typing */}
                         <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
                             <Sparkles size={12} />
                           </div>
                           <div className="flex gap-1 rounded-2xl rounded-tl-sm border border-border bg-accent/30 px-4 py-3.5">
@@ -332,7 +332,7 @@ export default function Home() {
                       {/* Quick phrase chips */}
                       <div className="flex gap-2 overflow-x-auto px-5 pb-2 no-scrollbar">
                         {["오늘 배포했어요", "회의 중입니다", "잠깐만요"].map((phrase) => (
-                          <div key={phrase} className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                          <div key={phrase} className="shrink-0 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[11px] font-medium text-blue-700 dark:text-blue-400">
                             {phrase}
                           </div>
                         ))}
@@ -344,7 +344,7 @@ export default function Home() {
                           <span className="flex-1 text-[13px] text-muted-foreground font-medium">
                             Ask in English...
                           </span>
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
                             <Send size={14} />
                           </div>
                         </div>
@@ -367,14 +367,14 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-16 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
-                Core Capabilities
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">
+                All-in-one
               </p>
               <h2 className="mt-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl">
-                Everything you need to <span className="text-muted-foreground/40 italic font-medium">thrive</span> in a Korean tech team.
+                Everything you need to <span className="text-muted-foreground/40 italic font-medium">plan</span> your days and grow.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                12 learning modules designed around the real challenges foreign engineers face in Korean workplaces — from daily standups to deployment discussions.
+                From goal-setting and daily tracking to an AI Korean coach, vocabulary, reading, and exam prep — Hengo keeps planning and learning in one place.
               </p>
             </motion.div>
 
@@ -388,7 +388,7 @@ export default function Home() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="group relative h-full overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-500/10 dark:bg-slate-900/40"
+                    className="group relative h-full overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 dark:bg-slate-900/40"
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
                     <div className="relative">
@@ -423,16 +423,16 @@ export default function Home() {
                 className="space-y-8"
               >
                 <h2 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
-                  Built for the serious learner.
+                  Plan, learn, and grow — in one app.
                 </h2>
                 <div className="space-y-6">
                   {[
-                    { title: "Workplace Phrase Analyzer", desc: "Paste any Slack or KakaoTalk message and get full context: politeness level, business meaning, and suggested replies." },
-                    { title: "Developer Vocabulary SRS", desc: "배포, API, 오류 and 400+ IT terms with English translations, spaced repetition, and audio." },
-                    { title: "Listening & Speaking Practice", desc: "AI-generated standup and code review audio with quizzes, plus voice scoring for pronunciation accuracy." },
+                    { title: "Goals & habit tracking", desc: "Set goals, add daily to-dos, and watch your streak grow on a focused dashboard." },
+                    { title: "AI Korean Coach", desc: "Ask anything and get natural Korean with grammar, politeness levels, and examples — anytime." },
+                    { title: "Vocabulary, Reading & Exam Prep", desc: "Spaced-repetition vocab with audio, bite-size reading, a daily phrase, and interview/exam practice." },
                   ].map((benefit) => (
                     <div key={benefit.title} className="flex gap-4">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 mt-1">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 mt-1">
                         <CheckCircle2 size={16} strokeWidth={3} />
                       </div>
                       <div>
@@ -449,13 +449,13 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="relative aspect-video overflow-hidden rounded-3xl border border-border shadow-2xl"
               >
-                <div className="absolute inset-0 bg-emerald-600/5 backdrop-blur-sm flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-600/5 backdrop-blur-sm flex items-center justify-center">
                    <div className="text-center p-8">
-                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl mb-4 text-emerald-600">
+                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl mb-4 text-blue-600">
                         <Zap size={32} fill="currentColor" />
                       </div>
                       <p className="text-lg font-bold text-foreground">Interactive Demo Coming Soon</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Join engineers from Cambodia, Vietnam, and 20+ countries mastering workplace Korean.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Join learners planning their goals and studying Korean every day.</p>
                    </div>
                 </div>
               </motion.div>
@@ -473,15 +473,15 @@ export default function Home() {
               className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-12 text-center shadow-2xl dark:bg-slate-900/80 dark:border dark:border-white/5 sm:p-20"
             >
               {/* Decorative blobs */}
-              <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-[80px]" />
+              <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-blue-500/20 blur-[80px]" />
               <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-sky-500/20 blur-[80px]" />
 
               <div className="relative z-10">
                 <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  Ready to survive your next standup?
+                  Ready to hit your goals?
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-                  Stop struggling in meetings. KoriAI gives you the workplace Korean you need to communicate confidently with your Korean team — starting today.
+                  Plan your day, build better habits, and learn Korean — all in one app. Start free today, no card required.
                 </p>
                 <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                   <Button
@@ -510,14 +510,14 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col items-center justify-between gap-8 sm:flex-row">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
-                  <Image src="/koriai-logo.svg" alt="" width={18} height={18} className="invert brightness-0" />
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg shadow-md">
+                  <Image src="/hengo-icon.svg" alt="" width={32} height={32} className="h-full w-full" />
                 </div>
                 <span className="text-sm font-bold tracking-tight text-foreground">
-                  KoriAI
+                  Hengo
                 </span>
                 <span className="text-xs text-muted-foreground ml-4">
-                  © 2026 KoriAI. All rights reserved.
+                  © 2026 Hengo. All rights reserved.
                 </span>
               </div>
               <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">

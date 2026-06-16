@@ -44,7 +44,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
             <Target size={20} strokeWidth={2.5} />
           </div>
           <div>
@@ -68,7 +68,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
           </div>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Target size={28} strokeWidth={1.75} />
             </div>
             <h3 className="text-base font-black tracking-tight">No active goals</h3>

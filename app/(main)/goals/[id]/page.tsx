@@ -285,7 +285,7 @@ export default function GoalDetailPage() {
         )}
       >
         <div className="pointer-events-none absolute inset-0 z-0">
-          <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/5 blur-[120px]" />
+          <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-blue-500/5 blur-[120px]" />
           <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-sky-500/5 blur-[120px]" />
         </div>
 
@@ -334,7 +334,7 @@ export default function GoalDetailPage() {
                   </DropdownMenuItem>
                   {!isCompleted && (
                     <DropdownMenuItem className="rounded-xl font-bold" disabled={isMutatingStatus} onSelect={() => updateStatus("completed", "Goal completed!")}>
-                      <CheckCircle2 className="mr-3 h-4 w-4 text-emerald-500" /> Mark Complete
+                      <CheckCircle2 className="mr-3 h-4 w-4 text-blue-500" /> Mark Complete
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator className="my-2" />
@@ -367,7 +367,7 @@ export default function GoalDetailPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <StatCard icon={<ClipboardList size={18} className="sm:size-[22px]" />} label="Tasks" value={`${completedTasks}/${totalTasks}`} color="text-blue-500" />
-        <StatCard icon={<Target size={18} className="sm:size-[22px]" />} label="Progress" value={`${taskProgress}%`} color="text-emerald-500" />
+        <StatCard icon={<Target size={18} className="sm:size-[22px]" />} label="Progress" value={`${taskProgress}%`} color="text-blue-500" />
         <StatCard icon={<Clock size={18} className="sm:size-[22px]" />} label="Days Left" value={String(deadlineInfo?.daysRemaining ?? "—")} color="text-orange-500" />
         <StatCard icon={<CalendarDays size={18} className="sm:size-[22px]" />} label="Target" value={goal.target_date ? format(new Date(goal.target_date), "MMM d") : "TBD"} color="text-purple-500" />
       </div>

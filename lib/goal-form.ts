@@ -1,6 +1,10 @@
 import type { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
+// Single source of truth lives in lib/goals.ts — re-exported here so the goal
+// form modules can keep importing GoalType from one place.
+export type { GoalType } from "./goals"
+
 // Schema + shared constants for the custom goal form (ported from Orbit
 // goal-form/types.ts). The user_context / structure fields back the deferred AI
 // flow but are kept in the schema so nothing silently drops.
@@ -37,8 +41,6 @@ export const goalSchema = z.object({
   travel_budget: z.string().optional(),
   travel_activities: z.string().optional(),
 })
-
-export type GoalType = "general" | "travel" | "finance" | "education" | "financial"
 
 export const goalTypes = [
   { value: "general", label: "General Goal", icon: "Sparkles" },

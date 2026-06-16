@@ -44,15 +44,15 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-600 dark:text-teal-400">Card Generator</p>
+            <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 dark:text-indigo-400">Card Generator</p>
           </div>
           <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">AI Deck Builder</h3>
           <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Select a category to expand your vocabulary with relevant high-frequency terms.
           </p>
         </div>
-        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-600 sm:flex">
+        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 sm:flex">
           <BookOpenCheck size={24} strokeWidth={2.5} />
         </div>
       </div>
@@ -65,14 +65,14 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-all active:scale-95 sm:gap-2 sm:p-4",
               selectedCategory === cat.id
-                ? "border-teal-500 bg-teal-500/10 ring-1 ring-teal-500/20"
-                : "border-border bg-background text-muted-foreground hover:border-teal-500/40 hover:bg-teal-500/[0.02]"
+                ? "border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/20"
+                : "border-border bg-background text-muted-foreground hover:border-indigo-500/40 hover:bg-indigo-500/[0.02]"
             )}
           >
             <span className="text-lg sm:text-xl">{cat.emoji}</span>
             <span className={cn(
               "text-[10px] font-black uppercase tracking-tight sm:text-[11px]",
-              selectedCategory === cat.id ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground/60"
+              selectedCategory === cat.id ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground/60"
             )}>
               {cat.label}
             </span>
@@ -82,7 +82,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
 
       <div className="mt-6 flex flex-col gap-4 border-t border-border/60 pt-6 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6 sm:pt-8">
         <Button
-          className="h-14 w-full rounded-2xl bg-teal-600 px-6 text-base font-black text-white shadow-xl shadow-teal-600/20 transition-all hover:bg-teal-500 active:scale-95 sm:w-auto sm:px-8"
+          className="h-14 w-full rounded-2xl bg-indigo-600 px-6 text-base font-black text-white shadow-xl shadow-indigo-600/20 transition-all hover:bg-indigo-500 active:scale-95 sm:w-auto sm:px-8"
           onClick={handleGenerate}
           disabled={!selectedCategory || generating}
         >

@@ -59,7 +59,7 @@ function SectionRow({ children, last }: { children: React.ReactNode; last?: bool
   )
 }
 
-function SectionHeader({ icon: Icon, title, description, color = "text-emerald-600" }: {
+function SectionHeader({ icon: Icon, title, description, color = "text-blue-600" }: {
   icon: React.ElementType
   title: string
   description: string
@@ -286,7 +286,7 @@ export default function SettingsPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <SectionCard className="border-emerald-500/10 bg-emerald-500/[0.02]">
+          <SectionCard className="border-blue-500/10 bg-blue-500/[0.02]">
             <SectionRow last>
               <div className="flex items-center gap-5">
                 <div className="relative">
@@ -295,7 +295,7 @@ export default function SettingsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
                     title="Change profile photo"
-                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-2xl font-black text-white shadow-xl shadow-emerald-500/20 active:scale-95"
+                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-2xl font-black text-white shadow-xl shadow-blue-500/20 active:scale-95"
                   >
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -337,7 +337,7 @@ export default function SettingsPage() {
           <Button
             type="submit"
             disabled={saving}
-            className="h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 transition-all"
+            className="h-14 w-full rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
           >
             {saving ? (
               <><Activity size={20} className="mr-2 animate-pulse" /> Saving...</>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-emerald-600 dark:text-emerald-400"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-blue-600 dark:text-blue-400"
             >
               <CheckCircle2 size={16} strokeWidth={3} />
               <span className="text-sm font-bold tracking-tight">Changes saved successfully</span>
@@ -419,7 +419,7 @@ export default function SettingsPage() {
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
-              <SectionHeader icon={User} title="Profile Details" description="Personal information and public identity" color="text-emerald-500" />
+              <SectionHeader icon={User} title="Profile Details" description="Personal information and public identity" color="text-blue-500" />
             </SectionRow>
 
             <SectionRow>
@@ -468,7 +468,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Native Language</label>
-                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select language</option>
                     {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
                   </select>
@@ -487,7 +487,7 @@ export default function SettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Occupation</label>
-                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select role</option>
                     {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Learning Goal</label>
-                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-emerald-500/20 dark:bg-white/5">
+                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select your main goal</option>
                     {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
@@ -531,13 +531,13 @@ export default function SettingsPage() {
                       className={cn(
                         "group relative flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98]",
                         active
-                          ? "border-emerald-500/40 bg-emerald-500/5 shadow-inner ring-1 ring-emerald-500/20"
-                          : "border-border bg-accent/5 hover:border-emerald-500/20 hover:bg-background"
+                          ? "border-blue-500/40 bg-blue-500/5 shadow-inner ring-1 ring-blue-500/20"
+                          : "border-border bg-accent/5 hover:border-blue-500/20 hover:bg-background"
                       )}
                     >
                       <div className={cn(
                         "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl transition-transform group-hover:scale-110",
-                        active ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-background shadow-sm"
+                        active ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "bg-background shadow-sm"
                       )}>
                         {level.emoji}
                       </div>
@@ -551,7 +551,7 @@ export default function SettingsPage() {
                         <p className="text-[11px] font-medium text-muted-foreground/60">{level.desc}</p>
                       </div>
                       {active ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
                           <CheckCircle2 size={14} strokeWidth={3} />
                         </div>
                       ) : (

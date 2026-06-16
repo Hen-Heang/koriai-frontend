@@ -294,7 +294,7 @@ function MessageBubbleImpl({
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center justify-between">
              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
-               {isUser ? "You" : "KoriAI Tutor"}
+               {isUser ? "You" : "Hengo Tutor"}
              </span>
              <span className="text-[10px] font-bold text-muted-foreground/20">
                {new Date(message.createdAt).toLocaleTimeString([], {

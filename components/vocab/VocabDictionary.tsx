@@ -126,7 +126,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search words, meanings, tags..."
-              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 transition-colors focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:bg-slate-900/40 sm:text-sm"
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 transition-colors focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:bg-slate-900/40 sm:text-sm"
             />
             {query && (
               <button
@@ -150,14 +150,14 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
                 className={cn(
                   "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95",
                   masteryFilter === value
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                     : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
                 )}
               >
                 {label}
                 <span className={cn(
                   "tabular-nums",
-                  masteryFilter === value ? "text-emerald-600/70 dark:text-emerald-400/70" : "text-muted-foreground/30"
+                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground/30"
                 )}>
                   {filterCount(value)}
                 </span>

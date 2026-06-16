@@ -48,13 +48,10 @@ const navSections = [
       { href: "/reading", label: "Reading", icon: BookOpenText },
       { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
+      // AI Coach now hosts Chat + Analyze + Generate as tabs (see /chat).
       { href: "/chat", label: "AI Coach", icon: MessageCircle },
-      // ── hidden while focusing on vocabulary — restore when needed ──
-      // { href: "/generator", label: "Message Gen", icon: Wand2 },
-      // { href: "/analyzer", label: "Analyzer", icon: ScanText },
-      // { href: "/speaking", label: "Speaking", icon: Mic },
+      // ── built but hidden — restore by uncommenting (icons imported above) ──
       // { href: "/listening", label: "Listening", icon: Headphones },
-      // { href: "/scenarios", label: "Meeting Sim", icon: Theater },
       // { href: "/achievements", label: "Achievements", icon: Trophy },
     ],
   },
@@ -72,12 +69,14 @@ const navSections = [
 const allLinks = navSections.flatMap((section) => section.links)
 
 // Goals sits in the center slot so it reads as the app's primary action.
+// AI Coach sits beside it so the chat tutor is one tap away on mobile.
+// (Reading stays in the desktop sidebar — it reads better on a large screen.)
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
   { href: "/goals", label: "Goals", icon: Target },
+  { href: "/chat", label: "AI", icon: MessageCircle },
   { href: "/interview", label: "Exam", icon: GraduationCap },
-  { href: "/reading", label: "Read", icon: BookOpenText },
 ]
 
 export default function MainLayout({
@@ -173,18 +172,18 @@ export default function MainLayout({
           {/* Brand */}
           <div className="px-6 pt-8 pb-6">
             <Link href="/" className="group flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
                 <Image
-                  src="/koriai-logo.svg"
-                  alt="KoriAI Logo"
-                  width={28}
-                  height={28}
-                  className="transition-all"
+                  src="/hengo-icon.svg"
+                  alt="Hengo Logo"
+                  width={40}
+                  height={40}
+                  className="h-full w-full"
                 />
               </div>
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.25em] text-foreground">
-                  KoriAI Lab
+                  Hengo Lab
                 </p>
                 <p className="text-[10px] font-bold text-muted-foreground/60 text-nowrap">
                   Premium Learning
@@ -212,7 +211,7 @@ export default function MainLayout({
                       className={cn(
                         "group relative flex items-center gap-3 rounded-2xl px-4 py-2.5 text-[14px] font-bold transition-all",
                         active
-                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground dark:hover:bg-white/5"
                       )}
                     >
@@ -228,7 +227,7 @@ export default function MainLayout({
                         strokeWidth={2.5}
                         className={cn(
                           "shrink-0 transition-transform",
-                          active ? "scale-105" : "group-hover:scale-110 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
+                          active ? "scale-105" : "group-hover:scale-110 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                         )}
                       />
                       {label}
@@ -240,13 +239,13 @@ export default function MainLayout({
           </nav>
 
           {/* AI badge */}
-          <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 shadow-sm">
+          <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 shadow-sm">
             <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
             </span>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
                 <Sparkles size={12} strokeWidth={2.5} />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">AI Active</span>
               </div>
@@ -273,19 +272,19 @@ export default function MainLayout({
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
               <div className="flex items-center gap-3">
                 <Link href="/" className="group flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg shadow-md">
                     <Image
-                      src="/koriai-logo.svg"
+                      src="/hengo-icon.svg"
                       alt=""
-                      width={18}
-                      height={18}
-                      className="invert brightness-0"
+                      width={32}
+                      height={32}
+                      className="h-full w-full"
                     />
                   </div>
                 </Link>
                 <div className="flex flex-col">
                   <span className="text-[13px] font-black tracking-tight text-foreground leading-none">
-                    KoriAI
+                    Hengo
                   </span>
                   <span className="mt-0.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
                     by Hen Heang
@@ -299,7 +298,7 @@ export default function MainLayout({
                   href="/settings"
                   title="Profile & settings"
                   className={cn(
-                    pathname === "/settings" && "ring-2 ring-emerald-500/40"
+                    pathname === "/settings" && "ring-2 ring-blue-500/40"
                   )}
                 />
               </div>
@@ -309,16 +308,16 @@ export default function MainLayout({
           {/* Desktop top bar */}
           <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-5 backdrop-blur-xl lg:flex">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600/60 dark:text-emerald-400/60">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 dark:text-blue-400/60">
                 Workspace
               </p>
               <h2 className="mt-1 text-sm font-bold text-foreground">
-                {allLinks.find(l => pathname.startsWith(l.href))?.label || "KoriAI"}
+                {allLinks.find(l => pathname.startsWith(l.href))?.label || "Hengo"}
               </h2>
             </div>
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 shadow-sm">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                   <span className="text-[11px] font-black uppercase tracking-widest text-foreground/60 text-nowrap">AI Sync Active</span>
                </div>
                <NotificationBell />
@@ -370,7 +369,7 @@ export default function MainLayout({
               <AnimatePresence initial={false}>
                 {activeTabIndex !== -1 && (
                   <motion.div
-                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-emerald-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-blue-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-blue-500/20 dark:bg-blue-400/10 dark:ring-blue-400/20"
                     initial={false}
                     style={{ width: `calc((100% - 0.75rem) / ${bottomTabs.length})` }}
                     animate={{
@@ -406,8 +405,8 @@ export default function MainLayout({
                         className={cn(
                           "-mt-6 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg ring-4 ring-background transition-all duration-300 dark:ring-slate-900",
                           active
-                            ? "scale-105 bg-emerald-600 text-white shadow-emerald-600/40"
-                            : "bg-emerald-500 text-white shadow-emerald-500/30 hover:scale-105"
+                            ? "scale-105 bg-blue-600 text-white shadow-blue-600/40"
+                            : "bg-blue-500 text-white shadow-blue-500/30 hover:scale-105"
                         )}
                       >
                         <Icon size={22} strokeWidth={2.6} />
@@ -416,7 +415,7 @@ export default function MainLayout({
                         className={cn(
                           "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
                           active
-                            ? "font-black text-emerald-600 opacity-100 dark:text-emerald-400"
+                            ? "font-black text-blue-600 opacity-100 dark:text-blue-400"
                             : "font-bold text-muted-foreground/60 opacity-80"
                         )}
                       >
@@ -433,7 +432,7 @@ export default function MainLayout({
                     className={cn(
                       "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
                       active
-                        ? "text-emerald-600 dark:text-emerald-400"
+                        ? "text-blue-600 dark:text-blue-400"
                         : "text-muted-foreground/50 hover:text-muted-foreground"
                     )}
                   >
@@ -443,7 +442,7 @@ export default function MainLayout({
                         strokeWidth={active ? 2.8 : 2.2}
                         className={cn(
                           "transition-all duration-300",
-                          active ? "scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "scale-100"
+                          active ? "scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" : "scale-100"
                         )}
                       />
                     </div>

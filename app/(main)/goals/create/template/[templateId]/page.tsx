@@ -401,7 +401,7 @@ export default function TemplateFormPage() {
                 idx === currentSection
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : idx < currentSection
-                    ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+                    ? "border border-blue-500/20 bg-blue-500/10 text-blue-500"
                     : "cursor-not-allowed border border-border bg-muted text-muted-foreground/40 opacity-50"
               )}
             >

@@ -227,7 +227,7 @@ export function GoalList({
   if (goals.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 rounded-[2.5rem] border-2 border-dashed border-border bg-card/30 py-24 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-blue-500/10 text-blue-600 dark:text-blue-400">
           <Target size={36} strokeWidth={1.5} />
         </div>
         <div>
@@ -236,7 +236,7 @@ export function GoalList({
             Try adjusting your filters or create a new goal to get started.
           </p>
         </div>
-        <Button onClick={() => router.push("/goals/create")} size="lg" className="rounded-2xl font-bold shadow-xl shadow-emerald-600/20">
+        <Button onClick={() => router.push("/goals/create")} size="lg" className="rounded-2xl font-bold shadow-xl shadow-blue-600/20">
           <Plus size={18} strokeWidth={2.5} className="mr-2" /> New Goal
         </Button>
       </div>

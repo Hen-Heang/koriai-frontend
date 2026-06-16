@@ -1,0 +1,26 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hengo app icon — "H" with an upward arrow (growth / goals). by Hen Heang -->
+  <defs>
+    <linearGradient id="hengo_bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="55%" stop-color="#1E40AF"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <radialGradient id="hengo_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(300 250) scale(620)">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Full-bleed background (safe for iOS masking + PWA maskable) -->
+  <rect width="1024" height="1024" fill="url(#hengo_bg)"/>
+  <rect width="1024" height="1024" fill="url(#hengo_glow)"/>
+
+  <!-- White "H": left stem + stepped crossbar -->
+  <path d="M386 410 V790" stroke="#ffffff" stroke-width="84" stroke-linecap="round"/>
+  <path d="M386 588 H500 V650 H590" stroke="#ffffff" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Green upward arrow (right stem of the H, rising past the top) -->
+  <path d="M590 790 V372" stroke="#10B981" stroke-width="84" stroke-linecap="round"/>
+  <path d="M590 220 L506 380 H674 Z" fill="#10B981" stroke="#10B981" stroke-width="36" stroke-linejoin="round"/>
+</svg>

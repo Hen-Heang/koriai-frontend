@@ -32,15 +32,15 @@ export function PageHero({
     >
       {/* Dynamic Background */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/5 blur-[100px]" />
+        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]" />
         <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-sky-500/5 blur-[100px]" />
       </div>
 
       <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
+            <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">
               {eyebrow}
             </p>
           </div>

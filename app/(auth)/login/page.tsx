@@ -45,10 +45,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 selection:bg-emerald-500/30 sm:px-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 selection:bg-blue-500/30 sm:px-6">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-24 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[100px] dark:bg-emerald-500/5" />
+        <div className="absolute -top-24 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-[100px] dark:bg-blue-500/5" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-sky-500/10 blur-[100px] dark:bg-sky-500/5" />
       </div>
 
@@ -60,19 +60,19 @@ export default function LoginPage() {
       >
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="group flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 transition-transform group-hover:scale-105">
-              <Image src="/koriai-logo.svg" alt="" width={24} height={24} className="invert brightness-0" />
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
+              <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
             </div>
-            <span className="text-xl font-black tracking-tight text-foreground">KoriAI</span>
+            <span className="text-xl font-black tracking-tight text-foreground">Hengo</span>
           </Link>
           <ThemeToggle />
         </div>
 
         <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500" />
           
           <CardHeader className="space-y-2 pb-8 pt-10">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
               <ShieldCheck size={14} strokeWidth={3} />
               Secure Login
             </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 <Field>
                   <div className="flex items-center justify-between">
                     <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Password</FieldLabel>
-                    <Link href="#" className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
+                    <Link href="#" className="text-[11px] font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400">
                       Forgot?
                     </Link>
                   </div>
@@ -149,7 +149,7 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-[0.98]"
+                className="h-14 w-full rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
               >
                 {loading ? (
                   <>
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border/60" />
               </div>
               <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                <span className="bg-card px-4 text-muted-foreground/60">New to KoriAI?</span>
+                <span className="bg-card px-4 text-muted-foreground/60">New to Hengo?</span>
               </div>
             </div>
 

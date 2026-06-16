@@ -197,17 +197,17 @@ export default function InterviewPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="rounded-[1.8rem] border-emerald-500/40 bg-emerald-500/5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
+          <Card className="rounded-[1.8rem] border-blue-500/40 bg-blue-500/5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
             <CardContent className="p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="rounded-lg border-none bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                <Badge className="rounded-lg border-none bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-600 dark:text-blue-400">
                   Your topic
                 </Badge>
                 <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[10px]">
                   {topic.difficulty}
                 </Badge>
               </div>
-              <p className="mt-4 text-lg font-black leading-snug text-emerald-600 dark:text-emerald-400 sm:text-xl">
+              <p className="mt-4 text-lg font-black leading-snug text-blue-600 dark:text-blue-400 sm:text-xl">
                 {topic.labelKo}
               </p>
               <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
@@ -232,7 +232,7 @@ export default function InterviewPage() {
           <Button
             onClick={startSession}
             disabled={isExaminerThinking}
-            className="h-14 w-full rounded-2xl bg-emerald-600 px-10 text-base font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-60 sm:w-auto"
+            className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-60 sm:w-auto"
           >
             {isExaminerThinking ? (
               <>
@@ -295,7 +295,7 @@ export default function InterviewPage() {
         <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
           <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
                 <GraduationCap size={20} strokeWidth={2.5} />
               </div>
               <div>
@@ -432,7 +432,7 @@ export default function InterviewPage() {
                   "h-12 w-full rounded-2xl px-6 text-sm font-black shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
                   recording
                     ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
-                    : "bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700"
+                    : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
                 )}
               >
                 {recording ? (
@@ -512,7 +512,7 @@ export default function InterviewPage() {
                     key={entry.id}
                     className="rounded-2xl border border-border bg-accent/5 p-4"
                   >
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">
                       Examiner
                     </p>
                     <p className="mt-1.5 font-bold text-foreground">
@@ -527,7 +527,7 @@ export default function InterviewPage() {
                 ) : (
                   <div
                     key={entry.id}
-                    className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"
+                    className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4"
                   >
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                       You
@@ -663,7 +663,7 @@ function SectionLabel({
         className={cn(
           "flex h-5 w-5 items-center justify-center rounded-md",
           color === "amber" && "bg-amber-500/10 text-amber-600",
-          color === "emerald" && "bg-emerald-500/10 text-emerald-600",
+          color === "emerald" && "bg-blue-500/10 text-blue-600",
           color === "sky" && "bg-sky-500/10 text-sky-600"
         )}
       >

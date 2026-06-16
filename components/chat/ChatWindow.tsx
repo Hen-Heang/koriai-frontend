@@ -62,6 +62,9 @@ type ChatWindowProps = {
   initialDraft?: string
   onNewChat?: () => void
   isStartingNewChat?: boolean
+  // When rendered inside the AI workspace tabs, the surrounding mode bar already
+  // provides the back button and safe-area top padding — so we drop ours here.
+  embedded?: boolean
 }
 
 export function ChatWindow({
@@ -72,6 +75,7 @@ export function ChatWindow({
   initialDraft,
   onNewChat,
   isStartingNewChat,
+  embedded = false,
 }: ChatWindowProps) {
   const {
     draft,
@@ -219,17 +223,24 @@ export function ChatWindow({
     <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-[2.5rem] md:border">
 
       {/* ── Desktop/Mobile Optimized Header ── */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6">
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 backdrop-blur-xl sm:px-6",
+          embedded ? "pt-4" : "pt-[max(1rem,env(safe-area-inset-top))]"
+        )}
+      >
         <div className="flex min-w-0 items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
-            onClick={() => router.push("/dashboard")}
-            title="Back to home"
-          >
-            <ChevronLeft size={24} strokeWidth={2.5} />
-          </Button>
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
+              onClick={() => router.push("/dashboard")}
+              title="Back to home"
+            >
+              <ChevronLeft size={24} strokeWidth={2.5} />
+            </Button>
+          )}
 
           <div className="relative shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-blue-500 to-indigo-600 text-[10px] font-black text-white shadow-lg shadow-blue-500/20">
@@ -319,7 +330,7 @@ export function ChatWindow({
                   {isTechnicalMode ? "💻" : "🇰🇷"}
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
-                  {isTechnicalMode ? "Dev Tutor" : "KoriAI"}
+                  {isTechnicalMode ? "Dev Tutor" : "Hengo"}
                 </h2>
                 <p className="mx-auto max-w-xs text-[13px] font-medium leading-relaxed text-muted-foreground/60">
                   {isTechnicalMode 
@@ -436,7 +447,7 @@ export function ChatWindow({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask KoriAI anything..."
+              placeholder="Ask Hengo anything..."
               aria-label="Chat message"
               className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-[15px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
               disabled={!conversationId || isStreaming || isLoadingMessages}
@@ -486,7 +497,7 @@ export function ChatWindow({
           </form>
           
           <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/40 sm:text-[11px]">
-            KoriAI can make mistakes. Consider checking important information.
+            Hengo can make mistakes. Consider checking important information.
           </p>
         </div>
       </div>

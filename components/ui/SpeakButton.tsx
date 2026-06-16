@@ -56,7 +56,7 @@ export function SpeakButton({
       {loading ? (
         <Loader2 className="size-3.5 animate-spin" />
       ) : (
-        <Volume2 className={`size-3.5 ${playing ? "text-teal-500" : ""}`} />
+        <Volume2 className={`size-3.5 ${playing ? "text-indigo-500" : ""}`} />
       )}
     </button>
   )

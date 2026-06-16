@@ -1,248 +1,96 @@
-# KoriAI Frontend
+# Hengo Frontend
 
-Frontend for a Korean AI learning platform built with Next.js App Router.
+Frontend for **Hengo** (by Hen Heang), an AI companion for daily growth — set goals, track to-dos, and learn (including workplace/technical Korean for developers).
 
-This repo currently focuses on the frontend side:
-- landing page
-- auth screens
-- dashboard (Personalized for Developers)
-- AI chat (with specialized Dev Mode)
-- correction flow
-- diary feedback
-- vocabulary review (Technical & Workplace categories)
-- scenario practice
-- settings
+This is effectively a **client-side SPA** that talks to a separate Spring Boot backend. There are no Next.js API routes or server actions; nearly every page is a client component, and all data comes from the backend at `NEXT_PUBLIC_API_BASE_URL`.
 
 ## Stack
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS v4
-- shadcn/ui primitives
-- Radix UI
-- Lucide React
-- TanStack Query
-- React Hook Form + Zod
-- Next Themes
-- Recharts
-- Sonner
-- Framer Motion (motion/react)
+- Next.js 16 (App Router) · React 19 · TypeScript
+- Tailwind CSS v4 (CSS-based config, no `tailwind.config`) · shadcn/ui + Radix primitives
+- TanStack Query (provided globally; several hooks also manage state manually)
+- `motion/react` for animation · `lucide-react` icons · `sonner` toasts · `recharts` charts
+- React Hook Form + Zod · axios · date-fns
+- Dark mode via `next-themes`
 
-## Recent Enhancements (Workplace & Technical Focus)
+## Commands
 
-The platform has been optimized for **software developers** who need to master Korean for professional environments.
-
-### 1. Developer-First Features
-- **Dev Mode (AI Chat):** A specialized toggle that adjusts the AI tutor's persona to use IT terminology, office honorifics, and technical context (e.g., Stand-ups, PR Reviews).
-- **Technical Vocabulary:** New categories for "IT & Software" and "Workplace" added to the AI deck builder.
-- **Pro Dashboard:** Quick Start actions prioritized for professional development.
-
-### 2. Modern AI UX (Gemini-Inspired)
-- **Conversation Stream:** Moved away from "SMS bubbles" to a full-width, clean layout similar to ChatGPT and Gemini for better technical readability.
-- **Pill-Shaped Input:** A sleek, minimal input area with integrated utility icons (+, Mic) and action buttons.
-- **Compact Chips:** Minimalist suggestion pills for quick interaction without visual clutter.
-
-### 3. iPhone 12 Pro Max Optimization
-- **Immersive Full-Screen Chat:** Mobile navigation and headers automatically hide during active chat sessions to maximize screen real estate.
-- **Safe-Area Awareness:** UI elements are anchored correctly to respect the notch and home indicator.
-- **Back Navigation:** Dedicated mobile back button added to the immersive chat header.
-
-## Run Locally
-
-Install dependencies:
+Use **pnpm** (ignore the stray `package-lock.json`).
 
 ```bash
-pnpm install
+pnpm dev          # dev server at localhost:3000
+pnpm build        # production build
+pnpm lint         # eslint
+npx vitest run    # run all unit tests (no "test" script in package.json)
+npx vitest run lib/vocab-review.test.ts   # run a single test file
 ```
 
-Start development server:
+Tests are plain vitest unit tests colocated in `lib/*.test.ts` (no vitest config file — defaults apply).
 
-```bash
-pnpm dev
-```
+## Features
 
-Build production output:
+| Area | Route | What it does |
+|---|---|---|
+| **Goals** | `/goals` | Primary surface. Plan goals, track deadlines, manage tasks, calendar view. |
+| **Dashboard** | `/dashboard` | Daily goal ring, streak, progress chart, next steps. |
+| **Vocabulary** | `/vocab` | Spaced-repetition decks, AI deck generation, list import, review sessions. |
+| **Reading** | `/reading` | Multi-unit reading with tap-to-translate, audio, and quizzes. |
+| **Daily Phrase** | `/daily-phrase` | One curated workplace phrase per day with a sentence challenge. |
+| **Exam Prep** | `/interview` | Mock interview Q&A with an AI examiner, speech input, and feedback. |
+| **AI Coach** | `/chat` | Unified AI workspace with three tabs: **Chat** (free conversation with Dev Mode + Korean voice mode), **Analyze** (decode a real Korean message — tone, politeness, replies), **Generate** (turn an English intent into Korean across formality levels). |
+| **Settings** | `/settings` | Profile, Korean level, work context, model preference, avatar. Links to practice History. |
 
-```bash
-pnpm build
-```
+Built but currently hidden from navigation (wired to the backend, easy to restore by uncommenting in `app/(main)/layout.tsx`): **Listening** (`/listening`) and **Achievements** (`/achievements`). **History** (`/history`) is reachable from the Settings page.
 
-Run lint:
+### Navigation
 
-```bash
-pnpm lint
-```
+- **Desktop:** a grouped sidebar (`Plan` / `Learn` / `Account`) in `app/(main)/layout.tsx`.
+- **Mobile:** a bottom tab bar — Home · Vocab · **Goals** (elevated center) · AI · Exam. The AI Coach is one tap away; Reading lives in the desktop sidebar.
+- **Immersive chat:** on `/chat` the mobile header, bottom tabs, and content padding are removed for a full-screen experience.
+
+## Architecture
+
+- **API layer — `lib/api.ts` is the single integration point.** One axios instance plus per-domain endpoint groups (`authApi`, `chatApi`, `vocabApi`, `listeningApi`, `analyzerApi`, `messageGenApi`, …). The backend wraps every payload in an envelope, so responses are unwrapped with `r.data.data`. Add new backend calls here, not inline in components.
+- A request interceptor attaches `Authorization: Bearer <token>` from localStorage; a 401 response clears auth and redirects to `/login`.
+- `chatApi.streamMessage` is the exception to axios — it uses raw `fetch` to parse SSE events (`start` / `token` / `done` / `error`) from `POST /chat/stream`.
+- **Auth** is JWT stored in localStorage via `lib/auth-store.ts`. The route guard is client-side only (`app/(main)/layout.tsx` redirects when not authenticated). `lib/auth.ts` (NextAuth) is an unwired stub.
 
 ## Environment Variables
 
-Create a local env file when you start wiring real services:
-
-```bash
-.env.local
-```
-
-Suggested variables:
+Create `.env.local`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_web_oauth_client_id
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=change-me
-OPENAI_API_KEY=your_openai_key
 ```
 
-Notes:
-- `NEXT_PUBLIC_API_BASE_URL` is already used by [lib/api.ts](lib/api.ts).
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` powers the "Sign in with Google" button
-  ([components/google-sign-in-button.tsx](components/google-sign-in-button.tsx)). Create a
-  **Web application** OAuth client in Google Cloud Console → APIs & Services → Credentials,
-  add `http://localhost:3000` to its Authorized JavaScript origins, and set the **same** client
-  ID on the backend as `GOOGLE_CLIENT_IDS` (the backend verifies the ID token's audience).
-  Restart the dev server after changing it — `NEXT_PUBLIC_*` vars are read at startup.
-- `NEXTAUTH_URL` and `NEXTAUTH_SECRET` will matter once auth is connected end-to-end.
-- `OPENAI_API_KEY` should only be used through a backend or secure server route, not directly from the browser.
+- `NEXT_PUBLIC_API_BASE_URL` is read by `lib/api.ts` (default `http://localhost:8080/api`).
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` powers the "Sign in with Google" button (`components/google-sign-in-button.tsx`). Create a **Web application** OAuth client in Google Cloud Console, add `http://localhost:3000` to its authorized origins, and set the same client ID on the backend. Restart the dev server after changing it (`NEXT_PUBLIC_*` vars are read at startup).
 
 ## Project Structure
 
 ```text
 app/
-  layout.tsx
-  page.tsx
-  (auth)/
-    login/page.tsx
-    register/page.tsx
-  (main)/
-    layout.tsx
-    dashboard/page.tsx
-    chat/page.tsx
-    chat/[id]/page.tsx
-    correct/page.tsx
-    diary/page.tsx
-    vocab/page.tsx
-    scenarios/page.tsx
-    scenarios/[id]/page.tsx
-    settings/page.tsx
-
+  (auth)/         login, register
+  (main)/         app shell + every feature page
+    layout.tsx    sidebar, mobile tabs, immersive-chat handling
+    chat/         AI Coach (Chat / Analyze / Generate tabs)
+    goals/  dashboard/  vocab/  reading/  daily-phrase/  interview/  settings/
 components/
-  providers/
-  chat/
-    ChatWindow.tsx      <- Optimized Immersive Layout
-    MessageBubble.tsx   <- Stream-style conversation
-  dashboard/
-  diary/
-  vocab/
-  ui/
-
-hooks/
-  useChat.ts            <- Includes technical mode logic
-  useProgress.ts
-  useVocab.ts
-
+  ui/             reusable shadcn-style primitives (keep generic)
+  chat/  ai/  vocab/  goals/  calendar/  reading/  dashboard/  ...
+hooks/            useChat, useVocab, etc. (some manage state directly)
 lib/
-  api.ts
-  auth.ts
-  types.ts
-  utils.ts
+  api.ts          single backend integration point
+  auth-store.ts   JWT in localStorage
+  goals.ts  reading.ts  vocab-review.ts  srs.ts  ...
 ```
-
-## Current Frontend Notes
-
-- The app uses route groups for `/(auth)` and `/(main)`.
-- `components/ui/*` contains reusable primitives and should be kept reusable.
-- `lib/api.ts` is prepared for backend integration through Axios.
-- `lib/auth.ts` contains a frontend auth config stub.
-- `hooks/*` currently use mock/demo data where backend APIs are not connected yet.
-- Dark mode is enabled with `next-themes`.
-- Mobile layout has been adjusted for iPhone-sized screens with an immersive, distraction-free chat pattern.
-
-## Feature Checklist
-
-- [x] Landing page
-- [x] Login page
-- [x] Register page
-- [x] Main app shell
-- [x] Dashboard UI (Pro optimized)
-- [x] Chat UI (Gemini style)
-- [x] Dev Mode toggle & logic
-- [x] Conversation detail page
-- [x] Correction page UI
-- [x] Diary page UI
-- [x] Vocabulary page UI (IT/Workplace categories)
-- [x] Scenarios list UI
-- [x] Scenario detail UI
-- [x] Settings page UI
-- [x] Dark mode toggle
-- [x] Mobile immersive navigation
-- [x] Responsive layout (iPhone 12 Pro Max tuned)
-- [ ] Real backend API integration
-- [ ] Real auth flow
-- [ ] Persistent chat history
-- [ ] Real vocabulary review logic
-- [ ] Real diary analysis pipeline
-- [ ] Scenario prompt/backend integration
-- [ ] Automated tests for major flows
-
-## Integration Status
-
-| Area | Status | Notes |
-|---|---|---|
-| UI primitives | Ready | Built with `components/ui/*` |
-| Routing | Ready | App Router structure is in place |
-| Theme | Ready | `next-themes` + dark mode toggle |
-| API client | Partial | Axios instance exists in `lib/api.ts` |
-| Authentication | Partial | Config stub exists in `lib/auth.ts` |
-| Chat data | Mock | `hooks/useChat.ts` currently simulates responses |
-| Progress data | Mock | `hooks/useProgress.ts` uses static demo data |
-| Vocab data | Mock | `hooks/useVocab.ts` uses local state/demo words |
-| OpenAI integration | Not connected | `openai` package is installed but not wired |
-| Backend integration | Not connected | No live Spring Boot connection yet |
-| Testing | Partial | Tooling installed, tests not written yet |
-
-## Devices Targeted
-
-The UI has been tuned primarily for:
-- iPhone 12 Pro Max (428x926px)
-- MacBook Pro / Apple Silicon laptops
-
-That includes:
-- safer mobile spacing
-- immersive chat (hides navigation)
-- dark mode support
-- glassy, Apple-inspired visual treatment
 
 ## Deployment
 
-Recommended deployment targets:
-- Vercel for the frontend
-- separate backend deployment for Spring Boot / API services
+- Frontend → Vercel. Backend (Spring Boot) deploys separately.
+- Set environment variables on the platform, then `pnpm build` / `pnpm start`.
 
-Basic frontend deployment flow:
-
-1. Push the repo with source files only.
-2. Configure environment variables in your deployment platform.
-3. Run the production build:
-
-```bash
-pnpm build
-pnpm start
-```
-
-## Screens / UX Notes
-
-Current design direction:
-- dark mode and light mode supported
-- Apple-inspired glassy surfaces
-- tuned for iPhone 12 Pro Max and MacBook-class screens
-- sidebar on desktop, full-screen immersive view on mobile chat
-
-## Next Steps
-
-Recommended next work:
-- connect real backend APIs to `lib/api.ts`
-- replace mock hook data with live queries
-- add tests for major flows
-- finish responsive polish for all feature pages
 ---
 
-Built with ❤️ by **Hen Heang** — 2026.
+Built by **Hen Heang** — 2026.
