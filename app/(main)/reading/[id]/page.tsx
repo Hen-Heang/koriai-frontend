@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   ArrowLeft,
   BookmarkPlus,
@@ -24,20 +24,18 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 import { SpeakButton } from "@/components/ui/SpeakButton"
-import { getApiErrorMessage, vocabApi } from "@/lib/api"
+import { getApiErrorMessage, readingApi, vocabApi } from "@/lib/api"
 import {
   READING_CATEGORIES,
-  deleteReadingUnit,
-  getAllReadingUnits,
   getReadingProgress,
   getReadingProgressServerSnapshot,
-  getReadingUnitsServerSnapshot,
   markUnitCompleted,
   markUnitQuizResult,
   markUnitStarted,
   subscribeReadingProgress,
-  subscribeReadingUnits,
+  type ReadingUnit,
 } from "@/lib/reading"
+import { deleteReadingUnit } from "@/lib/reading-store"
 import { cn } from "@/lib/utils"
 
 const containerVariants = {
@@ -71,12 +69,21 @@ function PeekableText({ text }: { text: string }) {
 export default function ReadingUnitPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const units = useSyncExternalStore(
-    subscribeReadingUnits,
-    getAllReadingUnits,
-    getReadingUnitsServerSnapshot
-  )
-  const unit = useMemo(() => units.find((u) => u.id === params.id), [units, params.id])
+
+  const [unit, setUnit] = useState<ReadingUnit | null>(null)
+  const [loadingUnit, setLoadingUnit] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    readingApi
+      .getUnit(params.id)
+      .then((u) => active && setUnit(u))
+      .catch(() => active && setUnit(null))
+      .finally(() => active && setLoadingUnit(false))
+    return () => {
+      active = false
+    }
+  }, [params.id])
 
   const progressMap = useSyncExternalStore(
     subscribeReadingProgress,
@@ -101,6 +108,15 @@ export default function ReadingUnitPage() {
     if (!unit) return
     markUnitStarted(unit.id)
   }, [unit])
+
+  if (loadingUnit) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+        <Loader2 size={18} className="animate-spin" />
+        <span className="text-sm font-bold">Loading unit…</span>
+      </div>
+    )
+  }
 
   if (!unit) {
     return (
@@ -173,12 +189,16 @@ export default function ReadingUnitPage() {
     setScore(0)
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!unit) return
     if (!window.confirm(`Delete "${unit.title}"? This cannot be undone.`)) return
-    deleteReadingUnit(unit.id)
-    toast.success("Unit deleted.")
-    router.push("/reading")
+    try {
+      await deleteReadingUnit(unit.id)
+      toast.success("Unit deleted.")
+      router.push("/reading")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not delete this unit."))
+    }
   }
 
   const allAnswered = Object.keys(answers).length === unit.quiz.length

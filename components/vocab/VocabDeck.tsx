@@ -102,26 +102,26 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                         tabIndex={0}
                         onClick={() => setExpandedId(item.id)}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpandedId(item.id) }}
-                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/5 sm:px-6"
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline gap-2">
-                            <span className="truncate text-[15px] font-black text-foreground">{item.term}</span>
+                            <span className="truncate text-xl font-black text-foreground sm:text-2xl">{item.term}</span>
                             {item.pronunciation && (
-                              <span className="hidden truncate text-[11px] font-medium italic text-muted-foreground/40 sm:inline">
+                              <span className="hidden truncate text-[13px] font-medium italic text-muted-foreground/40 sm:inline">
                                 {item.pronunciation}
                               </span>
                             )}
                           </div>
-                          <p className="truncate text-[13px] font-medium text-muted-foreground/70">{item.meaning}</p>
+                          <p className="truncate text-[15px] font-medium text-muted-foreground/70 sm:text-base">{item.meaning}</p>
                         </div>
-                        <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black tabular-nums", masteryColor(item.mastery))}>
+                        <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black tabular-nums", masteryColor(item.mastery))}>
                           {item.mastery}%
                         </span>
                         <span onClick={(e) => e.stopPropagation()}>
                           <SpeakButton
                             text={item.term}
-                            className="h-8 w-8 shrink-0 rounded-lg bg-accent/30"
+                            className="h-10 w-10 shrink-0 rounded-lg bg-accent/30"
                           />
                         </span>
                       </div>

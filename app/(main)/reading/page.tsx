@@ -1,30 +1,35 @@
 "use client"
 
 import Link from "next/link"
-import { useSyncExternalStore } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpenText,
   CheckCircle2,
   ChevronRight,
   CircleDashed,
   Clock3,
+  Loader2,
   Plus,
 } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { getApiErrorMessage } from "@/lib/api"
 import {
   READING_CATEGORIES,
-  getAllReadingUnits,
   getReadingProgress,
   getReadingProgressServerSnapshot,
-  getReadingUnitsServerSnapshot,
-  isBuiltinReadingUnit,
   subscribeReadingProgress,
-  subscribeReadingUnits,
   type ReadingCategory,
   type ReadingProgressEntry,
 } from "@/lib/reading"
+import {
+  getAllReadingUnits,
+  getReadingUnitsServerSnapshot,
+  isReadingUnitsLoaded,
+  loadReadingUnits,
+  subscribeReadingUnits,
+} from "@/lib/reading-store"
 import { cn } from "@/lib/utils"
 
 const containerVariants = {
@@ -73,6 +78,20 @@ export default function ReadingPage() {
     getReadingUnitsServerSnapshot
   )
 
+  const [loaded, setLoaded] = useState(isReadingUnitsLoaded())
+  const [loadError, setLoadError] = useState("")
+
+  useEffect(() => {
+    let active = true
+    loadReadingUnits()
+      .then(() => active && setLoadError(""))
+      .catch((err) => active && setLoadError(getApiErrorMessage(err, "Could not load reading units.")))
+      .finally(() => active && setLoaded(true))
+    return () => {
+      active = false
+    }
+  }, [])
+
   const completedCount = units.filter((u) => progress[u.id]?.status === "completed").length
 
   return (
@@ -102,6 +121,44 @@ export default function ReadingPage() {
           ]}
         />
       </motion.div>
+
+      {loadError && (
+        <motion.div
+          variants={itemVariants}
+          className="rounded-[1.8rem] border border-destructive/20 bg-destructive/5 p-5 text-sm font-bold text-destructive"
+        >
+          {loadError}
+        </motion.div>
+      )}
+
+      {!loadError && !loaded && units.length === 0 && (
+        <motion.div
+          variants={itemVariants}
+          className="flex items-center justify-center gap-2 py-20 text-muted-foreground"
+        >
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-sm font-bold">Loading reading units…</span>
+        </motion.div>
+      )}
+
+      {!loadError && loaded && units.length === 0 && (
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col items-center gap-3 rounded-[1.8rem] border border-dashed border-border bg-card/50 py-16 text-center"
+        >
+          <BookOpenText size={28} className="text-muted-foreground/50" strokeWidth={2} />
+          <p className="text-sm font-bold text-foreground">No reading units yet.</p>
+          <p className="max-w-xs text-xs font-medium text-muted-foreground">
+            Add your first text — paste an article, podcast transcript, or message to study.
+          </p>
+          <Link
+            href="/reading/new"
+            className="mt-1 inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+          >
+            <Plus size={14} strokeWidth={3} /> New unit
+          </Link>
+        </motion.div>
+      )}
 
       {CATEGORY_ORDER.map((category) => {
         const categoryUnits = units.filter((u) => u.category === category)
@@ -143,11 +200,6 @@ export default function ReadingPage() {
                         <BookOpenText size={18} strokeWidth={2.5} />
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {!isBuiltinReadingUnit(unit.id) && (
-                          <span className="inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                            Custom
-                          </span>
-                        )}
                         <StatusBadge entry={entry} />
                       </div>
                     </div>

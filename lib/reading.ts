@@ -1,5 +1,8 @@
-// Relative imports so vitest (which has no config / path-alias setup) can resolve them
-import { READING_UNITS } from "./reading-data"
+// Types, categories, and reading progress.
+// Reading UNITS now live in Postgres (see lib/reading-store.ts) — this file only
+// keeps the shapes, the category metadata, a couple of pure helpers, and the
+// per-unit progress that is still tracked locally in the browser.
+// Relative imports only so vitest (no path-alias setup) can resolve this file.
 import type { QuizQuestion } from "./types"
 
 export type ReadingCategory = "DAILY_LIFE" | "CULTURE" | "BEGINNER_STORY"
@@ -51,14 +54,14 @@ export const READING_CATEGORIES: Record<
   },
 }
 
-// ── User-managed units: add / update / delete / get ──
-// Stored in localStorage and merged over the built-in units.
-// A stored entry overrides the built-in with the same id; `null` hides a built-in.
+// ── Pure helpers (kept for unit tests / id generation) ──
 
 export type StoredUnitMap = Record<string, ReadingUnit | null>
 
-const UNITS_KEY = "koriai-reading-units"
-
+/**
+ * Merge built-in units with a stored override map.
+ * A stored entry overrides the built-in with the same id; `null` hides a built-in.
+ */
 export function mergeReadingUnits(
   builtins: ReadingUnit[],
   stored: StoredUnitMap
@@ -77,81 +80,13 @@ export function mergeReadingUnits(
   return merged
 }
 
-let unitsSnapshot: ReadingUnit[] | null = null
-const unitListeners = new Set<() => void>()
-
-function readStoredUnits(): StoredUnitMap {
-  if (typeof window === "undefined") return {}
-  try {
-    const raw = window.localStorage.getItem(UNITS_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
-}
-
-function writeStoredUnits(map: StoredUnitMap) {
-  if (typeof window === "undefined") return
-  window.localStorage.setItem(UNITS_KEY, JSON.stringify(map))
-  unitsSnapshot = null
-  unitListeners.forEach((listener) => listener())
-}
-
-export function subscribeReadingUnits(callback: () => void) {
-  unitListeners.add(callback)
-  return () => {
-    unitListeners.delete(callback)
-  }
-}
-
-export function getAllReadingUnits(): ReadingUnit[] {
-  if (unitsSnapshot === null) {
-    unitsSnapshot = mergeReadingUnits(READING_UNITS, readStoredUnits())
-  }
-  return unitsSnapshot
-}
-
-export function getReadingUnitsServerSnapshot(): ReadingUnit[] {
-  return READING_UNITS
-}
-
-export function getReadingUnit(unitId: string): ReadingUnit | undefined {
-  return getAllReadingUnits().find((u) => u.id === unitId)
-}
-
-export function isBuiltinReadingUnit(unitId: string): boolean {
-  return READING_UNITS.some((u) => u.id === unitId)
-}
-
-export function upsertReadingUnit(unit: ReadingUnit) {
-  writeStoredUnits({ ...readStoredUnits(), [unit.id]: unit })
-}
-
-export function deleteReadingUnit(unitId: string) {
-  const map = { ...readStoredUnits() }
-  if (isBuiltinReadingUnit(unitId)) {
-    map[unitId] = null
-  } else {
-    delete map[unitId]
-  }
-  writeStoredUnits(map)
-
-  const progress = { ...getReadingProgress() }
-  if (progress[unitId]) {
-    delete progress[unitId]
-    saveReadingProgress(progress)
-  }
-}
-
 export function createReadingUnitId(title: string, existingIds?: Set<string>): string {
   const base =
     title
       .toLowerCase()
       .replace(/[^a-z0-9가-힣]+/g, "-")
       .replace(/(^-+|-+$)/g, "") || "unit"
-  const taken =
-    existingIds ??
-    new Set([...READING_UNITS.map((u) => u.id), ...Object.keys(readStoredUnits())])
+  const taken = existingIds ?? new Set<string>()
   if (!taken.has(base)) return base
   let suffix = 2
   while (taken.has(`${base}-${suffix}`)) suffix++
@@ -243,4 +178,13 @@ export function markUnitQuizResult(unitId: string, score: number, total: number)
   }
   saveReadingProgress(progress)
   return passed
+}
+
+/** Drop the locally-stored progress for a unit (used when the unit is deleted). */
+export function removeUnitProgress(unitId: string) {
+  const current = getReadingProgress()
+  if (!current[unitId]) return
+  const progress = { ...current }
+  delete progress[unitId]
+  saveReadingProgress(progress)
 }

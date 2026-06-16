@@ -9,6 +9,7 @@ import {
   BookOpenText,
   CheckCircle2,
   GraduationCap,
+  Loader2,
   Plus,
   Save,
   Trash2,
@@ -18,13 +19,17 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { getApiErrorMessage } from "@/lib/api"
 import {
   READING_CATEGORIES,
-  createReadingUnitId,
-  upsertReadingUnit,
   type ReadingCategory,
   type ReadingUnit,
 } from "@/lib/reading"
+import {
+  createReadingUnit,
+  updateReadingUnit,
+  type ReadingUnitPayload,
+} from "@/lib/reading-store"
 import type { QuizQuestion } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -101,6 +106,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
   )
 
   const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
 
   function updateParagraph(index: number, patch: Partial<ParagraphDraft>) {
     setParagraphs((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
@@ -137,7 +143,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
     )
   }
 
-  function handleSave() {
+  async function handleSave() {
     setError("")
 
     if (!title.trim()) return setError("The Korean title is required.")
@@ -177,9 +183,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
       })
     }
 
-    const id = unit?.id ?? createReadingUnitId(titleEnglish.trim() || title.trim())
-    const next: ReadingUnit = {
-      id,
+    const payload: ReadingUnitPayload = {
       title: title.trim(),
       titleEnglish: titleEnglish.trim(),
       category,
@@ -200,9 +204,18 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
       quiz: cleanQuiz,
     }
 
-    upsertReadingUnit(next)
-    toast.success(isEdit ? "Unit updated." : "Unit created.")
-    router.push(`/reading/${id}`)
+    setSaving(true)
+    try {
+      const saved = unit
+        ? await updateReadingUnit(unit.id, payload)
+        : await createReadingUnit(payload)
+      toast.success(isEdit ? "Unit updated." : "Unit created.")
+      router.push(`/reading/${saved.id}`)
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Could not save this unit."))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -547,9 +560,14 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
           <Button
             type="button"
             onClick={handleSave}
-            className="h-11 rounded-2xl bg-emerald-600 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-500 active:scale-[0.99]"
+            disabled={saving}
+            className="h-11 rounded-2xl bg-emerald-600 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-500 active:scale-[0.99] disabled:opacity-60"
           >
-            <Save size={14} className="mr-2" strokeWidth={2.5} />
+            {saving ? (
+              <Loader2 size={14} className="mr-2 animate-spin" />
+            ) : (
+              <Save size={14} className="mr-2" strokeWidth={2.5} />
+            )}
             {isEdit ? "Save changes" : "Create unit"}
           </Button>
           <Link

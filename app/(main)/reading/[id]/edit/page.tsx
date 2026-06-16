@@ -2,23 +2,38 @@
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { useSyncExternalStore } from "react"
+import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 import { UnitEditor } from "@/components/reading/UnitEditor"
-import {
-  getAllReadingUnits,
-  getReadingUnitsServerSnapshot,
-  subscribeReadingUnits,
-} from "@/lib/reading"
+import { readingApi } from "@/lib/api"
+import type { ReadingUnit } from "@/lib/reading"
 
 export default function EditReadingUnitPage() {
   const params = useParams<{ id: string }>()
-  const units = useSyncExternalStore(
-    subscribeReadingUnits,
-    getAllReadingUnits,
-    getReadingUnitsServerSnapshot
-  )
-  const unit = units.find((u) => u.id === params.id)
+  const [unit, setUnit] = useState<ReadingUnit | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    readingApi
+      .getUnit(params.id)
+      .then((u) => active && setUnit(u))
+      .catch(() => active && setUnit(null))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [params.id])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+        <Loader2 size={18} className="animate-spin" />
+        <span className="text-sm font-bold">Loading unit…</span>
+      </div>
+    )
+  }
 
   if (!unit) {
     return (
