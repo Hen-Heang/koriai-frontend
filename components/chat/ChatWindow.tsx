@@ -252,13 +252,15 @@ export function ChatWindow({
               ))}
               <AnimatePresence>
                 {isStreaming && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-4 sm:gap-6"
                   >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 text-[9px] font-black text-white shadow-md">AI</div>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm sm:h-9 sm:w-9">
+                      <Sparkles size={18} strokeWidth={2.5} />
+                    </div>
                     <TypingIndicator />
                   </motion.div>
                 )}

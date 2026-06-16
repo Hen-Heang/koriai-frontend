@@ -35,9 +35,9 @@ const levels = [
 ]
 
 const models = [
-  { value: "gpt-4o-mini", label: "GPT-4o mini", desc: "Fast & efficient" },
+  { value: "gpt-5-mini", label: "GPT-5 mini", desc: "Latest · recommended" },
   { value: "gpt-4o", label: "GPT-4o", desc: "Balanced performance" },
-  { value: "gpt-5-mini", label: "GPT-5 mini", desc: "Latest generation" },
+  { value: "gpt-4o-mini", label: "GPT-4o mini", desc: "Fast & efficient" },
 ]
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {

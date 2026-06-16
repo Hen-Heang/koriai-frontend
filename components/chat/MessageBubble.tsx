@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
-import { CheckCircle2, Languages, Sparkles } from "lucide-react"
+import { Check, CheckCircle2, Copy, Languages, Sparkles } from "lucide-react"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 
 // ─── Inline parser ────────────────────────────────────────────────────────────
@@ -221,6 +223,17 @@ function renderBlocks(content: string, isUserBubble = false) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user"
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(message.content)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      toast.error("Couldn't copy to clipboard")
+    }
+  }
 
   return (
     <motion.div 
@@ -300,11 +313,23 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
           {/* Action row - Minimal / Appears on hover */}
           {!isUser && (
-            <div className="mt-2 flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-              <SpeakButton 
-                text={message.content} 
-                className="h-8 w-8 rounded-lg border border-border/60 bg-background/50 p-0 text-muted-foreground hover:bg-accent hover:text-foreground" 
+            <div className="mt-2 flex items-center gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+              <SpeakButton
+                text={message.content}
+                className="h-8 w-8 rounded-lg border border-border/60 bg-background/50 p-0 text-muted-foreground hover:bg-accent hover:text-foreground"
               />
+              <button
+                type="button"
+                onClick={handleCopy}
+                aria-label={copied ? "Copied" : "Copy message"}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/50 text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-90"
+              >
+                {copied ? (
+                  <Check size={15} strokeWidth={2.5} className="text-emerald-500" />
+                ) : (
+                  <Copy size={15} strokeWidth={2.5} />
+                )}
+              </button>
             </div>
           )}
         </div>
