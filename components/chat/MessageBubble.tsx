@@ -226,7 +226,15 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-function MessageBubbleImpl({ message, live = false }: { message: ChatMessage; live?: boolean }) {
+function MessageBubbleImpl({
+  message,
+  live = false,
+  userAvatarUrl = null,
+}: {
+  message: ChatMessage
+  live?: boolean
+  userAvatarUrl?: string | null
+}) {
   const isUser = message.role === "user"
   const [copied, setCopied] = useState(false)
 
@@ -263,14 +271,19 @@ function MessageBubbleImpl({ message, live = false }: { message: ChatMessage; li
         <div className="shrink-0 pt-1">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-xl text-[10px] font-black text-white shadow-sm sm:h-9 sm:w-9",
+              "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[10px] font-black text-white shadow-sm sm:h-9 sm:w-9",
               isUser
                 ? "bg-slate-500"
                 : "bg-linear-to-br from-blue-500 to-indigo-600"
             )}
           >
             {isUser ? (
-              <span className="text-[14px]">👤</span>
+              userAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={userAvatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[14px]">👤</span>
+              )
             ) : (
               <Sparkles size={18} strokeWidth={2.5} />
             )}

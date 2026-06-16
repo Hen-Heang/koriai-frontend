@@ -68,6 +68,89 @@ const progressGradient = (progress: number) =>
       ? "linear-gradient(90deg, #3b82f6, #2563eb)"
       : "linear-gradient(90deg, #f59e0b, #ef4444)"
 
+const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: Math.min(i, 8) * 0.03, duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+  }),
+  exit: { opacity: 0, x: -10, transition: { duration: 0.2 } },
+}
+
+type GoalActionHandlers = {
+  goal: Goal
+  onDeleteGoal: (goal: Goal, event: React.MouseEvent) => void
+  onEditGoal?: (goal: Goal, event: React.MouseEvent) => void
+  onToggleStar?: (goalId: string) => void
+}
+
+// Star + edit/delete menu, shared by the grid card and the table row so the
+// owner controls stay identical across views. `size` tunes the touch target
+// (smaller for the compact row).
+function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar }: GoalActionHandlers & { size: string }) {
+  return (
+    <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onToggleStar?.(goal.id)}
+        className={cn(
+          size,
+          "rounded-xl",
+          goal.isStarred
+            ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
+            : "text-muted-foreground/30 hover:bg-amber-500/10 hover:text-amber-500"
+        )}
+      >
+        <Star className={cn("h-4 w-4", goal.isStarred && "fill-current")} />
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className={cn(size, "rounded-xl hover:bg-foreground/5")}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2 shadow-2xl">
+          <DropdownMenuItem className="rounded-xl font-bold" onSelect={(e) => onEditGoal?.(goal, e as any)}>
+            <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit Goal
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-2" />
+          <DropdownMenuItem variant="destructive" className="rounded-xl font-bold" onSelect={(e) => onDeleteGoal(goal, e as any)}>
+            <Trash2 className="mr-3 h-4 w-4" /> Delete Goal
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
+// Emoji/initial avatar with the inline icon picker, shared by both views.
+function GoalIcon({
+  goal,
+  icon,
+  onChange,
+  className,
+}: {
+  goal: Goal
+  icon: string | null
+  onChange: (emoji: string | null) => void
+  className: string
+}) {
+  return (
+    <div
+      className={cn("relative shrink-0 overflow-hidden bg-primary/10 font-black text-primary", className)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <EmojiIconPicker value={icon} onChange={onChange}>
+        <button className="flex h-full w-full items-center justify-center">
+          {icon || goal.title.charAt(0).toUpperCase()}
+        </button>
+      </EmojiIconPicker>
+    </div>
+  )
+}
+
 export function GoalList({
   goals,
   isLoading,
@@ -126,10 +209,16 @@ export function GoalList({
   }
 
   if (isLoading) {
-    return (
-      <div className={cn("grid gap-5", viewMode === "grid" ? "sm:grid-cols-2" : "grid-cols-1")}>
+    return viewMode === "grid" ? (
+      <div className="grid grid-cols-2 gap-4 sm:gap-6">
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className={cn("rounded-[2.5rem]", viewMode === "grid" ? "h-64" : "h-32")} />
+          <Skeleton key={i} className="h-52 rounded-[1.5rem] sm:rounded-[2rem]" />
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2.5">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[68px] rounded-2xl" />
         ))}
       </div>
     )
@@ -168,7 +257,7 @@ export function GoalList({
         </Button>
       </div>
 
-      <div className={cn("grid gap-6", viewMode === "grid" ? "sm:grid-cols-2" : "grid-cols-1")}>
+      <div className={cn(viewMode === "grid" ? "grid grid-cols-2 gap-4 sm:gap-6" : "flex flex-col gap-2.5")}>
         <AnimatePresence mode="popLayout">
           {goals.map((goal, i) => {
             const deadlineInfo = calculateGoalDeadlineInfo(goal)
@@ -181,7 +270,73 @@ export function GoalList({
             const goalIcon = getGoalIcon(goal)
             const isOpening = openingGoalId === goal.id
             const isOwner = currentUser != null && String(currentUser) === String(goal.user_id)
+            const open = () => {
+              setOpeningGoalId(goal.id)
+              router.push(`/goals/${goal.id}`)
+            }
 
+            // ── List view: thin full-width table row ──
+            if (viewMode === "list") {
+              return (
+                <motion.div
+                  key={goal.id}
+                  custom={i}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  layout
+                  onClick={open}
+                  className={cn(
+                    "group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-3 py-3 transition-all hover:border-primary/30 hover:shadow-lg dark:bg-slate-900/40",
+                    isOpening && "ring-2 ring-primary",
+                    deadlineStyling?.borderColor
+                  )}
+                >
+                  <GoalIcon
+                    goal={goal}
+                    icon={goalIcon}
+                    onChange={(emoji) => handleIconChange(goal, emoji)}
+                    className="h-11 w-11 rounded-[1rem] text-lg"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                      {goal.title}
+                    </h3>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-foreground/5">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                          className="h-full rounded-full"
+                          style={{ background: progressGradient(progress) }}
+                        />
+                      </div>
+                      <span className="shrink-0 text-[10px] font-black uppercase tracking-widest tabular-nums text-muted-foreground/60">
+                        {done}/{total}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm font-black tabular-nums text-primary">{progress}%</span>
+                  {isOpening ? (
+                    <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    isOwner && (
+                      <GoalActions
+                        goal={goal}
+                        size="h-8 w-8"
+                        onDeleteGoal={onDeleteGoal}
+                        onEditGoal={onEditGoal}
+                        onToggleStar={onToggleStar}
+                      />
+                    )
+                  )}
+                </motion.div>
+              )
+            }
+
+            // ── Grid view: compact card, 2-up on phones ──
             return (
               <motion.div
                 key={goal.id}
@@ -197,86 +352,48 @@ export function GoalList({
               >
                 <Card
                   className={cn(
-                    "h-full overflow-hidden rounded-[1.75rem] border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:bg-slate-900/40 sm:rounded-[2rem]",
+                    "h-full overflow-hidden rounded-[1.5rem] border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:bg-slate-900/40 sm:rounded-[2rem]",
                     isOpening && "ring-2 ring-primary",
                     deadlineStyling?.borderColor
                   )}
-                  onClick={() => {
-                    setOpeningGoalId(goal.id)
-                    router.push(`/goals/${goal.id}`)
-                  }}
+                  onClick={open}
                 >
-                  <CardContent className="flex h-full flex-col p-6 sm:p-8">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 flex-1 gap-5">
-                        <div
-                          className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[1.5rem] bg-primary/10 text-3xl font-black text-primary transition-transform group-hover:scale-105"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <EmojiIconPicker
-                            value={goalIcon}
-                            onChange={(emoji) => handleIconChange(goal, emoji)}
-                          >
-                            <button className="flex h-full w-full items-center justify-center">
-                              {goalIcon || goal.title.charAt(0).toUpperCase()}
-                            </button>
-                          </EmojiIconPicker>
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge className="rounded-full bg-primary/10 px-3 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                              {goal.metadata?.goal_type || "General"}
-                            </Badge>
-                            {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
-                          </div>
-                          <h3 className="truncate text-xl font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
-                            {goal.title}
-                          </h3>
-                        </div>
-                      </div>
-
+                  <CardContent className="flex h-full flex-col p-4 sm:p-6">
+                    <div className="flex items-start justify-between gap-2">
+                      <GoalIcon
+                        goal={goal}
+                        icon={goalIcon}
+                        onChange={(emoji) => handleIconChange(goal, emoji)}
+                        className="h-12 w-12 rounded-[1.25rem] text-2xl transition-transform group-hover:scale-105 sm:h-14 sm:w-14 sm:text-3xl"
+                      />
                       {isOwner && (
-                        <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onToggleStar?.(goal.id)}
-                            className={cn(
-                              "h-11 w-11 rounded-2xl",
-                              goal.isStarred
-                                ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
-                                : "text-muted-foreground/30 hover:bg-amber-500/10 hover:text-amber-500"
-                            )}
-                          >
-                            <Star className={cn("h-5 w-5", goal.isStarred && "fill-current")} />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-foreground/5">
-                                <MoreHorizontal className="h-5 w-5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2 shadow-2xl">
-                              <DropdownMenuItem className="rounded-xl font-bold" onSelect={(e) => onEditGoal?.(goal, e as any)}>
-                                <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit Goal
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="my-2" />
-                              <DropdownMenuItem variant="destructive" className="rounded-xl font-bold" onSelect={(e) => onDeleteGoal(goal, e as any)}>
-                                <Trash2 className="mr-3 h-4 w-4" /> Delete Goal
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <GoalActions
+                          goal={goal}
+                          size="h-9 w-9"
+                          onDeleteGoal={onDeleteGoal}
+                          onEditGoal={onEditGoal}
+                          onToggleStar={onToggleStar}
+                        />
                       )}
                     </div>
 
-                    <div className="mt-auto space-y-6 pt-8">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
-                          <span>Overall Progress</span>
-                          <span className="text-sm font-black text-primary">{progress}%</span>
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                        {goal.metadata?.goal_type || "General"}
+                      </Badge>
+                      {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
+                    </div>
+                    <h3 className="mt-2 truncate text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
+                      {goal.title}
+                    </h3>
+
+                    <div className="mt-auto space-y-3 pt-5">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                          <span>Progress</span>
+                          <span className="text-sm text-primary">{progress}%</span>
                         </div>
-                        <div className="h-3 w-full overflow-hidden rounded-full bg-foreground/5 shadow-inner">
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-foreground/5 shadow-inner">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
@@ -287,18 +404,21 @@ export function GoalList({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-border/40 pt-5">
-                        <div className="flex items-center gap-5">
-                          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                            <ClipboardList size={16} className="text-primary/60" />
-                            {done}/{total}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                            <CalendarDays size={16} className="text-primary/60" />
-                            {goal.target_date ? format(new Date(goal.target_date), "MMM d") : "TBD"}
-                          </div>
-                        </div>
-                        {isOpening && <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
+                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        <span className="flex items-center gap-1.5">
+                          <ClipboardList size={14} className="text-primary/60" />
+                          {done}/{total}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          {isOpening ? (
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          ) : (
+                            <>
+                              <CalendarDays size={14} className="text-primary/60" />
+                              {goal.target_date ? format(new Date(goal.target_date), "MMM d") : "TBD"}
+                            </>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </CardContent>

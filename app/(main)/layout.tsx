@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
+import { UserAvatar } from "@/components/ui/UserAvatar"
 import { isAuthenticated } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
@@ -294,17 +295,13 @@ export default function MainLayout({
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <ThemeToggle />
-                <Link
+                <UserAvatar
                   href="/settings"
+                  title="Profile & settings"
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card shadow-sm transition-all active:scale-95",
-                    pathname === "/settings"
-                      ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/5"
-                      : "text-muted-foreground"
+                    pathname === "/settings" && "ring-2 ring-emerald-500/40"
                   )}
-                >
-                  <Settings size={18} strokeWidth={2.5} />
-                </Link>
+                />
               </div>
             </header>
           )}
@@ -326,6 +323,7 @@ export default function MainLayout({
                </div>
                <NotificationBell />
                <ThemeToggle />
+               <UserAvatar href="/settings" title="Profile & settings" />
             </div>
           </div>
 

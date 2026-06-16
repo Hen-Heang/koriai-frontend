@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { userApi } from "@/lib/api"
 import { clearAuth, getUserId } from "@/lib/auth-store"
+import { refreshProfileImage } from "@/hooks/useProfileImage"
 import { cn } from "@/lib/utils"
 
 const levels = [
@@ -160,6 +161,8 @@ export default function SettingsPage() {
       await userApi.uploadProfileImage(userId, file)
       const url = await userApi.getProfileImageUrl(userId)
       setAvatarUrl(url)
+      // Bust the shared avatar cache so the navbar + chat show the new photo.
+      refreshProfileImage()
     } catch {
       setError("Could not upload image. Please try again.")
     } finally {

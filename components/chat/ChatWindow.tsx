@@ -10,6 +10,7 @@ import { TypingIndicator } from "@/components/chat/TypingIndicator"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useChat } from "@/hooks/useChat"
+import { useProfileImage } from "@/hooks/useProfileImage"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { ttsApi } from "@/lib/api"
 import type { ChatMessage } from "@/lib/types"
@@ -87,6 +88,7 @@ export function ChatWindow({
   } = useChat({ conversationId, initialMessages })
 
   const router = useRouter()
+  const { url: userAvatarUrl } = useProfileImage()
   const suggestions = isTechnicalMode ? TECHNICAL_SUGGESTIONS : GENERAL_SUGGESTIONS
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -125,7 +127,9 @@ export function ChatWindow({
   // `messages` is read through a ref so this effect fires only on the
   // streaming→idle transition, not on every buffered token flush mid-stream.
   const messagesRef = useRef(messages)
-  messagesRef.current = messages
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
   const prevStreamingRef = useRef(false)
   const lastSpokenIdRef = useRef<string | null>(null)
   useEffect(() => {
@@ -350,6 +354,7 @@ export function ChatWindow({
                 <MessageBubble
                   key={message.id}
                   message={message}
+                  userAvatarUrl={userAvatarUrl}
                   live={isStreaming && i === messages.length - 1 && message.role === "assistant"}
                 />
               ))}
