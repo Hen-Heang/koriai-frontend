@@ -362,6 +362,18 @@ export interface CreateGoalPayload {
 
 export type UpdateGoalPayload = Partial<CreateGoalPayload>
 
+// Goal member (backend GoalMemberResponse, camelCase).
+export interface GoalMemberDto {
+  id: string
+  goalId: string
+  userId: number
+  role: "creator" | "member" | string
+  displayName: string | null
+  email: string | null
+  joinedAt: string | null
+  lastSeen: string | null
+}
+
 export const goalsApi = {
   list: (status?: string) =>
     api
@@ -373,10 +385,90 @@ export const goalsApi = {
   update: (id: string, data: UpdateGoalPayload) =>
     api.put(`/goals/${id}`, data).then((r) => r.data.data) as Promise<Goal>,
   remove: (id: string) => api.delete(`/goals/${id}`).then((r) => r.data.data),
+  // Share-link / join-by-code (backend GoalMemberController). Anyone with the
+  // share code can preview + join; only the creator can regenerate it.
+  previewByShareCode: (code: string) =>
+    api.get(`/goals/by-share-code/${code}`).then((r) => r.data.data) as Promise<Goal>,
+  joinByShareCode: (code: string) =>
+    api.post(`/goals/by-share-code/${code}/join`).then((r) => r.data.data) as Promise<Goal>,
+  regenerateShareCode: (id: string) =>
+    api
+      .post(`/goals/${id}/share-code/regenerate`)
+      .then((r) => r.data.data) as Promise<{ shareCode: string }>,
+  // Members (GoalMemberController). Backend returns camelCase GoalMemberResponse.
+  getMembers: (id: string) =>
+    api.get(`/goals/${id}/members`).then((r) => r.data.data) as Promise<GoalMemberDto[]>,
+  leaveGoal: (id: string) => api.delete(`/goals/${id}/members/me`).then((r) => r.data.data),
+  removeMember: (id: string, userId: number) =>
+    api.delete(`/goals/${id}/members/${userId}`).then((r) => r.data.data),
   toggleStar: (id: string) =>
     api.post(`/goals/${id}/star`).then((r) => r.data.data) as Promise<{ isStarred: boolean }>,
   getTasks: (id: string) =>
     api.get(`/goals/${id}/tasks`).then((r) => r.data.data) as Promise<Task[]>,
+  // AI-generate tasks for a goal (reuses the server OpenAI key); returns created tasks.
+  generateTasks: (id: string, body?: { count?: number; note?: string }) =>
+    api.post(`/goals/${id}/generate-tasks`, body ?? {}).then((r) => r.data.data) as Promise<Task[]>,
+
+  // Per-goal AI coach chat — SSE stream. Ephemeral: pass recent history each turn.
+  // Mirrors chatApi.streamMessage's event protocol (token / done / error).
+  coachStream: async (
+    id: string,
+    message: string,
+    history: { role: "user" | "assistant"; content: string }[],
+    onToken: (token: string) => void,
+    onDone: () => void,
+    signal?: AbortSignal,
+  ): Promise<void> => {
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null
+    const response = await fetch(`${API_BASE_URL}/goals/${id}/coach/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, history }),
+      signal,
+    })
+    if (!response.ok) throw new Error(`Coach stream failed: ${response.status}`)
+    if (!response.body) throw new Error("No response body")
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    let eventName = ""
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split("\n")
+      buffer = lines.pop() ?? ""
+      for (const line of lines) {
+        if (line.startsWith("event:")) eventName = line.slice(6).trim()
+        else if (line.startsWith("data:")) {
+          const raw = line.slice(5).trim()
+          if (eventName === "token") {
+            try {
+              onToken(JSON.parse(raw).token)
+            } catch {
+              /* ignore malformed chunk */
+            }
+          } else if (eventName === "done") {
+            onDone()
+          } else if (eventName === "error") {
+            let msg = "Coach is unavailable right now."
+            try {
+              msg = JSON.parse(raw).message || msg
+            } catch {
+              /* ignore */
+            }
+            throw new Error(msg)
+          }
+          eventName = ""
+        }
+      }
+    }
+  },
   // Sends a goal invitation to another user. The receiver gets it through the
   // goal-notifications feed and responds via notificationsApi.respond.
   // Backend: POST /api/goal-notifications/invite with { goalId, receiverUserId }.
@@ -451,6 +543,37 @@ export const ttsApi = {
     const response = await api.post("/tts", { text, voice }, { responseType: "blob" })
     return URL.createObjectURL(response.data)
   },
+}
+
+// Push notifications (browser Web Push + Telegram). Backend domain/push is already
+// wired into the notification dispatcher; these are the client endpoints.
+export interface TelegramLink {
+  deepLink: string | null
+  code: string
+  botUsername: string | null
+}
+
+// Browser PushSubscription.toJSON() shape — POSTed verbatim to the backend.
+export interface WebPushSubscriptionJSON {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+}
+
+export const pushApi = {
+  // ── Telegram ──
+  telegramLink: () =>
+    api.post("/push/telegram/link").then((r) => r.data.data) as Promise<TelegramLink>,
+  telegramStatus: () =>
+    api.get("/push/telegram/status").then((r) => r.data.data) as Promise<{ linked: boolean }>,
+  telegramUnlink: () => api.delete("/push/telegram").then((r) => r.data.data),
+
+  // ── Web Push ──
+  vapidPublicKey: () =>
+    api.get("/push/web/vapid-public-key").then((r) => r.data.data) as Promise<{ publicKey: string }>,
+  webSubscribe: (sub: WebPushSubscriptionJSON) =>
+    api.post("/push/web/subscribe", sub).then((r) => r.data.data),
+  webUnsubscribe: (endpoint: string) =>
+    api.post("/push/web/unsubscribe", { endpoint }).then((r) => r.data.data),
 }
 
 export default api

@@ -19,16 +19,20 @@ import {
   History,
   Camera,
   Loader2,
+  Bell,
+  Send,
 } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { userApi } from "@/lib/api"
 import { clearAuth, getUserId } from "@/lib/auth-store"
 import { refreshProfileImage } from "@/hooks/useProfileImage"
+import { usePush } from "@/hooks/usePush"
 import { cn } from "@/lib/utils"
 
 const levels = [
@@ -99,6 +103,7 @@ const itemVariants = {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const push = usePush()
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
   const [koreanLevel, setKoreanLevel] = useState("BEGINNER")
@@ -385,6 +390,67 @@ export default function SettingsPage() {
               </div>
               <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
             </button>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <SectionRow>
+              <SectionHeader
+                icon={Bell}
+                title="Notifications"
+                description="Goal reminders & invites — in the browser and on Telegram"
+                color="text-violet-500"
+              />
+            </SectionRow>
+
+            {/* Browser push */}
+            <SectionRow>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground">Browser notifications</p>
+                  <p className="text-[12px] font-medium text-muted-foreground">
+                    {push.supported
+                      ? push.webState === "denied"
+                        ? "Blocked — enable notifications for this site in your browser."
+                        : "Get push alerts even when KoriAI isn't open."
+                      : "Not supported in this browser."}
+                  </p>
+                </div>
+                <Switch
+                  checked={push.webEnabled}
+                  disabled={!push.supported || push.webBusy || push.webState === "denied"}
+                  onCheckedChange={(v) => (v ? push.enableWeb() : push.disableWeb())}
+                  aria-label="Toggle browser notifications"
+                />
+              </div>
+            </SectionRow>
+
+            {/* Telegram */}
+            <SectionRow last>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500 ring-1 ring-sky-500/20">
+                    <Send size={16} strokeWidth={2.5} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">Telegram</p>
+                    <p className="text-[12px] font-medium text-muted-foreground">
+                      {push.telegramLinked ? "Connected — alerts go to your chat." : "Connect to get alerts in Telegram."}
+                    </p>
+                  </div>
+                </div>
+                {push.telegramLinked ? (
+                  <Button variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
+                    Disconnect
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => push.linkTelegram()}>
+                    Connect
+                  </Button>
+                )}
+              </div>
+            </SectionRow>
           </SectionCard>
         </motion.div>
 

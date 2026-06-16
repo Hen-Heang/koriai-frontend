@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Clock,
   Flag,
+  LogOut,
   MoreHorizontal,
   Pencil,
   RotateCcw,
@@ -21,6 +22,7 @@ import {
   Star,
   Target,
   Trash2,
+  UserMinus,
   Users,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -35,7 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
@@ -43,6 +45,10 @@ import { DeadlineStatusBadge } from "@/components/goals/DeadlineStatusBadge"
 import { DeleteConfirmDialog } from "@/components/goals/DeleteConfirmDialog"
 import { EditGoalSlidePanel } from "@/components/goals/EditGoalSlidePanel"
 import { InviteMembers } from "@/components/goals/InviteMembers"
+import { ShareGoalCard } from "@/components/goals/ShareGoalCard"
+import { SmartAnalytics } from "@/components/goals/SmartAnalytics"
+import { GoalCoach } from "@/components/goals/GoalCoach"
+import { GoalCoachChat } from "@/components/goals/GoalCoachChat"
 import { Calendar } from "@/components/calendar/Calendar"
 import { parseYMD } from "@/lib/calendar"
 import { goalsApi, getApiErrorMessage } from "@/lib/api"
@@ -129,6 +135,13 @@ export default function GoalDetailPage() {
     enabled: !!id,
   })
 
+  const membersKey = ["goal", id, "members"] as const
+  const { data: members = [] } = useQuery({
+    queryKey: membersKey,
+    queryFn: () => goalsApi.getMembers(id),
+    enabled: !!id,
+  })
+
   useEffect(() => {
     if (goalError) toast.error("Could not load this goal", { description: "Please try again." })
   }, [goalError])
@@ -147,7 +160,6 @@ export default function GoalDetailPage() {
   const totalTasks = tasks.length
   const taskProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
-  const members = goal?.members ?? []
   const memberCount = members.length || goal?.memberCounts?.total || 0
 
   const refresh = useCallback(() => {
@@ -225,6 +237,34 @@ export default function GoalDetailPage() {
       setIsDeleting(false)
     }
   }, [goal, queryClient, userId, router])
+
+  // Leave a shared goal (members only — the creator can't leave).
+  const leaveGoal = useCallback(async () => {
+    try {
+      await goalsApi.leaveGoal(id)
+      void queryClient.invalidateQueries({ queryKey: goalsQueryKey(userId) })
+      toast.success("You left the goal")
+      router.push("/goals")
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Could not leave the goal"))
+    }
+  }, [id, queryClient, userId, router])
+
+  // Owner removes another member.
+  const removeMember = useCallback(
+    async (memberUserId: number, name: string) => {
+      try {
+        await goalsApi.removeMember(id, memberUserId)
+        void queryClient.invalidateQueries({ queryKey: membersKey })
+        void queryClient.invalidateQueries({ queryKey: goalKey })
+        toast.success(`Removed ${name}`)
+      } catch (e) {
+        toast.error(getApiErrorMessage(e, "Could not remove member"))
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, queryClient]
+  )
 
   if (goalLoading) {
     return (
@@ -417,6 +457,13 @@ export default function GoalDetailPage() {
               </Card>
             )}
           </div>
+
+          <div>
+            <h3 className="mb-4 px-1 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+              Smart analytics
+            </h3>
+            <SmartAnalytics tasks={tasks} targetDate={goal.target_date} />
+          </div>
         </TabsContent>
 
         <TabsContent value="tasks" className="rounded-[1.75rem] border border-border bg-card/50 p-1 shadow-2xl overflow-hidden sm:rounded-[2.5rem]">
@@ -449,29 +496,53 @@ export default function GoalDetailPage() {
               ) : (
                 <ul className="mt-6 space-y-2">
                   {members.map((m) => {
-                    const name = m.user_profiles?.display_name || "Member"
+                    const name = m.displayName || m.email || "Member"
+                    const isSelf = userId != null && String(m.userId) === String(userId)
+                    const isCreator = m.role === "creator"
                     return (
                       <li key={m.id} className="flex items-center gap-3 rounded-xl p-2">
                         <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarImage src={m.user_profiles?.avatar_url} alt={name} />
                           <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                             {name.slice(0, 1).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-foreground">{name}</p>
+                          <p className="truncate text-sm font-bold text-foreground">
+                            {name}
+                            {isSelf && <span className="ml-1 text-muted-foreground/60">(you)</span>}
+                          </p>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
                             {m.role}
                           </p>
                         </div>
-                        {m.role === "creator" && (
+                        {isCreator ? (
                           <Badge
                             variant="secondary"
                             className="border-none bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary"
                           >
                             Owner
                           </Badge>
-                        )}
+                        ) : isSelf ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-lg text-xs font-bold text-muted-foreground hover:text-destructive"
+                            onClick={leaveGoal}
+                          >
+                            <LogOut size={14} /> Leave
+                          </Button>
+                        ) : isOwner ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
+                            onClick={() => removeMember(m.userId, name)}
+                            aria-label={`Remove ${name}`}
+                            title={`Remove ${name}`}
+                          >
+                            <UserMinus size={16} />
+                          </Button>
+                        ) : null}
                       </li>
                     )
                   })}
@@ -490,22 +561,23 @@ export default function GoalDetailPage() {
                 <InviteMembers goalId={id} onInvited={refresh} />
               </Card>
             )}
+
+            {isOwner && (
+              <ShareGoalCard goalId={id} shareCode={goal.share_code} onRegenerated={refresh} />
+            )}
           </div>
         </TabsContent>
 
-        <TabsContent value="coach">
-          <Card className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-border bg-card/30 py-16 text-center sm:py-24">
-            <div className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-primary/10 text-primary shadow-2xl shadow-primary/20 sm:h-24 sm:w-24">
-              <Sparkles size={40} className="sm:size-12" />
-            </div>
-            <h3 className="mt-8 text-xl font-black tracking-tight sm:text-2xl">AI Goal Coach</h3>
-            <p className="mt-2 max-w-xs text-sm font-medium text-muted-foreground sm:max-w-sm">
-              Personalized guidance and task optimization for this specific goal is coming soon.
-            </p>
-            <Button asChild size="lg" className="mt-8 rounded-2xl font-bold shadow-xl shadow-primary/20">
-              <Link href="/chat">Chat with Coach</Link>
-            </Button>
-          </Card>
+        <TabsContent value="coach" className="space-y-6">
+          <GoalCoachChat goalId={id} goalTitle={goal.title} />
+          <GoalCoach
+            goalId={id}
+            onGenerated={() => {
+              void queryClient.invalidateQueries({ queryKey: tasksKey })
+              void queryClient.invalidateQueries({ queryKey: goalKey })
+              changeTab("tasks")
+            }}
+          />
         </TabsContent>
 
         {isOwner && (

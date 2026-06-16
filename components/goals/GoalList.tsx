@@ -226,9 +226,9 @@ export function GoalList({
 
   if (goals.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 rounded-[2.5rem] border-2 border-dashed border-border bg-card/30 py-24 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-blue-500/10 text-blue-600 dark:text-blue-400">
-          <Target size={36} strokeWidth={1.5} />
+      <div className="flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 border-dashed border-border bg-card/30 px-4 py-10 text-center sm:gap-6 sm:py-24">
+        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-blue-500/10 text-blue-600 dark:text-blue-400 sm:h-20 sm:w-20 sm:rounded-[2rem]">
+          <Target size={32} strokeWidth={1.5} className="sm:size-9" />
         </div>
         <div>
           <h3 className="text-xl font-black tracking-tight">No goals found</h3>

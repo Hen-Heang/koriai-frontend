@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Gauge,
   GraduationCap,
+  Menu,
   Target,
   // Headphones, // hidden Listening nav
   // History, // moved into Settings page
@@ -27,6 +28,12 @@ import { motion, AnimatePresence } from "motion/react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { UserAvatar } from "@/components/ui/UserAvatar"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { isAuthenticated } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
@@ -70,14 +77,20 @@ const allLinks = navSections.flatMap((section) => section.links)
 
 // Goals sits in the center slot so it reads as the app's primary action.
 // AI Coach sits beside it so the chat tutor is one tap away on mobile.
-// (Reading stays in the desktop sidebar — it reads better on a large screen.)
+// The 5th slot is a "More" sheet that exposes every remaining feature, so
+// nothing in the sidebar is unreachable on a phone.
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
   { href: "/goals", label: "Goals", icon: Target },
   { href: "/chat", label: "AI", icon: MessageCircle },
-  { href: "/interview", label: "Exam", icon: GraduationCap },
 ]
+
+// Everything not already a bottom tab — surfaced through the "More" sheet so
+// mobile users can still reach Reading, Daily Phrase, Exam Prep, Settings, etc.
+const moreLinks = allLinks.filter(
+  (link) => !bottomTabs.some((tab) => tab.href === link.href)
+)
 
 export default function MainLayout({
   children,
@@ -85,10 +98,18 @@ export default function MainLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
-  
-  const activeTabIndex = bottomTabs.findIndex(tab => 
-    pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+  const [moreOpen, setMoreOpen] = useState(false)
+
+  // Total bottom-bar slots = the link tabs plus the trailing "More" slot.
+  const slotCount = bottomTabs.length + 1
+  const primaryTabIndex = bottomTabs.findIndex(
+    (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
   )
+  const onMoreRoute = moreLinks.some(
+    (link) => pathname === link.href || pathname.startsWith(`${link.href}/`)
+  )
+  // When the active route lives behind "More", highlight the More slot (last).
+  const activeTabIndex = primaryTabIndex !== -1 ? primaryTabIndex : onMoreRoute ? bottomTabs.length : -1
 
   const mounted = useSyncExternalStore(
     (callback) => {
@@ -371,11 +392,11 @@ export default function MainLayout({
                   <motion.div
                     className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-blue-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-blue-500/20 dark:bg-blue-400/10 dark:ring-blue-400/20"
                     initial={false}
-                    style={{ width: `calc((100% - 0.75rem) / ${bottomTabs.length})` }}
+                    style={{ width: `calc((100% - 0.75rem) / ${slotCount})` }}
                     animate={{
                       // % offsets resolve against the padding box, but the tabs sit
                       // inside the p-1.5 content box — offset by the 0.375rem padding.
-                      left: `calc(0.375rem + ${activeTabIndex} * (100% - 0.75rem) / ${bottomTabs.length})`,
+                      left: `calc(0.375rem + ${activeTabIndex} * (100% - 0.75rem) / ${slotCount})`,
                     }}
                     transition={{
                       type: "spring",
@@ -457,9 +478,73 @@ export default function MainLayout({
                   </Link>
                 )
               })}
+
+              {/* More — opens a sheet with every remaining feature. */}
+              <button
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                aria-label="More"
+                aria-haspopup="dialog"
+                className={cn(
+                  "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
+                  onMoreRoute
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground/50 hover:text-muted-foreground"
+                )}
+              >
+                <div className="flex h-5.5 w-5.5 items-center justify-center">
+                  <Menu
+                    size={20}
+                    strokeWidth={onMoreRoute ? 2.8 : 2.2}
+                    className={cn(
+                      "transition-all duration-300",
+                      onMoreRoute ? "scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" : "scale-100"
+                    )}
+                  />
+                </div>
+                <span
+                  className={cn(
+                    "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                    onMoreRoute ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                  )}
+                >
+                  More
+                </span>
+              </button>
             </div>
           </div>
         </nav>
-      )}    </div>
+      )}
+
+      {/* Mobile "More" navigation sheet — full feature list for phones. */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="rounded-t-[2rem] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:hidden">
+          <SheetHeader>
+            <SheetTitle>All features</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-2 gap-2 px-4 pb-2">
+            {moreLinks.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || pathname.startsWith(`${href}/`)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold transition-all active:scale-[0.98]",
+                    active
+                      ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                      : "border-border bg-accent/5 text-foreground hover:bg-accent/40"
+                  )}
+                >
+                  <Icon size={20} strokeWidth={2.5} className="shrink-0" />
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   )
 }
