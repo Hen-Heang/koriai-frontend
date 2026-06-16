@@ -195,8 +195,13 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     // a second instead of one per token (which made replies stutter as they grew).
     let pending = ""
     let frame: number | null = null
+    // Cancels any scheduled frame and applies buffered tokens immediately, so
+    // every caller can just `flush()` without repeating the cancel dance.
     const flush = () => {
-      frame = null
+      if (frame !== null) {
+        cancelAnimationFrame(frame)
+        frame = null
+      }
       if (!pending) return
       const chunk = pending
       pending = ""
@@ -217,10 +222,6 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
           // user message already shown
         },
         (assistantMessageId) => {
-          if (frame !== null) {
-            cancelAnimationFrame(frame)
-            frame = null
-          }
           flush()
           setMessages((current) =>
             current.map((m) => (m.id === streamingId ? { ...m, id: assistantMessageId } : m))
@@ -229,17 +230,10 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
         controller.signal,
       )
       // Flush any tail tokens if the stream ended without a `done` event.
-      if (frame !== null) {
-        cancelAnimationFrame(frame)
-        frame = null
-      }
       flush()
       setError("")
     } catch (err) {
-      if (frame !== null) {
-        cancelAnimationFrame(frame)
-        frame = null
-      }
+      flush()
       // Aborted (navigation/new send) — drop the placeholder silently.
       if (err instanceof DOMException && err.name === "AbortError") {
         setMessages((current) => current.filter((m) => m.id !== streamingId))

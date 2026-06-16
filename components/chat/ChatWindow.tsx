@@ -15,16 +15,16 @@ import { ttsApi } from "@/lib/api"
 import type { ChatMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
+const SUBTITLE_LINE = /^(EN|RR|FIX)\s*:/i
+const HANGUL = /[가-힣]/
+
 // Pulls just the Korean (Hangul-bearing) lines out of a coach reply so TTS
 // speaks the spoken part, not the EN:/RR:/FIX: subtitle lines.
 function extractKoreanForSpeech(content: string): string {
   return content
     .split("\n")
-    .filter((line) => {
-      const t = line.trim()
-      if (!t || /^(EN|RR|FIX)\s*:/i.test(t)) return false
-      return /[가-힣]/.test(t)
-    })
+    .map((line) => line.trim())
+    .filter((line) => HANGUL.test(line) && !SUBTITLE_LINE.test(line))
     .join(" ")
     .replace(/\*\*/g, "")
     .trim()
@@ -122,6 +122,10 @@ export function ChatWindow({
   }
 
   // Auto-play the coach's Korean reply once streaming finishes (voice mode only).
+  // `messages` is read through a ref so this effect fires only on the
+  // streaming→idle transition, not on every buffered token flush mid-stream.
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
   const prevStreamingRef = useRef(false)
   const lastSpokenIdRef = useRef<string | null>(null)
   useEffect(() => {
@@ -129,16 +133,27 @@ export function ChatWindow({
     prevStreamingRef.current = isStreaming
     if (!justFinished || !voiceMode) return
 
-    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")
+    let lastAssistant: ChatMessage | undefined
+    for (let i = messagesRef.current.length - 1; i >= 0; i--) {
+      if (messagesRef.current[i].role === "assistant") {
+        lastAssistant = messagesRef.current[i]
+        break
+      }
+    }
     if (!lastAssistant || lastAssistant.id === lastSpokenIdRef.current) return
     const korean = extractKoreanForSpeech(lastAssistant.content)
     if (!korean) return
     lastSpokenIdRef.current = lastAssistant.id
     ttsApi
       .speak(korean, "nova")
-      .then((url) => new Audio(url).play())
+      .then((url) => {
+        const audio = new Audio(url)
+        // Free the blob URL once playback ends so it doesn't leak per reply.
+        audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true })
+        return audio.play().catch(() => URL.revokeObjectURL(url))
+      })
       .catch(() => {})
-  }, [isStreaming, voiceMode, messages])
+  }, [isStreaming, voiceMode])
 
   // Seed the composer once when arriving via a deep link (e.g. dashboard
   // "Correction" card → /chat?prompt=...) so the user lands ready to paste.
