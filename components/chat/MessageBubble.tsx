@@ -81,7 +81,7 @@ function renderInline(raw: string, isUserBubble = false, peek = true) {
               "rounded-md px-1.5 py-0.5 font-mono text-[0.85em]",
               isUserBubble
                 ? "bg-white/20 text-white"
-                : "bg-muted text-foreground ring-1 ring-border/50"
+                : "bg-muted/70 text-foreground"
             )}
           >
             {token.text}
@@ -180,44 +180,48 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
       case "heading": {
         const Tag = (`h${block.level}`) as "h1" | "h2" | "h3"
         return (
-          <Tag key={idx} className={cn(
-            "font-black tracking-tight",
-            block.level === 1 ? "text-lg" : "text-base",
-            "mt-2 mb-1"
-          )}>
+          <Tag
+            key={idx}
+            className={cn(
+              "font-semibold tracking-tight text-foreground",
+              // Calm hierarchy — closer to GPT/Gemini than the old font-black.
+              block.level === 1 ? "mt-6 text-[1.15rem]" : "mt-5 text-[1.05rem]",
+              "mb-2"
+            )}
+          >
             {renderInline(block.text, isUserBubble, peek)}
           </Tag>
         )
       }
       case "bullet":
         return (
-          <ul key={idx} className="space-y-1.5 pl-4 text-[14px]">
+          <ul key={idx} className="mt-3 space-y-2 text-[15px]">
             {block.items.map((item, i) => (
-              <li key={i} className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-40" />
-                <span className="leading-relaxed">{renderInline(item, isUserBubble, peek)}</span>
+              <li key={i} className="flex gap-3">
+                <span className="mt-[0.7em] h-[5px] w-[5px] shrink-0 rounded-full bg-current opacity-30" />
+                <span className="leading-7">{renderInline(item, isUserBubble, peek)}</span>
               </li>
             ))}
           </ul>
         )
       case "ordered":
         return (
-          <ol key={idx} className="space-y-1.5 pl-4 text-[14px]">
+          <ol key={idx} className="mt-3 space-y-2 text-[15px]">
             {block.items.map((item, i) => (
-              <li key={i} className="flex gap-2.5">
-                <span className="shrink-0 font-black text-[10px] opacity-40 mt-1">
-                  {i + 1}
+              <li key={i} className="flex gap-3">
+                <span className="mt-px w-4 shrink-0 text-right text-[13px] font-semibold tabular-nums text-muted-foreground/60">
+                  {i + 1}.
                 </span>
-                <span className="leading-relaxed">{renderInline(item, isUserBubble, peek)}</span>
+                <span className="leading-7">{renderInline(item, isUserBubble, peek)}</span>
               </li>
             ))}
           </ol>
         )
       case "hr":
-        return <hr key={idx} className="border-border/40 my-4" />
+        return <hr key={idx} className="my-6 border-border/50" />
       case "paragraph":
         return (
-          <p key={idx} className="text-[14px] font-medium leading-relaxed">
+          <p key={idx} className="mt-4 text-[15px] leading-7">
             {renderInline(block.text, isUserBubble, peek)}
           </p>
         )
@@ -304,10 +308,8 @@ function MessageBubbleImpl({
              </span>
           </div>
 
-          <article className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
-            <div className="space-y-4">
-              {body}
-            </div>
+          <article className="max-w-none text-foreground [&>*:first-child]:mt-0">
+            {body}
           </article>
 
           {/* Correction card - High End Inline */}
