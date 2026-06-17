@@ -318,14 +318,23 @@ export default function ReadingUnitPage() {
                 key={i}
                 className="rounded-[1.8rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40 sm:p-6"
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-3">
+                  {/* Numbered point — gives each paragraph a stable reference
+                      ("point 3") so notes taken while reading are easy to find
+                      again, and shows position in the passage (4 of 7). */}
+                  <span
+                    aria-label={`Point ${i + 1}`}
+                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-[12px] font-black tabular-nums text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400"
+                  >
+                    {i + 1}
+                  </span>
                   <p className="flex-1 text-[15px] font-medium leading-8 text-foreground sm:text-base sm:leading-9">
                     <PeekableText text={p.korean} />
                   </p>
                   <SpeakButton text={p.korean} className="mt-1 shrink-0" />
                 </div>
 
-                <div className="mt-3 border-t border-border/60 pt-3">
+                <div className="mt-3 border-t border-border/60 pt-3 sm:pl-10">
                   <button
                     type="button"
                     onClick={() => toggleTranslation(i)}
@@ -380,7 +389,7 @@ export default function ReadingUnitPage() {
         )}
 
         <div className="grid gap-2 sm:grid-cols-2">
-          {unit.vocab.map((v) => {
+          {unit.vocab.map((v, vi) => {
             const saved = savedWords.has(v.term)
             return (
               <div
@@ -389,6 +398,14 @@ export default function ReadingUnitPage() {
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
+                    {/* Numbered so a word is referenceable ("vocab 5"), matching
+                        the reading points and quiz numbering. */}
+                    <span
+                      aria-label={`Word ${vi + 1}`}
+                      className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-md bg-emerald-500/10 px-1 text-[10px] font-black tabular-nums text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400"
+                    >
+                      {vi + 1}
+                    </span>
                     <p className="font-extrabold text-foreground">{v.term}</p>
                     <SpeakButton text={v.term} />
                   </div>

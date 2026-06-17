@@ -204,6 +204,43 @@ export function getInterviewTopic(id: string): InterviewTopic {
   )
 }
 
+// ── Q&A preparation ───────────────────────────────────────────────────────
+// The exam is spoken Q&A, so beyond the written script the candidate drafts an
+// answer to each likely question. Answers are keyed by item id and ride in the
+// same `values` map the script uses, so they autosave + sync with no new wiring.
+
+export interface QAItem {
+  id: string
+  questionKo: string
+  questionEn: string
+}
+
+/** Likely exam questions for the topic, seeded as the starting Q&A list. */
+export function getSeedQA(topic: InterviewTopic): QAItem[] {
+  return (topic.prep?.sampleQuestions ?? []).map((q, i) => ({
+    id: `qa-seed-${i}`,
+    questionKo: q.ko,
+    questionEn: q.en,
+  }))
+}
+
+/**
+ * Renders the Q&A section of the exportable document. Skips items with neither a
+ * question nor an answer so blank rows don't clutter what the mentor receives.
+ */
+export function buildQADocument(items: QAItem[], answers: Record<string, string>): string {
+  const blocks: string[] = []
+  for (const item of items) {
+    const question = item.questionKo.trim()
+    const answer = (answers[item.id] ?? "").trim()
+    if (!question && !answer) continue
+    if (question) blocks.push(`Q: ${question}`)
+    blocks.push(answer ? `A: ${answer}` : "A: (작성 예정)")
+    blocks.push("")
+  }
+  return blocks.join("\n").trim()
+}
+
 /**
  * Assembles the written sections into one submittable document, skipping empty
  * sections, with a Korean heading per section.

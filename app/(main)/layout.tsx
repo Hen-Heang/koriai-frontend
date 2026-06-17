@@ -50,12 +50,14 @@ const navSections = [
   },
   {
     label: "Learn",
+    // Exam tools first (Vocab · Exam Prep · Listening) — the daily K-Specialist
+    // study loop — then the wider reading/coach surfaces.
     links: [
       { href: "/vocab", label: "Vocabulary", icon: BookOpen },
-      { href: "/reading", label: "Reading", icon: BookOpenText },
-      { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
       { href: "/listening", label: "Listening", icon: Headphones },
+      { href: "/reading", label: "Reading", icon: BookOpenText },
+      { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
       // AI Coach now hosts Chat + Analyze + Generate as tabs (see /chat).
       { href: "/chat", label: "AI Coach", icon: MessageCircle },
       // ── built but hidden — restore by uncommenting (icons imported above) ──
@@ -75,14 +77,17 @@ const navSections = [
 // Flat list kept for the desktop top-bar title lookup.
 const allLinks = navSections.flatMap((section) => section.links)
 
-// Goals sits in the center slot so it reads as the app's primary action.
-// AI Coach sits beside it so the chat tutor is one tap away on mobile.
-// The 5th slot is a "More" sheet that exposes every remaining feature, so
-// nothing in the sidebar is unreachable on a phone.
+// Six-slot bottom bar: five primary surfaces + a trailing "More" sheet. Home
+// (Dashboard) leads, then the daily practice surfaces. A flat, uniform bar (no
+// elevated center pill) — that treatment only balances on an odd slot count,
+// and tab spacing is tightened so all six fit comfortably on a phone.
+// "More" still exposes everything else (Reading, Daily Phrase, Listening,
+// Settings), so nothing is unreachable.
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
   { href: "/goals", label: "Goals", icon: Target },
+  { href: "/interview", label: "Exam", icon: GraduationCap },
   { href: "/chat", label: "AI", icon: MessageCircle },
 ]
 
@@ -383,20 +388,20 @@ export default function MainLayout({
           }}
           aria-hidden={isKeyboardOpen}
         >
-          <div className="mx-auto max-w-md px-3.5">
-            <div className="relative flex items-center justify-around rounded-[2rem] border border-border/80 bg-background/70 p-1.5 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-[32px] ring-1 ring-black/[0.04] dark:border-white/15 dark:bg-slate-900/60 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:ring-white/10">
+          <div className="mx-auto max-w-md px-2 sm:px-3.5">
+            <div className="relative flex items-center justify-around rounded-[1.75rem] border border-border/80 bg-background/70 p-1 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-[32px] ring-1 ring-black/[0.04] dark:border-white/15 dark:bg-slate-900/60 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:ring-white/10">
               
               {/* Sliding Active Indicator (Telegram-style) */}
               <AnimatePresence initial={false}>
                 {activeTabIndex !== -1 && (
                   <motion.div
-                    className="absolute z-0 h-[calc(100%-12px)] rounded-[1.45rem] bg-blue-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-blue-500/20 dark:bg-blue-400/10 dark:ring-blue-400/20"
+                    className="absolute z-0 h-[calc(100%-8px)] rounded-[1.35rem] bg-blue-500/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ring-1 ring-blue-500/20 dark:bg-blue-400/10 dark:ring-blue-400/20"
                     initial={false}
-                    style={{ width: `calc((100% - 0.75rem) / ${slotCount})` }}
+                    style={{ width: `calc((100% - 0.5rem) / ${slotCount})` }}
                     animate={{
                       // % offsets resolve against the padding box, but the tabs sit
-                      // inside the p-1.5 content box — offset by the 0.375rem padding.
-                      left: `calc(0.375rem + ${activeTabIndex} * (100% - 0.75rem) / ${slotCount})`,
+                      // inside the p-1 content box — offset by the 0.25rem padding.
+                      left: `calc(0.25rem + ${activeTabIndex} * (100% - 0.5rem) / ${slotCount})`,
                     }}
                     transition={{
                       type: "spring",
@@ -410,56 +415,21 @@ export default function MainLayout({
 
               {bottomTabs.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(`${href}/`)
-                // Goals is the app's primary action — render it as an elevated
-                // center pill so it stands out from the other tabs.
-                const isPrimary = href === "/goals"
-
-                if (isPrimary) {
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      aria-label={label}
-                      className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90"
-                    >
-                      <div
-                        className={cn(
-                          "-mt-6 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg ring-4 ring-background transition-all duration-300 dark:ring-slate-900",
-                          active
-                            ? "scale-105 bg-blue-600 text-white shadow-blue-600/40"
-                            : "bg-blue-500 text-white shadow-blue-500/30 hover:scale-105"
-                        )}
-                      >
-                        <Icon size={22} strokeWidth={2.6} />
-                      </div>
-                      <span
-                        className={cn(
-                          "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
-                          active
-                            ? "font-black text-blue-600 opacity-100 dark:text-blue-400"
-                            : "font-bold text-muted-foreground/60 opacity-80"
-                        )}
-                      >
-                        {label}
-                      </span>
-                    </Link>
-                  )
-                }
-
                 return (
                   <Link
                     key={href}
                     href={href}
+                    aria-label={label}
                     className={cn(
-                      "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
+                      "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 transition-all duration-300 active:scale-90",
                       active
                         ? "text-blue-600 dark:text-blue-400"
                         : "text-muted-foreground/50 hover:text-muted-foreground"
                     )}
                   >
-                    <div className="flex h-5.5 w-5.5 items-center justify-center">
+                    <div className="flex h-5 w-5 items-center justify-center">
                       <Icon
-                        size={20}
+                        size={18}
                         strokeWidth={active ? 2.8 : 2.2}
                         className={cn(
                           "transition-all duration-300",
@@ -469,7 +439,7 @@ export default function MainLayout({
                     </div>
                     <span
                       className={cn(
-                        "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                        "w-full truncate px-0.5 text-center text-[8.5px] uppercase tracking-[0.04em] leading-none transition-all duration-300 sm:text-[9px] sm:tracking-[0.08em]",
                         active ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
                       )}
                     >
@@ -486,15 +456,15 @@ export default function MainLayout({
                 aria-label="More"
                 aria-haspopup="dialog"
                 className={cn(
-                  "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-all duration-300 active:scale-90",
+                  "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 transition-all duration-300 active:scale-90",
                   onMoreRoute
                     ? "text-blue-600 dark:text-blue-400"
                     : "text-muted-foreground/50 hover:text-muted-foreground"
                 )}
               >
-                <div className="flex h-5.5 w-5.5 items-center justify-center">
+                <div className="flex h-5 w-5 items-center justify-center">
                   <Menu
-                    size={20}
+                    size={18}
                     strokeWidth={onMoreRoute ? 2.8 : 2.2}
                     className={cn(
                       "transition-all duration-300",
@@ -504,7 +474,7 @@ export default function MainLayout({
                 </div>
                 <span
                   className={cn(
-                    "truncate px-1 text-[9px] uppercase tracking-[0.08em] leading-none transition-all duration-300 sm:tracking-[0.12em]",
+                    "w-full truncate px-0.5 text-center text-[8.5px] uppercase tracking-[0.04em] leading-none transition-all duration-300 sm:text-[9px] sm:tracking-[0.08em]",
                     onMoreRoute ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
                   )}
                 >

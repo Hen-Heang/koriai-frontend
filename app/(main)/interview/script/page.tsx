@@ -19,6 +19,7 @@ import {
   Download,
   FileText,
   ListTree,
+  MessagesSquare,
   Plus,
   Trash2,
 } from "lucide-react"
@@ -26,7 +27,13 @@ import {
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Button } from "@/components/ui/button"
 import { interviewApi } from "@/lib/api"
-import { buildScriptDocument, INTERVIEW_TOPICS } from "@/lib/interview"
+import {
+  buildQADocument,
+  buildScriptDocument,
+  getSeedQA,
+  INTERVIEW_TOPICS,
+  type QAItem,
+} from "@/lib/interview"
 import { cn } from "@/lib/utils"
 
 const topic = INTERVIEW_TOPICS[0]
@@ -35,8 +42,25 @@ const STORAGE_KEY = `koriai-interview-script:${topic.id}`
 // so the existing per-topic text payload keeps syncing to the backend unchanged.
 const CUSTOM_KEY = `koriai-interview-script-custom:${topic.id}`
 
+// Custom (user-added) Q&A questions. Like custom sections, the question text is
+// frontend-only; the ANSWER rides in `values` (keyed by the item id) and syncs.
+const QA_CUSTOM_KEY = `koriai-interview-qa-custom:${topic.id}`
+
 /** A section the candidate adds themselves, beyond the fixed exam outline. */
 type CustomSection = { id: string; title: string }
+
+/** A Q&A question the candidate adds, beyond the seeded likely questions. */
+type CustomQA = { id: string; questionKo: string }
+
+function loadInitialQA(): CustomQA[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = window.localStorage.getItem(QA_CUSTOM_KEY)
+    return raw ? (JSON.parse(raw) as CustomQA[]) : []
+  } catch {
+    return []
+  }
+}
 
 function countWords(text: string) {
   const trimmed = text.trim()
@@ -121,6 +145,9 @@ export default function InterviewScriptPage() {
   const [copied, setCopied] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("")
   const [customSections, setCustomSections] = useState<CustomSection[]>(loadInitialCustom)
+  const [mode, setMode] = useState<"script" | "qa">("script")
+  const seedQA = useMemo(() => getSeedQA(topic), [])
+  const [customQA, setCustomQA] = useState<CustomQA[]>(loadInitialQA)
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -183,19 +210,49 @@ export default function InterviewScriptPage() {
     [customSections, values]
   )
 
-  const fullDocument = useMemo(
+  // Seeded likely questions + the candidate's own, in display order.
+  const allQA = useMemo<QAItem[]>(
+    () => [
+      ...seedQA,
+      ...customQA.map((q) => ({ id: q.id, questionKo: q.questionKo, questionEn: "" })),
+    ],
+    [seedQA, customQA]
+  )
+
+  const scriptDocument = useMemo(
     () => buildScriptDocument(topic, values, effectiveCustom),
     [values, effectiveCustom]
   )
+  const qaDocument = useMemo(() => buildQADocument(allQA, values), [allQA, values])
+
+  // Mentor / submission export bundles the script and the Q&A prep together.
+  const exportDocument = useMemo(() => {
+    const parts = [scriptDocument]
+    if (qaDocument) parts.push(`【 예상 질문 & 답변 (Q&A) 】\n\n${qaDocument}`)
+    return parts.filter(Boolean).join("\n\n")
+  }, [scriptDocument, qaDocument])
+
+  // Counts reflect the tab you're on so the script's length isn't skewed by Q&A.
+  const countedKeys = useMemo(() => {
+    if (mode === "qa") return new Set(allQA.map((q) => q.id))
+    return new Set([...outline.map((s) => s.id), ...effectiveCustom.map((s) => s.id)])
+  }, [mode, allQA, outline, effectiveCustom])
+
   const totalWords = useMemo(
-    () => Object.values(values).reduce((sum, text) => sum + countWords(text), 0),
-    [values]
+    () =>
+      Object.entries(values)
+        .filter(([key]) => countedKeys.has(key))
+        .reduce((sum, [, text]) => sum + countWords(text), 0),
+    [values, countedKeys]
   )
   // Korean script length is usually judged by 글자 수 (characters, spaces
   // excluded) rather than whitespace-delimited words, so surface both.
   const totalChars = useMemo(
-    () => Object.values(values).reduce((sum, text) => sum + text.replace(/\s/g, "").length, 0),
-    [values]
+    () =>
+      Object.entries(values)
+        .filter(([key]) => countedKeys.has(key))
+        .reduce((sum, [, text]) => sum + text.replace(/\s/g, "").length, 0),
+    [values, countedKeys]
   )
 
   // Saving happens here in the change handler (not in an effect) so there is no
@@ -269,10 +326,47 @@ export default function InterviewScriptPage() {
     scheduleSync(next)
   }
 
-  async function copyAll() {
-    if (!fullDocument) return
+  // ── Custom Q&A questions ─────────────────────────────────────────────────
+  function persistQA(next: CustomQA[]) {
+    setCustomQA(next)
     try {
-      await navigator.clipboard.writeText(fullDocument)
+      window.localStorage.setItem(QA_CUSTOM_KEY, JSON.stringify(next))
+    } catch {
+      // Ignore quota / private-mode failures.
+    }
+  }
+
+  function addCustomQA() {
+    const id = `qa-${crypto.randomUUID()}`
+    persistQA([...customQA, { id, questionKo: "" }])
+    setTimeout(() => document.getElementById(`qa-q-${id}`)?.focus(), 0)
+  }
+
+  function renameCustomQA(id: string, questionKo: string) {
+    persistQA(customQA.map((q) => (q.id === id ? { ...q, questionKo } : q)))
+  }
+
+  function removeCustomQA(id: string) {
+    persistQA(customQA.filter((q) => q.id !== id))
+    if (values[id] === undefined) return
+    // Drop its answer too so it doesn't linger in the synced payload.
+    const next = { ...values }
+    delete next[id]
+    setValues(next)
+    setSynced(false)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setSavedAt(new Date())
+    } catch {
+      // ignore
+    }
+    scheduleSync(next)
+  }
+
+  async function copyAll() {
+    if (!exportDocument) return
+    try {
+      await navigator.clipboard.writeText(exportDocument)
       setCopied(true)
       if (copyTimeout.current) clearTimeout(copyTimeout.current)
       copyTimeout.current = setTimeout(() => setCopied(false), 2000)
@@ -282,11 +376,11 @@ export default function InterviewScriptPage() {
   }
 
   function downloadTxt() {
-    if (!fullDocument) return
+    if (!exportDocument) return
     // Prefix a UTF-8 BOM so the Korean text is detected correctly by Windows
     // apps (한글/Notepad/Word) the recipient is likely to open it in — without
     // it, older editors can misread the encoding and show mojibake.
-    const blob = new Blob(["\uFEFF" + fullDocument], { type: "text/plain;charset=utf-8" })
+    const blob = new Blob(["\uFEFF" + exportDocument], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
     anchor.href = url
@@ -296,9 +390,10 @@ export default function InterviewScriptPage() {
   }
 
   function clearAll() {
-    if (!window.confirm("Clear the whole script? This cannot be undone.")) return
+    if (!window.confirm("Clear the whole script and Q&A? This cannot be undone.")) return
     setValues({})
     persistCustom([])
+    persistQA([])
     setSynced(false)
     try {
       window.localStorage.removeItem(STORAGE_KEY)
@@ -330,6 +425,7 @@ export default function InterviewScriptPage() {
     })),
   ]
   const completedSections = allSections.filter((s) => (view[s.id] ?? "").trim()).length
+  const answeredQA = allQA.filter((q) => (view[q.id] ?? "").trim()).length
 
   // Highlight the section nearest the top of the viewport in the outline rail,
   // the way Google Docs tracks the cursor's heading.
@@ -407,7 +503,7 @@ export default function InterviewScriptPage() {
               size="sm"
               variant="outline"
               onClick={copyAll}
-              disabled={!fullDocument}
+              disabled={!exportDocument}
               className="h-8 rounded-lg font-bold disabled:opacity-40"
             >
               {copied ? (
@@ -424,7 +520,7 @@ export default function InterviewScriptPage() {
               size="sm"
               variant="outline"
               onClick={downloadTxt}
-              disabled={!fullDocument}
+              disabled={!exportDocument}
               className="h-8 rounded-lg font-bold disabled:opacity-40"
             >
               <Download size={15} className="sm:mr-1.5" /> <span className="hidden sm:inline">Download</span>
@@ -433,7 +529,7 @@ export default function InterviewScriptPage() {
               size="sm"
               variant="outline"
               onClick={clearAll}
-              disabled={!fullDocument}
+              disabled={!exportDocument}
               className="h-8 rounded-lg border-destructive/30 font-bold text-destructive hover:bg-destructive/5 disabled:opacity-40"
             >
               <Trash2 size={15} />
@@ -444,7 +540,35 @@ export default function InterviewScriptPage() {
 
       {/* ── Canvas: outline rail + paper ── */}
       <div className="min-h-[calc(100dvh-3.25rem)] bg-[#f9fbfd] px-2 py-6 dark:bg-black/40 sm:px-6 sm:py-10">
-        <div className="mx-auto flex max-w-[1180px] justify-center gap-6 xl:gap-8">
+        <div className="mx-auto max-w-[1180px]">
+          {/* Script | Q&A tabs */}
+          <div className="mb-6 flex justify-center">
+            <div className="inline-flex items-center gap-1 rounded-2xl border border-border/70 bg-background p-1 shadow-sm dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => setMode("script")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-black uppercase tracking-wide transition-all",
+                  mode === "script" ? "bg-blue-600 text-white shadow" : "text-muted-foreground/70 hover:text-foreground"
+                )}
+              >
+                <FileText size={14} strokeWidth={2.6} /> Script
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("qa")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-black uppercase tracking-wide transition-all",
+                  mode === "qa" ? "bg-blue-600 text-white shadow" : "text-muted-foreground/70 hover:text-foreground"
+                )}
+              >
+                <MessagesSquare size={14} strokeWidth={2.6} /> Q&amp;A Prep
+              </button>
+            </div>
+          </div>
+
+          {mode === "script" ? (
+          <div className="flex justify-center gap-6 xl:gap-8">
           {/* Document outline (Docs left panel) */}
           <aside className="hidden w-56 shrink-0 lg:block">
             <div className="sticky top-20">
@@ -630,6 +754,88 @@ export default function InterviewScriptPage() {
               </button>
             </div>
           </article>
+          </div>
+          ) : (
+            <article className="mx-auto w-full max-w-[816px] rounded-sm bg-white px-6 py-10 shadow-[0_1px_3px_rgba(60,64,67,0.15),0_4px_24px_rgba(60,64,67,0.1)] ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10 sm:px-14 sm:py-16 lg:px-[96px]">
+              <header className="border-b border-border/60 pb-6">
+                <h1 className="text-[1.7rem] font-black leading-tight tracking-tight text-foreground sm:text-3xl">
+                  예상 질문 &amp; 답변 (Q&amp;A)
+                </h1>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">
+                  Draft an answer to each likely question. Answers autosave and export together with your script.
+                </p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
+                  {answeredQA}/{allQA.length} answered · {totalWords} words · {totalChars}자
+                </p>
+              </header>
+
+              <div className="mt-8 space-y-8">
+                {allQA.map((item, index) => {
+                  const isCustom = !item.id.startsWith("qa-seed-")
+                  const answer = view[item.id] ?? ""
+                  return (
+                    <section key={item.id} className="border-l-2 border-transparent pl-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          {isCustom ? (
+                            <input
+                              id={`qa-q-${item.id}`}
+                              value={item.questionKo}
+                              onChange={(e) => renameCustomQA(item.id, e.target.value)}
+                              placeholder="질문을 입력하세요…"
+                              className="w-full border-0 bg-transparent p-0 text-base font-black text-foreground outline-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:ring-0"
+                              lang="ko"
+                            />
+                          ) : (
+                            <>
+                              <p className="text-base font-black leading-snug text-foreground">
+                                {index + 1}. {item.questionKo}
+                              </p>
+                              {item.questionEn && (
+                                <p className="mt-0.5 text-sm font-medium text-muted-foreground/70">
+                                  {item.questionEn}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {item.questionKo.trim() && (
+                            <SpeakButton text={item.questionKo} title="Hear the question" className="shrink-0" />
+                          )}
+                          {isCustom && (
+                            <button
+                              type="button"
+                              onClick={() => removeCustomQA(item.id)}
+                              aria-label="Delete question"
+                              className="flex h-7 w-6 items-center justify-center rounded-md text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 size={14} strokeWidth={2.5} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 rounded-xl bg-muted/30 p-3">
+                        <DocTextarea
+                          value={answer}
+                          onChange={(text) => updateSection(item.id, text)}
+                          placeholder="여기에 답변을 작성하세요…"
+                        />
+                      </div>
+                    </section>
+                  )
+                })}
+
+                <button
+                  type="button"
+                  onClick={addCustomQA}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3.5 text-sm font-bold text-muted-foreground transition-colors hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-600"
+                >
+                  <Plus size={16} strokeWidth={2.5} /> Add your own question
+                </button>
+              </div>
+            </article>
+          )}
         </div>
       </div>
     </div>
