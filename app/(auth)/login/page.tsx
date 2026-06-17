@@ -35,7 +35,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const data = await authApi.login({ email, password })
-      setAuth(data.accessToken, data.userId, data.email)
+      setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
       router.push("/goals")
     } catch (error) {
       setError(getApiErrorMessage(error, "Invalid email or password."))

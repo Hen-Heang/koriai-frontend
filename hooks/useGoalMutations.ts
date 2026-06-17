@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import { goalsApi, getApiErrorMessage } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
+import { goalsQueryKey } from "@/hooks/useGoals"
 import type { Goal, GoalMetadata } from "@/lib/goals"
 
 // Combines Orbit's useCreateGoal + useUpdateGoal over the api layer. Supabase
@@ -49,14 +50,11 @@ function notifyAiSeam(options: GoalMutationOptions) {
 }
 
 export function useCreateGoal() {
-  const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
+  const userId = getUserId()
 
-  const createGoal = async (
-    payload: CreateGoalPayload,
-    options: GoalMutationOptions = {}
-  ): Promise<{ success: boolean; goal?: Goal; error?: string }> => {
-    setIsLoading(true)
-    try {
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateGoalPayload): Promise<Goal> => {
       if (getUserId() == null) throw new Error("No authenticated user found")
 
       const metadata: GoalMetadata = {
@@ -67,7 +65,7 @@ export function useCreateGoal() {
           : payload.metadata.start_date,
       }
 
-      const goal = await goalsApi.create({
+      return goalsApi.create({
         title: payload.title,
         description: payload.description || "",
         target_date: payload.no_duration ? null : toDateOnly(payload.target_date),
@@ -75,7 +73,18 @@ export function useCreateGoal() {
         status: "active",
         metadata,
       })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: goalsQueryKey(userId) })
+    },
+  })
 
+  const createGoal = async (
+    payload: CreateGoalPayload,
+    options: GoalMutationOptions = {}
+  ): Promise<{ success: boolean; goal?: Goal; error?: string }> => {
+    try {
+      const goal = await mutation.mutateAsync(payload)
       notifyAiSeam(options)
       toast.success("Success!", { description: "Your goal has been created." })
       return { success: true, goal }
@@ -84,24 +93,22 @@ export function useCreateGoal() {
       console.error("Error creating goal:", error)
       toast.error("Error creating goal", { description: message })
       return { success: false, error: message }
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  return { createGoal, isLoading }
+  return { createGoal, isLoading: mutation.isPending }
 }
 
 export function useUpdateGoal() {
-  const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
+  const userId = getUserId()
 
-  const updateGoal = async (
-    goalId: string,
-    payload: UpdateGoalPayload,
-    options: GoalMutationOptions = {}
-  ): Promise<{ success: boolean; goal?: Goal; message?: string }> => {
-    setIsLoading(true)
-    try {
+  const mutation = useMutation({
+    mutationFn: async (vars: {
+      goalId: string
+      payload: UpdateGoalPayload
+    }): Promise<Goal> => {
+      const { goalId, payload } = vars
       const metadata: GoalMetadata = {
         version: 1,
         ...payload.metadata,
@@ -110,14 +117,28 @@ export function useUpdateGoal() {
           : payload.metadata.start_date,
       }
 
-      const goal = await goalsApi.update(goalId, {
+      return goalsApi.update(goalId, {
         title: payload.title,
         description: payload.description || "",
         target_date: payload.no_duration ? null : toDateOnly(payload.target_date),
         no_duration: !!payload.no_duration,
         metadata,
       })
+    },
+    onSuccess: (_goal, vars) => {
+      void queryClient.invalidateQueries({ queryKey: goalsQueryKey(userId) })
+      // Prefix-matches ["goal", id], ["goal", id, "tasks"], ["goal", id, "members"].
+      void queryClient.invalidateQueries({ queryKey: ["goal", vars.goalId] })
+    },
+  })
 
+  const updateGoal = async (
+    goalId: string,
+    payload: UpdateGoalPayload,
+    options: GoalMutationOptions = {}
+  ): Promise<{ success: boolean; goal?: Goal; message?: string }> => {
+    try {
+      const goal = await mutation.mutateAsync({ goalId, payload })
       notifyAiSeam(options)
       toast.success("Success!", { description: "Your goal has been updated." })
       return { success: true, goal }
@@ -126,10 +147,8 @@ export function useUpdateGoal() {
       console.error("Error updating goal:", error)
       toast.error("Error", { description: message })
       return { success: false, message }
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  return { updateGoal, isLoading }
+  return { updateGoal, isLoading: mutation.isPending }
 }

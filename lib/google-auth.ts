@@ -43,6 +43,7 @@ export async function makeNonce(): Promise<{ nonce: string; hashedNonce: string 
 
 export interface GoogleSessionResult {
   accessToken: string
+  refreshToken: string
   userId: number
   email: string
 }
@@ -60,6 +61,6 @@ export async function handleGoogleCredential(
   _rawNonce: string,
 ): Promise<GoogleSessionResult> {
   const data = (await authApi.loginWithGoogle(credential)) as GoogleSessionResult
-  setAuth(data.accessToken, data.userId, data.email)
+  setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
   return data
 }

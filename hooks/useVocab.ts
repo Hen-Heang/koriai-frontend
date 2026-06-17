@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { vocabApi } from "@/lib/api"
+import { getUserId } from "@/lib/auth-store"
 import type { ReviewRating } from "@/lib/srs"
 import type { VocabItem } from "@/lib/types"
 
@@ -27,77 +28,63 @@ function normalizeWord(raw: unknown): VocabItem {
   }
 }
 
+interface VocabData {
+  savedWords: VocabItem[]
+  dueWords: VocabItem[]
+}
+
+async function fetchWords(): Promise<VocabData> {
+  const [savedData, dueData] = await Promise.all([
+    vocabApi.getSavedWords(),
+    vocabApi.getDueWords(),
+  ])
+
+  return {
+    savedWords: Array.isArray(savedData) ? savedData.map(normalizeWord) : [],
+    dueWords: Array.isArray(dueData) ? dueData.map(normalizeWord) : [],
+  }
+}
+
+export const vocabQueryKey = (userId?: number | null) => ["vocab", userId] as const
+
 export function useVocab() {
-  const [words, setWords] = useState<VocabItem[]>([])
-  const [dueToday, setDueToday] = useState<VocabItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const userId = getUserId()
+  const queryClient = useQueryClient()
+  const key = vocabQueryKey(userId)
 
-  async function fetchWords() {
-    const [savedData, dueData] = await Promise.all([
-      vocabApi.getSavedWords(),
-      vocabApi.getDueWords(),
-    ])
+  const { data, isPending, isError } = useQuery({
+    queryKey: key,
+    queryFn: fetchWords,
+    enabled: userId != null,
+  })
 
-    return {
-      savedWords: Array.isArray(savedData) ? savedData.map(normalizeWord) : [],
-      dueWords: Array.isArray(dueData) ? dueData.map(normalizeWord) : [],
-    }
-  }
+  const words = data?.savedWords ?? []
+  const dueToday = data?.dueWords ?? []
 
-  async function refresh() {
-    const { dueWords, savedWords } = await fetchWords()
-    setWords(savedWords)
-    setDueToday(dueWords)
-  }
-
-  useEffect(() => {
-    let active = true
-
-    fetchWords()
-      .then(({ dueWords, savedWords }) => {
-        if (!active) {
-          return
-        }
-        setWords(savedWords)
-        setDueToday(dueWords)
-      })
-      .catch(() => {
-        if (active) {
-          setError("Failed to load vocabulary data.")
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: key })
 
   const markReviewed = async (id: string) => {
     await vocabApi.markReviewed(id)
-    await refresh()
+    await invalidate()
   }
 
-  // Updates local state from the response instead of refetching the whole
-  // deck, so grading mid-session is instant.
+  // Patch the cache from the response instead of refetching the whole deck, so
+  // grading mid-session is instant.
   const rateWord = async (id: string, rating: ReviewRating) => {
     const updated = normalizeWord(await vocabApi.rate(id, rating))
-    setWords((prev) => prev.map((w) => (w.id === id ? updated : w)))
-    const today = new Date().toISOString().slice(0, 10)
-    setDueToday((prev) => {
-      const without = prev.filter((w) => w.id !== id)
-      return updated.nextReview <= today ? [...without, updated] : without
+    queryClient.setQueryData<VocabData>(key, (prev) => {
+      if (!prev) return prev
+      const savedWords = prev.savedWords.map((w) => (w.id === id ? updated : w))
+      const today = new Date().toISOString().slice(0, 10)
+      const without = prev.dueWords.filter((w) => w.id !== id)
+      const dueWords = updated.nextReview <= today ? [...without, updated] : without
+      return { savedWords, dueWords }
     })
   }
 
   const generate = async (category: string) => {
     const generated = await vocabApi.generate(category)
-    await refresh()
+    await invalidate()
     return generated
   }
 
@@ -106,24 +93,24 @@ export function useVocab() {
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => {
     await vocabApi.update(id, data)
-    await refresh()
+    await invalidate()
   }
 
   const deleteWord = async (id: string) => {
     await vocabApi.remove(id)
-    await refresh()
+    await invalidate()
   }
 
   const importList = async (category: string, text: string) => {
     const imported = await vocabApi.importList(category, text)
-    await refresh()
+    await invalidate()
     return Array.isArray(imported) ? imported.length : 0
   }
 
   return {
     dueToday,
-    error,
-    loading,
+    error: isError ? "Failed to load vocabulary data." : "",
+    loading: isPending,
     markReviewed,
     rateWord,
     generate,

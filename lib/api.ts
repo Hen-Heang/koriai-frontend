@@ -1,5 +1,5 @@
 import axios from "axios"
-import { clearAuth } from "@/lib/auth-store"
+import { clearAuth, getRefreshToken, setTokens } from "@/lib/auth-store"
 import type { Goal } from "@/lib/goals"
 import type { Task } from "@/lib/tasks"
 
@@ -41,14 +41,59 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Single-flight refresh: if several requests 401 at once, they all await the same
+// refresh call instead of firing N parallel refreshes (which would fail after the
+// first because the backend rotates/revokes the refresh token on use).
+let refreshPromise: Promise<string> | null = null
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) throw new Error("No refresh token")
+  // Use a bare axios call (not `api`) so this request skips the interceptors and
+  // can't recurse into another refresh.
+  const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken })
+  const data = res.data.data
+  setTokens(data.accessToken, data.refreshToken)
+  return data.accessToken as string
+}
+
+function forceLogout() {
+  clearAuth()
+  if (typeof window !== "undefined") {
+    window.location.href = "/login"
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      clearAuth()
-      if (typeof window !== "undefined") {
-        window.location.href = "/login"
+  async (error) => {
+    const original = error.config
+    const status = error.response?.status
+    const isRefreshCall = typeof original?.url === "string" && original.url.includes("/auth/refresh")
+
+    // On an expired access token, try to silently refresh once, then retry the
+    // original request. Only log out if the refresh itself fails.
+    if (status === 401 && original && !original._retry && !isRefreshCall) {
+      original._retry = true
+      try {
+        if (!refreshPromise) {
+          refreshPromise = refreshAccessToken().finally(() => {
+            refreshPromise = null
+          })
+        }
+        const newToken = await refreshPromise
+        original.headers = original.headers ?? {}
+        original.headers.Authorization = `Bearer ${newToken}`
+        return api(original)
+      } catch {
+        forceLogout()
+        return Promise.reject(error)
       }
+    }
+
+    // Refresh endpoint itself 401'd, or we already retried → session is truly dead.
+    if (status === 401) {
+      forceLogout()
     }
     return Promise.reject(error)
   }
@@ -73,6 +118,10 @@ export const authApi = {
 
   loginWithGoogle: (idToken: string) =>
     api.post("/auth/google", { idToken }).then((r) => r.data.data),
+
+  // Revoke the refresh token server-side so it can't be reused after logout.
+  logout: (refreshToken: string) =>
+    api.post("/auth/logout", { refreshToken }).then((r) => r.data.data),
 }
 
 // Chat

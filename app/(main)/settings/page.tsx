@@ -29,8 +29,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { userApi } from "@/lib/api"
-import { clearAuth, getUserId } from "@/lib/auth-store"
+import { authApi, userApi } from "@/lib/api"
+import { clearAuth, getRefreshToken, getUserId } from "@/lib/auth-store"
 import { refreshProfileImage } from "@/hooks/useProfileImage"
 import { usePush } from "@/hooks/usePush"
 import { cn } from "@/lib/utils"
@@ -212,7 +212,17 @@ export default function SettingsPage() {
     router.push("/dashboard")
   }
 
-  function handleSignOut() {
+  async function handleSignOut() {
+    // Best-effort server-side revoke so the refresh token can't be reused; clear
+    // local state and redirect regardless of whether the call succeeds.
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      try {
+        await authApi.logout(refreshToken)
+      } catch {
+        /* ignore — proceed with local logout */
+      }
+    }
     clearAuth()
     router.replace("/login")
   }

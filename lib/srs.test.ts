@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { formatInterval, previewIntervalDays } from "@/lib/srs"
+import { formatInterval, previewIntervalDays } from "./srs"
 
 const newCard = { easeFactor: 2.5, intervalDays: 0, repetitions: 0 }
 

@@ -1,8 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 
 import { progressApi } from "@/lib/api"
+import { getUserId } from "@/lib/auth-store"
 import type { DashboardStats, ProgressPoint } from "@/lib/types"
 
 const emptyStats: DashboardStats = {
@@ -16,22 +18,26 @@ const emptyStats: DashboardStats = {
   dueReviews: 0,
 }
 
-export function useProgress() {
-  const [chartData, setChartData] = useState<ProgressPoint[]>([])
-  const [stats, setStats] = useState<DashboardStats>(emptyStats)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+export const dashboardQueryKey = (userId?: number | null) => ["dashboard", userId] as const
 
-  useEffect(() => {
-    progressApi
-      .getDashboard()
-      .then((data) => {
-        setChartData(Array.isArray(data?.chartData) ? data.chartData : [])
-        setStats({ ...emptyStats, ...data?.stats })
-      })
-      .catch(() => setError("Failed to load progress data."))
-      .finally(() => setLoading(false))
-  }, [])
+export function useProgress() {
+  const userId = getUserId()
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: dashboardQueryKey(userId),
+    queryFn: () => progressApi.getDashboard(),
+    enabled: userId != null,
+  })
+
+  const chartData = useMemo<ProgressPoint[]>(
+    () => (Array.isArray(data?.chartData) ? data.chartData : []),
+    [data]
+  )
+
+  const stats = useMemo<DashboardStats>(
+    () => ({ ...emptyStats, ...data?.stats }),
+    [data]
+  )
 
   const dailyAverage = useMemo(
     () =>
@@ -47,8 +53,8 @@ export function useProgress() {
   return {
     chartData,
     dailyAverage,
-    error,
-    loading,
+    error: isError ? "Failed to load progress data." : "",
+    loading: isPending,
     stats,
   }
 }

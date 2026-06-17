@@ -1,10 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import { goalsApi, tasksApi, getApiErrorMessage } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
+import { goalsQueryKey } from "@/hooks/useGoals"
 import type { Task } from "@/lib/tasks"
 
 // Ported from Orbit src/hooks/useTodaysTasks.ts. Supabase queries are replaced
@@ -44,11 +46,14 @@ const isDueTodayOrCarriedOver = (t: Task, today: Date): boolean => {
   return endOk || !t.completed
 }
 
+export const todaysTasksQueryKey = (userId?: number | null) =>
+  ["tasks", "today", userId] as const
+
 export function useTodaysTasks() {
   const userId = getUserId()
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
-  const [availableGoals, setAvailableGoals] = useState<Array<{ id: string; title: string }>>([])
+  const queryClient = useQueryClient()
+  const tasksKey = todaysTasksQueryKey(userId)
+
   const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>([])
   const [newTaskTitle, setNewTaskTitle] = useState("")
   const [isAdding, setIsAdding] = useState(false)
@@ -56,12 +61,33 @@ export function useTodaysTasks() {
   // Ids changed by the last "mark all" — undo reverts exactly these.
   const [undoneIds, setUndoneIds] = useState<string[]>([])
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const selectionInitialized = useRef(false)
 
   useEffect(() => {
     return () => {
       if (undoTimer.current) clearTimeout(undoTimer.current)
     }
   }, [])
+
+  // Goals (shares cache with useGoals) provide the goal filter + titles.
+  const { data: goals = [] } = useQuery({
+    queryKey: goalsQueryKey(userId),
+    queryFn: () => goalsApi.list(),
+    enabled: userId != null,
+  })
+
+  // All of the user's tasks up to end-of-today; filtering to what's visible is
+  // derived client-side, so changing the goal selection never refetches.
+  const { data: rawTasks = [], isPending } = useQuery({
+    queryKey: tasksKey,
+    queryFn: () => tasksApi.range({ to: endOfTodayIso() }),
+    enabled: userId != null,
+  })
+
+  const availableGoals = useMemo(
+    () => goals.map((g) => ({ id: g.id, title: g.title })),
+    [goals]
+  )
 
   const persistSelection = useCallback(
     (ids: string[]) => {
@@ -75,67 +101,36 @@ export function useTodaysTasks() {
     [userId]
   )
 
-  // Fetch all the user's tasks up to end-of-today, then keep the ones due today
-  // (or carried over) whose goal is selected; standalone tasks are always shown.
-  const loadTasks = useCallback(async (selected: string[]): Promise<void> => {
-    const today = startOfToday()
-    const all = await tasksApi.range({ to: endOfTodayIso() })
-    const visible = all
-      .filter((t) => isDueTodayOrCarriedOver(t, today))
-      .filter((t) => !t.goal_id || selected.includes(t.goal_id))
-    setTasks(sortTasks(visible))
-  }, [])
-
-  const refetchForSelection = useCallback(
-    async (selected: string[]) => {
-      setLoading(true)
-      try {
-        await loadTasks(selected)
-      } catch (e) {
-        console.error("Error loading today's tasks:", e)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [loadTasks]
-  )
-
-  // Initial load: hydrate available goals + restore the saved goal selection.
+  // Once goals are known, restore the saved selection (default: all goals).
   useEffect(() => {
-    let cancelled = false
-    const init = async () => {
-      if (userId == null) {
-        setLoading(false)
-        return
-      }
-      setLoading(true)
-      try {
-        const goals = await goalsApi.list()
-        if (cancelled) return
-        const allIds = goals.map((g) => g.id)
-        setAvailableGoals(goals.map((g) => ({ id: g.id, title: g.title })))
+    if (selectionInitialized.current) return
+    if (userId == null || goals.length === 0) return
+    const allIds = goals.map((g) => g.id)
+    let initial: string[] = allIds.slice()
+    try {
+      const saved = localStorage.getItem(selectionKey(userId))
+      if (saved) initial = (JSON.parse(saved) as string[]).filter((id) => allIds.includes(id))
+    } catch {
+      /* ignore */
+    }
+    setSelectedGoalIds(initial)
+    selectionInitialized.current = true
+  }, [userId, goals])
 
-        let initial: string[] = allIds.slice()
-        try {
-          const saved = localStorage.getItem(selectionKey(userId))
-          if (saved) initial = (JSON.parse(saved) as string[]).filter((id) => allIds.includes(id))
-        } catch {
-          /* ignore */
-        }
-        if (cancelled) return
-        setSelectedGoalIds(initial)
-        await loadTasks(initial)
-      } catch (e) {
-        if (!cancelled) console.error("Error initializing today's tasks:", e)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    void init()
-    return () => {
-      cancelled = true
-    }
-  }, [userId, loadTasks])
+  // Derived visible list: due/carried-over + selected goal (standalone always shown), sorted.
+  const tasks = useMemo(() => {
+    const today = startOfToday()
+    const visible = rawTasks
+      .filter((t) => isDueTodayOrCarriedOver(t, today))
+      .filter((t) => !t.goal_id || selectedGoalIds.includes(t.goal_id))
+    return sortTasks(visible)
+  }, [rawTasks, selectedGoalIds])
+
+  const patchTasks = useCallback(
+    (updater: (list: Task[]) => Task[]) =>
+      queryClient.setQueryData<Task[]>(tasksKey, (prev) => updater(prev ?? [])),
+    [queryClient, tasksKey]
+  )
 
   const toggleGoal = useCallback(
     (goalId: string) => {
@@ -144,9 +139,8 @@ export function useTodaysTasks() {
         : [...selectedGoalIds, goalId]
       setSelectedGoalIds(next)
       persistSelection(next)
-      void refetchForSelection(next)
     },
-    [selectedGoalIds, persistSelection, refetchForSelection]
+    [selectedGoalIds, persistSelection]
   )
 
   const toggleAll = useCallback(() => {
@@ -155,8 +149,7 @@ export function useTodaysTasks() {
     const next = allSelected ? [] : allIds
     setSelectedGoalIds(next)
     persistSelection(next)
-    void refetchForSelection(next)
-  }, [availableGoals, selectedGoalIds, persistSelection, refetchForSelection])
+  }, [availableGoals, selectedGoalIds, persistSelection])
 
   const handleQuickAdd = useCallback(async () => {
     const title = newTaskTitle.trim()
@@ -174,32 +167,32 @@ export function useTodaysTasks() {
         is_anytime: true,
         completed: false,
       })
-      setTasks((prev) => sortTasks([...prev, created]))
+      patchTasks((prev) => [...prev, created])
       setNewTaskTitle("")
     } catch (e) {
       toast.error("Could not add task", { description: getApiErrorMessage(e, "Please try again.") })
     } finally {
       setIsAdding(false)
     }
-  }, [newTaskTitle, isAdding])
+  }, [newTaskTitle, isAdding, patchTasks])
 
   const handleToggleTaskCompletion = useCallback(
     async (taskId: string, currentStatus: boolean) => {
-      setTasks((prev) =>
-        sortTasks(prev.map((t) => (t.id === taskId ? { ...t, completed: !currentStatus } : t)))
+      patchTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, completed: !currentStatus } : t))
       )
       try {
         await tasksApi.update(taskId, { completed: !currentStatus })
       } catch (e) {
-        setTasks((prev) =>
-          sortTasks(prev.map((t) => (t.id === taskId ? { ...t, completed: currentStatus } : t)))
+        patchTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, completed: currentStatus } : t))
         )
         toast.error("Could not update task", {
           description: getApiErrorMessage(e, "Please try again."),
         })
       }
     },
-    []
+    [patchTasks]
   )
 
   const handleMarkAllCompleted = useCallback(async () => {
@@ -209,7 +202,9 @@ export function useTodaysTasks() {
     const ids = incomplete.map((t) => t.id)
     try {
       await Promise.all(ids.map((id) => tasksApi.update(id, { completed: true })))
-      setTasks((prev) => sortTasks(prev.map((t) => ({ ...t, completed: true }))))
+      patchTasks((prev) =>
+        prev.map((t) => (ids.includes(t.id) ? { ...t, completed: true } : t))
+      )
       setUndoneIds(ids)
       const n = ids.length
       toast.success("Tasks marked complete", {
@@ -224,21 +219,23 @@ export function useTodaysTasks() {
     } finally {
       setIsMarkingAll(false)
     }
-  }, [tasks])
+  }, [tasks, patchTasks])
 
   const handleUndoMarkAllCompleted = useCallback(async () => {
     if (undoneIds.length === 0) return
     const ids = undoneIds
     setUndoneIds([])
     if (undoTimer.current) clearTimeout(undoTimer.current)
-    setTasks((prev) => sortTasks(prev.map((t) => (ids.includes(t.id) ? { ...t, completed: false } : t))))
+    patchTasks((prev) =>
+      prev.map((t) => (ids.includes(t.id) ? { ...t, completed: false } : t))
+    )
     try {
       await Promise.all(ids.map((id) => tasksApi.update(id, { completed: false })))
       toast.success("Undone", { description: "Tasks reverted to their previous state." })
     } catch (e) {
       toast.error("Could not undo", { description: getApiErrorMessage(e, "Please try again.") })
     }
-  }, [undoneIds])
+  }, [undoneIds, patchTasks])
 
   const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks])
   const totalCount = tasks.length
@@ -280,7 +277,7 @@ export function useTodaysTasks() {
 
   return {
     tasks,
-    loading,
+    loading: isPending,
     availableGoals,
     selectedGoalIds,
     newTaskTitle,
