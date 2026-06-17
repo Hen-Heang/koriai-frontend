@@ -15,6 +15,18 @@ interface SpeakButtonProps {
 // Object URLs survive for the whole session so replays are instant.
 const audioUrlCache = new Map<string, string>()
 
+// Shared so other surfaces (e.g. the auto-play in a listening drill) reuse the
+// same per-session URL cache instead of re-fetching the audio for the same text.
+export async function getCachedAudioUrl(text: string, voice = "nova"): Promise<string> {
+  const cacheKey = `${voice}|${text}`
+  let url = audioUrlCache.get(cacheKey)
+  if (!url) {
+    url = await ttsApi.speak(text, voice)
+    audioUrlCache.set(cacheKey, url)
+  }
+  return url
+}
+
 export function SpeakButton({
   text,
   voice = "nova",
@@ -27,14 +39,9 @@ export function SpeakButton({
 
   async function handleSpeak() {
     if (loading || playing || !text) return
-    const cacheKey = `${voice}|${text}`
     setLoading(true)
     try {
-      let url = audioUrlCache.get(cacheKey)
-      if (!url) {
-        url = await ttsApi.speak(text, voice)
-        audioUrlCache.set(cacheKey, url)
-      }
+      const url = await getCachedAudioUrl(text, voice)
       const audio = new Audio(url)
       audio.playbackRate = playbackRate
       setLoading(false)

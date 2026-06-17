@@ -9,11 +9,19 @@ import "./globals.css"
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Allow pinch-zoom up to 5x — WCAG 1.4.4 (low-vision users must be able to
+  // zoom). We intentionally do NOT set maximumScale: 1, which would lock it.
+  maximumScale: 5,
   // Extend the layout under the notch/home indicator so env(safe-area-inset-*)
   // resolves to real values — without this every safe-area padding is 0 on iOS.
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
+  // Tint the iOS Safari / PWA status bar to match the app background in each
+  // theme so the notch area blends into the page instead of showing white.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7fbfb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1422" },
+  ],
 }
 
 export const metadata: Metadata = {

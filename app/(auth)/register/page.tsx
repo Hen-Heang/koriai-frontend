@@ -87,7 +87,7 @@ export default function RegisterPage() {
         learningGoal: learningGoal || undefined,
       })
       setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
-      router.push("/goals")
+      router.push("/dashboard")
     } catch (error) {
       setError(getApiErrorMessage(error, "Registration failed. Email may already be in use."))
     } finally {

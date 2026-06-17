@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildAnswerMessage,
+  buildEvaluationPrompt,
   buildInterviewSystemPrompt,
   buildScriptDocument,
   getInterviewTopic,
   INTERVIEW_TOPICS,
+  parseEvaluation,
   parseExaminerTurn,
 } from "./interview"
 
@@ -123,5 +125,58 @@ describe("buildAnswerMessage", () => {
     const message = buildAnswerMessage("  저는 더위를 안 좋아해요  ")
     expect(message).toContain("저는 더위를 안 좋아해요")
     expect(message).toContain("required format")
+  })
+})
+
+describe("buildEvaluationPrompt", () => {
+  it("ends the interview and asks for the four criteria as scores", () => {
+    const prompt = buildEvaluationPrompt()
+    expect(prompt).toContain("[SCORES]")
+    expect(prompt).toContain("Speaking")
+    expect(prompt).toContain("Pronunciation")
+    expect(prompt).toContain("Vocabulary")
+    expect(prompt).toContain("Confidence")
+    expect(prompt).toContain("Do NOT ask another question")
+  })
+})
+
+describe("parseEvaluation", () => {
+  it("parses a well-formed scorecard", () => {
+    const raw = [
+      "[SCORES]",
+      "Speaking: 4/5",
+      "Pronunciation: 3/5",
+      "Vocabulary: 4/5",
+      "Confidence: 5/5",
+      "[SUMMARY]",
+      "Strong vocabulary and good confidence; pronunciation needs polish.",
+      "[ADVICE]",
+      "- Slow down on long sentences.",
+      "- Practice the 장마 vocabulary out loud.",
+    ].join("\n")
+
+    const result = parseEvaluation(raw)
+    expect(result.scores).toHaveLength(4)
+    expect(result.scores[0]).toEqual({ label: "Speaking", score: 4, max: 5 })
+    expect(result.scores[3]).toEqual({ label: "Confidence", score: 5, max: 5 })
+    expect(result.summary).toContain("Strong vocabulary")
+    expect(result.advice).toHaveLength(2)
+    expect(result.advice[0]).toBe("Slow down on long sentences.")
+  })
+
+  it("accepts bare numbers without /5 and clamps out-of-range scores", () => {
+    const raw = "[SCORES]\nSpeaking: 4\nPronunciation: 9\n[SUMMARY]\nGood.\n[ADVICE]\n• Keep going."
+    const result = parseEvaluation(raw)
+    expect(result.scores[0]).toEqual({ label: "Speaking", score: 4, max: 5 })
+    // 9 is clamped to the max of 5.
+    expect(result.scores[1]).toEqual({ label: "Pronunciation", score: 5, max: 5 })
+    expect(result.advice[0]).toBe("Keep going.")
+  })
+
+  it("tolerates a missing scores block", () => {
+    const result = parseEvaluation("[SUMMARY]\nNice work overall.\n[ADVICE]\n1. Review grammar.")
+    expect(result.scores).toHaveLength(0)
+    expect(result.summary).toBe("Nice work overall.")
+    expect(result.advice[0]).toBe("Review grammar.")
   })
 })

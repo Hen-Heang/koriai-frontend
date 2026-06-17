@@ -237,6 +237,42 @@ export function useTodaysTasks() {
     }
   }, [undoneIds, patchTasks])
 
+  const editTask = useCallback(
+    async (taskId: string, title: string) => {
+      const trimmed = title.trim()
+      if (!trimmed) return
+      const before = queryClient
+        .getQueryData<Task[]>(tasksKey)
+        ?.find((t) => t.id === taskId)
+      patchTasks((list) => list.map((t) => (t.id === taskId ? { ...t, title: trimmed } : t)))
+      try {
+        await tasksApi.update(taskId, { title: trimmed })
+      } catch (e) {
+        if (before) patchTasks((list) => list.map((t) => (t.id === taskId ? before : t)))
+        toast.error("Could not update task", {
+          description: getApiErrorMessage(e, "Please try again."),
+        })
+      }
+    },
+    [queryClient, tasksKey, patchTasks]
+  )
+
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      const before = queryClient.getQueryData<Task[]>(tasksKey)
+      patchTasks((list) => list.filter((t) => t.id !== taskId))
+      try {
+        await tasksApi.remove(taskId)
+      } catch (e) {
+        if (before) queryClient.setQueryData(tasksKey, before)
+        toast.error("Could not delete task", {
+          description: getApiErrorMessage(e, "Please try again."),
+        })
+      }
+    },
+    [queryClient, tasksKey, patchTasks]
+  )
+
   const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks])
   const totalCount = tasks.length
   const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0
@@ -296,5 +332,7 @@ export function useTodaysTasks() {
     handleToggleTaskCompletion,
     handleMarkAllCompleted,
     handleUndoMarkAllCompleted,
+    editTask,
+    deleteTask,
   }
 }

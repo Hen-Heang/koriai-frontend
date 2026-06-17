@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { getApiErrorMessage, readingApi, vocabApi } from "@/lib/api"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import {
   READING_CATEGORIES,
   getReadingProgress,
@@ -72,6 +73,7 @@ export default function ReadingUnitPage() {
 
   const [unit, setUnit] = useState<ReadingUnit | null>(null)
   const [loadingUnit, setLoadingUnit] = useState(true)
+  const { logActivity } = useLogActivity()
 
   useEffect(() => {
     let active = true
@@ -449,7 +451,10 @@ export default function ReadingUnitPage() {
             ) : (
               <Button
                 type="button"
-                onClick={() => markUnitCompleted(unit.id)}
+                onClick={() => {
+                  markUnitCompleted(unit.id)
+                  void logActivity()
+                }}
                 className="h-10 shrink-0 rounded-xl bg-emerald-600 px-5 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-500 active:scale-95"
               >
                 <CheckCircle2 size={14} className="mr-1.5" strokeWidth={2.5} />

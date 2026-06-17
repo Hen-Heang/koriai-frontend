@@ -3,11 +3,12 @@
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { AddWordCard } from "@/components/vocab/AddWordCard"
 import { DeckBuilder } from "@/components/vocab/DeckBuilder"
 import { ReviewSession } from "@/components/vocab/ReviewSession"
 import { TextbookImport } from "@/components/vocab/TextbookImport"
 import { VocabDictionary } from "@/components/vocab/VocabDictionary"
-import { useStreak } from "@/hooks/useStreak"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import { useVocab } from "@/hooks/useVocab"
 
 const containerVariants = {
@@ -30,18 +31,20 @@ const itemVariants = {
 } as const
 
 export default function VocabPage() {
-  const { dueToday, error, loading, rateWord, words, generate, importList, updateWord, deleteWord } = useVocab()
-  const { refreshStreak } = useStreak()
+  const { dueToday, error, loading, rateWord, words, addWord, generate, importList, updateWord, deleteWord } = useVocab()
+  const { logActivity } = useLogActivity()
+
+  const topics = Array.from(new Set(words.map((w) => w.category).filter(Boolean))).sort()
 
   async function handleGenerate(category: string) {
     await generate(category)
-    refreshStreak()
+    void logActivity()
   }
 
   async function handleImport(deckName: string, text: string) {
     const count = await importList(deckName, text)
     if (count > 0) {
-      refreshStreak()
+      void logActivity()
     }
     return count
   }
@@ -76,6 +79,10 @@ export default function VocabPage() {
 
       <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
         <div className="order-2 min-w-0 space-y-8 xl:order-1">
+          <motion.div variants={itemVariants}>
+            <AddWordCard categories={topics} onAdd={addWord} />
+          </motion.div>
+
           <motion.div variants={itemVariants}>
             <DeckBuilder
               dueCount={dueToday.length}

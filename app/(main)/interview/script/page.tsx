@@ -63,6 +63,24 @@ function loadInitialCustom(): CustomSection[] {
   }
 }
 
+// Only a custom section's TEXT syncs to the account (under its `custom-*` key);
+// its definition (title/order) lives in localStorage. Text that arrives from the
+// account — or survives a cache clear — can therefore lack a definition, which
+// would hide it and silently drop it from the export. Re-create a placeholder
+// definition for any such orphaned key so the work is always visible and saved.
+function reconcileCustom(
+  custom: CustomSection[],
+  values: Record<string, string>
+): CustomSection[] {
+  const known = new Set(custom.map((s) => s.id))
+  const orphans = Object.keys(values)
+    .filter(
+      (id) => id.startsWith("custom-") && !known.has(id) && (values[id] ?? "").trim().length > 0
+    )
+    .map((id) => ({ id, title: "" }))
+  return orphans.length > 0 ? [...custom, ...orphans] : custom
+}
+
 // Borderless, auto-growing textarea so each section flows like document body
 // text instead of a boxed form field.
 function DocTextarea({
@@ -157,12 +175,26 @@ export default function InterviewScriptPage() {
     }, 1500)
   }
 
+  // Custom sections, plus recovered placeholders for any orphaned `custom-*`
+  // text (see reconcileCustom). Derived — never written back — so orphan text is
+  // always shown and exported without any state-sync gymnastics.
+  const effectiveCustom = useMemo(
+    () => reconcileCustom(customSections, values),
+    [customSections, values]
+  )
+
   const fullDocument = useMemo(
-    () => buildScriptDocument(topic, values, customSections),
-    [values, customSections]
+    () => buildScriptDocument(topic, values, effectiveCustom),
+    [values, effectiveCustom]
   )
   const totalWords = useMemo(
     () => Object.values(values).reduce((sum, text) => sum + countWords(text), 0),
+    [values]
+  )
+  // Korean script length is usually judged by 글자 수 (characters, spaces
+  // excluded) rather than whitespace-delimited words, so surface both.
+  const totalChars = useMemo(
+    () => Object.values(values).reduce((sum, text) => sum + text.replace(/\s/g, "").length, 0),
     [values]
   )
 
@@ -201,7 +233,14 @@ export default function InterviewScriptPage() {
   }
 
   function renameCustomSection(id: string, title: string) {
-    persistCustom(customSections.map((s) => (s.id === id ? { ...s, title } : s)))
+    // The section may be a recovered orphan that isn't in customSections yet —
+    // editing its title is what promotes it to a real, persisted definition.
+    const exists = customSections.some((s) => s.id === id)
+    persistCustom(
+      exists
+        ? customSections.map((s) => (s.id === id ? { ...s, title } : s))
+        : [...customSections, { id, title }]
+    )
   }
 
   function moveCustomSection(id: string, dir: "up" | "down") {
@@ -244,7 +283,10 @@ export default function InterviewScriptPage() {
 
   function downloadTxt() {
     if (!fullDocument) return
-    const blob = new Blob([fullDocument], { type: "text/plain;charset=utf-8" })
+    // Prefix a UTF-8 BOM so the Korean text is detected correctly by Windows
+    // apps (한글/Notepad/Word) the recipient is likely to open it in — without
+    // it, older editors can misread the encoding and show mojibake.
+    const blob = new Blob(["\uFEFF" + fullDocument], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
     anchor.href = url
@@ -268,7 +310,7 @@ export default function InterviewScriptPage() {
   }
 
   const view = mounted ? values : {}
-  const viewCustom = mounted ? customSections : []
+  const viewCustom = mounted ? effectiveCustom : []
 
   // Fixed exam outline first, then the candidate's own sections after it.
   const allSections = [
@@ -462,7 +504,7 @@ export default function InterviewScriptPage() {
                   {completedSections}/{allSections.length} sections
                 </p>
                 <p className="text-[11px] font-bold text-muted-foreground/70">
-                  {totalWords} {totalWords === 1 ? "word" : "words"}
+                  {totalWords} {totalWords === 1 ? "word" : "words"} · {totalChars}자
                 </p>
               </div>
             </div>
@@ -479,7 +521,7 @@ export default function InterviewScriptPage() {
                 {topic.label} · Interview script · Submit by Aug 21
               </p>
               <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
-                {completedSections}/{allSections.length} sections · {totalWords} words
+                {completedSections}/{allSections.length} sections · {totalWords} words · {totalChars}자
               </p>
             </header>
 

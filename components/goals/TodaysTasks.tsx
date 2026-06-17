@@ -13,7 +13,9 @@ import {
   ClipboardList,
   Clock,
   Loader2,
+  Pencil,
   Plus,
+  Trash2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -42,6 +44,8 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
   const router = useRouter()
   const [showCompleted, setShowCompleted] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState("")
 
   const {
     tasks,
@@ -64,7 +68,20 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     handleToggleTaskCompletion,
     handleMarkAllCompleted,
     handleUndoMarkAllCompleted,
+    editTask,
+    deleteTask,
   } = useTodaysTasks()
+
+  const startEditing = (task: Task) => {
+    setEditingId(task.id)
+    setEditingValue(task.title || task.description || "")
+  }
+
+  const commitEdit = () => {
+    if (editingId) void editTask(editingId, editingValue)
+    setEditingId(null)
+    setEditingValue("")
+  }
 
   const allSelected =
     availableGoals.length > 0 && selectedGoalIds.length === availableGoals.length
@@ -197,7 +214,9 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
             ? "border-red-500/20 bg-red-500/[0.03] hover:bg-red-500/[0.05]"
             : "border-border bg-background/40 hover:bg-accent/50 lg:p-5"
         )}
-        onClick={() => handleTaskClick(task)}
+        onClick={() => {
+          if (editingId !== task.id) handleTaskClick(task)
+        }}
       >
         <button
           type="button"
@@ -213,12 +232,30 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           {task.completed ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
         </button>
         <div className="min-w-0 flex-1">
-          <span className={cn(
-            "block text-base font-bold leading-snug tracking-tight transition-all",
-            task.completed ? "text-muted-foreground/40 line-through" : "text-foreground group-hover/item:text-primary"
-          )}>
-            {task.title || task.description}
-          </span>
+          {editingId === task.id ? (
+            <input
+              autoFocus
+              value={editingValue}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setEditingValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEdit()
+                if (e.key === "Escape") {
+                  setEditingId(null)
+                  setEditingValue("")
+                }
+              }}
+              onBlur={commitEdit}
+              className="w-full rounded-lg border border-primary/40 bg-background px-2 py-1 text-base font-bold outline-none"
+            />
+          ) : (
+            <span className={cn(
+              "block text-base font-bold leading-snug tracking-tight transition-all",
+              task.completed ? "text-muted-foreground/40 line-through" : "text-foreground group-hover/item:text-primary"
+            )}>
+              {task.title || task.description}
+            </span>
+          )}
           <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
             <span className={cn("flex items-center gap-1.5", overdue ? "text-red-500/80" : "text-muted-foreground/60")}>
               {overdue ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
@@ -231,6 +268,34 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
             )}
           </div>
         </div>
+
+        {/* Row actions (hover) */}
+        {editingId !== task.id && (
+          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover/item:opacity-100">
+            <button
+              type="button"
+              aria-label="Edit task"
+              onClick={(e) => {
+                e.stopPropagation()
+                startEditing(task)
+              }}
+              className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-accent hover:text-foreground"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Delete task"
+              onClick={(e) => {
+                e.stopPropagation()
+                void deleteTask(task.id)
+              }}
+              className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-red-500/10 hover:text-red-500"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </motion.div>
     )
   }

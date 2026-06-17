@@ -23,6 +23,7 @@ import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useChoices } from "@/hooks/useChoices"
 import { listeningApi, ttsApi, getApiErrorMessage } from "@/lib/api"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { ListeningAttemptResult, ListeningLesson } from "@/lib/types"
@@ -47,6 +48,7 @@ export default function ListeningPage() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [result, setResult] = useState<ListeningAttemptResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const { logActivity } = useLogActivity()
 
   // Audio playback
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -146,6 +148,7 @@ export default function ListeningPage() {
       const ordered = lesson.quiz.map((_, i) => (answers[i] ?? -1))
       const res = await listeningApi.submitAttempt(lesson.id, ordered)
       setResult(res)
+      void logActivity()
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not submit your answers."))
     } finally {

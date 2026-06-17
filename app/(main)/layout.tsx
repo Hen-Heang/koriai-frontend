@@ -10,9 +10,9 @@ import {
   CalendarDays,
   Gauge,
   GraduationCap,
+  Headphones,
   Menu,
   Target,
-  // Headphones, // hidden Listening nav
   // History, // moved into Settings page
   MessageCircle,
   // Mic, // hidden Speaking nav
@@ -55,10 +55,10 @@ const navSections = [
       { href: "/reading", label: "Reading", icon: BookOpenText },
       { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
+      { href: "/listening", label: "Listening", icon: Headphones },
       // AI Coach now hosts Chat + Analyze + Generate as tabs (see /chat).
       { href: "/chat", label: "AI Coach", icon: MessageCircle },
       // ── built but hidden — restore by uncommenting (icons imported above) ──
-      // { href: "/listening", label: "Listening", icon: Headphones },
       // { href: "/achievements", label: "Achievements", icon: Trophy },
     ],
   },

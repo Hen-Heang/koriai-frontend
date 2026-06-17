@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { vocabApi } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import type { ReviewRating } from "@/lib/srs"
 import type { VocabItem } from "@/lib/types"
 
@@ -50,6 +51,7 @@ export const vocabQueryKey = (userId?: number | null) => ["vocab", userId] as co
 export function useVocab() {
   const userId = getUserId()
   const queryClient = useQueryClient()
+  const { logActivity } = useLogActivity()
   const key = vocabQueryKey(userId)
 
   const { data, isPending, isError } = useQuery({
@@ -63,9 +65,23 @@ export function useVocab() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key })
 
+  // Manually add a single word, creating its topic/category on the fly if new.
+  const addWord = async (data: {
+    category?: string
+    term: string
+    meaning: string
+    example?: string
+  }) => {
+    const saved = await vocabApi.save(data)
+    await invalidate()
+    void logActivity()
+    return saved
+  }
+
   const markReviewed = async (id: string) => {
     await vocabApi.markReviewed(id)
     await invalidate()
+    void logActivity()
   }
 
   // Patch the cache from the response instead of refetching the whole deck, so
@@ -80,6 +96,7 @@ export function useVocab() {
       const dueWords = updated.nextReview <= today ? [...without, updated] : without
       return { savedWords, dueWords }
     })
+    void logActivity()
   }
 
   const generate = async (category: string) => {
@@ -111,6 +128,7 @@ export function useVocab() {
     dueToday,
     error: isError ? "Failed to load vocabulary data." : "",
     loading: isPending,
+    addWord,
     markReviewed,
     rateWord,
     generate,

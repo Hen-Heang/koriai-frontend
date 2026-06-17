@@ -1,0 +1,135 @@
+"use client"
+
+import { useState } from "react"
+import { Plus, PencilLine } from "lucide-react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import { getApiErrorMessage } from "@/lib/api"
+
+type AddWordCardProps = {
+  /** Existing topics, offered as suggestions (user can also type a new one). */
+  categories: string[]
+  onAdd: (data: {
+    category?: string
+    term: string
+    meaning: string
+    example?: string
+  }) => Promise<unknown>
+}
+
+export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
+  const [term, setTerm] = useState("")
+  const [meaning, setMeaning] = useState("")
+  const [example, setExample] = useState("")
+  const [category, setCategory] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  const canSave = term.trim() && meaning.trim() && !saving
+
+  async function handleSave() {
+    if (!canSave) return
+    setSaving(true)
+    try {
+      await onAdd({
+        term: term.trim(),
+        meaning: meaning.trim(),
+        example: example.trim() || undefined,
+        category: category.trim() || undefined,
+      })
+      toast.success("Word added", {
+        description: category.trim() ? `Saved to “${category.trim()}”.` : "Saved to your deck.",
+      })
+      setTerm("")
+      setMeaning("")
+      setExample("")
+      // Keep the category so adding several words to one topic is quick.
+    } catch (e) {
+      toast.error("Could not add word", { description: getApiErrorMessage(e, "Please try again.") })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inputClass =
+    "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all placeholder:font-medium placeholder:text-muted-foreground/40 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
+
+  return (
+    <div className="rounded-[2rem] border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.5rem] sm:p-8">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">
+              Manual entry
+            </p>
+          </div>
+          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">Add a Word</h3>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
+            Type your own term and meaning. Use the topic field to add it to an existing deck or
+            create a new one.
+          </p>
+        </div>
+        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 sm:flex">
+          <PencilLine size={24} strokeWidth={2.5} />
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2">
+        <input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          placeholder="Term (한국어) *"
+          className={inputClass}
+          lang="ko"
+        />
+        <input
+          value={meaning}
+          onChange={(e) => setMeaning(e.target.value)}
+          placeholder="Meaning (English) *"
+          className={inputClass}
+        />
+        <input
+          value={example}
+          onChange={(e) => setExample(e.target.value)}
+          placeholder="Example sentence (optional)"
+          className={`${inputClass} sm:col-span-2`}
+          lang="ko"
+        />
+        <div className="sm:col-span-2">
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Topic / category (e.g. Weather Exam) — pick or create"
+            className={inputClass}
+            list="vocab-topics"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave()
+            }}
+          />
+          <datalist id="vocab-topics">
+            {categories.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 border-t border-border/60 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:pt-8">
+        <Button
+          onClick={handleSave}
+          disabled={!canSave}
+          className="h-14 w-full rounded-2xl bg-emerald-600 px-6 text-base font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8"
+        >
+          <Plus size={20} strokeWidth={2.5} className="mr-2 shrink-0" />
+          {saving ? "Saving…" : "Add to deck"}
+        </Button>
+        {categories.length > 0 && (
+          <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 sm:text-right">
+            {categories.length} {categories.length === 1 ? "topic" : "topics"} so far
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}

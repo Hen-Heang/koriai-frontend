@@ -17,6 +17,7 @@ import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
 import { ProgressChart } from "@/components/dashboard/ProgressChart"
 import { StreakCard } from "@/components/dashboard/StreakCard"
 import { TodaysTasks } from "@/components/goals/TodaysTasks"
+import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
 import { Button as UIButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -276,6 +277,11 @@ export default function DashboardPage() {
             </Link>
           </UIButton>
         </div>
+      </motion.div>
+
+      {/* ── Exam countdown reminder ── */}
+      <motion.div variants={itemVariants}>
+        <ExamCountdownBanner />
       </motion.div>
 
       {/* ── Bento Grid ── */}

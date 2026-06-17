@@ -144,6 +144,22 @@ export const chatApi = {
   getConversation: (conversationId: number) =>
     api.get(`/chat/conversations/${conversationId}`).then((r) => r.data.data),
 
+  // Conversation history list (backend supports limit/offset paging).
+  listConversations: (limit = 20, offset = 0) =>
+    api
+      .get("/chat/conversations", { params: { limit, offset } })
+      .then((r) => r.data.data),
+
+  renameConversation: (conversationId: number, title: string) =>
+    api
+      .put(`/chat/conversations/${conversationId}`, { title })
+      .then((r) => r.data.data),
+
+  deleteConversation: (conversationId: number) =>
+    api
+      .delete(`/chat/conversations/${conversationId}`)
+      .then((r) => r.data.data) as Promise<{ deleted: boolean }>,
+
   streamMessage: async (
     conversationId: number,
     message: string,

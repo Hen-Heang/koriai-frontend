@@ -8,10 +8,14 @@ import {
   CheckCircle2,
   ChevronRight,
   Eye,
+  Gauge,
+  Headphones,
   Lightbulb,
+  Loader2,
   RotateCcw,
   Sparkles,
   Trophy,
+  Volume2,
   XCircle,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -21,14 +25,14 @@ import { vocabApi } from "@/lib/api"
 import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from "@/lib/srs"
 import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
-import { SpeakButton } from "@/components/ui/SpeakButton"
+import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
 
 function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   const distractors = shuffle(pool.filter((w) => w.id !== correct.id)).slice(0, 3)
   return shuffle([correct, ...distractors])
 }
 
-type Mode = "flashcard" | "choice" | "recall"
+type Mode = "flashcard" | "choice" | "recall" | "listening"
 type Phase = "idle" | "quiz" | "done"
 
 type ReviewSessionProps = {
@@ -452,6 +456,175 @@ function RecallCard({
   )
 }
 
+// ─── Audio-first (listening) ────────────────────────────────────────────────────
+// Plays the Korean audio with the word hidden — you recall the meaning from
+// sound alone, then reveal and self-grade. Trains listening, the hardest skill
+// for a spoken exam. Auto-plays on mount; iOS may block that, so the big play
+// button is the primary control.
+function ListeningCard({
+  card,
+  onGrade,
+}: {
+  card: VocabItem
+  onGrade: (rating: ReviewRating) => void | Promise<void>
+}) {
+  const [revealed, setRevealed] = useState(false)
+  const [loadingAudio, setLoadingAudio] = useState(false)
+  const [playing, setPlaying] = useState(false)
+  const [audioFailed, setAudioFailed] = useState(false)
+
+  const play = useCallback(
+    async (rate = 1) => {
+      if (!card.term) return
+      setLoadingAudio(true)
+      setAudioFailed(false)
+      try {
+        const url = await getCachedAudioUrl(card.term)
+        const audio = new Audio(url)
+        audio.playbackRate = rate
+        setLoadingAudio(false)
+        setPlaying(true)
+        audio.onended = () => setPlaying(false)
+        await audio.play()
+      } catch {
+        // Autoplay blocked (often iOS without a gesture) or TTS unavailable.
+        setLoadingAudio(false)
+        setPlaying(false)
+        setAudioFailed(true)
+      }
+    },
+    [card.term]
+  )
+
+  // Auto-play once when the card appears. Kept separate from play() so the first
+  // statement is an await (no setState synchronously in the effect body), and so
+  // a card change cancels an in-flight play.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!card.term) return
+      try {
+        const url = await getCachedAudioUrl(card.term)
+        if (cancelled) return
+        const audio = new Audio(url)
+        audio.onended = () => setPlaying(false)
+        setPlaying(true)
+        await audio.play()
+      } catch {
+        if (!cancelled) setAudioFailed(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [card.term])
+
+  const grade = useCallback(
+    (rating: ReviewRating) => {
+      setRevealed(false)
+      onGrade(rating)
+    },
+    [onGrade]
+  )
+
+  // Keys: R replays, Space/Enter reveals, then 1-4 grade.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key.toLowerCase() === "r") {
+        e.preventDefault()
+        void play()
+      } else if (!revealed && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault()
+        setRevealed(true)
+      } else if (revealed && ["1", "2", "3", "4"].includes(e.key)) {
+        grade(RATINGS[Number(e.key) - 1])
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [revealed, grade, play])
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Audio stage */}
+      <div className="flex h-80 flex-col items-center justify-center gap-6 rounded-[2rem] border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-[2.5rem] sm:p-8">
+        <span className="rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">
+          Listen &amp; Recall
+        </span>
+
+        {/* Big play button */}
+        <button
+          type="button"
+          onClick={() => void play()}
+          disabled={loadingAudio}
+          aria-label="Play audio"
+          className={cn(
+            "flex h-28 w-28 items-center justify-center rounded-[2rem] border-b-4 text-white transition-all active:translate-y-[3px] active:border-b-0 disabled:opacity-60 sm:h-32 sm:w-32",
+            "border-[#1499e0] bg-[#1cb0f6] shadow-lg shadow-[#1cb0f6]/30"
+          )}
+        >
+          {loadingAudio ? (
+            <Loader2 size={44} className="animate-spin" strokeWidth={2.5} />
+          ) : (
+            <Volume2
+              size={48}
+              strokeWidth={2.5}
+              className={playing ? "animate-pulse" : ""}
+            />
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void play(0.7)}
+          className="flex items-center gap-2 rounded-full border-2 border-b-4 border-border bg-accent/5 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all active:translate-y-[2px] active:border-b-2 hover:text-foreground"
+        >
+          <Gauge size={13} strokeWidth={3} /> Slow
+        </button>
+
+        {audioFailed && (
+          <p className="text-[11px] font-bold text-muted-foreground/50">
+            Tap the speaker to play the audio.
+          </p>
+        )}
+      </div>
+
+      {!revealed ? (
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-card text-sm font-black uppercase tracking-[0.2em] text-foreground transition-all active:translate-y-[3px] active:border-b-0"
+        >
+          <Eye size={18} strokeWidth={2.5} /> Show Answer
+        </button>
+      ) : (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          {/* Answer reveal */}
+          <div className="rounded-2xl border-2 border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-5 text-center dark:bg-[#58cc02]/[0.08]">
+            <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl">
+              {card.term}
+            </p>
+            {card.pronunciation && (
+              <p className="mt-1.5 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
+            )}
+            <p className="mt-3 break-keep text-lg font-black text-muted-foreground [overflow-wrap:anywhere]">
+              {card.meaning}
+            </p>
+            {card.example && (
+              <p className="mx-auto mt-4 max-w-sm rounded-2xl border-2 border-[#58cc02]/20 bg-card/80 p-3 text-sm font-bold leading-relaxed text-muted-foreground">
+                {card.example}
+              </p>
+            )}
+          </div>
+
+          <GradeButtons card={card} onGrade={grade} />
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSessionProps) {
   const [phase, setPhase] = useState<Phase>("idle")
@@ -549,19 +722,20 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
           {/* Mode Selector - iOS style */}
           <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
-            {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall"] as Mode[]).map((m) => (
+            {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening"] as Mode[]).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
                 className={cn(
-                  "flex-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
+                  "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
                   mode === m
                     ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : "Recall"}
+                {m === "listening" && <Headphones size={13} strokeWidth={3} />}
+                {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : "Listen"}
               </button>
             ))}
           </div>
@@ -707,7 +881,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             exit={{ opacity: 0, scale: 0.98, x: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {mode === "recall" ? (
+            {mode === "listening" ? (
+              <ListeningCard card={card} onGrade={handleGrade} />
+            ) : mode === "recall" ? (
               <RecallCard
                 card={card}
                 onKnew={() => handleGrade("GOOD")}

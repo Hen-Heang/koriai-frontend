@@ -24,7 +24,7 @@ import { ErrorBanner } from "@/components/ui/error-banner"
 import { Textarea } from "@/components/ui/textarea"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { useCopy } from "@/hooks/useCopy"
-import { useStreak } from "@/hooks/useStreak"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import { analyzerApi, getApiErrorMessage } from "@/lib/api"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import type { MessageAnalysis } from "@/lib/types"
@@ -58,7 +58,7 @@ export function MessageAnalyzer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const { copied, copy } = useCopy(2000)
-  const { refreshStreak } = useStreak()
+  const { logActivity } = useLogActivity()
 
   async function handleAnalyze() {
     if (!text.trim()) return
@@ -68,7 +68,7 @@ export function MessageAnalyzer() {
     try {
       const data = await analyzerApi.analyze(text, source ?? undefined)
       setResult(data)
-      refreshStreak()
+      void logActivity()
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to analyze the message. Please try again."))
     } finally {

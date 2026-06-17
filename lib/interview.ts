@@ -309,6 +309,89 @@ export function parseExaminerTurn(raw: string): ExaminerTurn {
   }
 }
 
+// ── End-of-session evaluation ────────────────────────────────────────────
+// After the Q&A the candidate can ask for an overall verdict. The examiner
+// already has the full conversation, so we just switch it out of the per-turn
+// question format and into a one-off scorecard keyed to the four official exam
+// criteria (speaking, pronunciation, vocabulary, confidence).
+
+const SCORES_TAG = "[SCORES]"
+const SUMMARY_TAG = "[SUMMARY]"
+const ADVICE_TAG = "[ADVICE]"
+
+/** The four official K-Specialist criteria, in the order the exam lists them. */
+export const EVALUATION_CRITERIA = [
+  "Speaking",
+  "Pronunciation",
+  "Vocabulary",
+  "Confidence",
+] as const
+
+export interface EvaluationScore {
+  label: string
+  score: number
+  max: number
+}
+
+export interface InterviewEvaluation {
+  scores: EvaluationScore[]
+  summary: string
+  advice: string[]
+}
+
+/**
+ * Final-turn message that ends the interview and asks for a scorecard instead
+ * of another question. Sent on the same conversation, so the model judges the
+ * whole transcript it already has.
+ */
+export function buildEvaluationPrompt(): string {
+  return [
+    "The interview is now over. Do NOT ask another question.",
+    "Evaluate the candidate's overall spoken performance across the whole interview, judging the four official exam criteria on a 1–5 scale.",
+    "Reply ONLY in this exact format, nothing before or after:",
+    SCORES_TAG,
+    "Speaking: <1-5>",
+    "Pronunciation: <1-5>",
+    "Vocabulary: <1-5>",
+    "Confidence: <1-5>",
+    SUMMARY_TAG,
+    "<two or three sentences of honest, encouraging English feedback on the overall performance>",
+    ADVICE_TAG,
+    "- <one short, actionable tip in English>",
+    "- <one short, actionable tip in English>",
+    "- <one short, actionable tip in English>",
+  ].join("\n")
+}
+
+/**
+ * Parses the scorecard reply. Tolerant of formatting drift: missing scores are
+ * dropped, and any bullet style (-, •, *, or 1.) is accepted for the advice.
+ */
+export function parseEvaluation(raw: string): InterviewEvaluation {
+  const text = (raw ?? "").trim()
+
+  const scoresBlock = extractSection(text, SCORES_TAG, [SUMMARY_TAG, ADVICE_TAG])
+  const summary = extractSection(text, SUMMARY_TAG, [ADVICE_TAG])
+  const adviceBlock = extractSection(text, ADVICE_TAG, [])
+
+  const scores: EvaluationScore[] = []
+  for (const line of scoresBlock.split("\n")) {
+    // Match "Label: 4" or "Label: 4/5" (the "/5" is optional).
+    const match = line.match(/^\s*(.+?)\s*[:：]\s*(\d+)\s*(?:\/\s*(\d+))?/)
+    if (!match) continue
+    const max = match[3] ? Number(match[3]) : 5
+    const score = Math.max(0, Math.min(max, Number(match[2])))
+    scores.push({ label: match[1].trim(), score, max })
+  }
+
+  const advice = adviceBlock
+    .split("\n")
+    .map((line) => line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean)
+
+  return { scores, summary, advice }
+}
+
 function extractSection(
   text: string,
   startTag: string,

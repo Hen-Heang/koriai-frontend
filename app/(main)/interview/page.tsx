@@ -4,12 +4,15 @@ import { useRef, useState } from "react"
 import Link from "next/link"
 import {
   AlertCircle,
+  Award,
   BookOpen,
+  CheckCircle2,
   ChevronDown,
   Eye,
   EyeOff,
   FileText,
   GraduationCap,
+  Lightbulb,
   Loader2,
   MessageCircleQuestion,
   Mic,
@@ -23,23 +26,33 @@ import {
 import { AnimatePresence, motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { ScoreTrend } from "@/components/interview/ScoreTrend"
+import { StudyPlanCard } from "@/components/interview/StudyPlanCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
-import { useStreak } from "@/hooks/useStreak"
+import { useLogActivity } from "@/hooks/useLogActivity"
 import { chatApi, getApiErrorMessage, ttsApi } from "@/lib/api"
 import {
   buildAnswerMessage,
+  buildEvaluationPrompt,
   buildInterviewSystemPrompt,
   INTERVIEW_TOPICS,
+  parseEvaluation,
   parseExaminerTurn,
   type ExaminerTurn,
+  type InterviewEvaluation,
   type InterviewTopic,
   type PhraseEntry,
 } from "@/lib/interview"
+import {
+  loadScorecards,
+  saveScorecard,
+  type ScorecardRecord,
+} from "@/lib/interview-history"
 import { cn } from "@/lib/utils"
 
 type SessionEntry =
@@ -60,19 +73,29 @@ const itemVariants = {
 // direct tap — failures are swallowed and the candidate uses the speaker button.
 async function autoSpeak(text: string) {
   if (!text) return
+  let url: string | undefined
   try {
-    const url = await ttsApi.speak(text)
+    url = await ttsApi.speak(text)
     const audio = new Audio(url)
+    // ttsApi.speak hands back an object URL — release it once playback ends or
+    // errors, otherwise every spoken question leaks a blob for the whole session.
+    const release = () => {
+      if (url) URL.revokeObjectURL(url)
+    }
+    audio.addEventListener("ended", release, { once: true })
+    audio.addEventListener("error", release, { once: true })
     await audio.play()
   } catch {
     // Autoplay blocked or TTS unavailable — manual playback still works.
+    // play() never started, so revoke the URL now rather than on an event.
+    if (url) URL.revokeObjectURL(url)
   }
 }
 
 export default function InterviewPage() {
-  const { refreshStreak } = useStreak()
+  const { logActivity } = useLogActivity()
 
-  const [phase, setPhase] = useState<"select" | "session">("select")
+  const [phase, setPhase] = useState<"select" | "session" | "summary">("select")
   const [entries, setEntries] = useState<SessionEntry[]>([])
   const [current, setCurrent] = useState<ExaminerTurn | null>(null)
   const [streamingText, setStreamingText] = useState("")
@@ -81,6 +104,10 @@ export default function InterviewPage() {
   const [isEditingAnswer, setIsEditingAnswer] = useState(false)
   const [showEnglish, setShowEnglish] = useState(false)
   const [error, setError] = useState("")
+  const [isEvaluating, setIsEvaluating] = useState(false)
+  const [evaluation, setEvaluation] = useState<InterviewEvaluation | null>(null)
+  // Past scorecards (localStorage) — lazy-loaded so the trend survives reloads.
+  const [history, setHistory] = useState<ScorecardRecord[]>(loadScorecards)
 
   const speech = useSpeechRecognition({ lang: "ko-KR" })
   const conversationRef = useRef<number | null>(null)
@@ -119,7 +146,7 @@ export default function InterviewPage() {
       ])
       setQuestionCount((count) => count + 1)
       setStreamingText("")
-      refreshStreak()
+      void logActivity()
       void autoSpeak(turn.questionKo)
     } catch (err) {
       setError(getApiErrorMessage(err, "The examiner could not respond. Try again."))
@@ -141,6 +168,7 @@ export default function InterviewPage() {
       setEntries([])
       setCurrent(null)
       setQuestionCount(0)
+      setEvaluation(null)
       speech.reset()
       setPhase("session")
       await runExaminerTurn(buildInterviewSystemPrompt(topic))
@@ -164,6 +192,41 @@ export default function InterviewPage() {
     void runExaminerTurn(buildAnswerMessage(answer))
   }
 
+  // Ends the Q&A and asks the examiner for a final scorecard against the four
+  // exam criteria, judged on the full transcript it already holds. Lands on the
+  // "summary" phase; the conversation stays open so the candidate can retry.
+  async function finishInterview() {
+    const convId = conversationRef.current
+    if (!convId || isEvaluating || isExaminerThinking) return
+
+    setError("")
+    setIsEvaluating(true)
+    speech.stop()
+
+    let buffer = ""
+    try {
+      await chatApi.streamMessage(
+        convId,
+        buildEvaluationPrompt(),
+        (token) => {
+          buffer += token
+        },
+        () => {},
+        () => {}
+      )
+      const parsed = parseEvaluation(buffer)
+      setEvaluation(parsed)
+      // Persist this scorecard so the progress trend builds over time.
+      setHistory(saveScorecard(parsed))
+      setPhase("summary")
+      void logActivity()
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Could not generate your evaluation. Try again."))
+    } finally {
+      setIsEvaluating(false)
+    }
+  }
+
   function endSession() {
     speech.reset()
     conversationRef.current = null
@@ -171,6 +234,7 @@ export default function InterviewPage() {
     setCurrent(null)
     setStreamingText("")
     setQuestionCount(0)
+    setEvaluation(null)
     setPhase("select")
   }
 
@@ -217,6 +281,14 @@ export default function InterviewPage() {
           </Card>
         </motion.div>
 
+        {/* Renders itself only after mount + when scorecards exist, so it's safe
+            to leave ungated here (no SSR/CSR conditional mismatch). */}
+        <ScoreTrend records={history} />
+
+        <motion.div variants={itemVariants}>
+          <StudyPlanCard />
+        </motion.div>
+
         {topic.prep && (
           <motion.div variants={itemVariants}>
             <StudyPack topic={topic} defaultOpen />
@@ -258,8 +330,22 @@ export default function InterviewPage() {
     )
   }
 
+  // ── Evaluation summary ───────────────────────────────────────────
+  if (phase === "summary" && evaluation) {
+    return (
+      <EvaluationSummary
+        topic={topic}
+        evaluation={evaluation}
+        history={history}
+        onPracticeAgain={startSession}
+        onBackToTopics={endSession}
+      />
+    )
+  }
+
   // ── Live session ─────────────────────────────────────────────────
   const recording = speech.status === "listening"
+  const answeredCount = entries.filter((entry) => entry.kind === "answer").length
 
   return (
     <motion.div
@@ -487,6 +573,27 @@ export default function InterviewPage() {
             >
               <Send size={18} className="mr-2" /> Submit Answer & Next Question
             </Button>
+
+            {/* Wrap up the session and get a scorecard. Needs at least one
+                answered question so the examiner has something to judge. */}
+            {answeredCount >= 1 && (
+              <Button
+                variant="outline"
+                onClick={finishInterview}
+                disabled={isEvaluating || isExaminerThinking}
+                className="h-12 w-full rounded-2xl border-blue-500/40 bg-blue-500/5 px-6 text-sm font-black text-blue-600 transition-all hover:bg-blue-500/10 active:scale-95 disabled:opacity-50 dark:text-blue-400 sm:h-14"
+              >
+                {isEvaluating ? (
+                  <>
+                    <Loader2 size={18} className="mr-2 animate-spin" /> Scoring your interview…
+                  </>
+                ) : (
+                  <>
+                    <Award size={18} className="mr-2" /> Finish & Get Evaluation
+                  </>
+                )}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -687,6 +794,172 @@ function PhraseRow({ entry }: { entry: PhraseEntry }) {
       </div>
       <SpeakButton text={entry.ko} className="mt-0.5 shrink-0 p-1.5" />
     </div>
+  )
+}
+
+// End-of-session scorecard: the four exam criteria as scored bars, an overall
+// summary, and concrete next-step advice. Ends with retry / change-topic.
+function EvaluationSummary({
+  topic,
+  evaluation,
+  history,
+  onPracticeAgain,
+  onBackToTopics,
+}: {
+  topic: InterviewTopic
+  evaluation: InterviewEvaluation
+  history: ScorecardRecord[]
+  onPracticeAgain: () => void
+  onBackToTopics: () => void
+}) {
+  const { scores, summary, advice } = evaluation
+  const overall =
+    scores.length > 0
+      ? scores.reduce((sum, s) => sum + (s.score / s.max) * 5, 0) / scores.length
+      : 0
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-5 pb-12 sm:space-y-6"
+    >
+      <motion.div variants={itemVariants}>
+        <PageHero
+          eyebrow="Mock Interview · Result"
+          title="Your Evaluation"
+          description="An overall read on this session across the four official exam criteria — speaking, pronunciation, vocabulary, and confidence. Practice again to push each score up."
+          stats={[
+            { label: "Overall", value: overall ? `${overall.toFixed(1)} / 5` : "—" },
+            { label: "Topic", value: topic.difficulty },
+            { label: "Criteria", value: String(scores.length || 4) },
+          ]}
+        />
+      </motion.div>
+
+      {/* Scorecard */}
+      <motion.div variants={itemVariants}>
+        <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
+          <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
+                <Award size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black">Scorecard</CardTitle>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Judged on the exam&apos;s four criteria
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-5 sm:pt-6">
+            {scores.length > 0 ? (
+              scores.map((s) => (
+                <div key={s.label} className="space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm font-black text-foreground">{s.label}</span>
+                    <span className="text-sm font-black tabular-nums text-blue-600 dark:text-blue-400">
+                      {s.score}
+                      <span className="text-muted-foreground/50"> / {s.max}</span>
+                    </span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-accent/40">
+                    <motion.div
+                      className="h-full rounded-full bg-blue-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(s.score / s.max) * 100}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm font-medium text-muted-foreground">
+                No scores were returned — see the summary below.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Overall summary */}
+      {summary && (
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-[1.8rem] border-sky-500/20 bg-sky-500/5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
+            <CardContent className="flex items-start gap-3 p-5 sm:p-6">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
+                <CheckCircle2 size={18} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
+                  Overall
+                </p>
+                <p className="mt-1.5 text-sm font-medium leading-relaxed text-foreground/90">
+                  {summary}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Actionable advice */}
+      {advice.length > 0 && (
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
+            <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+                  <Lightbulb size={20} strokeWidth={2.5} />
+                </div>
+                <CardTitle className="text-base font-black">What to work on next</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2.5 pt-5">
+              {advice.map((tip, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 rounded-2xl border border-border bg-accent/5 p-4"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-[11px] font-black text-amber-600">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm font-medium leading-relaxed text-foreground/90">{tip}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Trajectory across past mocks — shown once there's more than one. */}
+      {history.length > 1 && (
+        <motion.div variants={itemVariants}>
+          <ScoreTrend records={history} />
+        </motion.div>
+      )}
+
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col gap-3 sm:flex-row sm:justify-center"
+      >
+        <Button
+          onClick={onPracticeAgain}
+          className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto"
+        >
+          <RotateCcw size={20} className="mr-2" /> Practice Again
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onBackToTopics}
+          className="h-14 w-full rounded-2xl border-border bg-background px-8 text-base font-bold hover:bg-accent active:scale-95 sm:w-auto"
+        >
+          <GraduationCap size={20} className="mr-2" /> Back to Topic
+        </Button>
+      </motion.div>
+    </motion.div>
   )
 }
 
