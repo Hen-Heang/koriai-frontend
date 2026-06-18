@@ -60,7 +60,7 @@ export default function LoginPage() {
       >
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="group flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
               <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
             </div>
             <span className="text-xl font-black tracking-tight text-foreground">Hengo</span>

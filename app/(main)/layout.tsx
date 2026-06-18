@@ -198,7 +198,7 @@ export default function MainLayout({
           {/* Brand */}
           <div className="px-6 pt-8 pb-6">
             <Link href="/" className="group flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
                 <Image
                   src="/hengo-icon.svg"
                   alt="Hengo Logo"
@@ -298,7 +298,7 @@ export default function MainLayout({
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
               <div className="flex items-center gap-3">
                 <Link href="/" className="group flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg shadow-md">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl shadow-md">
                     <Image
                       src="/hengo-icon.svg"
                       alt=""
