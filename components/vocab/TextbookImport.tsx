@@ -43,14 +43,14 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
   }
 
   return (
-    <div className="rounded-[2rem] border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.5rem] sm:p-8">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600 dark:text-violet-400">Textbook Import</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Textbook Import</p>
           </div>
-          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">Paste Your Lesson</h3>
+          <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Paste Your Lesson</h3>
           <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Copy a word list from your textbook (사회통합프로그램, TOPIK, class notes) and paste it here.
             AI turns it into flashcards — your translations are kept exactly as written.
@@ -79,7 +79,7 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
           className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 transition-colors sm:resize-y sm:text-sm"
         />
         {text.trim() && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] font-bold">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs font-bold">
             <span className={prepared.entries.length ? "text-violet-600 dark:text-violet-400" : "text-destructive"}>
               {prepared.entries.length
                 ? `${prepared.entries.length} word${prepared.entries.length === 1 ? "" : "s"} ready to import`
@@ -102,7 +102,7 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
         )}
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <Button
-            className="h-12 w-full rounded-2xl bg-violet-600 px-7 text-sm font-black text-white shadow-xl shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 sm:w-auto"
+            className="h-12 w-full rounded-2xl bg-violet-600 px-7 text-sm font-bold text-white shadow-xl shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 sm:w-auto"
             onClick={handleImport}
             disabled={!deckName.trim() || !prepared.entries.length || importing}
           >

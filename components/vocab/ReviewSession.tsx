@@ -89,10 +89,10 @@ function GradeButtons({
             GRADE_STYLES[rating].classes
           )}
         >
-          <span className="text-xs font-black uppercase tracking-wider">
+          <span className="text-xs font-bold uppercase tracking-wider">
             {GRADE_STYLES[rating].label}
           </span>
-          <span className="text-[10px] font-bold opacity-80">
+          <span className="text-[11px] font-bold opacity-80">
             {formatInterval(previewIntervalDays(card, rating))}
           </span>
         </button>
@@ -169,22 +169,22 @@ function FlashCard({
           <button
             type="button"
             onClick={() => setFlipped(true)}
-            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-[2.5rem] sm:p-8"
+            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
-            <p className="w-full break-keep text-5xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{reversed ? card.meaning : card.term}</p>
+            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
+            <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{reversed ? card.meaning : card.term}</p>
             {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
-            <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
+            <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
               Tap to Reveal
             </div>
           </button>
 
           {/* Back */}
           <div
-            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-[2.5rem] sm:p-8"
+            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
-            <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{reversed ? card.term : card.meaning}</p>
+            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
+            <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{reversed ? card.term : card.meaning}</p>
             <Pronunciation text={card.pronunciation} className="mt-2 text-base sm:text-2xl" />
             {/* Always surface the other side too, so each card reinforces Korean + reading + meaning together. */}
             <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/80 [overflow-wrap:anywhere] sm:text-2xl">
@@ -220,7 +220,7 @@ function FlashCard({
                   type="button"
                   onClick={fetchHint}
                   disabled={loadingHint}
-                  className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#b88600] hover:text-[#9a7100] dark:text-[#ffd43b]"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#b88600] hover:text-[#9a7100] dark:text-[#ffd43b]"
                 >
                   <Lightbulb size={14} strokeWidth={2.5} className={loadingHint ? "animate-pulse" : ""} />
                   {loadingHint ? "Creating AI sentence..." : "Get AI example sentence"}
@@ -261,9 +261,9 @@ function ChoiceCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
-      <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Select Meaning</span>
-        <p className="w-full break-keep text-5xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{card.term}</p>
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Select Meaning</span>
+        <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{card.term}</p>
         <Pronunciation text={card.pronunciation} className="mt-3 text-lg sm:text-2xl" />
         <div className="mt-6">
           <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
@@ -320,7 +320,7 @@ function ChoiceCard({
             <button
               type="button"
               onClick={() => (selected === card.id ? onKnew() : onLearning())}
-              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
             >
               Next Word
               <ChevronRight size={20} strokeWidth={3} />
@@ -362,9 +362,9 @@ function RecallCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
-      <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Type in Korean</span>
-        <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{card.meaning}</p>
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Type in Korean</span>
+        <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{card.meaning}</p>
         {card.pronunciation && answered && (
           <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
         )}
@@ -392,7 +392,7 @@ function RecallCard({
           spellCheck={false}
           placeholder="한국어로 입력하세요..."
           className={cn(
-            "h-16 w-full rounded-2xl border bg-card px-5 text-center text-xl font-black tracking-tight text-foreground placeholder:text-base placeholder:font-bold placeholder:text-muted-foreground/30 focus:outline-none transition-colors",
+            "h-16 w-full rounded-2xl border bg-card px-5 text-center text-xl font-bold tracking-tight text-foreground placeholder:text-base placeholder:font-bold placeholder:text-muted-foreground/30 focus:outline-none transition-colors",
             !answered
               ? "border-border focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
               : result === "correct"
@@ -407,7 +407,7 @@ function RecallCard({
               type="button"
               onClick={submit}
               disabled={!answer.trim()}
-              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
             >
               <CheckCircle2 size={18} strokeWidth={2.5} />
               Check
@@ -415,7 +415,7 @@ function RecallCard({
             <button
               type="button"
               onClick={() => setResult("incorrect")}
-              className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent active:scale-95"
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent active:scale-95"
             >
               <Eye size={16} strokeWidth={2.5} />
               Show
@@ -442,12 +442,12 @@ function RecallCard({
             >
               <div className="min-w-0">
                 <p className={cn(
-                  "text-[10px] font-black uppercase tracking-[0.2em]",
+                  "text-[11px] font-bold uppercase tracking-wide",
                   result === "correct" ? "text-emerald-600" : "text-red-500"
                 )}>
                   {result === "correct" ? "Correct" : "Answer"}
                 </p>
-                <p className="mt-1 break-keep text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere]">{card.term}</p>
+                <p className="mt-1 break-keep text-2xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere]">{card.term}</p>
                 {card.example && (
                   <p className="mt-2 text-sm font-bold leading-relaxed text-muted-foreground/70">{card.example}</p>
                 )}
@@ -458,7 +458,7 @@ function RecallCard({
             <button
               type="button"
               onClick={next}
-              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
             >
               Next Word
               <ChevronRight size={20} strokeWidth={3} />
@@ -562,8 +562,8 @@ function ListeningCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Audio stage */}
-      <div className="flex h-80 flex-col items-center justify-center gap-6 rounded-[2rem] border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-[2.5rem] sm:p-8">
-        <span className="rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">
+      <div className="flex h-80 flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
+        <span className="rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
           Listen &amp; Recall
         </span>
 
@@ -574,7 +574,7 @@ function ListeningCard({
           disabled={loadingAudio}
           aria-label="Play audio"
           className={cn(
-            "flex h-28 w-28 items-center justify-center rounded-[2rem] border-b-4 text-white transition-all active:translate-y-[3px] active:border-b-0 disabled:opacity-60 sm:h-32 sm:w-32",
+            "flex h-28 w-28 items-center justify-center rounded-3xl border-b-4 text-white transition-all active:translate-y-[3px] active:border-b-0 disabled:opacity-60 sm:h-32 sm:w-32",
             "border-[#1499e0] bg-[#1cb0f6] shadow-lg shadow-[#1cb0f6]/30"
           )}
         >
@@ -592,13 +592,13 @@ function ListeningCard({
         <button
           type="button"
           onClick={() => void play(0.7)}
-          className="flex items-center gap-2 rounded-full border-2 border-b-4 border-border bg-accent/5 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all active:translate-y-[2px] active:border-b-2 hover:text-foreground"
+          className="flex items-center gap-2 rounded-full border-2 border-b-4 border-border bg-accent/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/70 transition-all active:translate-y-[2px] active:border-b-2 hover:text-foreground"
         >
           <Gauge size={13} strokeWidth={3} /> Slow
         </button>
 
         {audioFailed && (
-          <p className="text-[11px] font-bold text-muted-foreground/50">
+          <p className="text-xs font-bold text-muted-foreground/50">
             Tap the speaker to play the audio.
           </p>
         )}
@@ -608,7 +608,7 @@ function ListeningCard({
         <button
           type="button"
           onClick={() => setRevealed(true)}
-          className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-card text-sm font-black uppercase tracking-[0.2em] text-foreground transition-all active:translate-y-[3px] active:border-b-0"
+          className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-card text-sm font-bold uppercase tracking-wide text-foreground transition-all active:translate-y-[3px] active:border-b-0"
         >
           <Eye size={18} strokeWidth={2.5} /> Show Answer
         </button>
@@ -616,11 +616,11 @@ function ListeningCard({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {/* Answer reveal */}
           <div className="rounded-2xl border-2 border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-5 text-center dark:bg-[#58cc02]/[0.08]">
-            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">
+            <p className="w-full break-keep text-4xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">
               {card.term}
             </p>
             <Pronunciation text={card.pronunciation} className="mt-2 text-lg sm:text-2xl" />
-            <p className="mt-3 break-keep text-xl font-black text-muted-foreground [overflow-wrap:anywhere] sm:text-2xl">
+            <p className="mt-3 break-keep text-xl font-bold text-muted-foreground [overflow-wrap:anywhere] sm:text-2xl">
               {card.meaning}
             </p>
             {card.example && (
@@ -715,13 +715,13 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   if (phase === "idle") {
     const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
     return (
-      <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-[2.5rem]">
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-3xl">
         {/* Top Header */}
         <div className="bg-emerald-500/[0.03] px-5 py-7 text-center border-b border-border/60 sm:px-8 sm:py-8">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
             <BrainCircuit size={32} strokeWidth={2.5} />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-foreground">Memory Lab</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Memory Lab</h2>
           <p className="mt-2 text-sm font-medium text-muted-foreground/60">
             {dueToday.length > 0
               ? `${dueToday.length} reviews awaiting attention`
@@ -733,12 +733,12 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           {/* Deck Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-black text-emerald-600">{dueToday.length}</p>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Due Now</p>
+              <p className="text-3xl font-bold text-emerald-600">{dueToday.length}</p>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
             </div>
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-black text-foreground">{allWords.length}</p>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Total Deck</p>
+              <p className="text-3xl font-bold text-foreground">{allWords.length}</p>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
             </div>
           </div>
 
@@ -750,7 +750,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
                 type="button"
                 onClick={() => setMode(m)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-black uppercase tracking-widest transition-all",
+                  "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-bold uppercase tracking-wide transition-all",
                   mode === m
                     ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
                     : "text-muted-foreground hover:text-foreground"
@@ -767,7 +767,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <button
               type="button"
               onClick={() => setReversed((r) => !r)}
-              className="mx-auto -mt-2 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground active:scale-95"
+              className="mx-auto -mt-2 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground active:scale-95"
             >
               <ArrowLeftRight size={13} strokeWidth={3} />
               {reversed ? "English → Korean" : "Korean → English"}
@@ -779,7 +779,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             type="button"
             disabled={loading || deckSize === 0}
             onClick={startQuiz}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+            className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
           >
             <Sparkles size={20} strokeWidth={2.5} />
             {loading ? "Loading..." : "Enter Session"}
@@ -796,10 +796,10 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     const headline = pct >= 80 ? "Perfect Loop" : pct >= 50 ? "Solid Growth" : "Keep Building"
     
     return (
-      <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 sm:rounded-[2.5rem]">
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 sm:rounded-3xl">
         <div className="flex flex-col items-center gap-8 px-5 py-10 text-center sm:px-8 sm:py-16">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-emerald-500/10 text-emerald-600 shadow-inner ring-1 ring-emerald-500/20">
+            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 shadow-inner ring-1 ring-emerald-500/20">
               <Trophy size={48} strokeWidth={2} />
             </div>
             <motion.div
@@ -813,9 +813,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           </div>
 
           <div>
-            <h2 className="text-4xl font-black tracking-tight text-foreground">{headline}</h2>
+            <h2 className="text-4xl font-bold tracking-tight text-foreground">{headline}</h2>
             <p className="mt-3 text-[15px] font-medium text-muted-foreground/60 leading-relaxed">
-              You knew <span className="text-emerald-600 font-black">{knew}</span> of <span className="text-foreground font-black">{total}</span> words on the first try.
+              You knew <span className="text-emerald-600 font-bold">{knew}</span> of <span className="text-foreground font-bold">{total}</span> words on the first try.
               Keep this momentum up to strengthen long-term memory.
             </p>
           </div>
@@ -834,7 +834,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <button
               type="button"
               onClick={startQuiz}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-background py-4 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:bg-accent active:scale-95"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-background py-4 text-xs font-bold uppercase tracking-wide text-foreground transition-all hover:bg-accent active:scale-95"
             >
               <RotateCcw size={16} strokeWidth={3} />
               Re-run
@@ -842,7 +842,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <button
               type="button"
               onClick={() => setPhase("idle")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
             >
               Finish Lab
             </button>
@@ -868,12 +868,12 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         </button>
         <div className="flex items-center gap-3">
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-          <span className="text-[13px] font-black uppercase tracking-widest text-foreground">
+          <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
             {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
           </span>
         </div>
         {/* Live tally: remembered vs. relearning */}
-        <div className="flex items-center gap-2.5 text-[11px] font-black tabular-nums">
+        <div className="flex items-center gap-2.5 text-xs font-bold tabular-nums">
           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={13} strokeWidth={3} />
             {knewCount}

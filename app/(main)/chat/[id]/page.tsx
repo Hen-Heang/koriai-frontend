@@ -16,7 +16,7 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
         subtitle="Detailed view for a specific AI conversation thread."
         conversationId={Number.isFinite(conversationId) ? conversationId : undefined}
       />
-      <Card className="rounded-[2rem] border-border/60 bg-white/90 shadow-lg shadow-slate-950/5">
+      <Card className="rounded-3xl border-border/60 bg-white/90 shadow-lg shadow-slate-950/5">
         <CardHeader>
           <CardTitle className="text-xl">Conversation details</CardTitle>
         </CardHeader>

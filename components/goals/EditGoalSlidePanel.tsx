@@ -165,7 +165,7 @@ export function EditGoalSlidePanel({
                       className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-3xl shadow-sm transition-all hover:scale-105 hover:border-primary/40 hover:bg-primary/20"
                     >
                       {icon ?? (
-                        <span className="text-xl font-black text-primary">
+                        <span className="text-xl font-bold text-primary">
                           {goal?.title?.charAt(0)?.toUpperCase() || "G"}
                         </span>
                       )}

@@ -122,7 +122,7 @@ export function InviteMembers({ goalId, onInvited }: InviteMembersProps) {
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar className="h-9 w-9 shrink-0">
                   <AvatarImage src={user.avatarUrl || undefined} alt={name} />
-                  <AvatarFallback className="bg-primary/10 text-[11px] font-bold text-primary">
+                  <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                     {getInitials(name)}
                   </AvatarFallback>
                 </Avatar>

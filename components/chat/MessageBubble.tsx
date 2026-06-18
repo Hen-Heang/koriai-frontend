@@ -184,7 +184,7 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
             key={idx}
             className={cn(
               "font-semibold tracking-tight text-foreground",
-              // Calm hierarchy — closer to GPT/Gemini than the old font-black.
+              // Calm hierarchy — closer to GPT/Gemini than the old font-bold.
               block.level === 1 ? "mt-6 text-[1.15rem]" : "mt-5 text-[1.05rem]",
               "mb-2"
             )}
@@ -275,7 +275,7 @@ function MessageBubbleImpl({
         <div className="shrink-0 pt-1">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[10px] font-black text-white shadow-sm sm:h-9 sm:w-9",
+              "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[11px] font-bold text-white shadow-sm sm:h-9 sm:w-9",
               isUser
                 ? "bg-slate-500"
                 : "bg-linear-to-br from-blue-500 to-indigo-600"
@@ -297,10 +297,10 @@ function MessageBubbleImpl({
         {/* Content Section */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center justify-between">
-             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+             <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
                {isUser ? "You" : "Hengo Tutor"}
              </span>
-             <span className="text-[10px] font-bold text-muted-foreground/20">
+             <span className="text-[11px] font-bold text-muted-foreground/20">
                {new Date(message.createdAt).toLocaleTimeString([], {
                  hour: "2-digit",
                  minute: "2-digit",
@@ -321,7 +321,7 @@ function MessageBubbleImpl({
             >
               <div className="flex items-center gap-2 border-b border-amber-500/10 bg-amber-500/5 px-4 py-2.5">
                 <CheckCircle2 size={14} className="text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Suggested Improvement</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Suggested Improvement</p>
               </div>
               <div className="p-4">
                 <div className="text-[14px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">

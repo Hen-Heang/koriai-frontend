@@ -47,13 +47,13 @@ export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-[2.5rem] border-border bg-card/50 p-6 shadow-sm sm:p-8">
+      <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Sparkles size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-black tracking-tight">AI Goal Coach</h3>
+            <h3 className="text-lg font-bold tracking-tight">AI Goal Coach</h3>
             <p className="text-sm font-medium text-muted-foreground">
               Generate a task plan for this goal, scheduled across your timeframe.
             </p>
@@ -62,7 +62,7 @@ export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
 
         <div className="mt-6 space-y-4">
           <div>
-            <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/50">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
               How many tasks?
             </p>
             <div className="flex gap-2">
@@ -85,7 +85,7 @@ export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
           </div>
 
           <div>
-            <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/50">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
               Anything specific? (optional)
             </p>
             <Input
@@ -104,8 +104,8 @@ export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
       </Card>
 
       {generated && generated.length > 0 && (
-        <Card className="rounded-[2.5rem] border-border bg-card/50 p-6 shadow-sm sm:p-8">
-          <h4 className="mb-4 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+        <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+          <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
             Just added
           </h4>
           <ul className="space-y-2">

@@ -125,9 +125,9 @@ export function SmartPeek({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="truncate text-xl font-black tracking-tight text-foreground">{data.word}</h4>
+                          <h4 className="truncate text-xl font-bold tracking-tight text-foreground">{data.word}</h4>
                           {data.hanja && (
-                            <span className="rounded-md bg-accent px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{data.hanja}</span>
+                            <span className="rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold text-muted-foreground">{data.hanja}</span>
                           )}
                         </div>
                         <p className="mt-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">{data.definition}</p>
@@ -151,7 +151,7 @@ export function SmartPeek({
                       <Button
                         size="sm"
                         className={cn(
-                          "h-9 flex-1 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all",
+                          "h-9 flex-1 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
                           saved ? "bg-emerald-500 hover:bg-emerald-500" : "bg-emerald-600 hover:bg-emerald-500"
                         )}
                         onClick={handleSave}

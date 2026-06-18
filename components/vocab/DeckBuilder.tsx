@@ -40,14 +40,14 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
   }
 
   return (
-    <div className="rounded-[2rem] border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.5rem] sm:p-8">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 dark:text-indigo-400">Card Generator</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Card Generator</p>
           </div>
-          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">AI Deck Builder</h3>
+          <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">AI Deck Builder</h3>
           <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Select a category to expand your vocabulary with relevant high-frequency terms.
           </p>
@@ -71,7 +71,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
           >
             <span className="text-lg sm:text-xl">{cat.emoji}</span>
             <span className={cn(
-              "text-[10px] font-black uppercase tracking-tight sm:text-[11px]",
+              "text-[11px] font-bold uppercase tracking-tight sm:text-xs",
               selectedCategory === cat.id ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground/60"
             )}>
               {cat.label}
@@ -82,7 +82,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
 
       <div className="mt-6 flex flex-col gap-4 border-t border-border/60 pt-6 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6 sm:pt-8">
         <Button
-          className="h-14 w-full rounded-2xl bg-indigo-600 px-6 text-base font-black text-white shadow-xl shadow-indigo-600/20 transition-all hover:bg-indigo-500 active:scale-95 sm:w-auto sm:px-8"
+          className="h-14 w-full rounded-2xl bg-indigo-600 px-6 text-base font-bold text-white shadow-xl shadow-indigo-600/20 transition-all hover:bg-indigo-500 active:scale-95 sm:w-auto sm:px-8"
           onClick={handleGenerate}
           disabled={!selectedCategory || generating}
         >
@@ -97,7 +97,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
             </>
           )}
         </Button>
-        <div className="flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 sm:justify-end">
+        <div className="flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:justify-end">
           <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-0">
             <span>{dueCount} REVIEWS DUE</span>
             <span className="sm:mt-0.5">{totalCount} TOTAL CARDS</span>

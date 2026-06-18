@@ -38,7 +38,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.5rem] lg:p-8",
+        "flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
         className
       )}
     >
@@ -48,8 +48,8 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
             <Target size={20} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-lg font-black tracking-tight text-foreground">Your Goals</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+            <h3 className="text-lg font-bold tracking-tight text-foreground">Your Goals</h3>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
               {activeGoals.length} Active
             </p>
           </div>
@@ -71,7 +71,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Target size={28} strokeWidth={1.75} />
             </div>
-            <h3 className="text-base font-black tracking-tight">No active goals</h3>
+            <h3 className="text-base font-bold tracking-tight">No active goals</h3>
             <p className="mb-6 mt-1 max-w-[200px] text-xs font-medium text-muted-foreground">
               Set a goal and track your progress in one place.
             </p>
@@ -90,15 +90,15 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
                 href={`/goals/${goal.id}`}
                 className="group flex items-center gap-4 rounded-3xl border border-border bg-background/40 p-4 transition-all hover:bg-accent/50 lg:p-5"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-black text-primary transition-transform group-hover:scale-110">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary transition-transform group-hover:scale-110">
                   {icon || (goal.title ? goal.title.charAt(0).toUpperCase() : "G")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-base font-black text-foreground transition-colors group-hover:text-primary">
+                    <p className="truncate text-base font-bold text-foreground transition-colors group-hover:text-primary">
                       {goal.title}
                     </p>
-                    <span className="shrink-0 text-xs font-black tabular-nums text-primary">
+                    <span className="shrink-0 text-xs font-bold tabular-nums text-primary">
                       {progress}%
                     </span>
                   </div>
@@ -113,7 +113,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />
-                    <span className="flex items-center gap-1 text-[10px] font-black uppercase text-muted-foreground/60">
+                    <span className="flex items-center gap-1 text-[11px] font-bold uppercase text-muted-foreground/60">
                       <ClipboardList className="h-3 w-3" />
                       {goal.taskCounts?.completed}/{goal.taskCounts?.total}
                     </span>

@@ -180,9 +180,9 @@ export default function ListeningPage() {
 
       <motion.div
         variants={itemVariants}
-        className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+        className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
       >
-        <label className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           Topic
         </label>
         <ChipSelect options={topics} value={topic} onChange={setTopic} className="mt-3" />
@@ -191,7 +191,7 @@ export default function ListeningPage() {
             type="button"
             onClick={handleGenerate}
             disabled={loading}
-            className="h-11 rounded-xl bg-emerald-600 px-6 text-sm font-black text-white hover:bg-emerald-500 active:scale-95"
+            className="h-11 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white hover:bg-emerald-500 active:scale-95"
           >
             <Sparkles size={16} className="mr-2" strokeWidth={2.5} />
             {loading ? "Generating..." : lesson ? "New Lesson" : "Generate Lesson"}
@@ -202,7 +202,7 @@ export default function ListeningPage() {
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading && (
-        <motion.div variants={itemVariants} className="rounded-[2rem] border border-border bg-card p-7 dark:bg-slate-900/40">
+        <motion.div variants={itemVariants} className="rounded-3xl border border-border bg-card p-7 dark:bg-slate-900/40">
           <Skeleton className="h-5 w-1/3" />
           <Skeleton className="mt-4 h-16 w-full rounded-2xl" />
           <Skeleton className="mt-3 h-24 w-full rounded-2xl" />
@@ -214,7 +214,7 @@ export default function ListeningPage() {
           {/* Player */}
           <motion.div
             variants={itemVariants}
-            className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+            className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -222,7 +222,7 @@ export default function ListeningPage() {
                   <Headphones size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600/70 dark:text-emerald-400/70">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-600/70 dark:text-emerald-400/70">
                     {lesson.topic}
                   </p>
                   <h3 className="text-base font-extrabold text-foreground">{lesson.title}</h3>
@@ -250,7 +250,7 @@ export default function ListeningPage() {
                     type="button"
                     onClick={() => handlePlay(r)}
                     className={cn(
-                      "h-10 rounded-xl px-4 text-xs font-black active:scale-95",
+                      "h-10 rounded-xl px-4 text-xs font-bold active:scale-95",
                       rate === r
                         ? "bg-foreground text-background"
                         : "border border-border bg-background text-foreground hover:bg-accent"
@@ -275,7 +275,7 @@ export default function ListeningPage() {
               <div className="mt-4 space-y-3">
                 {lesson.lines.map((line, i) => (
                   <div key={i} className="rounded-2xl border border-border bg-background/60 px-4 py-3 dark:bg-white/4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/70">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70">
                       {line.speaker}
                     </p>
                     <p className="mt-1 font-bold text-foreground">{line.korean}</p>
@@ -345,19 +345,19 @@ export default function ListeningPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={!allAnswered || submitting}
-                    className="h-11 rounded-xl bg-emerald-600 px-6 text-sm font-black text-white hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
+                    className="h-11 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
                   >
                     {submitting ? "Scoring..." : "Submit answers"}
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 px-6 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
                       <CheckCircle2 size={20} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-emerald-700 dark:text-emerald-300">
+                      <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
                         {result.score} / {result.total} correct · {result.accuracy}%
                       </p>
                       <p className="text-xs font-medium text-muted-foreground">Saved to your progress.</p>
@@ -369,7 +369,7 @@ export default function ListeningPage() {
                       setAnswers({})
                       setResult(null)
                     }}
-                    className="h-10 rounded-xl border border-border bg-background px-5 text-xs font-black text-foreground hover:bg-accent active:scale-95"
+                    className="h-10 rounded-xl border border-border bg-background px-5 text-xs font-bold text-foreground hover:bg-accent active:scale-95"
                   >
                     <RotateCcw size={14} className="mr-2" /> Try again
                   </Button>
@@ -383,7 +383,7 @@ export default function ListeningPage() {
       {!lesson && !loading && !error && (
         <motion.div
           variants={itemVariants}
-          className="rounded-[2rem] border border-dashed border-border bg-card/40 p-10 text-center"
+          className="rounded-3xl border border-dashed border-border bg-card/40 p-10 text-center"
         >
           <Headphones size={32} className="mx-auto text-muted-foreground/50" strokeWidth={2} />
           <p className="mt-3 text-sm font-bold text-foreground">No lesson yet</p>

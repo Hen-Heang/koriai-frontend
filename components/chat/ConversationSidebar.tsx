@@ -51,7 +51,7 @@ export function ConversationSidebar({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between px-3 py-3">
-        <h2 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
           Chats
         </h2>
         <div className="flex items-center gap-1">
@@ -170,7 +170,7 @@ export function ConversationSidebar({
                         onDelete(c.id)
                         setConfirmId(null)
                       }}
-                      className="rounded-lg px-2 py-1 text-[11px] font-black uppercase text-red-500 hover:bg-red-500/10"
+                      className="rounded-lg px-2 py-1 text-xs font-bold uppercase text-red-500 hover:bg-red-500/10"
                     >
                       Delete
                     </button>

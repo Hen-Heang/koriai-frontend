@@ -26,7 +26,7 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-6 shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-xl sm:p-10",
+        "relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 dark:backdrop-blur-xl sm:p-10",
         className
       )}
     >
@@ -39,15 +39,15 @@ export function PageHero({
       <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">
+            <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
               {eyebrow}
             </p>
           </div>
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl xl:text-6xl">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             {title}
           </h1>
-          <p className="max-w-2xl text-base font-medium leading-relaxed text-muted-foreground">
+          <p className="max-w-2xl text-base font-normal leading-relaxed text-muted-foreground">
             {description}
           </p>
         </div>
@@ -59,12 +59,12 @@ export function PageHero({
               {stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-[1.5rem] border border-border bg-background/50 px-5 py-4 shadow-sm backdrop-blur-sm dark:bg-white/5 sm:min-w-[100px]"
+                  className="rounded-2xl border border-border bg-background/50 px-5 py-4 backdrop-blur-sm dark:bg-white/5 sm:min-w-[100px]"
                 >
-                  <p className="text-xl font-black tracking-tighter text-foreground sm:text-2xl">
+                  <p className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                     {stat.value}
                   </p>
-                  <p className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
                     {stat.label}
                   </p>
                 </div>

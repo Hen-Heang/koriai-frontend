@@ -466,10 +466,10 @@ export default function InterviewScriptPage() {
 
           {/* Doc name + live save status (the line Docs shows under the title) */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-black leading-tight text-foreground">
+            <p className="truncate text-[15px] font-bold leading-tight text-foreground">
               {topic.labelKo}
             </p>
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
               {synced ? (
                 <CloudCheck size={13} className="shrink-0 text-blue-500" />
               ) : (
@@ -535,7 +535,7 @@ export default function InterviewScriptPage() {
                 type="button"
                 onClick={() => setMode("script")}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-black uppercase tracking-wide transition-all",
+                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold uppercase tracking-wide transition-all",
                   mode === "script" ? "bg-blue-600 text-white shadow" : "text-muted-foreground/70 hover:text-foreground"
                 )}
               >
@@ -545,7 +545,7 @@ export default function InterviewScriptPage() {
                 type="button"
                 onClick={() => setMode("qa")}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-black uppercase tracking-wide transition-all",
+                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold uppercase tracking-wide transition-all",
                   mode === "qa" ? "bg-blue-600 text-white shadow" : "text-muted-foreground/70 hover:text-foreground"
                 )}
               >
@@ -561,7 +561,7 @@ export default function InterviewScriptPage() {
             <div className="sticky top-20">
               <div className="mb-3 flex items-center gap-2 px-2 text-muted-foreground">
                 <ListTree size={16} strokeWidth={2.5} />
-                <span className="text-[11px] font-black uppercase tracking-[0.18em]">
+                <span className="text-xs font-bold uppercase tracking-[0.18em]">
                   Outline
                 </span>
               </div>
@@ -611,10 +611,10 @@ export default function InterviewScriptPage() {
                 Add section
               </button>
               <div className="mt-4 border-t border-border/60 px-3 pt-3">
-                <p className="text-[11px] font-bold text-muted-foreground/70">
+                <p className="text-xs font-bold text-muted-foreground/70">
                   {completedSections}/{allSections.length} sections
                 </p>
-                <p className="text-[11px] font-bold text-muted-foreground/70">
+                <p className="text-xs font-bold text-muted-foreground/70">
                   {totalWords} {totalWords === 1 ? "word" : "words"} · {totalChars}자
                 </p>
               </div>
@@ -625,7 +625,7 @@ export default function InterviewScriptPage() {
           <article className="w-full max-w-[816px] rounded-sm bg-white px-6 py-10 shadow-[0_1px_3px_rgba(60,64,67,0.15),0_4px_24px_rgba(60,64,67,0.1)] ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10 sm:px-14 sm:py-16 lg:px-[96px]">
             {/* Document title */}
             <header className="border-b border-border/60 pb-6">
-              <h1 className="text-[1.7rem] font-black leading-tight tracking-tight text-foreground sm:text-3xl">
+              <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
                 {topic.labelKo}
               </h1>
               <p className="mt-2 text-sm font-medium text-muted-foreground">
@@ -654,17 +654,17 @@ export default function InterviewScriptPage() {
                     <div className="flex items-center justify-between gap-3">
                       {section.custom ? (
                         <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                          <span className="text-lg font-black text-foreground">{index + 1}.</span>
+                          <span className="text-lg font-bold text-foreground">{index + 1}.</span>
                           <input
                             id={`title-${section.id}`}
                             value={section.titleKo}
                             onChange={(e) => renameCustomSection(section.id, e.target.value)}
                             placeholder="Section title…"
-                            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-black text-foreground outline-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:ring-0"
+                            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-bold text-foreground outline-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:ring-0"
                           />
                         </div>
                       ) : (
-                        <h2 className="text-lg font-black text-foreground">
+                        <h2 className="text-lg font-bold text-foreground">
                           {index + 1}. {section.titleKo}
                           <span className="ml-2 text-sm font-bold text-muted-foreground/70">
                             {section.titleEn}
@@ -673,7 +673,7 @@ export default function InterviewScriptPage() {
                       )}
                       <div className="flex shrink-0 items-center gap-2">
                         {sectionWords > 0 && (
-                          <span className="text-[11px] font-bold tabular-nums text-muted-foreground/50">
+                          <span className="text-xs font-bold tabular-nums text-muted-foreground/50">
                             {sectionWords}w
                           </span>
                         )}
@@ -745,7 +745,7 @@ export default function InterviewScriptPage() {
           ) : (
             <article className="mx-auto w-full max-w-[816px] rounded-sm bg-white px-6 py-10 shadow-[0_1px_3px_rgba(60,64,67,0.15),0_4px_24px_rgba(60,64,67,0.1)] ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10 sm:px-14 sm:py-16 lg:px-[96px]">
               <header className="border-b border-border/60 pb-6">
-                <h1 className="text-[1.7rem] font-black leading-tight tracking-tight text-foreground sm:text-3xl">
+                <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
                   예상 질문 &amp; 답변 (Q&amp;A)
                 </h1>
                 <p className="mt-2 text-sm font-medium text-muted-foreground">
@@ -770,12 +770,12 @@ export default function InterviewScriptPage() {
                               value={item.questionKo}
                               onChange={(e) => renameCustomQA(item.id, e.target.value)}
                               placeholder="질문을 입력하세요…"
-                              className="w-full border-0 bg-transparent p-0 text-base font-black text-foreground outline-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:ring-0"
+                              className="w-full border-0 bg-transparent p-0 text-base font-bold text-foreground outline-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:ring-0"
                               lang="ko"
                             />
                           ) : (
                             <>
-                              <p className="text-base font-black leading-snug text-foreground">
+                              <p className="text-base font-bold leading-snug text-foreground">
                                 {index + 1}. {item.questionKo}
                               </p>
                               {item.questionEn && (

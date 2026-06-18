@@ -156,7 +156,7 @@ function NotificationRow({
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-medium text-muted-foreground/70">
+          <span className="text-xs font-medium text-muted-foreground/70">
             {n.createdAt ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true }) : ""}
           </span>
           {!n.read && (
@@ -166,7 +166,7 @@ function NotificationRow({
                 e.stopPropagation()
                 onMarkRead(n.id)
               }}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
             >
               <Check className="h-3 w-3" /> Mark read
             </button>
@@ -201,7 +201,7 @@ export function NotificationBell() {
         >
           <Bell size={18} strokeWidth={2.5} />
           {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground shadow-md ring-2 ring-background">
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground shadow-md ring-2 ring-background">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -214,9 +214,9 @@ export function NotificationBell() {
       >
         <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-black tracking-tight text-foreground">Notifications</h3>
+            <h3 className="text-sm font-bold tracking-tight text-foreground">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black tabular-nums text-primary">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold tabular-nums text-primary">
                 {unreadCount}
               </span>
             )}
@@ -225,7 +225,7 @@ export function NotificationBell() {
             <button
               type="button"
               onClick={() => void markAllRead()}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
             >
               <CheckCheck className="h-3.5 w-3.5" /> Mark all read
             </button>
@@ -240,7 +240,7 @@ export function NotificationBell() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                 <Bell size={28} strokeWidth={1.75} />
               </div>
-              <p className="text-sm font-black tracking-tight text-foreground">You&apos;re all caught up</p>
+              <p className="text-sm font-bold tracking-tight text-foreground">You&apos;re all caught up</p>
               <p className="mt-1 max-w-[220px] text-xs font-medium text-muted-foreground">
                 Goal invitations and task updates will show up here.
               </p>

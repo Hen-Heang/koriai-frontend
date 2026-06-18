@@ -220,7 +220,7 @@ export function ChatWindow({
   const isEmpty = messages.length === 0 && !isLoadingMessages
 
   return (
-    <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-[2.5rem] md:border">
+    <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-3xl md:border">
 
       {/* ── Desktop/Mobile Optimized Header ── */}
       <div
@@ -243,16 +243,16 @@ export function ChatWindow({
           )}
 
           <div className="relative shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-blue-500 to-indigo-600 text-[10px] font-black text-white shadow-lg shadow-blue-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-blue-500 to-indigo-600 text-[11px] font-bold text-white shadow-lg shadow-blue-500/20">
               AI
             </div>
             <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-[15px] font-black tracking-tight text-foreground leading-none">{title}</h3>
+            <h3 className="truncate text-[15px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
             <div className="mt-1.5 flex items-center gap-1.5">
               <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
-              <p className="truncate text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{subtitle}</p>
+              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">{subtitle}</p>
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ export function ChatWindow({
             size="sm"
             onClick={() => setIsTechnicalMode(!isTechnicalMode)}
             className={cn(
-              "flex h-9 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-all",
+              "flex h-9 items-center gap-2 rounded-xl px-3 text-[11px] font-bold uppercase tracking-wider transition-all",
               isTechnicalMode 
                 ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400" 
                 : "border-border/60 bg-background/50 text-muted-foreground/60"
@@ -281,7 +281,7 @@ export function ChatWindow({
             onClick={() => setVoiceMode(!voiceMode)}
             title="Korean voice conversation: speak and hear replies with subtitles"
             className={cn(
-              "flex h-9 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-all",
+              "flex h-9 items-center gap-2 rounded-xl px-3 text-[11px] font-bold uppercase tracking-wider transition-all",
               voiceMode
                 ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                 : "border-border/60 bg-background/50 text-muted-foreground/60"
@@ -316,7 +316,7 @@ export function ChatWindow({
                   <Sparkles size={24} className="animate-pulse" />
                 </div>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Syncing History</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Syncing History</p>
             </div>
           ) : isEmpty ? (
             /* ── Native-Style Empty State ── */
@@ -397,7 +397,7 @@ export function ChatWindow({
             <motion.p 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="mb-3 px-4 text-[11px] font-black uppercase tracking-widest text-destructive"
+              className="mb-3 px-4 text-xs font-bold uppercase tracking-wide text-destructive"
             >
               {error}
             </motion.p>
@@ -418,7 +418,7 @@ export function ChatWindow({
                 <p className="text-[12px] font-medium text-destructive">{micError}</p>
               ) : (
                 <>
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                  <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                     <Mic size={12} className="animate-pulse" /> Listening
                   </span>
                   <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
@@ -431,7 +431,7 @@ export function ChatWindow({
 
           <form
             onSubmit={handleSubmit}
-            className="group relative flex items-center gap-1 rounded-[2.5rem] border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+            className="group relative flex items-center gap-1 rounded-3xl border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
             <Button 
               type="button" 
@@ -496,7 +496,7 @@ export function ChatWindow({
             </div>
           </form>
           
-          <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/40 sm:text-[11px]">
+          <p className="mt-3 text-center text-[11px] font-medium text-muted-foreground/40 sm:text-xs">
             Hengo can make mistakes. Consider checking important information.
           </p>
         </div>

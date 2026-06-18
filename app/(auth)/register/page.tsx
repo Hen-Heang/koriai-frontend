@@ -113,17 +113,17 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
               <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
             </div>
-            <span className="text-xl font-black tracking-tight text-foreground">Hengo</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">Hengo</span>
           </Link>
           <ThemeToggle />
         </div>
 
-        <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
+        <Card className="overflow-hidden rounded-3xl border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" />
 
           <CardHeader className="space-y-2 pb-6 pt-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                 <UserPlus size={14} strokeWidth={3} />
                 Step {step} of 2
               </div>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
                 <div className={`h-1.5 w-8 rounded-full transition-colors ${step >= 2 ? "bg-blue-500" : "bg-border"}`} />
               </div>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tight text-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               {step === 1 ? "Create account" : "Your profile"}
             </CardTitle>
             <p className="text-sm font-medium leading-relaxed text-muted-foreground">
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                 <FieldGroup className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Full Name</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Full Name</FieldLabel>
                       <FieldContent>
                         <Input
                           name="displayName"
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Korean Level</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Korean Level</FieldLabel>
                       <FieldContent>
                         <select
                           value={koreanLevel}
@@ -179,7 +179,7 @@ export default function RegisterPage() {
                   </div>
 
                   <Field>
-                    <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Email Address</FieldLabel>
+                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Email Address</FieldLabel>
                     <FieldContent>
                       <Input
                         type="email"
@@ -195,7 +195,7 @@ export default function RegisterPage() {
                   </Field>
 
                   <Field>
-                    <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Password</FieldLabel>
+                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Password</FieldLabel>
                     <FieldContent>
                       <div className="relative">
                         <Input
@@ -227,7 +227,7 @@ export default function RegisterPage() {
                 <FieldGroup className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Country</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Country</FieldLabel>
                       <FieldContent>
                         <Input
                           placeholder="e.g. Cambodia"
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Native Language</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Native Language</FieldLabel>
                       <FieldContent>
                         <select
                           value={nativeLanguage}
@@ -256,7 +256,7 @@ export default function RegisterPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Occupation</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Occupation</FieldLabel>
                       <FieldContent>
                         <select
                           value={occupation}
@@ -271,7 +271,7 @@ export default function RegisterPage() {
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Years of Experience</FieldLabel>
+                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Years of Experience</FieldLabel>
                       <FieldContent>
                         <Input
                           type="number"
@@ -287,7 +287,7 @@ export default function RegisterPage() {
                   </div>
 
                   <Field>
-                    <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Learning Goal</FieldLabel>
+                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Learning Goal</FieldLabel>
                     <FieldContent>
                       <select
                         value={learningGoal}
@@ -304,7 +304,7 @@ export default function RegisterPage() {
                 </FieldGroup>
               )}
 
-              <div className="flex items-start gap-2 rounded-2xl bg-blue-500/5 p-3 text-[11px] font-medium text-blue-700 dark:text-blue-400">
+              <div className="flex items-start gap-2 rounded-2xl bg-blue-500/5 p-3 text-xs font-medium text-blue-700 dark:text-blue-400">
                 <Sparkles size={14} className="mt-0.5 shrink-0" />
                 <p>
                   {step === 1
@@ -338,7 +338,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-14 flex-1 rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
+                  className="h-14 flex-1 rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
                 >
                   {loading ? (
                     <>
@@ -364,7 +364,7 @@ export default function RegisterPage() {
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+              <div className="relative flex justify-center text-[11px] font-bold uppercase tracking-wide">
                 <span className="bg-card px-4 text-muted-foreground/60">Already have an account?</span>
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-8 text-center text-[11px] font-medium text-muted-foreground">
+        <p className="mt-8 text-center text-xs font-medium text-muted-foreground">
           By creating an account, you agree to our{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.

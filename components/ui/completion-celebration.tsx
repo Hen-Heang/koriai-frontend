@@ -83,7 +83,7 @@ export function CompletionCelebration({
           ))}
 
           <motion.div
-            className="relative flex flex-col items-center gap-1.5 rounded-[2rem] border border-white/30 bg-white/80 px-9 py-7 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/80"
+            className="relative flex flex-col items-center gap-1.5 rounded-3xl border border-white/30 bg-white/80 px-9 py-7 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/80"
             initial={{ scale: 0.5, y: 24, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
@@ -97,8 +97,8 @@ export function CompletionCelebration({
             >
               🎉
             </motion.div>
-            <p className="text-xl font-black tracking-tight text-foreground">{message}</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
+            <p className="text-xl font-bold tracking-tight text-foreground">{message}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               {subtitle}
             </p>
           </motion.div>

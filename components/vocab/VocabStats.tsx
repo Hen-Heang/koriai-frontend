@@ -37,8 +37,8 @@ export function VocabStats({ words, dueCount }: VocabStatsProps) {
         {tiles.map(({ label, value, icon: Icon, accent }) => (
           <div key={label} className="rounded-2xl border border-border/60 bg-accent/5 p-3.5 dark:bg-white/[0.02]">
             <Icon size={15} strokeWidth={2.5} className={cn("mb-2", accent)} />
-            <p className={cn("text-2xl font-black tabular-nums tracking-tight", accent)}>{value}</p>
-            <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground/40">{label}</p>
+            <p className={cn("text-2xl font-bold tabular-nums tracking-tight", accent)}>{value}</p>
+            <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground/40">{label}</p>
           </div>
         ))}
       </div>
@@ -64,8 +64,8 @@ export function VocabStats({ words, dueCount }: VocabStatsProps) {
           {BUCKETS.map(({ key, label, text, dot }) => (
             <div key={key} className="flex items-center gap-1.5">
               <span className={cn("h-2 w-2 rounded-full", dot)} />
-              <span className="text-[11px] font-bold text-muted-foreground/60">{label}</span>
-              <span className={cn("text-[11px] font-black tabular-nums", text)}>{stats[key]}</span>
+              <span className="text-xs font-bold text-muted-foreground/60">{label}</span>
+              <span className={cn("text-xs font-bold tabular-nums", text)}>{stats[key]}</span>
             </div>
           ))}
         </div>

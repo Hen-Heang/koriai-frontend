@@ -116,7 +116,7 @@ export default function DailyPhrasePage() {
 
       {loading ? (
         <motion.div variants={itemVariants} className="space-y-4">
-          <div className="rounded-[2rem] border border-border bg-card p-7 shadow-sm dark:bg-slate-900/40">
+          <div className="rounded-3xl border border-border bg-card p-7 shadow-sm dark:bg-slate-900/40">
             <AiGenerating
               stages={[
                 "Picking today's workplace phrase…",
@@ -134,12 +134,12 @@ export default function DailyPhrasePage() {
         <>
           <motion.div
             variants={itemVariants}
-            className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8"
+            className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {phrase.formality && (
-                  <span className="inline-flex rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
+                  <span className="inline-flex rounded-full bg-blue-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
                     {phrase.formality}
                   </span>
                 )}
@@ -160,7 +160,7 @@ export default function DailyPhrasePage() {
 
             {phrase.whenToUse && (
               <div className="mt-6 rounded-2xl border border-sky-200/60 bg-sky-50/60 p-4 dark:border-sky-400/15 dark:bg-sky-400/6">
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
                   When to use
                 </p>
                 <p className="mt-1.5 text-sm leading-6 text-sky-800 dark:text-sky-200">
@@ -176,8 +176,8 @@ export default function DailyPhrasePage() {
                 disabled={marking}
                 className={
                   phrase.learned
-                    ? "h-10 rounded-xl bg-blue-600 px-5 text-xs font-black text-white hover:bg-blue-500 active:scale-95"
-                    : "h-10 rounded-xl border border-border bg-background px-5 text-xs font-black text-foreground hover:bg-accent active:scale-95"
+                    ? "h-10 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white hover:bg-blue-500 active:scale-95"
+                    : "h-10 rounded-xl border border-border bg-background px-5 text-xs font-bold text-foreground hover:bg-accent active:scale-95"
                 }
               >
                 <CheckCircle2 size={14} className="mr-2" strokeWidth={2.5} />
@@ -187,7 +187,7 @@ export default function DailyPhrasePage() {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 rounded-xl border border-border bg-background px-5 text-xs font-black text-foreground hover:bg-accent active:scale-95"
+                className="h-10 rounded-xl border border-border bg-background px-5 text-xs font-bold text-foreground hover:bg-accent active:scale-95"
               >
                 <BookmarkPlus size={14} className="mr-2" strokeWidth={2.5} />
                 {saving ? "Saving..." : "Add to flashcards"}
@@ -223,13 +223,13 @@ export default function DailyPhrasePage() {
           )}
 
           {/* Sentence Practice */}
-          <motion.div variants={itemVariants} className="rounded-[2rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
+          <motion.div variants={itemVariants} className="rounded-3xl border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
             <div className="flex items-center gap-2 mb-1">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
                 <PenLine size={16} strokeWidth={2.5} />
               </div>
               <div>
-                <h4 className="text-sm font-black text-foreground">Write it yourself</h4>
+                <h4 className="text-sm font-bold text-foreground">Write it yourself</h4>
                 <p className="text-xs font-medium text-muted-foreground/60">Use today&apos;s phrase in your own sentence</p>
               </div>
             </div>

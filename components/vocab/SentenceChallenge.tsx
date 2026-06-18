@@ -107,7 +107,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
         <div className="flex items-center gap-2.5">
           <PenLine size={14} strokeWidth={2.5} className={open ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground/50"} />
           <span className={cn(
-            "text-[11px] font-black uppercase tracking-[0.18em]",
+            "text-xs font-bold uppercase tracking-[0.18em]",
             open ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground/50"
           )}>
             Practice Sentence
@@ -152,7 +152,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                   <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4 space-y-1.5">
                     <div className="flex items-center gap-1.5">
                       <BookOpen size={12} strokeWidth={2.5} className="text-violet-600 dark:text-violet-400" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">Task</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Task</span>
                     </div>
                     <p className="text-sm font-bold text-foreground leading-relaxed">{challenge.challengePrompt}</p>
                     {challenge.contextHint && (
@@ -174,7 +174,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                     type="button"
                     onClick={handleCheck}
                     disabled={!attempt.trim() || phase === "checking"}
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 text-xs font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 disabled:opacity-40"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 text-xs font-bold uppercase tracking-[0.18em] text-white shadow-lg shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 disabled:opacity-40"
                   >
                     {phase === "checking" ? (
                       <><Loader2 size={14} className="animate-spin" /> Evaluating...</>
@@ -193,7 +193,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                 >
                   {/* Score */}
                   <div className={cn("rounded-2xl border p-4 flex items-center gap-4", scoreBg)}>
-                    <div className={cn("text-4xl font-black tabular-nums", scoreColor)}>
+                    <div className={cn("text-4xl font-bold tabular-nums", scoreColor)}>
                       {result.score}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -202,7 +202,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                           ? <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} />
                           : <XCircle size={14} className="text-red-600 dark:text-red-400" strokeWidth={2.5} />
                         }
-                        <span className={cn("text-xs font-black uppercase tracking-widest", scoreColor)}>
+                        <span className={cn("text-xs font-bold uppercase tracking-wide", scoreColor)}>
                           {result.correct ? "Good job" : "Keep practicing"}
                         </span>
                       </div>
@@ -215,7 +215,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                   {/* Corrected / Better */}
                   {result.correctedSentence && result.correctedSentence !== attempt.trim() && (
                     <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-3 space-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">Corrected</span>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">Corrected</span>
                       <p className="text-sm font-bold text-foreground">{result.correctedSentence}</p>
                     </div>
                   )}
@@ -224,7 +224,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                     <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
                       <div className="flex items-center gap-1.5">
                         <Star size={11} strokeWidth={2.5} className="text-amber-600 dark:text-amber-400" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">More natural</span>
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">More natural</span>
                       </div>
                       <p className="text-sm font-bold text-foreground">{result.betterAlternative}</p>
                     </div>
@@ -242,14 +242,14 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
                     <button
                       type="button"
                       onClick={handleRetry}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-border bg-background py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-border bg-background py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent active:scale-95"
                     >
                       <RotateCcw size={12} strokeWidth={2.5} /> Try again
                     </button>
                     <button
                       type="button"
                       onClick={handleNewChallenge}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-violet-600 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-violet-600 py-3 text-[11px] font-bold uppercase tracking-wide text-white shadow-md shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95"
                     >
                       <PenLine size={12} strokeWidth={2.5} /> New challenge
                     </button>

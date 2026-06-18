@@ -72,7 +72,7 @@ export function TaskDetailsPanel({
           </Button>
         )}
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="mb-1 text-[11px] font-medium leading-none text-muted-foreground">Task</span>
+          <span className="mb-1 text-xs font-medium leading-none text-muted-foreground">Task</span>
           <span className="truncate text-sm font-semibold leading-none tracking-tight text-foreground">
             {goalTitle}
           </span>
@@ -145,7 +145,7 @@ export function TaskDetailsPanel({
                 <button
                   onClick={() => onToggleTaskCompletion(selectedTask.id)}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors duration-200",
+                    "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-200",
                     selectedTask.completed
                       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                       : "bg-primary/10 text-primary hover:bg-primary/15"
@@ -193,7 +193,7 @@ export function TaskDetailsPanel({
                     {selectedTask.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className="flex items-center gap-1.5 rounded-lg bg-foreground/[0.05] px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                        className="flex items-center gap-1.5 rounded-lg bg-foreground/[0.05] px-2.5 py-1 text-xs font-medium text-muted-foreground"
                       >
                         <Tag className="h-3 w-3" />
                         {tag}
@@ -224,7 +224,7 @@ export function TaskDetailsPanel({
 
             {hasDescription && (
               <div className="space-y-4">
-                <h2 className="px-1 text-[11px] font-medium text-muted-foreground">Description</h2>
+                <h2 className="px-1 text-xs font-medium text-muted-foreground">Description</h2>
                 <div className="whitespace-pre-wrap rounded-2xl border border-border/60 bg-card/50 px-6 py-6 text-sm leading-relaxed text-foreground/90">
                   {selectedTask.description}
                 </div>

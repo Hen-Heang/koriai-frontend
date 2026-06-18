@@ -77,14 +77,14 @@ export function MessageGenerator() {
 
       <motion.div
         variants={itemVariants}
-        className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+        className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
       >
-        <label className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           Category
         </label>
         <ChipSelect options={categories} value={category} onChange={setCategory} className="mt-3" />
 
-        <label className="mt-6 block text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <label className="mt-6 block text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           What do you want to say?
         </label>
         <Textarea
@@ -102,7 +102,7 @@ export function MessageGenerator() {
             type="button"
             onClick={handleGenerate}
             disabled={loading || !intent.trim()}
-            className="h-11 rounded-xl bg-blue-600 px-6 text-sm font-black text-white hover:bg-blue-500 active:scale-95"
+            className="h-11 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white hover:bg-blue-500 active:scale-95"
           >
             <Wand2 size={16} className="mr-2" strokeWidth={2.5} />
             {loading ? "Generating..." : "Generate"}
@@ -134,7 +134,7 @@ export function MessageGenerator() {
               >
                 <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-accent/5 px-4 py-2.5">
                   {v.formality && (
-                    <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-600 dark:text-blue-400">
+                    <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-400">
                       {v.formality}
                     </span>
                   )}

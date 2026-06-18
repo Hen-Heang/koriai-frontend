@@ -55,16 +55,16 @@ export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
     "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all placeholder:font-medium placeholder:text-muted-foreground/40 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
 
   return (
-    <div className="rounded-[2rem] border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.5rem] sm:p-8">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
               Manual entry
             </p>
           </div>
-          <h3 className="mt-3 text-xl font-black text-foreground sm:mt-4 sm:text-2xl">Add a Word</h3>
+          <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Add a Word</h3>
           <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
             Type your own term and meaning. Use the topic field to add it to an existing deck or
             create a new one.
@@ -119,13 +119,13 @@ export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
         <Button
           onClick={handleSave}
           disabled={!canSave}
-          className="h-14 w-full rounded-2xl bg-emerald-600 px-6 text-base font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8"
+          className="h-14 w-full rounded-2xl bg-emerald-600 px-6 text-base font-bold text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8"
         >
           <Plus size={20} strokeWidth={2.5} className="mr-2 shrink-0" />
           {saving ? "Saving…" : "Add to deck"}
         </Button>
         {categories.length > 0 && (
-          <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 sm:text-right">
+          <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:text-right">
             {categories.length} {categories.length === 1 ? "topic" : "topics"} so far
           </p>
         )}

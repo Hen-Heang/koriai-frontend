@@ -38,7 +38,7 @@ function DashboardLoadingState() {
   return (
     <div className="space-y-6 pb-8 sm:space-y-8 sm:pb-10">
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] 2xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-        <div className="overflow-hidden rounded-[2rem] bg-slate-950 p-5 shadow-2xl sm:rounded-[2.5rem] sm:p-8">
+        <div className="overflow-hidden rounded-3xl bg-slate-950 p-5 shadow-2xl sm:rounded-3xl sm:p-8">
           <Skeleton className="h-4 w-36 bg-white/10" />
           <Skeleton className="mt-4 h-14 w-52 bg-white/10 sm:h-16 sm:w-72" />
           <Skeleton className="mt-4 h-5 w-full max-w-xl bg-white/10" />
@@ -61,7 +61,7 @@ function DashboardLoadingState() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <div className="rounded-[2rem] border border-border bg-card p-5 shadow-xl sm:rounded-[2.5rem] sm:p-6">
+          <div className="rounded-3xl border border-border bg-card p-5 shadow-xl sm:rounded-3xl sm:p-6">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="mt-4 h-9 w-3/4" />
             <Skeleton className="mt-3 h-5 w-full" />
@@ -97,7 +97,7 @@ function DashboardLoadingState() {
         <Skeleton className="mt-3 h-9 w-80 max-w-full" />
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="rounded-[1.8rem] border border-border bg-card p-5 shadow-sm sm:rounded-[2.25rem] sm:p-6">
+            <div key={item} className="rounded-[1.8rem] border border-border bg-card p-5 shadow-sm sm:rounded-3xl sm:p-6">
               <Skeleton className="h-14 w-14 rounded-2xl" />
               <Skeleton className="mt-5 h-6 w-28" />
               <Skeleton className="mt-3 h-4 w-full" />
@@ -108,7 +108,7 @@ function DashboardLoadingState() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="rounded-[2rem] border border-border bg-card p-6 shadow-xl sm:rounded-[2.5rem]">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-xl sm:rounded-3xl">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="mt-4 h-8 w-48" />
           <Skeleton className="mt-6 h-72 w-full rounded-3xl" />
@@ -133,7 +133,7 @@ function DashboardLoadingState() {
               </div>
             </div>
           </div>
-          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-xl sm:rounded-[2.5rem]">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-xl sm:rounded-3xl">
             <Skeleton className="h-5 w-40" />
             <div className="mt-6 space-y-3">
               {[1, 2, 3, 4].map((item) => (
@@ -268,11 +268,11 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 sm:text-[11px]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
             {getToday()}
           </p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-            {getGreeting()}, 👋
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {getGreeting()} 👋
           </h1>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -300,7 +300,7 @@ export default function DashboardPage() {
         {/* Main Hero Card (8 cols) */}
         <motion.div 
           variants={itemVariants}
-          className="relative col-span-1 overflow-hidden rounded-[2rem] border border-border bg-slate-950 p-6 text-white shadow-2xl sm:rounded-[2.5rem] md:col-span-8 lg:p-10"
+          className="relative col-span-1 overflow-hidden rounded-3xl border border-border bg-slate-950 p-6 text-white shadow-xl md:col-span-8 lg:p-10"
         >
           {/* Decorative Gradients */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -309,14 +309,14 @@ export default function DashboardPage() {
           </div>
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-400">
               <Sparkles size={12} />
               Personal Plan
             </div>
-            <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+            <h2 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
               {studyFocus.title}
             </h2>
-            <p className="mt-4 max-w-xl text-[13px] font-medium leading-relaxed text-slate-400 sm:text-base">
+            <p className="mt-4 max-w-xl text-sm font-normal leading-relaxed text-slate-400 sm:text-base">
               {studyFocus.description}
             </p>
 
@@ -331,7 +331,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Floating Korean Text Watermark */}
-          <div className="pointer-events-none absolute -bottom-10 -right-10 hidden text-[12rem] font-black leading-none text-white/[0.02] select-none xl:block">
+          <div className="pointer-events-none absolute -bottom-10 -right-10 hidden text-[12rem] font-bold leading-none text-white/[0.02] select-none xl:block">
             한국어
           </div>
         </motion.div>
@@ -353,15 +353,15 @@ export default function DashboardPage() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="group relative overflow-hidden rounded-[2rem] border border-border bg-card p-5 transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900/40"
+                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:shadow-lg dark:bg-slate-900/40"
               >
                 <div className={cn("inline-flex rounded-2xl p-3", action.iconBg)}>
                   <action.icon size={20} strokeWidth={2.5} />
                 </div>
-                <h3 className="mt-4 text-base font-black text-foreground">{action.label}</h3>
-                <p className="mt-1 text-xs font-medium text-muted-foreground line-clamp-2">{action.description}</p>
+                <h3 className="mt-4 text-base font-bold text-foreground">{action.label}</h3>
+                <p className="mt-1 text-xs font-normal text-muted-foreground line-clamp-2">{action.description}</p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className={cn("text-[10px] font-black uppercase tracking-widest", action.gradient.split(' ')[0].replace('from-', 'text-'))}>
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wide", action.gradient.split(' ')[0].replace('from-', 'text-'))}>
                     Start
                   </span>
                   <ArrowRight size={14} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
@@ -379,16 +379,16 @@ export default function DashboardPage() {
         {/* Streak & Stats Bento (5 cols) */}
         <motion.div variants={itemVariants} className="col-span-1 space-y-6 md:col-span-5 lg:col-span-4">
           <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
-          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40">
-            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/50">Next Steps</h3>
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Next Steps</h3>
             <div className="mt-4 space-y-4">
               {nextSteps.map((step, i) => (
                 <Link key={i} href={step.href} className="group flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-[12px] font-black group-hover:bg-blue-500 group-hover:text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent text-[13px] font-bold text-muted-foreground transition-colors group-hover:bg-blue-500 group-hover:text-white">
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
+                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
                   </div>
                   <ArrowRight size={14} className="text-muted-foreground/20 group-hover:translate-x-1 group-hover:text-blue-500" />
                 </Link>

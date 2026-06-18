@@ -68,13 +68,13 @@ export function GoalCoachChat({ goalId, goalTitle }: { goalId: string; goalTitle
   }
 
   return (
-    <Card className="flex h-[clamp(420px,70dvh,640px)] flex-col overflow-hidden rounded-[2.5rem] border-border bg-card/50 shadow-sm">
+    <Card className="flex h-[clamp(420px,70dvh,640px)] flex-col overflow-hidden rounded-3xl border-border bg-card/50 shadow-sm">
       <div className="flex shrink-0 items-center gap-3 border-b border-border/60 px-5 py-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Sparkles size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-black tracking-tight text-foreground">AI Goal Coach</p>
+          <p className="text-sm font-bold tracking-tight text-foreground">AI Goal Coach</p>
           <p className="truncate text-xs font-medium text-muted-foreground">
             {goalTitle ? `Focused on "${goalTitle}"` : "Grounded in this goal's tasks"}
           </p>

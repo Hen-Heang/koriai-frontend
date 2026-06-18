@@ -44,7 +44,7 @@ export default function TemplateFormPage() {
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <CardTitle className="text-2xl font-black">Template not found</CardTitle>
+            <CardTitle className="text-2xl font-bold">Template not found</CardTitle>
             <CardDescription>The requested template could not be identified.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-10">
@@ -178,7 +178,7 @@ export default function TemplateFormPage() {
     const value = formData[field.id]
     const error = errors[field.id]
     const labelEl = (
-      <Label htmlFor={field.id} className="ml-1 text-xs font-black uppercase tracking-widest text-muted-foreground">
+      <Label htmlFor={field.id} className="ml-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
         {field.label} {field.required && <span className="text-primary">*</span>}
       </Label>
     )
@@ -210,7 +210,7 @@ export default function TemplateFormPage() {
               className={cn(error && "border-destructive/50 bg-destructive/5")}
             />
             {field.helperText && !error && (
-              <p className="ml-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <p className="ml-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
                 {field.helperText}
               </p>
             )}
@@ -230,7 +230,7 @@ export default function TemplateFormPage() {
               className={cn("min-h-[120px]", error && "border-destructive/50 bg-destructive/5")}
             />
             {field.helperText && !error && (
-              <p className="ml-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <p className="ml-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
                 {field.helperText}
               </p>
             )}
@@ -305,7 +305,7 @@ export default function TemplateFormPage() {
                     <CardContent className="space-y-4 p-5">
                       {compoundField.fields.map((subField) => (
                         <div key={subField.id} className="space-y-2">
-                          <Label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                          <Label className="ml-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/70">
                             {subField.label}
                           </Label>
                           <Input
@@ -374,14 +374,14 @@ export default function TemplateFormPage() {
             </div>
             <div className="min-w-0">
               <h1 className="truncate font-bold tracking-tight">{template.name}</h1>
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary/70">
                 {template.category}
               </p>
             </div>
           </div>
         </div>
         <div className="hidden flex-col items-end sm:flex">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
             Section {currentSection + 1} of {template.sections.length}
           </span>
           <span className="text-xs font-bold text-primary">{Math.round(progress)}% complete</span>
@@ -397,7 +397,7 @@ export default function TemplateFormPage() {
               onClick={() => idx <= currentSection && setCurrentSection(idx)}
               disabled={idx > currentSection}
               className={cn(
-                "flex items-center gap-2.5 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
+                "flex items-center gap-2.5 rounded-2xl px-5 py-2.5 text-xs font-bold uppercase tracking-wide transition-all",
                 idx === currentSection
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : idx < currentSection
@@ -421,14 +421,14 @@ export default function TemplateFormPage() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className="rounded-[2rem]">
+            <Card className="rounded-3xl">
               <CardContent className="p-6 sm:p-8">
                 <div className="mb-8 flex items-center gap-5">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
                     {section.icon || template.icon}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black tracking-tight">{section.title}</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">{section.title}</h2>
                     {section.description && (
                       <p className="mt-1 text-sm font-medium text-muted-foreground">{section.description}</p>
                     )}
@@ -485,7 +485,7 @@ export default function TemplateFormPage() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-bold tracking-tight">{template.name}</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary/70">
                     {template.category}
                   </p>
                 </div>
@@ -499,7 +499,7 @@ export default function TemplateFormPage() {
           <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
             <div className="mb-3 flex items-center gap-2">
               <Zap size={14} className="text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Tip</span>
+              <span className="text-[11px] font-bold uppercase tracking-wide text-primary">Tip</span>
             </div>
             <p className="text-xs font-medium italic leading-relaxed text-foreground/80">
               Fill in the details and we&apos;ll prefill your goal. AI task generation arrives soon —

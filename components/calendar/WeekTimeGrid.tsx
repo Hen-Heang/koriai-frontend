@@ -79,7 +79,7 @@ export function WeekTimeGrid({
               )}
               style={{ width: colWidth }}
             >
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-xs">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-xs">
                 {format(day, "EEE")}
               </div>
               <div
@@ -115,7 +115,7 @@ export function WeekTimeGrid({
                 style={{ height: HOUR_HEIGHT }}
               >
                 {hour > 0 && (
-                  <span className="absolute -top-2 right-1.5 text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                  <span className="absolute -top-2 right-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
                     {formatHourLabel(hour)}
                   </span>
                 )}
@@ -174,7 +174,7 @@ function AllDayStrip({ days, getTasksForDate, onTaskClick, colWidth }: AllDayStr
                 type="button"
                 onClick={() => onTaskClick(task)}
                 className={cn(
-                  "w-full truncate rounded-md border-l-2 px-1.5 py-1 text-left text-[11px] font-medium text-foreground transition-colors",
+                  "w-full truncate rounded-md border-l-2 px-1.5 py-1 text-left text-xs font-medium text-foreground transition-colors",
                   task.completed && "line-through opacity-60"
                 )}
                 style={{ backgroundColor: hexWithAlpha(color, 0.16), borderLeftColor: color }}
@@ -270,14 +270,14 @@ function DayColumn({
           >
             <div
               className={cn(
-                "truncate text-[11px] font-semibold leading-tight",
+                "truncate text-xs font-semibold leading-tight",
                 p.task.completed && "line-through"
               )}
             >
               {p.task.title || p.task.description || "Untitled"}
             </div>
             {height > 30 && (
-              <div className="truncate text-[10px] opacity-80">
+              <div className="truncate text-[11px] opacity-80">
                 {formatTaskTimeRange(
                   p.task.daily_start_time,
                   p.task.daily_end_time,

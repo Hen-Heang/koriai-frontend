@@ -49,7 +49,7 @@ function DeckSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
+        <div key={i} className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
           {/* top mastery bar */}
           <Skeleton className="absolute inset-x-0 top-0 h-1 rounded-none" />
           <div className="flex items-start justify-between gap-4 pt-2">
@@ -109,7 +109,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
   return (
     <div className="space-y-6">
       <div className="px-4">
-        <h4 className="text-sm font-black uppercase tracking-[0.25em] text-muted-foreground/60">Your Dictionary</h4>
+        <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground/60">Your Dictionary</h4>
         <p className="mt-1 text-xs font-bold text-muted-foreground/30">
           {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
         </p>
@@ -148,7 +148,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
                 type="button"
                 onClick={() => setMasteryFilter(value)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95",
+                  "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
                   masteryFilter === value
                     ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                     : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
@@ -164,13 +164,13 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
               </button>
             ))}
 
-            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 transition-colors hover:text-foreground dark:bg-slate-900/40">
+            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/60 transition-colors hover:text-foreground dark:bg-slate-900/40">
               <ArrowDownUp size={12} strokeWidth={3} className="shrink-0" />
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
                 aria-label="Sort words"
-                className="cursor-pointer appearance-none bg-transparent py-1.5 pr-1 text-[11px] font-black uppercase tracking-widest text-foreground focus:outline-none"
+                className="cursor-pointer appearance-none bg-transparent py-1.5 pr-1 text-xs font-bold uppercase tracking-wide text-foreground focus:outline-none"
               >
                 {SORT_ORDERS.map(({ value, label }) => (
                   <option key={value} value={value} className="font-bold normal-case tracking-normal text-foreground">
@@ -201,7 +201,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
       </div>
 
       {!loading && words.length > 0 && !filtered.length ? (
-        <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-accent/5 p-10 text-center">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center">
           <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/30" />
           <p className="text-sm font-bold text-muted-foreground/60">
             No words match your search.
@@ -210,11 +210,11 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
       ) : null}
 
       {!loading && !words.length ? (
-        <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-accent/5 p-10 text-center sm:rounded-[3rem] sm:p-16">
-          <div className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-muted/10 text-muted-foreground/20 mb-6">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center sm:rounded-3xl sm:p-16">
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted/10 text-muted-foreground/20 mb-6">
             <Layers3 size={40} strokeWidth={1.5} />
           </div>
-          <h3 className="text-xl font-black text-foreground">Start Your Collection</h3>
+          <h3 className="text-xl font-bold text-foreground">Start Your Collection</h3>
           <p className="mx-auto mt-3 max-w-xs text-[15px] font-medium leading-relaxed text-muted-foreground/60">
             Save words from chat sessions or use the AI Deck Builder to start mastering Korean vocabulary.
           </p>

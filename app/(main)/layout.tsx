@@ -208,7 +208,7 @@ export default function MainLayout({
                 />
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-foreground">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-foreground">
                   Hengo Lab
                 </p>
                 <p className="text-[10px] font-bold text-muted-foreground/60 text-nowrap">
@@ -224,7 +224,7 @@ export default function MainLayout({
           <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
             {navSections.map((section) => (
               <div key={section.label} className="space-y-1">
-                <p className="px-4 pb-1 text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground/40">
+                <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">
                   {section.label}
                 </p>
                 {section.links.map(({ href, label, icon: Icon }) => {
@@ -273,7 +273,7 @@ export default function MainLayout({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
                 <Sparkles size={12} strokeWidth={2.5} />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">AI Active</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide">AI Active</span>
               </div>
               <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground/70">
                 Monitoring your fluency live
@@ -309,10 +309,10 @@ export default function MainLayout({
                   </div>
                 </Link>
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-black tracking-tight text-foreground leading-none">
+                  <span className="text-[13px] font-bold tracking-tight text-foreground leading-none">
                     Hengo
                   </span>
-                  <span className="mt-0.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+                  <span className="mt-0.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tight">
                     by Hen Heang
                   </span>
                 </div>
@@ -334,7 +334,7 @@ export default function MainLayout({
           {/* Desktop top bar */}
           <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-5 backdrop-blur-xl lg:flex">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 dark:text-blue-400/60">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600/60 dark:text-blue-400/60">
                 Workspace
               </p>
               <h2 className="mt-1 text-sm font-bold text-foreground">
@@ -344,7 +344,7 @@ export default function MainLayout({
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 shadow-sm">
                   <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-[11px] font-black uppercase tracking-widest text-foreground/60 text-nowrap">AI Sync Active</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-foreground/60 text-nowrap">AI Sync Active</span>
                </div>
                <NotificationBell />
                <ThemeToggle />
@@ -427,9 +427,9 @@ export default function MainLayout({
                         : "text-muted-foreground/50 hover:text-muted-foreground"
                     )}
                   >
-                    <div className="flex h-5 w-5 items-center justify-center">
+                    <div className="flex h-6 w-6 items-center justify-center">
                       <Icon
-                        size={18}
+                        size={22}
                         strokeWidth={active ? 2.8 : 2.2}
                         className={cn(
                           "transition-all duration-300",
@@ -439,8 +439,8 @@ export default function MainLayout({
                     </div>
                     <span
                       className={cn(
-                        "w-full truncate px-0.5 text-center text-[8.5px] uppercase tracking-[0.04em] leading-none transition-all duration-300 sm:text-[9px] sm:tracking-[0.08em]",
-                        active ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                        "w-full truncate px-0.5 text-center text-[10px] uppercase tracking-[0.03em] leading-none transition-all duration-300 sm:text-[10px] sm:tracking-[0.06em]",
+                        active ? "font-bold opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
                       )}
                     >
                       {label}
@@ -462,9 +462,9 @@ export default function MainLayout({
                     : "text-muted-foreground/50 hover:text-muted-foreground"
                 )}
               >
-                <div className="flex h-5 w-5 items-center justify-center">
+                <div className="flex h-6 w-6 items-center justify-center">
                   <Menu
-                    size={18}
+                    size={22}
                     strokeWidth={onMoreRoute ? 2.8 : 2.2}
                     className={cn(
                       "transition-all duration-300",
@@ -474,8 +474,8 @@ export default function MainLayout({
                 </div>
                 <span
                   className={cn(
-                    "w-full truncate px-0.5 text-center text-[8.5px] uppercase tracking-[0.04em] leading-none transition-all duration-300 sm:text-[9px] sm:tracking-[0.08em]",
-                    onMoreRoute ? "font-black opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
+                    "w-full truncate px-0.5 text-center text-[10px] uppercase tracking-[0.03em] leading-none transition-all duration-300 sm:text-[10px] sm:tracking-[0.06em]",
+                    onMoreRoute ? "font-bold opacity-100 translate-y-0" : "font-bold opacity-60 translate-y-0.5"
                   )}
                 >
                   More

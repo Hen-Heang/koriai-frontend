@@ -56,15 +56,15 @@ function SectionHeader({
   return (
     <div className="flex items-center gap-2 px-1">
       <Icon size={16} strokeWidth={2.5} className="text-blue-600 dark:text-blue-400" />
-      <h3 className="text-base font-black tracking-tight text-foreground">{title}</h3>
-      {hint && <span className="text-[10px] font-bold text-muted-foreground/60">{hint}</span>}
+      <h3 className="text-base font-bold tracking-tight text-foreground">{title}</h3>
+      {hint && <span className="text-[11px] font-bold text-muted-foreground/60">{hint}</span>}
     </div>
   )
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/70">
+    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
       {children}
     </p>
   )
@@ -223,12 +223,12 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
       <div className="space-y-4">
         <Link
           href={isEdit ? `/reading/${unit!.id}` : "/reading"}
-          className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft size={14} strokeWidth={3} /> {isEdit ? "Back to unit" : "All units"}
         </Link>
 
-        <div className="rounded-[2rem] border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-xl dark:bg-slate-900/40 sm:p-8">
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             {isEdit ? "Edit unit" : "Create a new unit"}
           </h1>
@@ -298,7 +298,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                     type="button"
                     onClick={() => setCategory(key)}
                     className={cn(
-                      "rounded-xl border px-3.5 py-2 text-xs font-black transition-all active:scale-95",
+                      "rounded-xl border px-3.5 py-2 text-xs font-bold transition-all active:scale-95",
                       category === key
                         ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -318,7 +318,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                     type="button"
                     onClick={() => setLevel(l)}
                     className={cn(
-                      "rounded-xl border px-3.5 py-2 text-xs font-black transition-all active:scale-95",
+                      "rounded-xl border px-3.5 py-2 text-xs font-bold transition-all active:scale-95",
                       level === l
                         ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -371,7 +371,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
               className="space-y-3 rounded-[1.8rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Paragraph {i + 1}
                 </span>
                 <button
@@ -400,7 +400,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
           <Button
             type="button"
             onClick={() => setParagraphs((prev) => [...prev, { korean: "", english: "" }])}
-            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-black text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-bold text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           >
             <Plus size={14} className="mr-1.5" strokeWidth={3} /> Add paragraph
           </Button>
@@ -444,7 +444,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
           <Button
             type="button"
             onClick={() => setVocab((prev) => [...prev, { term: "", meaning: "", example: "" }])}
-            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-black text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-bold text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           >
             <Plus size={14} className="mr-1.5" strokeWidth={3} /> Add word
           </Button>
@@ -465,7 +465,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
               className="space-y-3 rounded-[1.8rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Question {qi + 1}
                 </span>
                 <button
@@ -518,7 +518,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                   <button
                     type="button"
                     onClick={() => updateQuiz(qi, { options: [...q.options, ""] })}
-                    className="inline-flex items-center gap-1.5 px-1 text-xs font-black text-muted-foreground hover:text-foreground"
+                    className="inline-flex items-center gap-1.5 px-1 text-xs font-bold text-muted-foreground hover:text-foreground"
                   >
                     <Plus size={13} strokeWidth={3} /> Add option
                   </button>
@@ -529,7 +529,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                 onChange={(e) => updateQuiz(qi, { explanation: e.target.value })}
                 placeholder="Explanation shown after answering (optional)"
               />
-              <p className="text-[10px] font-bold text-muted-foreground/50">
+              <p className="text-[11px] font-bold text-muted-foreground/50">
                 Tap the ✓ next to an option to mark it as the correct answer.
               </p>
             </div>
@@ -542,7 +542,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
                 { question: "", options: ["", ""], answerIndex: 0, explanation: "" },
               ])
             }
-            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-black text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            className="h-10 rounded-xl border border-dashed border-border bg-transparent px-4 text-xs font-bold text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           >
             <Plus size={14} className="mr-1.5" strokeWidth={3} /> Add question
           </Button>
@@ -561,7 +561,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-11 rounded-2xl bg-blue-600 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-500 active:scale-[0.99] disabled:opacity-60"
+            className="h-11 rounded-2xl bg-blue-600 px-8 text-xs font-bold uppercase tracking-wide text-white hover:bg-blue-500 active:scale-[0.99] disabled:opacity-60"
           >
             {saving ? (
               <Loader2 size={14} className="mr-2 animate-spin" />
@@ -572,7 +572,7 @@ export function UnitEditor({ unit }: { unit?: ReadingUnit }) {
           </Button>
           <Link
             href={isEdit ? `/reading/${unit!.id}` : "/reading"}
-            className="text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
+            className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
           >
             Cancel
           </Link>

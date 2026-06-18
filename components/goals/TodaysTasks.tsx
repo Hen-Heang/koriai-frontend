@@ -96,7 +96,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     const allDone = completedCount === totalCount
     return (
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
+        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide">
           <span className={cn(allDone ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60")}>
             {allDone ? "All Tasks Done" : "Daily Progress"}
           </span>
@@ -132,7 +132,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
         size="sm"
         onClick={() => void handleQuickAdd()}
         disabled={!newTaskTitle.trim() || isAdding}
-        className="h-8 shrink-0 rounded-xl bg-primary px-3 text-[11px] font-black uppercase tracking-widest text-white shadow-sm"
+        className="h-8 shrink-0 rounded-xl bg-primary px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm"
       >
         {isAdding ? "…" : "Add"}
       </Button>
@@ -147,7 +147,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
         onClick={() => (canUndo ? handleUndoMarkAllCompleted() : handleMarkAllCompleted())}
         disabled={isMarkingAll || (!canUndo && completedCount === totalCount)}
         className={cn(
-          "h-9 gap-2 rounded-2xl border-border bg-background/50 px-4 text-[11px] font-bold",
+          "h-9 gap-2 rounded-2xl border-border bg-background/50 px-4 text-xs font-bold",
           canUndo ? "text-red-500 hover:text-red-600" : "text-emerald-600 dark:text-emerald-400"
         )}
       >
@@ -164,12 +164,12 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-border bg-background/50 px-4 text-[11px] font-bold">
+            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-border bg-background/50 px-4 text-xs font-bold">
               Filter Goals
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60 rounded-2xl p-2 shadow-xl">
-            <DropdownMenuLabel className="px-3 pt-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Show tasks from</DropdownMenuLabel>
+            <DropdownMenuLabel className="px-3 pt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">Show tasks from</DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuCheckboxItem
               checked={allSelected}
@@ -256,7 +256,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
               {task.title || task.description}
             </span>
           )}
-          <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
+          <div className="mt-2 flex items-center justify-between text-xs font-bold">
             <span className={cn("flex items-center gap-1.5", overdue ? "text-red-500/80" : "text-muted-foreground/60")}>
               {overdue ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
               {task.is_anytime ? "Anytime" : task.daily_start_time?.slice(0, 5)}
@@ -302,17 +302,17 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
 
   const sectionHeader = (label: string, count: number, accent?: string) => (
     <div className="flex items-center gap-2 px-1 py-2">
-      <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", accent || "text-muted-foreground/40")}>
+      <span className={cn("text-[11px] font-bold uppercase tracking-wide", accent || "text-muted-foreground/40")}>
         {label}
       </span>
-      <span className="text-[10px] font-black tabular-nums text-muted-foreground/20">{count}</span>
+      <span className="text-[11px] font-bold tabular-nums text-muted-foreground/20">{count}</span>
       <div className="h-px flex-1 bg-foreground/5" />
     </div>
   )
 
   return (
     <div className={cn(
-      "flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.5rem] lg:p-8",
+      "flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
       className
     )}>
       <div className="flex items-center justify-between">
@@ -321,8 +321,8 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
             <ClipboardList size={20} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-lg font-black tracking-tight text-foreground">Today&apos;s Tasks</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+            <h3 className="text-lg font-bold tracking-tight text-foreground">Today&apos;s Tasks</h3>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
               {format(new Date(), "EEEE, MMM d")}
             </p>
           </div>
@@ -351,7 +351,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
                   <CheckCircle size={28} />
                 </div>
-                <h3 className="text-base font-black">All Clear</h3>
+                <h3 className="text-base font-bold">All Clear</h3>
                 <p className="mt-1 text-xs font-medium text-muted-foreground">No tasks left for today.</p>
               </div>
             ) : (
@@ -380,8 +380,8 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                       onClick={() => setShowCompleted(!showCompleted)}
                       className="flex w-full items-center gap-2 py-2"
                     >
-                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60">Completed</span>
-                      <span className="text-[10px] font-black text-muted-foreground/20">{groups.completed.length}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-600/60">Completed</span>
+                      <span className="text-[11px] font-bold text-muted-foreground/20">{groups.completed.length}</span>
                       <div className="h-px flex-1 bg-foreground/5" />
                       <ChevronDown className={cn("h-4 w-4 text-muted-foreground/20", showCompleted && "rotate-180")} />
                     </button>

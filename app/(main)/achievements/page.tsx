@@ -96,7 +96,7 @@ export default function AchievementsPage() {
 
       {loading ? (
         <>
-          <Skeleton className="h-28 w-full rounded-[2rem]" />
+          <Skeleton className="h-28 w-full rounded-3xl" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} className="h-32 w-full rounded-2xl" />
@@ -108,7 +108,7 @@ export default function AchievementsPage() {
           {/* Level progress */}
           <motion.div
             variants={itemVariants}
-            className="rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+            className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -116,15 +116,15 @@ export default function AchievementsPage() {
                   <Trophy size={22} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                     Level {level?.level}
                   </p>
                   <h3 className="text-lg font-extrabold text-foreground">{level?.name}</h3>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-foreground">{level?.totalXp}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <p className="text-2xl font-bold text-foreground">{level?.totalXp}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                   Total XP
                 </p>
               </div>
@@ -179,7 +179,7 @@ export default function AchievementsPage() {
                     </div>
                     <span
                       className={cn(
-                        "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+                        "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em]",
                         a.unlocked
                           ? "bg-emerald-600 text-white"
                           : "bg-muted text-muted-foreground/70"
@@ -190,14 +190,14 @@ export default function AchievementsPage() {
                   </div>
                   <h4
                     className={cn(
-                      "mt-4 text-base font-black",
+                      "mt-4 text-base font-bold",
                       a.unlocked ? "text-foreground" : "text-muted-foreground"
                     )}
                   >
                     {a.title}
                   </h4>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">{a.description}</p>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50">
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50">
                     {a.category}
                   </p>
                 </div>

@@ -270,14 +270,14 @@ export default function InterviewPage() {
           <Card className="rounded-[1.8rem] border-blue-500/40 bg-blue-500/5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
             <CardContent className="p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="rounded-lg border-none bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-600 dark:text-blue-400">
+                <Badge className="rounded-lg border-none bg-blue-500/10 px-2 py-0.5 text-[11px] text-blue-600 dark:text-blue-400">
                   Your topic
                 </Badge>
-                <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[10px]">
+                <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[11px]">
                   {topic.difficulty}
                 </Badge>
               </div>
-              <p className="mt-4 text-lg font-black leading-snug text-blue-600 dark:text-blue-400 sm:text-xl">
+              <p className="mt-4 text-lg font-bold leading-snug text-blue-600 dark:text-blue-400 sm:text-xl">
                 {topic.labelKo}
               </p>
               <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
@@ -310,7 +310,7 @@ export default function InterviewPage() {
           <Button
             onClick={startSession}
             disabled={isExaminerThinking}
-            className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-60 sm:w-auto"
+            className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-60 sm:w-auto"
           >
             {isExaminerThinking ? (
               <>
@@ -391,7 +391,7 @@ export default function InterviewPage() {
                 <GraduationCap size={20} strokeWidth={2.5} />
               </div>
               <div>
-                <CardTitle className="text-xl font-black">Examiner</CardTitle>
+                <CardTitle className="text-xl font-bold">Examiner</CardTitle>
                 <p className="text-xs font-medium text-muted-foreground">
                   Question {Math.max(questionCount, 1)}
                 </p>
@@ -412,7 +412,7 @@ export default function InterviewPage() {
             )}
 
             {/* Question text */}
-            <div className="relative overflow-hidden rounded-[1.5rem] border border-border bg-accent/5 p-5 sm:rounded-[2rem] sm:p-6">
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-border bg-accent/5 p-5 sm:rounded-3xl sm:p-6">
               {isExaminerThinking && !streamingText ? (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 size={18} className="animate-spin" />
@@ -420,7 +420,7 @@ export default function InterviewPage() {
                 </div>
               ) : (
                 <>
-                  <p className="text-[1.5rem] font-black leading-tight text-foreground sm:text-2xl lg:text-[1.7rem]">
+                  <p className="text-[1.5rem] font-bold leading-tight text-foreground sm:text-2xl lg:text-[1.7rem]">
                     {streamingText
                       ? parseExaminerTurn(streamingText).questionKo
                       : current?.questionKo}
@@ -431,7 +431,7 @@ export default function InterviewPage() {
                       <div className="flex items-center gap-1.5 rounded-2xl border border-border bg-background p-1.5 shadow-sm">
                         <div className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-accent">
                           <SpeakButton text={current.questionKo} className="p-0" />
-                          <span className="text-xs font-black uppercase tracking-tighter text-muted-foreground">
+                          <span className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">
                             Normal
                           </span>
                         </div>
@@ -442,7 +442,7 @@ export default function InterviewPage() {
                             className="p-0"
                             playbackRate={0.75}
                           />
-                          <span className="text-xs font-black uppercase tracking-tighter text-muted-foreground">
+                          <span className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">
                             Slow
                           </span>
                         </div>
@@ -499,7 +499,7 @@ export default function InterviewPage() {
                   <Waves size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-black">Your Answer</CardTitle>
+                  <CardTitle className="text-xl font-bold">Your Answer</CardTitle>
                   <p className="text-xs font-medium text-muted-foreground">
                     Speak in Korean, then submit.
                   </p>
@@ -507,7 +507,7 @@ export default function InterviewPage() {
               </div>
               <Badge
                 className={cn(
-                  "rounded-lg border-none px-3 py-1 text-[10px] font-black uppercase tracking-wider",
+                  "rounded-lg border-none px-3 py-1 text-[11px] font-bold uppercase tracking-wider",
                   recording ? "animate-pulse bg-rose-500 text-white" : "bg-accent/20"
                 )}
               >
@@ -521,7 +521,7 @@ export default function InterviewPage() {
                 onClick={() => (recording ? speech.stop() : speech.start())}
                 disabled={isExaminerThinking}
                 className={cn(
-                  "h-12 w-full rounded-2xl px-6 text-sm font-black shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
+                  "h-12 w-full rounded-2xl px-6 text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
                   recording
                     ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
                     : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
@@ -549,7 +549,7 @@ export default function InterviewPage() {
 
             {/* Transcript */}
             <div className="rounded-[1.5rem] border border-border bg-background p-4 shadow-sm sm:rounded-3xl sm:p-5">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                 Transcript
               </p>
               {isEditingAnswer || !speech.supported ? (
@@ -575,7 +575,7 @@ export default function InterviewPage() {
             <Button
               onClick={submitAnswer}
               disabled={!speech.transcript.trim() || isExaminerThinking}
-              className="h-12 w-full rounded-2xl bg-foreground px-6 text-sm font-black text-background shadow-lg transition-all active:scale-95 disabled:opacity-40 sm:h-14"
+              className="h-12 w-full rounded-2xl bg-foreground px-6 text-sm font-bold text-background shadow-lg transition-all active:scale-95 disabled:opacity-40 sm:h-14"
             >
               <Send size={18} className="mr-2" /> Submit Answer & Next Question
             </Button>
@@ -587,7 +587,7 @@ export default function InterviewPage() {
                 variant="outline"
                 onClick={finishInterview}
                 disabled={isEvaluating || isExaminerThinking}
-                className="h-12 w-full rounded-2xl border-blue-500/40 bg-blue-500/5 px-6 text-sm font-black text-blue-600 transition-all hover:bg-blue-500/10 active:scale-95 disabled:opacity-50 dark:text-blue-400 sm:h-14"
+                className="h-12 w-full rounded-2xl border-blue-500/40 bg-blue-500/5 px-6 text-sm font-bold text-blue-600 transition-all hover:bg-blue-500/10 active:scale-95 disabled:opacity-50 dark:text-blue-400 sm:h-14"
               >
                 {isEvaluating ? (
                   <>
@@ -616,7 +616,7 @@ export default function InterviewPage() {
         <motion.div variants={itemVariants}>
           <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
             <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
-              <CardTitle className="text-base font-black">Session Transcript</CardTitle>
+              <CardTitle className="text-base font-bold">Session Transcript</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-5">
               {entries.map((entry) =>
@@ -625,7 +625,7 @@ export default function InterviewPage() {
                     key={entry.id}
                     className="rounded-2xl border border-border bg-accent/5 p-4"
                   >
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-blue-600">
                       Examiner
                     </p>
                     <p className="mt-1.5 font-bold text-foreground">
@@ -642,7 +642,7 @@ export default function InterviewPage() {
                     key={entry.id}
                     className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4"
                   >
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       You
                     </p>
                     <p className="mt-1.5 font-medium text-foreground">{entry.text}</p>
@@ -683,7 +683,7 @@ function StudyPack({
             <BookOpen size={20} strokeWidth={2.5} />
           </div>
           <div>
-            <CardTitle className="text-xl font-black">Study Pack</CardTitle>
+            <CardTitle className="text-xl font-bold">Study Pack</CardTitle>
             <p className="text-xs font-medium text-muted-foreground">
               Vocabulary, phrases & likely questions — tap 🔊 to hear each one.
             </p>
@@ -716,7 +716,7 @@ function StudyPack({
                       className="flex items-center justify-between gap-2 rounded-2xl border border-border bg-accent/5 px-3 py-2.5"
                     >
                       <div className="min-w-0">
-                        <p className="truncate font-black text-foreground">{item.term}</p>
+                        <p className="truncate font-bold text-foreground">{item.term}</p>
                         <p className="truncate text-xs font-medium text-muted-foreground">
                           {item.meaning}
                         </p>
@@ -782,7 +782,7 @@ function SectionLabel({
       >
         {icon}
       </span>
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         {children}
       </p>
     </div>
@@ -853,7 +853,7 @@ function EvaluationSummary({
                 <Award size={20} strokeWidth={2.5} />
               </div>
               <div>
-                <CardTitle className="text-xl font-black">Scorecard</CardTitle>
+                <CardTitle className="text-xl font-bold">Scorecard</CardTitle>
                 <p className="text-xs font-medium text-muted-foreground">
                   Judged on the exam&apos;s four criteria
                 </p>
@@ -865,8 +865,8 @@ function EvaluationSummary({
               scores.map((s) => (
                 <div key={s.label} className="space-y-1.5">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-black text-foreground">{s.label}</span>
-                    <span className="text-sm font-black tabular-nums text-blue-600 dark:text-blue-400">
+                    <span className="text-sm font-bold text-foreground">{s.label}</span>
+                    <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
                       {s.score}
                       <span className="text-muted-foreground/50"> / {s.max}</span>
                     </span>
@@ -899,7 +899,7 @@ function EvaluationSummary({
                 <CheckCircle2 size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
                   Overall
                 </p>
                 <p className="mt-1.5 text-sm font-medium leading-relaxed text-foreground/90">
@@ -920,7 +920,7 @@ function EvaluationSummary({
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
                   <Lightbulb size={20} strokeWidth={2.5} />
                 </div>
-                <CardTitle className="text-base font-black">What to work on next</CardTitle>
+                <CardTitle className="text-base font-bold">What to work on next</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-2.5 pt-5">
@@ -929,7 +929,7 @@ function EvaluationSummary({
                   key={i}
                   className="flex items-start gap-3 rounded-2xl border border-border bg-accent/5 p-4"
                 >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-[11px] font-black text-amber-600">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600">
                     {i + 1}
                   </span>
                   <p className="text-sm font-medium leading-relaxed text-foreground/90">{tip}</p>
@@ -953,7 +953,7 @@ function EvaluationSummary({
       >
         <Button
           onClick={onPracticeAgain}
-          className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto"
+          className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto"
         >
           <RotateCcw size={20} className="mr-2" /> Practice Again
         </Button>

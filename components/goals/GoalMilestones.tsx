@@ -85,17 +85,17 @@ export function GoalMilestones({
   }
 
   return (
-    <Card className="rounded-[2rem] border-border bg-card/50 p-6 shadow-sm sm:rounded-[2.5rem] sm:p-8">
+    <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:rounded-3xl sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Flag size={15} strokeWidth={2.5} className="text-primary" />
-          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
             Milestones
           </h3>
           {saving && <Loader2 size={13} className="animate-spin text-muted-foreground/40" />}
         </div>
         {milestones.length > 0 && (
-          <span className="text-xs font-black tabular-nums text-foreground">
+          <span className="text-xs font-bold tabular-nums text-foreground">
             {doneCount}
             <span className="text-muted-foreground/40"> / {milestones.length}</span>
           </span>
@@ -144,7 +144,7 @@ export function GoalMilestones({
                 {m.title}
               </span>
               {due && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-accent/40 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-accent/40 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   <CalendarDays size={11} strokeWidth={2.5} />
                   {due}
                 </span>
@@ -198,7 +198,7 @@ export function GoalMilestones({
               type="button"
               onClick={add}
               disabled={!newTitle.trim()}
-              className="flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
+              className="flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
             >
               <Check size={14} strokeWidth={3} /> Add
             </button>
@@ -217,7 +217,7 @@ export function GoalMilestones({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-black uppercase tracking-wider text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-95"
           >
             <Plus size={14} strokeWidth={3} /> Add milestone
           </button>
@@ -228,7 +228,7 @@ export function GoalMilestones({
               type="button"
               onClick={() => void persist(suggestions)}
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-black uppercase tracking-wider text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:opacity-50"
             >
               <Sparkles size={14} strokeWidth={2.5} /> Add suggested milestones
             </button>

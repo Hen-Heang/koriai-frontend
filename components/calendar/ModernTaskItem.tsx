@@ -95,7 +95,7 @@ export const ModernTaskItem = memo(function ModernTaskItem({
             <Badge
               variant="outline"
               className={cn(
-                "h-4.5 px-1.5 text-[10px] font-medium",
+                "h-4.5 px-1.5 text-[11px] font-medium",
                 task.completed
                   ? "border-muted-foreground/20 text-muted-foreground/60 bg-transparent"
                   : "border-primary/20 text-primary bg-primary/5"

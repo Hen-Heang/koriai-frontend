@@ -59,19 +59,19 @@ function EditForm({
   return (
     <div className="space-y-2.5 pt-2">
       <div>
-        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
+        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
         <input value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} className={cn(inputClass, "mt-1 text-lg font-bold")} />
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
+        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
         <input value={meaning} onChange={(e) => setMeaning(e.target.value)} className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
+        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
         <input value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
+        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
         <textarea value={example} onChange={(e) => setExample(e.target.value)} rows={2} className={cn(inputClass, "mt-1 resize-none")} />
       </div>
       {error && <p className="text-xs font-bold text-destructive">{error}</p>}
@@ -80,7 +80,7 @@ function EditForm({
           type="button"
           onClick={handleSave}
           disabled={saving || !term.trim() || !meaning.trim()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
         >
           {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={3} />}
           Save
@@ -89,7 +89,7 @@ function EditForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-accent active:scale-95"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent active:scale-95"
         >
           <X size={13} strokeWidth={3} />
           Cancel
@@ -139,7 +139,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
       : "bg-red-500/10 text-red-600 ring-red-500/20 dark:text-red-400"
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-4 shadow-sm transition-all dark:bg-slate-900/40 dark:backdrop-blur-md sm:p-5 sm:hover:-translate-y-1 sm:hover:shadow-xl">
+    <div className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-sm transition-all dark:bg-slate-900/40 dark:backdrop-blur-md sm:p-5 sm:hover:-translate-y-1 sm:hover:shadow-xl">
       {/* Mastery Progress Bar (Top) */}
       <div className="absolute inset-x-0 top-0 h-1 bg-accent/10">
         <motion.div
@@ -164,7 +164,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
           <div className="flex items-start justify-between gap-3 pt-2 sm:gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
-                <h3 className="min-w-0 break-keep text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere] sm:truncate sm:text-3xl">
+                <h3 className="min-w-0 break-keep text-2xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:truncate sm:text-3xl">
                   {item.term}
                 </h3>
                 <SpeakButton
@@ -198,7 +198,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
                       type="button"
                       onClick={handleDelete}
                       disabled={deleting}
-                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[10px] font-black uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
+                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[11px] font-bold uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
                     >
                       {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} strokeWidth={2.5} />}
                       {deleting ? "Deleting" : "Sure?"}
@@ -214,13 +214,13 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
                     </button>
                   )
                 )}
-                <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1", masteryBg)}>
+                <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1", masteryBg)}>
                   {mastery}%
                 </div>
               </div>
               {item.difficultyLevel && (
                 <span className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
+                  "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                   item.difficultyLevel === "Easy" ? "bg-emerald-500/10 text-emerald-600" :
                   item.difficultyLevel === "Medium" ? "bg-amber-500/10 text-amber-600" :
                   "bg-red-500/10 text-red-600"
@@ -236,7 +236,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={12} className="text-muted-foreground/40" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Usage Context</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Usage Context</span>
               </div>
               <p className="text-sm font-bold leading-relaxed text-foreground/80 [overflow-wrap:anywhere] sm:text-[15px]">
                 {item.example}
@@ -258,18 +258,18 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             item.tags.map((tag) => (
               <span
                 key={tag}
-                className="flex items-center gap-1 rounded-full bg-accent/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/70"
+                className="flex items-center gap-1 rounded-full bg-accent/30 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70"
               >
                 <Tag size={10} strokeWidth={3} />
                 {tag}
               </span>
             ))
           ) : (
-            <span className="text-[10px] font-bold text-muted-foreground/30 italic">No tags</span>
+            <span className="text-[11px] font-bold text-muted-foreground/30 italic">No tags</span>
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
           <Calendar size={12} strokeWidth={3} />
           <span>Next: {item.nextReview}</span>
         </div>
@@ -279,7 +279,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
         <button
           type="button"
           onClick={() => onReview(item.id)}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-black uppercase tracking-[0.15em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
         >
           Complete Review
           <ChevronRight size={16} strokeWidth={3} />

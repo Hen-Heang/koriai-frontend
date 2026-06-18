@@ -26,15 +26,15 @@ export function ProgressChart({ data }: { data: ProgressPoint[] }) {
   )
 
   return (
-    <div className="overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.5rem] lg:p-10">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-10">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-cyan-600 dark:text-cyan-400">
             Activity
           </p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-foreground sm:text-xl">Weekly Progress</h3>
+          <h3 className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">Weekly Progress</h3>
         </div>
-        <div className="rounded-full bg-cyan-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/20">
+        <div className="rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/20">
           Last 7 days
         </div>
       </div>

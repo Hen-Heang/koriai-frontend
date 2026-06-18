@@ -45,22 +45,22 @@ export function ScoreTrend({ records }: { records: ScorecardRecord[] }) {
     <div className="overflow-hidden rounded-[1.8rem] border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.2rem] sm:p-6">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
             Your Progress
           </p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-foreground">
+          <h3 className="mt-1 text-lg font-bold tracking-tight text-foreground">
             {records.length} mock{records.length === 1 ? "" : "s"} scored
           </h3>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-black tabular-nums tracking-tight text-foreground">
+          <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
             {latest.toFixed(1)}
             <span className="text-sm text-muted-foreground/50"> / 5</span>
           </p>
           {delta !== null && (
             <p
               className={cn(
-                "mt-0.5 flex items-center justify-end gap-1 text-[11px] font-black tabular-nums",
+                "mt-0.5 flex items-center justify-end gap-1 text-xs font-bold tabular-nums",
                 delta > 0
                   ? "text-emerald-600 dark:text-emerald-400"
                   : delta < 0

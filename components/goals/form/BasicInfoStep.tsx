@@ -96,7 +96,7 @@ export function BasicInfoStep({ form, onNextStep, selectedGoalType }: BasicInfoS
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-xl transition-all hover:border-primary/40 hover:bg-primary/20"
                     >
                       {iconField.value || (
-                        <span className="text-sm font-black text-primary">
+                        <span className="text-sm font-bold text-primary">
                           {field.value?.trim().charAt(0).toUpperCase() || "G"}
                         </span>
                       )}

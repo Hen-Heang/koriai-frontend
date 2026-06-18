@@ -94,7 +94,7 @@ export default function GoalsPage() {
         eyebrow="Planner"
         title="Goals"
         description="Set goals, break them into scheduled tasks, and track every deadline in one place."
-        className="rounded-[2rem] sm:rounded-[2.5rem]"
+        className="rounded-3xl sm:rounded-3xl"
         actions={
           <div className="flex w-full gap-3 sm:w-auto">
             <Button asChild variant="outline" className="h-11 flex-1 rounded-2xl border-border bg-background/50 font-bold backdrop-blur-sm sm:flex-none sm:px-6">
@@ -140,7 +140,7 @@ export default function GoalsPage() {
                       setCurrentPage(1)
                     }}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black uppercase tracking-widest transition-all",
+                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold uppercase tracking-wide transition-all",
                       isSelected
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground/60 hover:text-foreground hover:bg-background/40"
@@ -149,7 +149,7 @@ export default function GoalsPage() {
                     {tab}
                     <span
                       className={cn(
-                        "rounded-lg px-2 py-0.5 text-[10px] font-black tabular-nums",
+                        "rounded-lg px-2 py-0.5 text-[11px] font-bold tabular-nums",
                         isSelected ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-foreground/5 text-muted-foreground/40"
                       )}
                     >
@@ -183,7 +183,7 @@ export default function GoalsPage() {
               >
                 Previous
               </Button>
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 tabular-nums">
+              <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/60 tabular-nums">
                 Page {currentPage} of {filteredTotalPages}
               </span>
               <Button

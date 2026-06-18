@@ -138,18 +138,18 @@ function ChatPageContent() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4 text-center max-w-sm p-8 rounded-[2.5rem] border border-destructive/20 bg-destructive/5"
+          className="flex flex-col items-center gap-4 text-center max-w-sm p-8 rounded-3xl border border-destructive/20 bg-destructive/5"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
             <AlertCircle size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-lg font-black text-foreground">Connection Error</h3>
+            <h3 className="text-lg font-bold text-foreground">Connection Error</h3>
             <p className="mt-2 text-sm font-medium text-muted-foreground leading-relaxed">{error}</p>
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 text-xs font-black uppercase tracking-widest text-blue-600 hover:text-blue-500 underline underline-offset-4"
+            className="mt-2 text-xs font-bold uppercase tracking-wide text-blue-600 hover:text-blue-500 underline underline-offset-4"
           >
             Try refreshing
           </button>
@@ -195,7 +195,7 @@ function ChatPageContent() {
                   onClick={() => setMode(id)}
                   aria-current={active ? "true" : undefined}
                   className={cn(
-                    "relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-black uppercase tracking-wide transition-all active:scale-95 sm:px-4",
+                    "relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
                     active ? "text-white" : "text-muted-foreground/70 hover:text-foreground"
                   )}
                 >

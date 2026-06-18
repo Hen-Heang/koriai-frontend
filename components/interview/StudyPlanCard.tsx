@@ -188,18 +188,18 @@ export function StudyPlanCard() {
               <CalendarDays size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <p className="text-sm font-black leading-tight text-foreground">Exam Prep Plan</p>
-              <p className="text-[11px] font-medium text-muted-foreground">
+              <p className="text-sm font-bold leading-tight text-foreground">Exam Prep Plan</p>
+              <p className="text-xs font-medium text-muted-foreground">
                 {week.phase} · {week.label} ({week.range})
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1 text-[11px] font-black text-rose-600 dark:text-rose-400">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-600 dark:text-rose-400">
               <Flame size={12} strokeWidth={3} />
               {mounted ? `${daysToExam}d` : "—"} to exam
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-[11px] font-black text-blue-600 dark:text-blue-400">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
               <FileText size={12} strokeWidth={3} />
               {mounted ? `${daysToScript}d` : "—"} to script
             </span>
@@ -208,8 +208,8 @@ export function StudyPlanCard() {
 
         {/* This week's checklist */}
         <div className="mt-5 flex items-center justify-between">
-          <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">This week</p>
-          <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[10px]">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">This week</p>
+          <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[11px]">
             {completed}/{total}
           </Badge>
         </div>
@@ -235,7 +235,7 @@ export function StudyPlanCard() {
             type="button"
             onClick={addTask}
             disabled={!newTask.trim()}
-            className="shrink-0 rounded-lg bg-amber-500/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-amber-700 disabled:opacity-40 dark:text-amber-400"
+            className="shrink-0 rounded-lg bg-amber-500/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-700 disabled:opacity-40 dark:text-amber-400"
           >
             Add
           </button>
@@ -265,7 +265,7 @@ export function StudyPlanCard() {
                 <span className="font-semibold">{w.phase}</span>
               </li>
             ))}
-            <li className="flex items-center justify-between rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-black text-rose-600 dark:text-rose-400">
+            <li className="flex items-center justify-between rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
               <span>Aug 29</span>
               <span>EXAM 🎯</span>
             </li>

@@ -106,7 +106,7 @@ export function MessageAnalyzer() {
         {/* Main Workspace */}
         <div className="min-w-0 space-y-6">
           <motion.div variants={itemVariants}>
-            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl backdrop-blur-md dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl backdrop-blur-md dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-3xl">
               <CardHeader className="border-b border-border/60 bg-accent/5 px-5 pb-4 pt-5 sm:px-6 sm:pb-6">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -114,8 +114,8 @@ export function MessageAnalyzer() {
                       <ScanText size={18} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-black">Message to Analyze</CardTitle>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      <CardTitle className="text-xl font-bold">Message to Analyze</CardTitle>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                         Paste what your coworker wrote
                       </p>
                     </div>
@@ -142,7 +142,7 @@ export function MessageAnalyzer() {
                         type="button"
                         onClick={() => setSource(active ? null : s)}
                         className={cn(
-                          "rounded-full px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-95",
+                          "rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-all active:scale-95",
                           active
                             ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                             : "border border-border bg-background text-muted-foreground hover:text-foreground"
@@ -162,13 +162,13 @@ export function MessageAnalyzer() {
                 />
 
                 <div className="flex flex-col items-start gap-3 border-t border-border/60 bg-accent/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
                     {text.trim().length} characters
                   </span>
                   <Button
                     onClick={handleAnalyze}
                     disabled={loading || !text.trim()}
-                    className="h-11 w-full rounded-[1.15rem] bg-blue-600 px-6 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95 sm:h-12 sm:w-auto sm:rounded-[1.25rem] sm:px-8"
+                    className="h-11 w-full rounded-[1.15rem] bg-blue-600 px-6 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95 sm:h-12 sm:w-auto sm:rounded-[1.25rem] sm:px-8"
                   >
                     {loading ? (
                       <><Activity size={18} className="mr-2 animate-pulse" /> Analyzing...</>
@@ -193,11 +193,11 @@ export function MessageAnalyzer() {
                 className="space-y-6"
               >
                 {/* Meaning card */}
-                <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card shadow-2xl dark:bg-slate-900/60">
+                <Card className="overflow-hidden rounded-3xl border-border bg-card shadow-2xl dark:bg-slate-900/60">
                   <div className="flex items-center justify-between border-b border-border/60 bg-blue-500/5 px-6 py-4">
                     <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                       <BadgeCheck size={16} strokeWidth={3} />
-                      <p className="text-[10px] font-black uppercase tracking-widest">Analysis Complete</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide">Analysis Complete</p>
                     </div>
                     <SpeakButton
                       text={result.originalText}
@@ -206,7 +206,7 @@ export function MessageAnalyzer() {
                   </div>
 
                   <div className="p-6 sm:p-8">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">Original</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/30">Original</p>
                     <p className="mt-2 text-base font-bold leading-relaxed text-foreground sm:text-lg">
                       {result.originalText}
                     </p>
@@ -214,14 +214,14 @@ export function MessageAnalyzer() {
 
                   <div className="grid divide-y divide-border/60 border-t border-border/60 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
                     <div className="p-6 sm:p-8">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">Literal Meaning</p>
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/30">Literal Meaning</p>
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground/80">
                         {result.literalMeaning}
                       </p>
                     </div>
                     <div className="bg-blue-500/[0.02] p-6 sm:p-8">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600/40">Natural Meaning</p>
-                      <p className="mt-2 text-sm font-black leading-relaxed text-foreground">
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-blue-600/40">Natural Meaning</p>
+                      <p className="mt-2 text-sm font-bold leading-relaxed text-foreground">
                         {result.naturalMeaning}
                       </p>
                     </div>
@@ -230,11 +230,11 @@ export function MessageAnalyzer() {
 
                 {/* Context + politeness + tone */}
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <Card className="rounded-[2rem] border border-border bg-card shadow-sm dark:bg-slate-900/40">
+                  <Card className="rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Building2 size={14} className="text-sky-500" strokeWidth={2.5} />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Business Context</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Business Context</p>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -242,20 +242,20 @@ export function MessageAnalyzer() {
                     </CardContent>
                   </Card>
 
-                  <Card className="rounded-[2rem] border border-border bg-card shadow-sm dark:bg-slate-900/40">
+                  <Card className="rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Languages size={14} className="text-violet-500" strokeWidth={2.5} />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Politeness & Tone</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Politeness & Tone</p>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Politeness</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">Politeness</p>
                         <p className="mt-1 text-[13px] font-bold text-foreground/80">{result.politenessLevel}</p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Tone</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">Tone</p>
                         <p className="mt-1 text-[13px] font-bold text-foreground/80">{result.tone}</p>
                       </div>
                     </CardContent>
@@ -265,7 +265,7 @@ export function MessageAnalyzer() {
                 {/* Phrase breakdown */}
                 {result.breakdown && result.breakdown.length > 0 && (
                   <div className="space-y-4">
-                    <h4 className="flex items-center gap-2 px-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                       <ListTree size={14} className="text-muted-foreground/40" /> Phrase Breakdown
                     </h4>
                     <div className="grid gap-3">
@@ -278,7 +278,7 @@ export function MessageAnalyzer() {
                           className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm transition-all hover:border-blue-500/20 hover:shadow-lg dark:bg-slate-900/40"
                         >
                           <div className="flex flex-wrap items-center gap-3 border-b border-border/60 bg-accent/5 px-5 py-4">
-                            <span className="rounded-lg bg-blue-500/10 px-3 py-1.5 text-[13px] font-black text-blue-600 dark:text-blue-400">
+                            <span className="rounded-lg bg-blue-500/10 px-3 py-1.5 text-[13px] font-bold text-blue-600 dark:text-blue-400">
                               {item.fragment}
                             </span>
                             <span className="text-[12px] font-bold text-sky-600/80 dark:text-sky-400/80">{item.meaning}</span>
@@ -295,7 +295,7 @@ export function MessageAnalyzer() {
                 {/* Suggested replies */}
                 {result.suggestedReplies && result.suggestedReplies.length > 0 && (
                   <div className="space-y-4">
-                    <h4 className="flex items-center gap-2 px-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                       <MessageSquareReply size={14} className="text-muted-foreground/40" /> Suggested Replies
                     </h4>
                     <div className="grid gap-3">
@@ -309,10 +309,10 @@ export function MessageAnalyzer() {
                         >
                           <div className="flex items-start justify-between gap-3 p-5">
                             <div className="min-w-0">
-                              <p className="text-[15px] font-black leading-relaxed text-foreground">{reply.korean}</p>
+                              <p className="text-[15px] font-bold leading-relaxed text-foreground">{reply.korean}</p>
                               <p className="mt-1 text-[13px] font-medium text-muted-foreground">{reply.english}</p>
                               {reply.formality && (
-                                <span className="mt-3 inline-block rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                <span className="mt-3 inline-block rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
                                   {reply.formality}
                                 </span>
                               )}
@@ -349,13 +349,13 @@ export function MessageAnalyzer() {
         {/* Sidebar Guidance */}
         <div className="space-y-6">
           <motion.div variants={itemVariants}>
-            <Card className="rounded-[2rem] border-border bg-card shadow-xl dark:bg-slate-900/40">
+            <Card className="rounded-3xl border-border bg-card shadow-xl dark:bg-slate-900/40">
               <CardHeader className="border-b border-border/60 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 shadow-sm ring-1 ring-sky-500/20">
                     <Lightbulb size={18} strokeWidth={2.5} />
                   </div>
-                  <CardTitle className="text-base font-black uppercase tracking-tight">How to use</CardTitle>
+                  <CardTitle className="text-base font-bold uppercase tracking-tight">How to use</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-5 pt-6">
@@ -365,7 +365,7 @@ export function MessageAnalyzer() {
                       <tip.icon size={16} strokeWidth={3} />
                     </div>
                     <div>
-                      <h4 className="text-[12px] font-black uppercase tracking-wider text-foreground">{tip.label}</h4>
+                      <h4 className="text-[12px] font-bold uppercase tracking-wider text-foreground">{tip.label}</h4>
                       <p className="mt-1 text-[12px] font-medium leading-relaxed text-muted-foreground">{tip.text}</p>
                     </div>
                   </div>
@@ -378,7 +378,7 @@ export function MessageAnalyzer() {
             <div className="px-2">
               <div className="mb-4 flex items-center gap-2">
                 <ScanText size={14} className="text-muted-foreground/40" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Try a sample</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Try a sample</h4>
               </div>
               <div className="grid gap-2">
                 {starterPrompts.map((prompt, i) => (

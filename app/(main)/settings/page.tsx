@@ -51,7 +51,7 @@ const models = [
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm dark:bg-slate-900/40", className)}>
+    <div className={cn("overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40", className)}>
       {children}
     </div>
   )
@@ -77,7 +77,7 @@ function SectionHeader({ icon: Icon, title, description, color = "text-blue-600"
         <Icon size={20} strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-sm font-black text-foreground uppercase tracking-wider">{title}</p>
+        <p className="text-sm font-bold text-foreground uppercase tracking-wider">{title}</p>
         <p className="text-[12px] font-medium text-muted-foreground">{description}</p>
       </div>
     </div>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
     return (
       <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
         <div className="space-y-6">
-          <div className="rounded-[2.5rem] border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="mt-4 h-11 w-48" />
             <Skeleton className="mt-3 h-5 w-full max-w-sm" />
@@ -271,7 +271,7 @@ export default function SettingsPage() {
               <Skeleton className="h-10 w-28 rounded-xl" />
             </div>
           </div>
-          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-5">
               <Skeleton className="h-16 w-16 rounded-2xl" />
               <div className="flex-1">
@@ -283,7 +283,7 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-6">
           {[1, 2].map((item) => (
-            <div key={item} className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <div key={item} className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center gap-4">
                 <Skeleton className="h-10 w-10 rounded-2xl" />
                 <div>
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
                     title="Change profile photo"
-                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-2xl font-black text-white shadow-xl shadow-blue-500/20 active:scale-95"
+                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-2xl font-bold text-white shadow-xl shadow-blue-500/20 active:scale-95"
                   >
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -366,7 +366,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-lg font-black text-foreground">
+                  <p className="truncate text-lg font-bold text-foreground">
                     {displayName || "Your name"}
                   </p>
                   <p className="truncate text-sm font-medium text-muted-foreground/60">{email}</p>
@@ -380,7 +380,7 @@ export default function SettingsPage() {
           <Button
             type="submit"
             disabled={saving}
-            className="h-14 w-full rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
+            className="h-14 w-full rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
           >
             {saving ? (
               <><Activity size={20} className="mr-2 animate-pulse" /> Saving...</>
@@ -418,10 +418,10 @@ export default function SettingsPage() {
                   <History size={18} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-foreground uppercase tracking-wider">
+                  <p className="text-sm font-bold text-foreground uppercase tracking-wider">
                     Study History
                   </p>
-                  <p className="text-[11px] font-medium text-muted-foreground/60">
+                  <p className="text-xs font-medium text-muted-foreground/60">
                     Corrections, calendar &amp; grammar patterns
                   </p>
                 </div>
@@ -547,10 +547,10 @@ export default function SettingsPage() {
                   <LogOut size={18} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-red-600 uppercase tracking-wider">
+                  <p className="text-sm font-bold text-red-600 uppercase tracking-wider">
                     Sign out
                   </p>
-                  <p className="text-[11px] font-medium text-muted-foreground/60">
+                  <p className="text-xs font-medium text-muted-foreground/60">
                     End your active session
                   </p>
                 </div>
@@ -572,7 +572,7 @@ export default function SettingsPage() {
             <SectionRow>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
                     Display name
                   </label>
                   <Input
@@ -583,7 +583,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
                     Email address
                   </label>
                   <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/5 px-4 py-3 opacity-60">
@@ -591,7 +591,7 @@ export default function SettingsPage() {
                     <span className="flex-1 truncate text-sm font-bold text-foreground">
                       {email}
                     </span>
-                    <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                       <ShieldCheck size={10} strokeWidth={3} />
                       Verified
                     </span>
@@ -610,11 +610,11 @@ export default function SettingsPage() {
             <SectionRow last>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Country</label>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Country</label>
                   <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Cambodia" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
                 </div>
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Native Language</label>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Native Language</label>
                   <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select language</option>
                     {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
@@ -633,18 +633,18 @@ export default function SettingsPage() {
             <SectionRow last>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Occupation</label>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Occupation</label>
                   <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select role</option>
                     {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Years of Experience</label>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Years of Experience</label>
                   <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Learning Goal</label>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Learning Goal</label>
                   <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select your main goal</option>
                     {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
@@ -690,12 +690,12 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex-1">
                         <p className={cn(
-                          "text-sm font-black tracking-tight",
+                          "text-sm font-bold tracking-tight",
                           active ? "text-foreground" : "text-muted-foreground"
                         )}>
                           {level.label}
                         </p>
-                        <p className="text-[11px] font-medium text-muted-foreground/60">{level.desc}</p>
+                        <p className="text-xs font-medium text-muted-foreground/60">{level.desc}</p>
                       </div>
                       {active ? (
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
@@ -741,12 +741,12 @@ export default function SettingsPage() {
                         )}
                       >
                         <p className={cn(
-                          "text-sm font-black tracking-tight",
+                          "text-sm font-bold tracking-tight",
                           active ? "text-foreground" : "text-muted-foreground"
                         )}>
                           {model.label}
                         </p>
-                        <p className="text-[11px] font-medium text-muted-foreground/60">{model.desc}</p>
+                        <p className="text-xs font-medium text-muted-foreground/60">{model.desc}</p>
                         {active && (
                           <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
                         )}
@@ -756,7 +756,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
                     Advanced Custom Model
                   </label>
                   <Input
@@ -773,7 +773,7 @@ export default function SettingsPage() {
 
         {/* Mobile-only copyright */}
         <motion.div variants={itemVariants} className="pt-4 text-center xl:hidden">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/30">
             © 2026 Hen Heang · FullStack Developer
           </p>
         </motion.div>

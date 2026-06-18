@@ -49,8 +49,8 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
           <FolderOpen size={18} strokeWidth={2.5} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-black text-foreground">{name}</p>
-          <p className="text-[11px] font-bold text-muted-foreground/50">
+          <p className="truncate text-[15px] font-bold text-foreground">{name}</p>
+          <p className="text-xs font-bold text-muted-foreground/50">
             {items.length} {items.length === 1 ? "word" : "words"} · {avgMastery}% mastered
           </p>
         </div>
@@ -91,7 +91,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                         <button
                           type="button"
                           onClick={() => setExpandedId(null)}
-                          className="mt-2 w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 transition-colors hover:bg-accent/30 hover:text-foreground"
+                          className="mt-2 w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50 transition-colors hover:bg-accent/30 hover:text-foreground"
                         >
                           Collapse
                         </button>
@@ -106,7 +106,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline gap-2">
-                            <span className="truncate text-xl font-black text-foreground sm:text-2xl">{item.term}</span>
+                            <span className="truncate text-xl font-bold text-foreground sm:text-2xl">{item.term}</span>
                             {item.pronunciation && (
                               <span className="hidden truncate text-[13px] font-medium italic text-muted-foreground/40 sm:inline">
                                 {item.pronunciation}
@@ -115,7 +115,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                           </div>
                           <p className="truncate text-[15px] font-medium text-muted-foreground/70 sm:text-base">{item.meaning}</p>
                         </div>
-                        <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black tabular-nums", masteryColor(item.mastery))}>
+                        <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", masteryColor(item.mastery))}>
                           {item.mastery}%
                         </span>
                         <span onClick={(e) => e.stopPropagation()}>

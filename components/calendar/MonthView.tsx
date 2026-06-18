@@ -67,7 +67,7 @@ export function MonthView({
             <div
               key={day}
               className={cn(
-                "py-3 text-[10px] font-black uppercase tracking-[0.2em]",
+                "py-3 text-[11px] font-bold uppercase tracking-wide",
                 i === 0 || i === 6 ? "text-muted-foreground/60" : "text-muted-foreground"
               )}
             >
@@ -103,7 +103,7 @@ export function MonthView({
                 <div className="mb-1 flex justify-center">
                   <span
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-black transition-all",
+                      "flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold transition-all",
                       today && !isSelected && "bg-primary text-primary-foreground shadow",
                       isSelected && "scale-110 bg-primary/90 text-primary-foreground shadow",
                       !today && !isSelected && "text-muted-foreground"

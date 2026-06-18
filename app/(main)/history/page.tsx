@@ -89,7 +89,7 @@ function GrammarTracker({ entries }: { entries: CorrectionEntry[] }) {
           <div className="flex items-center justify-between gap-3">
             <span className="text-[13px] font-bold leading-snug text-foreground/80 line-clamp-2">{point}</span>
             <span className={cn(
-              "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black",
+              "shrink-0 rounded-full px-2.5 py-1 text-xs font-bold",
               count >= 4 ? "bg-red-500/10 text-red-600 dark:text-red-400" :
               count >= 2 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
               "bg-slate-500/10 text-slate-500"
@@ -139,7 +139,7 @@ function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
         <Button variant="ghost" size="icon" onClick={onPrev} className="h-9 w-9 rounded-xl">
           <ChevronLeft size={18} strokeWidth={2.5} />
         </Button>
-        <span className="text-sm font-black text-foreground">{monthName}</span>
+        <span className="text-sm font-bold text-foreground">{monthName}</span>
         <Button
           variant="ghost"
           size="icon"
@@ -154,7 +154,7 @@ function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1">
         {weekdays.map((d) => (
-          <div key={d} className="py-1 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+          <div key={d} className="py-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
             {d}
           </div>
         ))}
@@ -178,7 +178,7 @@ function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
                 isActive
                   ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
                   : isToday
-                    ? "ring-2 ring-blue-500/40 text-blue-600 font-black"
+                    ? "ring-2 ring-blue-500/40 text-blue-600 font-bold"
                     : "text-muted-foreground/50"
               )}
             >
@@ -189,7 +189,7 @@ function PracticeCalendar({ month, activeDays, onPrev, onNext }: {
       </div>
 
       {/* Entry count */}
-      <p className="text-center text-[11px] font-bold text-muted-foreground/50">
+      <p className="text-center text-xs font-bold text-muted-foreground/50">
         {activeDays.size} {activeDays.size === 1 ? "practice day" : "practice days"} this month
       </p>
     </div>
@@ -270,15 +270,15 @@ export default function HistoryPage() {
 
           {/* Grammar Patterns */}
           <motion.div variants={itemVariants}>
-            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem] lg:rounded-3xl">
               <CardHeader className="border-b border-border/60 bg-accent/5 px-5 py-4 sm:px-6 sm:py-5">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 shadow-sm ring-1 ring-red-500/20">
                     <Brain size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black">Recurring Mistakes</h2>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    <h2 className="text-lg font-bold">Recurring Mistakes</h2>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                       Grammar patterns from your corrections
                     </p>
                   </div>
@@ -307,14 +307,14 @@ export default function HistoryPage() {
           {/* Correction History */}
           <motion.div variants={itemVariants}>
             <div className="space-y-4">
-              <h3 className="px-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+              <h3 className="px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                 Correction History
               </h3>
 
               {loadingCorrections ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="overflow-hidden rounded-[1.5rem] border border-border bg-card px-5 py-4 shadow-sm dark:bg-slate-900/40 sm:rounded-[2rem] sm:px-6 sm:py-5">
+                    <div key={i} className="overflow-hidden rounded-[1.5rem] border border-border bg-card px-5 py-4 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl sm:px-6 sm:py-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-2">
                           <Skeleton className="h-3 w-24" />
@@ -327,7 +327,7 @@ export default function HistoryPage() {
                   ))}
                 </div>
               ) : corrections.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-10 text-center sm:rounded-[2rem] sm:py-12">
+                <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-10 text-center sm:rounded-3xl sm:py-12">
                   <ScrollText size={36} className="text-muted-foreground/30" strokeWidth={1.5} />
                   <p className="text-sm font-bold text-muted-foreground/50">No corrections yet</p>
                   <p className="text-xs text-muted-foreground/40">Submit a daily report in Correction to see history here.</p>
@@ -340,7 +340,7 @@ export default function HistoryPage() {
                       <motion.div
                         key={entry.id}
                         layout
-                        className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm dark:bg-slate-900/40 sm:rounded-[2rem]"
+                        className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm dark:bg-slate-900/40 sm:rounded-3xl"
                       >
                         {/* Header row */}
                         <button
@@ -349,13 +349,13 @@ export default function HistoryPage() {
                         >
                           <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5">
                             <div className="min-w-0 flex-1 space-y-1.5">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
                                 {formatDate(entry.createdAt)}
                               </p>
                               <p className="line-clamp-1 text-sm font-bold text-muted-foreground/70">
                                 {entry.originalText}
                               </p>
-                              <p className="line-clamp-1 text-sm font-black text-foreground">
+                              <p className="line-clamp-1 text-sm font-bold text-foreground">
                                 {entry.correctedText}
                               </p>
                             </div>
@@ -382,15 +382,15 @@ export default function HistoryPage() {
                                 {/* Original vs Corrected */}
                                 <div className="grid gap-3 sm:grid-cols-2">
                                   <div className="rounded-2xl bg-red-500/5 p-4">
-                                    <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-red-500/60">Original</p>
+                                    <p className="mb-2 text-[9px] font-bold uppercase tracking-wide text-red-500/60">Original</p>
                                     <p className="text-sm font-medium leading-relaxed text-foreground/70">{entry.originalText}</p>
                                   </div>
                                   <div className="rounded-2xl bg-blue-500/5 p-4">
                                     <div className="mb-2 flex items-center justify-between">
-                                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600/60">Corrected</p>
+                                      <p className="text-[9px] font-bold uppercase tracking-wide text-blue-600/60">Corrected</p>
                                       <SpeakButton text={entry.correctedText} className="h-7 w-7 rounded-lg" />
                                     </div>
-                                    <p className="text-sm font-black leading-relaxed text-foreground">{entry.correctedText}</p>
+                                    <p className="text-sm font-bold leading-relaxed text-foreground">{entry.correctedText}</p>
                                   </div>
                                 </div>
 
@@ -434,15 +434,15 @@ export default function HistoryPage() {
         {/* ── Right column: Practice Calendar ── */}
         <div>
           <motion.div variants={itemVariants}>
-            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 lg:sticky lg:top-8 sm:rounded-[2.2rem] lg:rounded-[2.5rem]">
+            <Card className="overflow-hidden rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 lg:sticky lg:top-8 sm:rounded-[2.2rem] lg:rounded-3xl">
               <CardHeader className="border-b border-border/60 bg-accent/5 px-5 py-4 sm:px-6 sm:py-5">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-500 shadow-sm ring-1 ring-violet-500/20">
                     <CalendarDays size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h2 className="text-base font-black">Practice Calendar</h2>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    <h2 className="text-base font-bold">Practice Calendar</h2>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                       Days you practiced
                     </p>
                   </div>

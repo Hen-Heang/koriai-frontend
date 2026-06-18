@@ -146,12 +146,12 @@ export default function Home() {
                 variants={containerVariants}
                 className="flex flex-col"
               >
-                <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">
+                <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">
                   <BrainCircuit size={14} strokeWidth={2.5} />
                   Plan · Learn · Grow daily
                 </motion.div>
 
-                <motion.h1 variants={itemVariants} className="mt-6 text-[2.8rem] font-black leading-[1.08] tracking-tight text-foreground sm:text-[4.2rem]">
+                <motion.h1 variants={itemVariants} className="mt-6 text-[2.8rem] font-bold leading-[1.08] tracking-tight text-foreground sm:text-[4.2rem]">
                   Set goals, build habits, and{" "}
                   <span className="relative inline-block">
                     <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
@@ -200,7 +200,7 @@ export default function Home() {
                     <div key={stat.label} className="flex items-center gap-4">
                       {i > 0 && <div className="h-8 w-px bg-border/60" />}
                       <div>
-                        <p className="text-2xl font-black leading-none text-foreground">{stat.value}</p>
+                        <p className="text-2xl font-bold leading-none text-foreground">{stat.value}</p>
                         <p className="mt-1 text-xs font-medium text-muted-foreground">{stat.label}</p>
                       </div>
                     </div>
@@ -230,7 +230,7 @@ export default function Home() {
                 className="relative"
               >
                 {/* Glow */}
-                <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-sky-500/20 blur-3xl" />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-sky-500/20 blur-3xl" />
 
                 {/* Floating vocab chip */}
                 <motion.div
@@ -243,10 +243,10 @@ export default function Home() {
                     <BookOpenCheck size={14} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-foreground">배포</p>
-                    <p className="text-[10px] text-muted-foreground">deployment</p>
+                    <p className="text-xs font-bold text-foreground">배포</p>
+                    <p className="text-[11px] text-muted-foreground">deployment</p>
                   </div>
-                  <div className="ml-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">+2 XP</div>
+                  <div className="ml-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-bold text-blue-600">+2 XP</div>
                 </motion.div>
 
                 {/* Floating streak chip */}
@@ -258,14 +258,14 @@ export default function Home() {
                 >
                   <div className="text-lg">🔥</div>
                   <div>
-                    <p className="text-[11px] font-bold text-foreground">7-day streak</p>
-                    <p className="text-[10px] text-muted-foreground">Keep it up!</p>
+                    <p className="text-xs font-bold text-foreground">7-day streak</p>
+                    <p className="text-[11px] text-muted-foreground">Keep it up!</p>
                   </div>
                 </motion.div>
 
                 {/* Phone frame mockup */}
                 <div className="relative mx-auto w-full max-w-[360px]">
-                  <div className="relative overflow-hidden rounded-[3rem] border-[8px] border-slate-900 bg-background shadow-2xl dark:border-slate-800">
+                  <div className="relative overflow-hidden rounded-3xl border-[8px] border-slate-900 bg-background shadow-2xl dark:border-slate-800">
                     {/* Notch */}
                     <div className="absolute left-1/2 top-0 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-slate-900 dark:bg-slate-800" />
 
@@ -278,12 +278,12 @@ export default function Home() {
                           </div>
                           <div>
                             <p className="text-[13px] font-bold leading-none text-foreground">AI Coach</p>
-                            <p className="mt-1 text-[10px] font-medium text-blue-500">● Online now</p>
+                            <p className="mt-1 text-[11px] font-medium text-blue-500">● Online now</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1">
-                          <span className="text-[11px]">🔥</span>
-                          <span className="text-[11px] font-bold text-amber-600">7</span>
+                          <span className="text-xs">🔥</span>
+                          <span className="text-xs font-bold text-amber-600">7</span>
                         </div>
                       </div>
 
@@ -332,7 +332,7 @@ export default function Home() {
                       {/* Quick phrase chips */}
                       <div className="flex gap-2 overflow-x-auto px-5 pb-2 no-scrollbar">
                         {["오늘 배포했어요", "회의 중입니다", "잠깐만요"].map((phrase) => (
-                          <div key={phrase} className="shrink-0 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                          <div key={phrase} className="shrink-0 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400">
                             {phrase}
                           </div>
                         ))}
@@ -367,10 +367,10 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-16 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                 All-in-one
               </p>
-              <h2 className="mt-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+              <h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                 Everything you need to <span className="text-muted-foreground/40 italic font-medium">plan</span> your days and grow.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
@@ -422,7 +422,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="space-y-8"
               >
-                <h2 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+                <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                   Plan, learn, and grow — in one app.
                 </h2>
                 <div className="space-y-6">
@@ -470,14 +470,14 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-12 text-center shadow-2xl dark:bg-slate-900/80 dark:border dark:border-white/5 sm:p-20"
+              className="relative overflow-hidden rounded-3xl bg-slate-900 p-12 text-center shadow-2xl dark:bg-slate-900/80 dark:border dark:border-white/5 sm:p-20"
             >
               {/* Decorative blobs */}
               <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-blue-500/20 blur-[80px]" />
               <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-sky-500/20 blur-[80px]" />
 
               <div className="relative z-10">
-                <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+                <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
                   Ready to hit your goals?
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">

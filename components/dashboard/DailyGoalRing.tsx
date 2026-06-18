@@ -28,16 +28,16 @@ export function DailyGoalRing({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-[2.5rem] lg:p-8",
+        "relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
             {label}
           </p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-foreground">{status}</h3>
+          <h3 className="mt-1 text-lg font-bold tracking-tight text-foreground">{status}</h3>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
           <Target size={20} strokeWidth={2.5} />
@@ -73,10 +73,10 @@ export function DailyGoalRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-black tracking-tighter text-foreground sm:text-4xl">
+          <span className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl">
             {clamped}%
           </span>
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
             Done
           </span>
         </div>
@@ -91,7 +91,7 @@ export function DailyGoalRing({
             className="h-full rounded-full bg-emerald-500" 
           />
         </div>
-        <div className="flex items-center justify-between text-[11px] font-bold">
+        <div className="flex items-center justify-between text-xs font-bold">
           <span className="text-muted-foreground">{detail}</span>
           <span className="text-emerald-600 dark:text-emerald-400">
             {clamped >= 100 ? "Goal Met" : `${100 - clamped}% left`}

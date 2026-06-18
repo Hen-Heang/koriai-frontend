@@ -139,7 +139,7 @@ function GoalIcon({
 }) {
   return (
     <div
-      className={cn("relative shrink-0 overflow-hidden bg-primary/10 font-black text-primary", className)}
+      className={cn("relative shrink-0 overflow-hidden bg-primary/10 font-bold text-primary", className)}
       onClick={(e) => e.stopPropagation()}
     >
       <EmojiIconPicker value={icon} onChange={onChange}>
@@ -212,7 +212,7 @@ export function GoalList({
     return viewMode === "grid" ? (
       <div className="grid grid-cols-2 gap-4 sm:gap-6">
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-52 rounded-[1.5rem] sm:rounded-[2rem]" />
+          <Skeleton key={i} className="h-52 rounded-[1.5rem] sm:rounded-3xl" />
         ))}
       </div>
     ) : (
@@ -226,12 +226,12 @@ export function GoalList({
 
   if (goals.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 border-dashed border-border bg-card/30 px-4 py-10 text-center sm:gap-6 sm:py-24">
-        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-blue-500/10 text-blue-600 dark:text-blue-400 sm:h-20 sm:w-20 sm:rounded-[2rem]">
+      <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-border bg-card/30 px-4 py-10 text-center sm:gap-6 sm:py-24">
+        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-blue-500/10 text-blue-600 dark:text-blue-400 sm:h-20 sm:w-20 sm:rounded-3xl">
           <Target size={32} strokeWidth={1.5} className="sm:size-9" />
         </div>
         <div>
-          <h3 className="text-xl font-black tracking-tight">No goals found</h3>
+          <h3 className="text-xl font-bold tracking-tight">No goals found</h3>
           <p className="mt-2 max-w-sm text-sm font-medium text-muted-foreground">
             Try adjusting your filters or create a new goal to get started.
           </p>
@@ -250,7 +250,7 @@ export function GoalList({
           variant="ghost"
           size="sm"
           onClick={toggleViewMode}
-          className="h-10 gap-2 rounded-xl px-4 font-black uppercase tracking-widest text-muted-foreground/60 hover:text-foreground"
+          className="h-10 gap-2 rounded-xl px-4 font-bold uppercase tracking-wide text-muted-foreground/60 hover:text-foreground"
         >
           {viewMode === "grid" ? <List size={16} /> : <LayoutGrid size={16} />}
           {viewMode === "grid" ? "List View" : "Grid View"}
@@ -310,7 +310,7 @@ export function GoalList({
                     className="h-11 w-11 rounded-[1rem] text-lg"
                   />
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                    <h3 className="truncate text-sm font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
                       {goal.title}
                     </h3>
                     <div className="mt-1.5 flex items-center gap-2">
@@ -323,12 +323,12 @@ export function GoalList({
                           style={{ background: progressGradient(progress) }}
                         />
                       </div>
-                      <span className="shrink-0 text-[10px] font-black uppercase tracking-widest tabular-nums text-muted-foreground/60">
+                      <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide tabular-nums text-muted-foreground/60">
                         {done}/{total}
                       </span>
                     </div>
                   </div>
-                  <span className="shrink-0 text-sm font-black tabular-nums text-primary">{progress}%</span>
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-primary">{progress}%</span>
                   {isOpening ? (
                     <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   ) : (
@@ -362,7 +362,7 @@ export function GoalList({
               >
                 <Card
                   className={cn(
-                    "h-full overflow-hidden rounded-[1.5rem] border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:bg-slate-900/40 sm:rounded-[2rem]",
+                    "h-full overflow-hidden rounded-[1.5rem] border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:bg-slate-900/40 sm:rounded-3xl",
                     isOpening && "ring-2 ring-primary",
                     deadlineStyling?.borderColor
                   )}
@@ -388,18 +388,18 @@ export function GoalList({
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                      <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
                         {goal.metadata?.goal_type || "General"}
                       </Badge>
                       {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                     </div>
-                    <h3 className="mt-2 truncate text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
+                    <h3 className="mt-2 truncate text-base font-bold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
                       {goal.title}
                     </h3>
 
                     <div className="mt-auto space-y-3 pt-5">
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                           <span>Progress</span>
                           <span className="text-sm text-primary">{progress}%</span>
                         </div>
@@ -414,7 +414,7 @@ export function GoalList({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
                         <span className="flex items-center gap-1.5">
                           <ClipboardList size={14} className="text-primary/60" />
                           {done}/{total}

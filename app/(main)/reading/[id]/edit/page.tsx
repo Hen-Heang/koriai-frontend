@@ -39,7 +39,7 @@ export default function EditReadingUnitPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
         <p className="text-lg font-bold text-foreground">Unit not found.</p>
-        <Link href="/reading" className="text-sm font-black text-blue-600 hover:underline">
+        <Link href="/reading" className="text-sm font-bold text-blue-600 hover:underline">
           Back to Reading Units
         </Link>
       </div>

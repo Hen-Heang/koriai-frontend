@@ -47,20 +47,20 @@ const CATEGORY_ORDER: ReadingCategory[] = ["DAILY_LIFE", "CULTURE", "BEGINNER_ST
 function StatusBadge({ entry }: { entry: ReadingProgressEntry }) {
   if (entry.status === "completed") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
         <CheckCircle2 size={11} strokeWidth={3} /> Completed
       </span>
     )
   }
   if (entry.status === "in_progress") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
         <Clock3 size={11} strokeWidth={3} /> In progress
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
       <CircleDashed size={11} strokeWidth={3} /> Not started
     </span>
   )
@@ -109,7 +109,7 @@ export default function ReadingPage() {
           actions={
             <Link
               href="/reading/new"
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
             >
               <Plus size={14} strokeWidth={3} /> New unit
             </Link>
@@ -153,7 +153,7 @@ export default function ReadingPage() {
           </p>
           <Link
             href="/reading/new"
-            className="mt-1 inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
+            className="mt-1 inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
           >
             <Plus size={14} strokeWidth={3} /> New unit
           </Link>
@@ -169,14 +169,14 @@ export default function ReadingPage() {
           <motion.section key={category} variants={itemVariants} className="space-y-3">
             <div className="flex items-end justify-between px-1">
               <div>
-                <h3 className="text-base font-black tracking-tight text-foreground">
+                <h3 className="text-base font-bold tracking-tight text-foreground">
                   {READING_CATEGORIES[category].label}
                 </h3>
                 <p className="mt-0.5 text-xs font-medium text-muted-foreground">
                   {READING_CATEGORIES[category].description}
                 </p>
               </div>
-              <span className="text-xs font-black text-muted-foreground/70">
+              <span className="text-xs font-bold text-muted-foreground/70">
                 {done}/{categoryUnits.length} done
               </span>
             </div>
@@ -214,7 +214,7 @@ export default function ReadingPage() {
                     </p>
 
                     <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
+                      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
                         <span>{unit.level}</span>
                         <span>·</span>
                         <span>{unit.vocab.length} words</span>
@@ -223,7 +223,7 @@ export default function ReadingPage() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {typeof entry.quizScore === "number" && (
-                          <span className="text-[10px] font-black text-muted-foreground/50">
+                          <span className="text-[11px] font-bold text-muted-foreground/50">
                             Quiz {entry.quizScore}/{entry.quizTotal}
                           </span>
                         )}

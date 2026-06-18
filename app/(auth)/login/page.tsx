@@ -63,20 +63,20 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
               <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
             </div>
-            <span className="text-xl font-black tracking-tight text-foreground">Hengo</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">Hengo</span>
           </Link>
           <ThemeToggle />
         </div>
 
-        <Card className="overflow-hidden rounded-[2.5rem] border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
+        <Card className="overflow-hidden rounded-3xl border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500" />
           
           <CardHeader className="space-y-2 pb-8 pt-10">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
               <ShieldCheck size={14} strokeWidth={3} />
               Secure Login
             </div>
-            <CardTitle className="text-3xl font-black tracking-tight text-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               Welcome back
             </CardTitle>
             <p className="text-sm font-medium leading-relaxed text-muted-foreground">
@@ -88,7 +88,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <FieldGroup className="space-y-4">
                 <Field>
-                  <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Email Address</FieldLabel>
+                  <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Email Address</FieldLabel>
                   <FieldContent>
                     <Input
                       type="email"
@@ -105,8 +105,8 @@ export default function LoginPage() {
                 </Field>
                 <Field>
                   <div className="flex items-center justify-between">
-                    <FieldLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Password</FieldLabel>
-                    <Link href="#" className="text-[11px] font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Password</FieldLabel>
+                    <Link href="#" className="text-xs font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400">
                       Forgot?
                     </Link>
                   </div>
@@ -149,7 +149,7 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="h-14 w-full rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
+                className="h-14 w-full rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
               >
                 {loading ? (
                   <>
@@ -169,7 +169,7 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+              <div className="relative flex justify-center text-[11px] font-bold uppercase tracking-wide">
                 <span className="bg-card px-4 text-muted-foreground/60">Or continue with</span>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+              <div className="relative flex justify-center text-[11px] font-bold uppercase tracking-wide">
                 <span className="bg-card px-4 text-muted-foreground/60">New to Hengo?</span>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-8 text-center text-[11px] font-medium text-muted-foreground">
+        <p className="mt-8 text-center text-xs font-medium text-muted-foreground">
           By signing in, you agree to our{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
