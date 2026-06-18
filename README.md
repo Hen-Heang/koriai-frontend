@@ -50,7 +50,7 @@ Built but currently hidden from navigation (wired to the backend, easy to restor
 
 ## Architecture
 
-- **API layer — `lib/api.ts` is the single integration point.** One axios instance plus per-domain endpoint groups (`authApi`, `chatApi`, `vocabApi`, `listeningApi`, `analyzerApi`, `messageGenApi`, …). The backend wraps every payload in an envelope, so responses are unwrapped with `r.data.data`. Add new backend calls here, not inline in components.
+- **API layer — `lib/api/` is the single integration point.** A per-domain service package: `client.ts` holds the one axios instance + interceptors, each domain has its own file (`auth`, `chat`, `vocab`, `goals`, `interview`, `reading`, `progress`, `learning`, `tts`, `push`, `user`), and `index.ts` re-exports everything so callers still `import { … } from "@/lib/api"`. The backend wraps every payload in an envelope, so responses are unwrapped with `r.data.data`. Add new backend calls to the matching domain file, not inline in components.
 - A request interceptor attaches `Authorization: Bearer <token>` from localStorage; a 401 response clears auth and redirects to `/login`.
 - `chatApi.streamMessage` is the exception to axios — it uses raw `fetch` to parse SSE events (`start` / `token` / `done` / `error`) from `POST /chat/stream`.
 - **Auth** is JWT stored in localStorage via `lib/auth-store.ts`. The route guard is client-side only (`app/(main)/layout.tsx` redirects when not authenticated). `lib/auth.ts` (NextAuth) is an unwired stub.
@@ -64,7 +64,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_web_oauth_client_id
 ```
 
-- `NEXT_PUBLIC_API_BASE_URL` is read by `lib/api.ts` (default `http://localhost:8080/api`).
+- `NEXT_PUBLIC_API_BASE_URL` is read by `lib/api/client.ts` (default `http://localhost:8080/api`).
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` powers the "Sign in with Google" button (`components/google-sign-in-button.tsx`). Create a **Web application** OAuth client in Google Cloud Console, add `http://localhost:3000` to its authorized origins, and set the same client ID on the backend. Restart the dev server after changing it (`NEXT_PUBLIC_*` vars are read at startup).
 
 ## Project Structure
@@ -81,7 +81,7 @@ components/
   chat/  ai/  vocab/  goals/  calendar/  reading/  dashboard/  ...
 hooks/            useChat, useVocab, etc. (some manage state directly)
 lib/
-  api.ts          single backend integration point
+  api/            backend integration — per-domain service package (client + barrel)
   auth-store.ts   JWT in localStorage
   goals.ts  reading.ts  vocab-review.ts  srs.ts  ...
 ```

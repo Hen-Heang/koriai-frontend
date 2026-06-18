@@ -24,12 +24,12 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 
 **This is effectively a client-side SPA over a separate Spring Boot backend.** Nearly every page/layout is `"use client"`. There are no Next.js API routes or server actions. All data comes from the backend at `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8080/api`); the backend repo is separate.
 
-### API layer — `lib/api.ts` (the single integration point)
+### API layer — `lib/api/` (the single integration point)
 
-- One axios instance plus per-domain endpoint groups (`authApi`, `chatApi`, `vocabApi`, `listeningApi`, `analyzerApi`, etc.). Add new backend calls here, not inline in components.
+- A per-domain service package. `lib/api/client.ts` holds the one axios instance + interceptors; each domain has its own file (`auth.ts`, `chat.ts`, `vocab.ts`, `goals.ts`, `interview.ts`, `reading.ts`, `progress.ts`, `learning.ts`, `tts.ts`, `push.ts`, `user.ts`); `lib/api/index.ts` is a barrel that re-exports everything. Import from `@/lib/api` as before (e.g. `import { vocabApi } from "@/lib/api"`). Add a new backend call to the matching domain file, not inline in components.
 - The backend wraps every payload in an envelope — responses are always unwrapped with `r.data.data`. Keep that pattern.
-- Request interceptor attaches `Authorization: Bearer <token>` from localStorage; response interceptor on 401 clears auth and hard-redirects to `/login`.
-- `chatApi.streamMessage` is the exception to axios: it uses raw `fetch` to parse SSE events (`start` / `token` / `done` / `error`) from `POST /chat/stream`.
+- Request interceptor attaches `Authorization: Bearer <token>` from localStorage; the 401 response interceptor does a single-flight token refresh, retries once, and only hard-redirects to `/login` if the refresh itself fails.
+- `chatApi.streamMessage` (and `goalsApi.coachStream`) are the exceptions to axios: they use raw `fetch` to parse SSE events (`start` / `token` / `done` / `error`) from the backend stream endpoints.
 
 ### Auth
 

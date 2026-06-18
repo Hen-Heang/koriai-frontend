@@ -1,7 +1,18 @@
 "use client"
 
+import dynamic from "next/dynamic"
+
 import { PageHero } from "@/components/app/page-hero"
-import { Calendar } from "@/components/calendar/Calendar"
+
+// The calendar is heavy (date-grid + recharts-free but large). Load it on the
+// client after first paint so the page shell appears immediately.
+const Calendar = dynamic(
+  () => import("@/components/calendar/Calendar").then((m) => m.Calendar),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse rounded-3xl bg-muted/20" />,
+  }
+)
 
 // Standalone personal-tasks calendar (goal_id = null). Ports Orbit
 // routes/calendar.tsx — the same Calendar component is embedded in the goal

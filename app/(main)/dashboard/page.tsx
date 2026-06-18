@@ -11,10 +11,10 @@ import {
   Cpu,
 } from "lucide-react"
 import { motion } from "motion/react"
+import dynamic from "next/dynamic"
 
 import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
 import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
-import { ProgressChart } from "@/components/dashboard/ProgressChart"
 import { StreakCard } from "@/components/dashboard/StreakCard"
 import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
@@ -23,6 +23,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { useProgress } from "@/hooks/useProgress"
 import { getStudyFocus } from "@/lib/study-focus"
+
+// recharts is heavy; defer it so the dashboard shell + above-the-fold cards
+// paint first, then the chart streams in.
+const ProgressChart = dynamic(
+  () => import("@/components/dashboard/ProgressChart").then((m) => m.ProgressChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-72 w-full animate-pulse rounded-3xl bg-muted/20 sm:h-80" />,
+  }
+)
 
 function DashboardLoadingState() {
   return (

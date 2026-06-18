@@ -14,7 +14,7 @@ export interface GoalMetadata {
     timeRange?: [string, string]
     daysOfWeek?: number[]
   }
-  milestones?: Array<{ title: string; due_date?: string }>
+  milestones?: Array<{ title: string; due_date?: string; done?: boolean }>
   template_id?: string
   icon?: string
   travel_destination?: string

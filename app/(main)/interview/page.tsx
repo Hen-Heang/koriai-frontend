@@ -24,9 +24,9 @@ import {
   Waves,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import dynamic from "next/dynamic"
 
 import { PageHero } from "@/components/app/page-hero"
-import { ScoreTrend } from "@/components/interview/ScoreTrend"
 import { StudyPlanCard } from "@/components/interview/StudyPlanCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
@@ -58,6 +58,12 @@ import { cn } from "@/lib/utils"
 type SessionEntry =
   | { id: string; kind: "examiner"; turn: ExaminerTurn }
   | { id: string; kind: "answer"; text: string }
+
+// recharts-backed; deferred so the page paints before the chart chunk loads.
+const ScoreTrend = dynamic(
+  () => import("@/components/interview/ScoreTrend").then((m) => m.ScoreTrend),
+  { ssr: false, loading: () => <div className="h-48 w-full animate-pulse rounded-3xl bg-muted/20" /> }
+)
 
 const containerVariants = {
   hidden: { opacity: 0 },

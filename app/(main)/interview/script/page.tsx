@@ -52,39 +52,34 @@ type CustomSection = { id: string; title: string }
 /** A Q&A question the candidate adds, beyond the seeded likely questions. */
 type CustomQA = { id: string; questionKo: string }
 
-function loadInitialQA(): CustomQA[] {
-  if (typeof window === "undefined") return []
+// SSR-safe localStorage JSON helpers — return the fallback when there's no
+// window, no value, or a parse error; swallow quota / private-mode write errors.
+function loadJSON<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback
   try {
-    const raw = window.localStorage.getItem(QA_CUSTOM_KEY)
-    return raw ? (JSON.parse(raw) as CustomQA[]) : []
+    const raw = window.localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
   } catch {
-    return []
+    return fallback
   }
 }
+
+function saveJSON(key: string, value: unknown) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Ignore quota / private-mode failures.
+  }
+}
+
+const loadInitialQA = (): CustomQA[] => loadJSON<CustomQA[]>(QA_CUSTOM_KEY, [])
+const loadInitial = (): Record<string, string> =>
+  loadJSON<Record<string, string>>(STORAGE_KEY, {})
+const loadInitialCustom = (): CustomSection[] => loadJSON<CustomSection[]>(CUSTOM_KEY, [])
 
 function countWords(text: string) {
   const trimmed = text.trim()
   return trimmed ? trimmed.split(/\s+/).length : 0
-}
-
-function loadInitial(): Record<string, string> {
-  if (typeof window === "undefined") return {}
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
-  } catch {
-    return {}
-  }
-}
-
-function loadInitialCustom(): CustomSection[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw = window.localStorage.getItem(CUSTOM_KEY)
-    return raw ? (JSON.parse(raw) as CustomSection[]) : []
-  } catch {
-    return []
-  }
 }
 
 // Only a custom section's TEXT syncs to the account (under its `custom-*` key);
@@ -233,26 +228,26 @@ export default function InterviewScriptPage() {
   }, [scriptDocument, qaDocument])
 
   // Counts reflect the tab you're on so the script's length isn't skewed by Q&A.
-  const countedKeys = useMemo(() => {
-    if (mode === "qa") return new Set(allQA.map((q) => q.id))
-    return new Set([...outline.map((s) => s.id), ...effectiveCustom.map((s) => s.id)])
-  }, [mode, allQA, outline, effectiveCustom])
+  // Iterate the items shown on the active tab and read their text straight from
+  // `values`, rather than scanning the whole map and filtering by key.
+  const countedItems = useMemo(
+    () => (mode === "qa" ? allQA : [...outline, ...effectiveCustom]),
+    [mode, allQA, outline, effectiveCustom]
+  )
 
   const totalWords = useMemo(
-    () =>
-      Object.entries(values)
-        .filter(([key]) => countedKeys.has(key))
-        .reduce((sum, [, text]) => sum + countWords(text), 0),
-    [values, countedKeys]
+    () => countedItems.reduce((sum, item) => sum + countWords(values[item.id] ?? ""), 0),
+    [countedItems, values]
   )
   // Korean script length is usually judged by 글자 수 (characters, spaces
   // excluded) rather than whitespace-delimited words, so surface both.
   const totalChars = useMemo(
     () =>
-      Object.entries(values)
-        .filter(([key]) => countedKeys.has(key))
-        .reduce((sum, [, text]) => sum + text.replace(/\s/g, "").length, 0),
-    [values, countedKeys]
+      countedItems.reduce(
+        (sum, item) => sum + (values[item.id] ?? "").replace(/\s/g, "").length,
+        0
+      ),
+    [countedItems, values]
   )
 
   // Saving happens here in the change handler (not in an effect) so there is no
@@ -275,11 +270,7 @@ export default function InterviewScriptPage() {
   // rides along in `values` and syncs to the account like every other section.
   function persistCustom(next: CustomSection[]) {
     setCustomSections(next)
-    try {
-      window.localStorage.setItem(CUSTOM_KEY, JSON.stringify(next))
-    } catch {
-      // Ignore quota / private-mode failures.
-    }
+    saveJSON(CUSTOM_KEY, next)
   }
 
   function addCustomSection() {
@@ -329,11 +320,7 @@ export default function InterviewScriptPage() {
   // ── Custom Q&A questions ─────────────────────────────────────────────────
   function persistQA(next: CustomQA[]) {
     setCustomQA(next)
-    try {
-      window.localStorage.setItem(QA_CUSTOM_KEY, JSON.stringify(next))
-    } catch {
-      // Ignore quota / private-mode failures.
-    }
+    saveJSON(QA_CUSTOM_KEY, next)
   }
 
   function addCustomQA() {

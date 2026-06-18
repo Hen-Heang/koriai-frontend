@@ -16,7 +16,6 @@ import {
 } from "recharts"
 import {
   AlertTriangle,
-  Flame,
   Lightbulb,
   TrendingDown,
   TrendingUp,
@@ -30,7 +29,6 @@ import { cn } from "@/lib/utils"
 import type { Task } from "@/lib/tasks"
 import {
   calculateDailyTrend,
-  calculateStreak,
   calculateVelocityData,
   computeAnalytics,
   getProductivityBreakdown,
@@ -61,11 +59,10 @@ const insightStyle: Record<SmartInsight["type"], { icon: React.ElementType; colo
 export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDate?: string | null }) {
   const mounted = useMounted()
 
-  const { analytics, breakdown, streak, daily, velocity } = useMemo(
+  const { analytics, breakdown, daily, velocity } = useMemo(
     () => ({
       analytics: computeAnalytics(tasks, targetDate),
       breakdown: getProductivityBreakdown(tasks),
-      streak: calculateStreak(tasks),
       daily: calculateDailyTrend(tasks),
       velocity: calculateVelocityData(tasks),
     }),
@@ -95,7 +92,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
   return (
     <div className="space-y-6">
       {/* Headline stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
             Productivity
@@ -112,15 +109,6 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
           <p className="mt-1 flex items-center gap-1.5 text-lg font-black capitalize text-foreground">
             <TrendIcon className="h-5 w-5 text-primary" /> {analytics.velocityTrend}
           </p>
-        </Card>
-        <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-            Streak
-          </p>
-          <p className="mt-1 flex items-center gap-1.5 text-3xl font-black tabular-nums text-foreground">
-            <Flame className="h-6 w-6 text-orange-500" /> {streak.current}
-          </p>
-          <p className="text-[11px] font-medium text-muted-foreground">longest {streak.longest}d</p>
         </Card>
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">

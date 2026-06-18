@@ -112,11 +112,11 @@ function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar }: Goa
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2 shadow-2xl">
-          <DropdownMenuItem className="rounded-xl font-bold" onSelect={(e) => onEditGoal?.(goal, e as any)}>
+          <DropdownMenuItem className="rounded-xl font-bold" onSelect={(e) => onEditGoal?.(goal, e as unknown as React.MouseEvent)}>
             <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit Goal
           </DropdownMenuItem>
           <DropdownMenuSeparator className="my-2" />
-          <DropdownMenuItem variant="destructive" className="rounded-xl font-bold" onSelect={(e) => onDeleteGoal(goal, e as any)}>
+          <DropdownMenuItem variant="destructive" className="rounded-xl font-bold" onSelect={(e) => onDeleteGoal(goal, e as unknown as React.MouseEvent)}>
             <Trash2 className="mr-3 h-4 w-4" /> Delete Goal
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -257,8 +257,18 @@ export function GoalList({
         </Button>
       </div>
 
-      <div className={cn(viewMode === "grid" ? "grid grid-cols-2 gap-4 sm:gap-6" : "flex flex-col gap-2.5")}>
-        <AnimatePresence mode="popLayout">
+      {/* Key the container by viewMode so the two layouts cross-fade as separate
+          trees, instead of morphing the same keyed nodes across a grid⇄flex
+          change (which is what made the switch janky). */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={viewMode}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className={cn(viewMode === "grid" ? "grid grid-cols-2 gap-4 sm:gap-6" : "flex flex-col gap-2.5")}
+        >
           {goals.map((goal, i) => {
             const deadlineInfo = calculateGoalDeadlineInfo(goal)
             const deadlineStyling = deadlineInfo
@@ -426,8 +436,8 @@ export function GoalList({
               </motion.div>
             )
           })}
-        </AnimatePresence>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }

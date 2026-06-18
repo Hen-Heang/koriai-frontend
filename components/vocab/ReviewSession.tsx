@@ -32,6 +32,13 @@ function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   return shuffle([correct, ...distractors])
 }
 
+// The romanized reading, shown under the term on every card variant. Size and
+// spacing are passed in via className; the bracketed format is shared.
+function Pronunciation({ text, className }: { text?: string | null; className?: string }) {
+  if (!text) return null
+  return <p className={cn("font-bold text-muted-foreground/70", className)}>[{text}]</p>
+}
+
 type Mode = "flashcard" | "choice" | "recall" | "listening"
 type Phase = "idle" | "quiz" | "done"
 
@@ -165,7 +172,8 @@ function FlashCard({
             className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-[2.5rem] sm:p-8"
           >
             <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
-            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">{reversed ? card.meaning : card.term}</p>
+            <p className="w-full break-keep text-5xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{reversed ? card.meaning : card.term}</p>
+            {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
             <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
               Tap to Reveal
             </div>
@@ -176,7 +184,12 @@ function FlashCard({
             className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-[2rem] border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-[2.5rem] sm:p-8"
           >
             <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
-            <p className="w-full break-keep text-2xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl">{reversed ? card.term : card.meaning}</p>
+            <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{reversed ? card.term : card.meaning}</p>
+            <Pronunciation text={card.pronunciation} className="mt-2 text-base sm:text-2xl" />
+            {/* Always surface the other side too, so each card reinforces Korean + reading + meaning together. */}
+            <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/80 [overflow-wrap:anywhere] sm:text-2xl">
+              {reversed ? card.meaning : card.term}
+            </p>
 
             {card.example && (
               <div className="mt-6 w-full max-w-sm rounded-2xl border-2 border-[#58cc02]/20 bg-card/80 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
@@ -250,7 +263,8 @@ function ChoiceCard({
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-[3rem] sm:p-10">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Select Meaning</span>
-        <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">{card.term}</p>
+        <p className="w-full break-keep text-5xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{card.term}</p>
+        <Pronunciation text={card.pronunciation} className="mt-3 text-lg sm:text-2xl" />
         <div className="mt-6">
           <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
         </div>
@@ -283,7 +297,7 @@ function ChoiceCard({
               )}
             >
               <span className={cn(
-                "min-w-0 text-[15px] font-bold [overflow-wrap:anywhere]",
+                "min-w-0 text-base font-bold [overflow-wrap:anywhere] sm:text-lg",
                 !answered ? "text-foreground" : isCorrect ? "text-emerald-700 dark:text-emerald-400" : isSelected ? "text-red-700 dark:text-red-400" : "text-muted-foreground"
               )}>
                 {choice.meaning}
@@ -602,13 +616,11 @@ function ListeningCard({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {/* Answer reveal */}
           <div className="rounded-2xl border-2 border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-5 text-center dark:bg-[#58cc02]/[0.08]">
-            <p className="w-full break-keep text-3xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl">
+            <p className="w-full break-keep text-4xl font-black leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">
               {card.term}
             </p>
-            {card.pronunciation && (
-              <p className="mt-1.5 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
-            )}
-            <p className="mt-3 break-keep text-lg font-black text-muted-foreground [overflow-wrap:anywhere]">
+            <Pronunciation text={card.pronunciation} className="mt-2 text-lg sm:text-2xl" />
+            <p className="mt-3 break-keep text-xl font-black text-muted-foreground [overflow-wrap:anywhere] sm:text-2xl">
               {card.meaning}
             </p>
             {card.example && (
@@ -636,6 +648,16 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   const [knewCount, setKnewCount] = useState(0)
 
   const canUseChoice = allWords.length >= 4
+
+  // Lock the page behind the full-screen review so only the session scrolls.
+  useEffect(() => {
+    if (phase !== "quiz") return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [phase])
 
   function startQuiz() {
     const deck = dueToday.length > 0 ? dueToday : allWords
@@ -835,9 +857,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   if (!card) return null
 
   return (
-    <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-[2.5rem]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Session Progress Header */}
-      <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 sm:px-6 sm:py-5">
+      <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
         <button
           onClick={() => setPhase("idle")}
           className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
@@ -872,7 +894,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         />
       </div>
 
-      <div className="p-4 sm:p-10">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-10">
+        <div className="mx-auto w-full max-w-2xl">
         <AnimatePresence mode="wait">
           <motion.div
             key={card.id + currentIndex}
@@ -905,6 +928,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             )}
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
     </div>
   )

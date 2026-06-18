@@ -46,20 +46,32 @@ import { DeleteConfirmDialog } from "@/components/goals/DeleteConfirmDialog"
 import { EditGoalSlidePanel } from "@/components/goals/EditGoalSlidePanel"
 import { InviteMembers } from "@/components/goals/InviteMembers"
 import { ShareGoalCard } from "@/components/goals/ShareGoalCard"
-import { SmartAnalytics } from "@/components/goals/SmartAnalytics"
+import { GoalMilestones, type Milestone } from "@/components/goals/GoalMilestones"
 import { GoalCoach } from "@/components/goals/GoalCoach"
 import { GoalCoachChat } from "@/components/goals/GoalCoachChat"
-import { Calendar } from "@/components/calendar/Calendar"
+import dynamic from "next/dynamic"
 import { parseYMD } from "@/lib/calendar"
 import { goalsApi, getApiErrorMessage } from "@/lib/api"
 import { goalsQueryKey } from "@/hooks/useGoals"
 import { getUserId } from "@/lib/auth-store"
+import { EXAM_DATE, SCRIPT_DUE_DATE } from "@/lib/study-plan"
 import {
   calculateGoalDeadlineInfo,
   getDeadlineStatusStyling,
   type Goal,
 } from "@/lib/goals"
 import { cn } from "@/lib/utils"
+
+// Heavy, below-the-fold pieces — deferred so the goal header/tabs paint first.
+// SmartAnalytics pulls in recharts; Calendar is a large date-grid component.
+const SmartAnalytics = dynamic(
+  () => import("@/components/goals/SmartAnalytics").then((m) => m.SmartAnalytics),
+  { ssr: false, loading: () => <div className="h-64 w-full animate-pulse rounded-3xl bg-muted/20" /> }
+)
+const Calendar = dynamic(
+  () => import("@/components/calendar/Calendar").then((m) => m.Calendar),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse rounded-3xl bg-muted/20" /> }
+)
 
 type DetailTab = "overview" | "tasks" | "members" | "coach" | "settings"
 const TAB_STORAGE_KEY = "dg_goal_detail_tab"
@@ -303,7 +315,20 @@ export default function GoalDetailPage() {
   }
 
   const icon = goal.metadata?.icon
-  const milestones = goal.metadata?.milestones ?? []
+  // Exam-prep goals (detected loosely from the title/description) get a one-tap
+  // starter milestone set seeded from the K-Specialist study-plan dates.
+  const examGoalSuggestions: Milestone[] = /exam|interview|korean|한국어|k-?specialist|면접|topik|토픽/i.test(
+    `${goal.title ?? ""} ${goal.description ?? ""}`
+  )
+    ? [
+        { title: "Finish a full mock + note your baseline score", due_date: "2026-07-15" },
+        { title: "All weather vocab + key phrases memorized", due_date: "2026-08-17" },
+        { title: "Script final draft — no more changes", due_date: "2026-08-19" },
+        { title: "Submit Korean script", due_date: SCRIPT_DUE_DATE },
+        { title: "Score 4/5 across all criteria on a mock", due_date: "2026-08-25" },
+        { title: "Exam day — K-Specialist interview", due_date: EXAM_DATE },
+      ]
+    : []
   const isCompleted = goal.status === "completed"
   const isArchived = goal.status === "archived"
 
@@ -457,6 +482,16 @@ export default function GoalDetailPage() {
               </Card>
             )}
           </div>
+
+          <GoalMilestones
+            goal={goal}
+            suggestions={examGoalSuggestions}
+            onGoalUpdated={(updated) =>
+              queryClient.setQueryData<Goal>(goalKey, (prev) =>
+                prev ? { ...prev, ...updated } : updated
+              )
+            }
+          />
 
           <div>
             <h3 className="mb-4 px-1 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
