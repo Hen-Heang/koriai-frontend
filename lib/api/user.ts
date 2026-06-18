@@ -34,6 +34,11 @@ export const userApi = {
   updatePreferredModel: (id: number, preferredModel: string) =>
     api.put(`/users/${id}/preferred-model`, { preferredModel }).then((r) => r.data.data),
 
+  // Daily study-reminder prefs (reviews-due + streak-saver). `hour` is the local
+  // (Seoul) hour-of-day for the reviews-due nudge; backend StudyReminderScheduler reads these.
+  updateStudyReminders: (id: number, enabled: boolean, hour: number) =>
+    api.put(`/users/${id}/study-reminders`, { enabled, hour }).then((r) => r.data.data),
+
   uploadProfileImage: (id: number, file: File) => {
     const form = new FormData()
     form.append("file", file)

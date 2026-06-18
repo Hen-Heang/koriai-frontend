@@ -21,8 +21,10 @@ import {
   Loader2,
   Bell,
   Send,
+  AlarmClock,
 } from "lucide-react"
 import { motion } from "motion/react"
+import { toast } from "sonner"
 
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
@@ -120,6 +122,9 @@ export default function SettingsPage() {
   const [error, setError] = useState("")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [studyRemindersEnabled, setStudyRemindersEnabled] = useState(true)
+  const [studyReminderHour, setStudyReminderHour] = useState(20)
+  const [savingReminders, setSavingReminders] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -139,12 +144,35 @@ export default function SettingsPage() {
         const model = data.preferredModel ?? "gpt-5-mini"
         setPreferredModel(model)
         if (!models.some((m) => m.value === model)) setCustomModel(model)
+        setStudyRemindersEnabled(data.studyRemindersEnabled ?? true)
+        setStudyReminderHour(data.studyReminderHour ?? 20)
         if (data.hasProfileImage) {
           userApi.getProfileImageUrl(userId).then(setAvatarUrl).catch(() => {})
         }
       })
       .finally(() => setLoading(false))
   }, [])
+
+  // Study reminders save eagerly on each change. Optimistically update local
+  // state, persist, and revert + toast on failure.
+  async function saveStudyReminders(enabled: boolean, hour: number) {
+    const userId = getUserId()
+    if (!userId) return
+    const prevEnabled = studyRemindersEnabled
+    const prevHour = studyReminderHour
+    setStudyRemindersEnabled(enabled)
+    setStudyReminderHour(hour)
+    setSavingReminders(true)
+    try {
+      await userApi.updateStudyReminders(userId, enabled, hour)
+    } catch {
+      setStudyRemindersEnabled(prevEnabled)
+      setStudyReminderHour(prevHour)
+      toast.error("Could not save study reminders", { description: "Please try again." })
+    } finally {
+      setSavingReminders(false)
+    }
+  }
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -409,7 +437,7 @@ export default function SettingsPage() {
               <SectionHeader
                 icon={Bell}
                 title="Notifications"
-                description="Goal reminders & invites — in the browser and on Telegram"
+                description="Study & task reminders, goal invites — in the browser and on Telegram"
                 color="text-violet-500"
               />
             </SectionRow>
@@ -437,7 +465,7 @@ export default function SettingsPage() {
             </SectionRow>
 
             {/* Telegram */}
-            <SectionRow last>
+            <SectionRow>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500 ring-1 ring-sky-500/20">
@@ -460,6 +488,49 @@ export default function SettingsPage() {
                   </Button>
                 )}
               </div>
+            </SectionRow>
+
+            {/* Study reminders (daily reviews-due + streak-saver) */}
+            <SectionRow last>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
+                    <AlarmClock size={16} strokeWidth={2.5} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">Daily study reminders</p>
+                    <p className="text-[12px] font-medium text-muted-foreground">
+                      A nudge when reviews are due, and a streak-saver if you haven&apos;t studied.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={studyRemindersEnabled}
+                  disabled={savingReminders}
+                  onCheckedChange={(v) => saveStudyReminders(v, studyReminderHour)}
+                  aria-label="Toggle daily study reminders"
+                />
+              </div>
+              {studyRemindersEnabled && (
+                <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
+                  <label htmlFor="study-hour" className="text-[12px] font-bold text-muted-foreground">
+                    Remind me to review at
+                  </label>
+                  <select
+                    id="study-hour"
+                    value={studyReminderHour}
+                    disabled={savingReminders}
+                    onChange={(e) => saveStudyReminders(studyRemindersEnabled, Number(e.target.value))}
+                    className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-bold text-foreground outline-none transition-all focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <option key={h} value={h}>
+                        {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </SectionRow>
           </SectionCard>
         </motion.div>
