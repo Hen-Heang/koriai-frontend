@@ -56,3 +56,24 @@ export const userApi = {
     return URL.createObjectURL(response.data)
   },
 }
+
+export interface LevelSuggestion {
+  currentLevel: string
+  suggestedLevel: string | null
+  upgradeAvailable: boolean
+  reason: string
+  streakDays: number
+  wordsSaved: number
+  avgVocabMastery: number
+  avgCorrectionRating: number
+}
+
+// Suggests leveling BEGINNER -> INTERMEDIATE -> ADVANCED from real streak/vocab
+// mastery/grammar-accuracy data, instead of leaving koreanLevel a one-time
+// manual profile choice. Never downgrades.
+export const levelApi = {
+  getSuggestion: () =>
+    api.get("/users/level/suggestion").then((r) => r.data.data) as Promise<LevelSuggestion>,
+  apply: (level: string) =>
+    api.post("/users/level/apply", { level }).then((r) => r.data.data),
+}

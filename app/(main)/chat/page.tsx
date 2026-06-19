@@ -34,6 +34,7 @@ function ChatPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialDraft = searchParams.get("prompt") ?? undefined
+  const initialCategory = searchParams.get("category") ?? undefined
 
   // A ?prompt= deep link is a correction/chat request, so it always lands on Chat.
   const queryMode = searchParams.get("mode")
@@ -265,7 +266,7 @@ function ChatPageContent() {
         ) : (
           <div className="h-full overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-6xl">
-              {mode === "analyze" ? <MessageAnalyzer /> : <MessageGenerator />}
+              {mode === "analyze" ? <MessageAnalyzer /> : <MessageGenerator initialCategory={initialCategory} />}
             </div>
           </div>
         )}

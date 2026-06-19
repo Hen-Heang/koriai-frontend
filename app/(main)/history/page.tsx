@@ -9,6 +9,8 @@ import {
   ChevronRight,
   ScrollText,
   Languages,
+  Star,
+  Trash2,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
@@ -27,12 +29,29 @@ type CorrectionEntry = {
   createdAt: string
   originalText: string
   correctedText: string
+  rating?: number | null
   grammarPoints: string[]
   explanation: string
   englishTranslation?: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function StarRating({ rating }: { rating?: number | null }) {
+  if (!rating) return null
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          size={12}
+          strokeWidth={2.5}
+          className={i < rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}
+        />
+      ))}
+    </div>
+  )
+}
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -209,6 +228,20 @@ export default function HistoryPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date())
   const [activeDays, setActiveDays] = useState<Set<number>>(new Set())
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Delete this correction? This can't be undone.")) return
+    setDeletingId(id)
+    try {
+      await correctionApi.remove(id)
+      setCorrections((prev) => prev.filter((c) => c.id !== id))
+    } catch {
+      // Leave the entry in place if the delete fails.
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   useEffect(() => {
     correctionApi
@@ -343,30 +376,48 @@ export default function HistoryPage() {
                         className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm dark:bg-slate-900/40 sm:rounded-3xl"
                       >
                         {/* Header row */}
-                        <button
-                          className="w-full text-left"
-                          onClick={() => setExpandedId(isExpanded ? null : entry.id)}
-                        >
-                          <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5">
-                            <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5">
+                          <button
+                            type="button"
+                            className="min-w-0 flex-1 space-y-1.5 text-left"
+                            onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                          >
+                            <div className="flex items-center gap-2">
                               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
                                 {formatDate(entry.createdAt)}
                               </p>
-                              <p className="line-clamp-1 text-sm font-bold text-muted-foreground/70">
-                                {entry.originalText}
-                              </p>
-                              <p className="line-clamp-1 text-sm font-bold text-foreground">
-                                {entry.correctedText}
-                              </p>
+                              <StarRating rating={entry.rating} />
                             </div>
-                            <div className={cn(
-                              "mt-1 shrink-0 transition-transform duration-200",
-                              isExpanded ? "rotate-90" : "rotate-0"
-                            )}>
-                              <ArrowRight size={16} className="text-muted-foreground/40" strokeWidth={2.5} />
-                            </div>
+                            <p className="line-clamp-1 text-sm font-bold text-muted-foreground/70">
+                              {entry.originalText}
+                            </p>
+                            <p className="line-clamp-1 text-sm font-bold text-foreground">
+                              {entry.correctedText}
+                            </p>
+                          </button>
+                          <div className="mt-1 flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void handleDelete(entry.id)}
+                              disabled={deletingId === entry.id}
+                              aria-label="Delete correction"
+                              className="rounded-lg p-1.5 text-muted-foreground/30 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40"
+                            >
+                              <Trash2 size={15} strokeWidth={2.5} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={isExpanded ? "Collapse" : "Expand"}
+                              onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                              className={cn(
+                                "rounded-lg p-1.5 text-muted-foreground/40 transition-transform duration-200",
+                                isExpanded ? "rotate-90" : "rotate-0"
+                              )}
+                            >
+                              <ArrowRight size={16} strokeWidth={2.5} />
+                            </button>
                           </div>
-                        </button>
+                        </div>
 
                         {/* Expanded detail */}
                         <AnimatePresence>
@@ -379,6 +430,16 @@ export default function HistoryPage() {
                               className="overflow-hidden"
                             >
                               <div className="space-y-5 border-t border-border/60 px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
+                                {/* Rating */}
+                                {entry.rating != null && (
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/50">
+                                      Sentence Quality
+                                    </p>
+                                    <StarRating rating={entry.rating} />
+                                  </div>
+                                )}
+
                                 {/* Original vs Corrected */}
                                 <div className="grid gap-3 sm:grid-cols-2">
                                   <div className="rounded-2xl bg-red-500/5 p-4">

@@ -261,6 +261,32 @@ export interface LessonAttemptResult {
   results: boolean[]
 }
 
+export interface CorrectionReview {
+  id: string
+  originalText: string
+  correctedText: string
+  explanation?: string
+  grammarPoints: string[]
+  mastery: number
+  nextReviewDate: string
+  easeFactor: number
+  intervalDays: number
+  repetitions: number
+  lapses: number
+}
+
+export interface PracticeToday {
+  userLevel: string
+  dueVocabCount: number
+  dueVocabSample: VocabItem[]
+  dueCorrectionsCount: number
+  dueCorrectionsSample: CorrectionReview[]
+  dailyPhrase: DailyPhrase
+  suggestedScenario: ScenarioDetail
+  suggestedMessageCategory: string
+  suggestedListeningTopic: string
+}
+
 export interface MessageAnalysis {
   id: number
   source?: string | null

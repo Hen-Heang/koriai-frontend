@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import type { LucideIcon } from "lucide-react"
 import {
   BookOpen,
+  CalendarDays,
+  CheckCircle2,
   Flame,
   Headphones,
   Library,
@@ -13,7 +15,9 @@ import {
   Sparkles,
   SpellCheck2,
   Sprout,
+  TrendingUp,
   Trophy,
+  Wand2,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -38,6 +42,10 @@ const ICONS: Record<string, LucideIcon> = {
   headphones: Headphones,
   messages: MessagesSquare,
   trophy: Trophy,
+  "check-circle": CheckCircle2,
+  "calendar-days": CalendarDays,
+  wand: Wand2,
+  "trending-up": TrendingUp,
 }
 
 export default function AchievementsPage() {

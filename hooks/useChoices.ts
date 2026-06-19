@@ -8,12 +8,23 @@ import { useEffect, useState } from "react"
 // then render instantly and skip the network round-trip entirely.
 const choicesCache = new Map<() => Promise<string[]>, string[]>()
 
+function pickSelected(opts: string[], initialSelected?: string) {
+  return initialSelected && opts.includes(initialSelected) ? initialSelected : opts[0]
+}
+
 // Fetches a list of options from the backend, keeping a hardcoded fallback
-// (and its first entry selected) until real data arrives.
-export function useChoices(fetcher: () => Promise<string[]>, fallback: string[]) {
+// (and its first entry selected) until real data arrives. An optional
+// `initialSelected` (e.g. a suggestion deep-linked from the Practice Hub)
+// is preferred over the first entry when it's present in the option list.
+export function useChoices(
+  fetcher: () => Promise<string[]>,
+  fallback: string[],
+  initialSelected?: string
+) {
   const cached = choicesCache.get(fetcher)
-  const [options, setOptions] = useState<string[]>(cached ?? fallback)
-  const [selected, setSelected] = useState<string>((cached ?? fallback)[0])
+  const initialOptions = cached ?? fallback
+  const [options, setOptions] = useState<string[]>(initialOptions)
+  const [selected, setSelected] = useState<string>(() => pickSelected(initialOptions, initialSelected))
 
   useEffect(() => {
     // Already cached this session — no need to hit the backend again.
@@ -24,7 +35,7 @@ export function useChoices(fetcher: () => Promise<string[]>, fallback: string[])
         if (active && Array.isArray(data) && data.length > 0) {
           choicesCache.set(fetcher, data)
           setOptions(data)
-          setSelected(data[0])
+          setSelected(pickSelected(data, initialSelected))
         }
       })
       .catch(() => {

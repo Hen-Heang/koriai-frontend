@@ -8,6 +8,7 @@ import {
   BookOpen,
   BookOpenText,
   CalendarDays,
+  Drama,
   Gauge,
   GraduationCap,
   Headphones,
@@ -46,6 +47,7 @@ const navSections = [
     // Goals is the primary surface — keep it at the very top of the sidebar.
     label: "Plan",
     links: [
+      { href: "/practice", label: "Today", icon: Sparkles },
       { href: "/goals", label: "Goals", icon: Target },
       { href: "/dashboard", label: "Dashboard", icon: Gauge },
     ],
@@ -59,6 +61,7 @@ const navSections = [
       { href: "/vocab", label: "Vocabulary", icon: BookOpen },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
       { href: "/listening", label: "Listening", icon: Headphones },
+      { href: "/scenarios", label: "Scenarios", icon: Drama },
       { href: "/reading", label: "Reading", icon: BookOpenText },
       { href: "/notes", label: "Dev Notes", icon: NotebookPen },
       { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },

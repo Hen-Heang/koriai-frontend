@@ -1,0 +1,215 @@
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+import { Drama, MessageCircle, Sparkles, Target } from "lucide-react"
+import { motion } from "motion/react"
+import { useRouter } from "next/navigation"
+
+import { PageHero } from "@/components/app/page-hero"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ChipSelect } from "@/components/ui/chip-select"
+import { ErrorBanner } from "@/components/ui/error-banner"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { scenarioApi, getApiErrorMessage } from "@/lib/api"
+import { containerVariants, itemVariants } from "@/lib/motion"
+import { cn } from "@/lib/utils"
+import type { ScenarioDetail } from "@/lib/types"
+
+const LEVEL_BADGE: Record<string, string> = {
+  Beginner: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  Intermediate: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  Advanced: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+}
+
+export default function ScenariosPage() {
+  const router = useRouter()
+  const [scenarios, setScenarios] = useState<ScenarioDetail[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [category, setCategory] = useState("All")
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [customTopic, setCustomTopic] = useState("")
+
+  useEffect(() => {
+    let active = true
+    scenarioApi
+      .getList()
+      .then((data) => {
+        if (active) setScenarios(data)
+      })
+      .catch((err) => {
+        if (active) setError(getApiErrorMessage(err, "Could not load scenarios."))
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(scenarios.map((s) => s.category)))],
+    [scenarios]
+  )
+
+  const visible = category === "All" ? scenarios : scenarios.filter((s) => s.category === category)
+
+  function handlePractice(scenario: ScenarioDetail) {
+    const prompt = scenario.introMessage || `Let's practice: ${scenario.goal}`
+    router.push(`/chat?prompt=${encodeURIComponent(prompt)}`)
+  }
+
+  function handleCustomPractice() {
+    const topic = customTopic.trim()
+    if (!topic) return
+    router.push(`/chat?prompt=${encodeURIComponent(`Let's practice this in Korean: ${topic}`)}`)
+  }
+
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-8 pb-12">
+      <motion.div variants={itemVariants}>
+        <PageHero
+          eyebrow="Scenarios"
+          title="Roleplay Scenarios"
+          description="Practice real-life and workplace situations in Korean — from ordering food to giving a status update to your manager — then jump into a guided AI conversation."
+          stats={[
+            { label: "Scenarios", value: `${scenarios.length}` },
+            { label: "Categories", value: `${Math.max(categories.length - 1, 0)}` },
+          ]}
+        />
+      </motion.div>
+
+      <motion.div
+        variants={itemVariants}
+        className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+      >
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Category
+        </label>
+        <ChipSelect options={categories} value={category} onChange={setCategory} className="mt-3" />
+      </motion.div>
+
+      <motion.div
+        variants={itemVariants}
+        className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+      >
+        <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <Sparkles size={14} className="text-blue-500" />
+          Or practice your own topic
+        </label>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+          <Input
+            value={customTopic}
+            onChange={(e) => setCustomTopic(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCustomPractice()
+            }}
+            placeholder="e.g. asking a coworker for help with a bug"
+            className="h-11 rounded-xl"
+          />
+          <Button
+            type="button"
+            disabled={!customTopic.trim()}
+            onClick={handleCustomPractice}
+            className="h-11 shrink-0 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white hover:bg-blue-500 active:scale-95 disabled:opacity-50"
+          >
+            <MessageCircle size={14} className="mr-2" />
+            Practice with AI Coach
+          </Button>
+        </div>
+      </motion.div>
+
+      {error && <ErrorBanner>{error}</ErrorBanner>}
+
+      {loading && (
+        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-3xl" />
+          ))}
+        </motion.div>
+      )}
+
+      {!loading && visible.length > 0 && (
+        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2">
+          {visible.map((scenario) => {
+            const expanded = expandedId === scenario.id
+            return (
+              <div
+                key={scenario.id}
+                className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      <Drama size={20} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600/70 dark:text-blue-400/70">
+                        {scenario.category}
+                      </p>
+                      <h3 className="text-base font-extrabold text-foreground">{scenario.title}</h3>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={cn("border px-2.5 py-1 text-[11px] font-bold", LEVEL_BADGE[scenario.level])}
+                  >
+                    {scenario.level}
+                  </Badge>
+                </div>
+
+                <p className="mt-4 text-sm text-muted-foreground">{scenario.summary}</p>
+
+                <div className="mt-3 flex items-start gap-2 text-sm text-foreground">
+                  <Target size={14} className="mt-0.5 shrink-0 text-muted-foreground/60" />
+                  <span>{scenario.goal}</span>
+                </div>
+
+                {expanded && scenario.introMessage && (
+                  <div className="mt-4 rounded-2xl border border-border bg-background/60 px-4 py-3 dark:bg-white/4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70">
+                      Conversation starter
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-foreground">{scenario.introMessage}</p>
+                  </div>
+                )}
+
+                <div className="mt-5 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(expanded ? null : scenario.id)}
+                    className="text-xs font-bold text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {expanded ? "Hide preview" : "Preview"}
+                  </button>
+                  <Button
+                    type="button"
+                    onClick={() => handlePractice(scenario)}
+                    className="h-10 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white hover:bg-blue-500 active:scale-95"
+                  >
+                    <MessageCircle size={14} className="mr-2" />
+                    Practice with AI Coach
+                  </Button>
+                </div>
+              </div>
+            )
+          })}
+        </motion.div>
+      )}
+
+      {!loading && !error && visible.length === 0 && (
+        <motion.div
+          variants={itemVariants}
+          className="rounded-3xl border border-dashed border-border bg-card/40 p-10 text-center"
+        >
+          <Drama size={32} className="mx-auto text-muted-foreground/50" strokeWidth={2} />
+          <p className="mt-3 text-sm font-bold text-foreground">No scenarios in this category</p>
+          <p className="mt-1 text-sm text-muted-foreground">Try a different category filter.</p>
+        </motion.div>
+      )}
+    </motion.div>
+  )
+}

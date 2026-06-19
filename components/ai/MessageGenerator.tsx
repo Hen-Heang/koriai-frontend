@@ -27,12 +27,18 @@ const FALLBACK_CATEGORIES = [
   "Meeting Communication",
   "Deployment Updates",
   "Bug Reports",
+  "Requesting Time Off",
+  "Status Update to Manager",
+  "Declining a Request Politely",
+  "Apologizing for a Mistake",
+  "Scheduling a Meeting",
 ]
 
-export function MessageGenerator() {
+export function MessageGenerator({ initialCategory }: { initialCategory?: string } = {}) {
   const { options: categories, selected: category, setSelected: setCategory } = useChoices(
     messageGenApi.getCategories,
-    FALLBACK_CATEGORIES
+    FALLBACK_CATEGORIES,
+    initialCategory
   )
   const [intent, setIntent] = useState("")
   const [loading, setLoading] = useState(false)

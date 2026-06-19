@@ -9,6 +9,17 @@ export const correctionApi = {
     api.post("/corrections/check", { text }).then((r) => r.data.data),
   history: (limit = 10) =>
     api.get(`/corrections/history?limit=${limit}`).then((r) => r.data.data),
+  // Mistake-based review: corrections resurface on an SRS schedule (same
+  // algorithm as vocab cards) until you stop repeating them.
+  getDueReviews: () =>
+    api.get("/corrections/review/due").then((r) => r.data.data) as Promise<
+      import("../types").CorrectionReview[]
+    >,
+  rate: (id: string | number, rating: "AGAIN" | "HARD" | "GOOD" | "EASY") =>
+    api.post(`/corrections/${id}/rate?rating=${rating}`).then((r) => r.data.data) as Promise<
+      import("../types").CorrectionReview
+    >,
+  remove: (id: string | number) => api.delete(`/corrections/${id}`).then((r) => r.data.data),
 }
 
 // Daily Phrase
@@ -47,8 +58,10 @@ export const listeningApi = {
 
 // Scenarios
 export const scenarioApi = {
-  getList: () => api.get("/scenarios").then((r) => r.data.data),
-  getById: (id: string) => api.get(`/scenarios/${id}`).then((r) => r.data.data),
+  getList: () =>
+    api.get("/scenarios").then((r) => r.data.data) as Promise<import("../types").ScenarioDetail[]>,
+  getById: (id: string) =>
+    api.get(`/scenarios/${id}`).then((r) => r.data.data) as Promise<import("../types").ScenarioDetail>,
 }
 
 // Workplace Korean Analyzer (Module 9)
@@ -57,4 +70,11 @@ export const analyzerApi = {
     api.post("/analyzer/analyze", { text, source }).then((r) => r.data.data),
   history: (limit = 30) =>
     api.get(`/analyzer/history?limit=${limit}`).then((r) => r.data.data),
+}
+
+// Daily Practice Hub — aggregates due reviews + today's phrase + a random
+// scenario/category/topic suggestion so there's one entry point per day.
+export const practiceApi = {
+  getToday: () =>
+    api.get("/practice/today").then((r) => r.data.data) as Promise<import("../types").PracticeToday>,
 }

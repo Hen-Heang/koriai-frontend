@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   CheckCircle2,
   Eye,
@@ -36,9 +37,20 @@ const PLAYBACK_RATES = [
 ]
 
 export default function ListeningPage() {
+  return (
+    <Suspense fallback={null}>
+      <ListeningPageContent />
+    </Suspense>
+  )
+}
+
+function ListeningPageContent() {
+  const searchParams = useSearchParams()
+  const initialTopic = searchParams.get("topic") ?? undefined
   const { options: topics, selected: topic, setSelected: setTopic } = useChoices(
     listeningApi.getTopics,
-    FALLBACK_TOPICS
+    FALLBACK_TOPICS,
+    initialTopic
   )
   const [lesson, setLesson] = useState<ListeningLesson | null>(null)
   const [loading, setLoading] = useState(false)
