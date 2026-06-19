@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowDownUp, Layers3, Search, SearchX, X } from "lucide-react"
+import { ArrowDownUp, LayoutGrid, Layers3, List, Search, SearchX, X } from "lucide-react"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -16,6 +16,8 @@ import {
   type SortOrder,
 } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
+
+export type VocabViewMode = "list" | "grid"
 
 type VocabDictionaryProps = {
   words: VocabItem[]
@@ -94,6 +96,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
   const [query, setQuery] = useState("")
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
   const [sortOrder, setSortOrder] = useState<SortOrder>("alpha")
+  const [viewMode, setViewMode] = useState<VocabViewMode>("list")
   const isFiltering = query.trim().length > 0 || masteryFilter !== "all"
 
   const filtered = useMemo(
@@ -179,6 +182,37 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
                 ))}
               </select>
             </label>
+
+            <div className="flex items-center gap-0.5 rounded-full border border-border bg-card p-0.5 dark:bg-slate-900/40">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                aria-label="List view"
+                aria-pressed={viewMode === "list"}
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+                  viewMode === "list"
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground/40 hover:text-foreground"
+                )}
+              >
+                <List size={14} strokeWidth={2.5} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                aria-label="Grid view"
+                aria-pressed={viewMode === "grid"}
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+                  viewMode === "grid"
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground/40 hover:text-foreground"
+                )}
+              >
+                <LayoutGrid size={14} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -193,6 +227,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
               items={items}
               defaultOpen={index === 0}
               forceOpen={isFiltering}
+              viewMode={viewMode}
               onUpdate={onUpdate}
               onDelete={onDelete}
             />

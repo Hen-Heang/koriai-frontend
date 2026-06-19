@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Activity, ClipboardPaste } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Activity, ClipboardPaste, Pencil, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { prepareVocabImport } from "@/lib/vocab-import"
@@ -19,14 +19,44 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
   const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState("")
 
+  // Entries the user can fine-tune (edit/remove) before importing — re-parsed
+  // from the pasted text whenever it changes, so manual edits to the textarea
+  // win, but a removed/edited entry survives until the next paste.
+  const [entries, setEntries] = useState<string[]>([])
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editingValue, setEditingValue] = useState("")
+
   const prepared = useMemo(() => prepareVocabImport(text, existingTerms), [text, existingTerms])
 
+  useEffect(() => {
+    setEntries(prepared.entries)
+    setEditingIndex(null)
+  }, [prepared.entries])
+
+  function removeEntry(index: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function startEditing(index: number) {
+    setEditingIndex(index)
+    setEditingValue(entries[index])
+  }
+
+  function saveEditing() {
+    if (editingIndex === null) return
+    const value = editingValue.trim()
+    setEntries((prev) =>
+      value ? prev.map((entry, i) => (i === editingIndex ? value : entry)) : prev.filter((_, i) => i !== editingIndex)
+    )
+    setEditingIndex(null)
+  }
+
   async function handleImport() {
-    if (!deckName.trim() || !prepared.entries.length) return
+    if (!deckName.trim() || !entries.length) return
     setImporting(true)
     setMessage("")
     try {
-      const count = await onImport(deckName.trim(), prepared.cleanedText)
+      const count = await onImport(deckName.trim(), entries.join("\n"))
       setMessage(
         count > 0
           ? `Imported ${count} words into "${deckName.trim()}".`
@@ -80,9 +110,9 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
         />
         {text.trim() && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs font-bold">
-            <span className={prepared.entries.length ? "text-violet-600 dark:text-violet-400" : "text-destructive"}>
-              {prepared.entries.length
-                ? `${prepared.entries.length} word${prepared.entries.length === 1 ? "" : "s"} ready to import`
+            <span className={entries.length ? "text-violet-600 dark:text-violet-400" : "text-destructive"}>
+              {entries.length
+                ? `${entries.length} word${entries.length === 1 ? "" : "s"} ready to import`
                 : "No vocabulary entries detected"}
             </span>
             {prepared.duplicatesRemoved > 0 && (
@@ -95,16 +125,64 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
                 {prepared.alreadySaved} already in your dictionary
               </span>
             )}
-            {prepared.entries.length > 100 && (
+            {entries.length > 100 && (
               <span className="text-muted-foreground/60">Large list — import may take a moment</span>
             )}
           </div>
+        )}
+        {entries.length > 0 && (
+          <ul className="max-h-64 space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-background/60 p-2">
+            {entries.map((entry, index) => (
+              <li
+                key={index}
+                className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-sm font-medium text-foreground hover:bg-accent/5"
+              >
+                {editingIndex === index ? (
+                  <input
+                    autoFocus
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveEditing()
+                      if (e.key === "Escape") setEditingIndex(null)
+                    }}
+                    className="flex-1 rounded-lg border border-violet-500/40 bg-card px-2 py-1 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/20"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => startEditing(index)}
+                    className="flex-1 truncate text-left transition-colors hover:text-violet-600 dark:hover:text-violet-400"
+                  >
+                    {entry}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => startEditing(index)}
+                  aria-label="Edit entry"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
+                >
+                  <Pencil size={12} strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeEntry(index)}
+                  aria-label="Remove entry"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <Button
             className="h-12 w-full rounded-2xl bg-violet-600 px-7 text-sm font-bold text-white shadow-xl shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 sm:w-auto"
             onClick={handleImport}
-            disabled={!deckName.trim() || !prepared.entries.length || importing}
+            disabled={!deckName.trim() || !entries.length || importing}
           >
             {importing ? (
               <>
