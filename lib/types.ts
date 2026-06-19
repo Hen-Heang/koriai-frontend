@@ -198,6 +198,69 @@ export interface SentenceCheckResponse {
   grammarNote: string
 }
 
+// ── Foundations (basics + grammar) ──────────────────────────────────────────
+// Three beginner tracks: "survival" teaches Level-0 phrases you need on day one
+// (greetings, ordering, emergencies); "alphabet" teaches Hangul (자음/모음 →
+// syllables); "grammar" teaches sentence patterns (particles, 요-form, tenses,
+// numbers, irregular verbs).
+export type LearnTrack = "survival" | "alphabet" | "grammar"
+
+export type LessonLevel = "Intro" | "Beginner" | "Elementary"
+
+// One lesson as shown in the track list (no teaching/practice payload).
+export interface LessonSummary {
+  id: string
+  track: LearnTrack
+  order: number
+  title: string
+  subtitle: string
+  level: LessonLevel
+  estimatedMinutes: number
+  completed: boolean
+  // 0–100, % of this lesson's exercises answered correctly on the best attempt.
+  progress: number
+}
+
+// A teaching card shown before practice. The same shape serves both tracks:
+// alphabet → `hangul` is a jamo/syllable, `meaning` is its sound; grammar →
+// `hangul` is the pattern/headword, `meaning` is the rule it expresses.
+export interface LessonCard {
+  hangul: string
+  romanization?: string
+  meaning: string
+  example?: string
+  exampleTranslation?: string
+  note?: string
+}
+
+// A single practice item. "multiple-choice" reveals the right option;
+// "type-answer" expects a short typed string (e.g. the romanization).
+export interface LessonExercise {
+  id: string
+  type: "multiple-choice" | "type-answer"
+  prompt: string
+  options?: string[]
+  answerIndex?: number
+  answer?: string
+  explanation?: string
+}
+
+// Full lesson payload for the runner: intro + teaching cards + practice.
+export interface LessonDetail extends LessonSummary {
+  intro: string
+  cards: LessonCard[]
+  exercises: LessonExercise[]
+}
+
+export interface LessonAttemptResult {
+  lessonId: string
+  score: number
+  total: number
+  accuracy: number
+  completed: boolean
+  results: boolean[]
+}
+
 export interface MessageAnalysis {
   id: number
   source?: string | null

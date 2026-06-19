@@ -11,7 +11,9 @@ import {
   Gauge,
   GraduationCap,
   Headphones,
+  Languages,
   Menu,
+  NotebookPen,
   Target,
   // History, // moved into Settings page
   MessageCircle,
@@ -50,13 +52,15 @@ const navSections = [
   },
   {
     label: "Learn",
-    // Exam tools first (Vocab · Exam Prep · Listening) — the daily K-Specialist
-    // study loop — then the wider reading/coach surfaces.
+    // Foundations (beginner basics) leads, then the exam tools (Vocab · Exam
+    // Prep · Listening) — the daily study loop — then reading/coach surfaces.
     links: [
+      { href: "/learn", label: "Foundations", icon: Languages },
       { href: "/vocab", label: "Vocabulary", icon: BookOpen },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
       { href: "/listening", label: "Listening", icon: Headphones },
       { href: "/reading", label: "Reading", icon: BookOpenText },
+      { href: "/notes", label: "Dev Notes", icon: NotebookPen },
       { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
       // AI Coach now hosts Chat + Analyze + Generate as tabs (see /chat).
       { href: "/chat", label: "AI Coach", icon: MessageCircle },

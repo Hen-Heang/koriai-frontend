@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background — iOS clips to rounded corners itself, but add radius for other uses -->
+  <rect width="180" height="180" rx="38" fill="#09090b"/>
+
+  <!-- Terminal card -->
+  <rect x="22" y="40" width="136" height="100" rx="10" fill="#18181b"/>
+  <rect x="22" y="40" width="136" height="100" rx="10" stroke="#27272a" stroke-width="1" fill="none"/>
+
+  <!-- Traffic lights -->
+  <circle cx="37" cy="55" r="4.5" fill="#ef4444" opacity="0.8"/>
+  <circle cx="52" cy="55" r="4.5" fill="#eab308" opacity="0.8"/>
+  <circle cx="67" cy="55" r="4.5" fill="#22c55e" opacity="0.8"/>
+
+  <!-- Divider -->
+  <line x1="22" y1="67" x2="158" y2="67" stroke="#27272a" stroke-width="1"/>
+
+  <!-- Prompt -->
+  <text x="35" y="94" font-family="monospace" font-size="20" font-weight="700" fill="#34d399">&gt;_</text>
+
+  <!-- Code lines -->
+  <rect x="35" y="102" width="56" height="5" rx="2.5" fill="#34d399" opacity="0.7"/>
+  <rect x="35" y="113" width="78" height="5" rx="2.5" fill="#52525b" opacity="0.8"/>
+  <rect x="35" y="124" width="44" height="5" rx="2.5" fill="#52525b" opacity="0.5"/>
+
+  <!-- Cursor -->
+  <rect x="95" y="100" width="5" height="10" rx="1.5" fill="#34d399" opacity="0.9"/>
+</svg>

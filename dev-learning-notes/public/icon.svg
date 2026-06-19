@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#09090b"/>
+
+  <!-- Subtle grid lines -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#grid)" opacity="0.04"/>
+
+  <!-- Terminal card -->
+  <rect x="72" y="120" width="368" height="272" rx="16" fill="#18181b"/>
+  <rect x="72" y="120" width="368" height="272" rx="16" stroke="#27272a" stroke-width="1.5" fill="none"/>
+
+  <!-- Traffic lights -->
+  <circle cx="108" cy="152" r="8" fill="#ef4444" opacity="0.8"/>
+  <circle cx="132" cy="152" r="8" fill="#eab308" opacity="0.8"/>
+  <circle cx="156" cy="152" r="8" fill="#22c55e" opacity="0.8"/>
+
+  <!-- Divider line -->
+  <line x1="72" y1="172" x2="440" y2="172" stroke="#27272a" stroke-width="1.5"/>
+
+  <!-- Prompt symbol -->
+  <text x="104" y="222" font-family="monospace" font-size="44" font-weight="700" fill="#34d399">&gt;_</text>
+
+  <!-- Code lines -->
+  <rect x="104" y="244" width="140" height="8" rx="4" fill="#34d399" opacity="0.7"/>
+  <rect x="104" y="266" width="200" height="8" rx="4" fill="#52525b" opacity="0.8"/>
+  <rect x="104" y="288" width="120" height="8" rx="4" fill="#52525b" opacity="0.6"/>
+  <rect x="104" y="310" width="170" height="8" rx="4" fill="#52525b" opacity="0.5"/>
+  <rect x="104" y="332" width="90" height="8" rx="4" fill="#34d399" opacity="0.4"/>
+
+  <!-- Blinking cursor -->
+  <rect x="254" y="244" width="10" height="20" rx="2" fill="#34d399" opacity="0.9"/>
+
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+</svg>

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Reference copy of the Orbit/goalmap source used during integration — not part of this app.
     "goalmap/**",
+    // Donor source for the Dev Notes feature (ported into app/(main)/notes) — not part of this app's build.
+    "dev-learning-notes/**",
   ]),
 ]);
 

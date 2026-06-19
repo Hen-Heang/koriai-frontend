@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(javac:*)",
+      "Bash(java:*)",
+      "Bash(mvn:*)",
+      "Bash(git:*)",
+      "Bash(node:*)",
+      "Bash(psql:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/credentials.json)",
+      "Read(**/*.pem)"
+    ]
+  }
+}

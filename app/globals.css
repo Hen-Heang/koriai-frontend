@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -195,4 +196,47 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+/* ── Dev Notes: markdown code blocks ──
+   The study-notes reader renders markdown client-side without a syntax
+   highlighter, wrapping each fenced block in `.shiki-wrapper`. Give those a
+   consistent dark surface + a language badge from the `data-lang` attribute. */
+.prose .shiki-wrapper {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.prose .shiki-wrapper pre {
+  margin: 0;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: #0d1117;
+  padding: 1.1rem 1.25rem;
+}
+
+.prose .shiki-wrapper pre code {
+  color: #e6edf3;
+  background: transparent;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding: 0;
+}
+
+.prose .shiki-wrapper[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.55rem;
+  left: 0.9rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7d8590;
+  pointer-events: none;
+}
+
+.prose .shiki-wrapper[data-lang] pre {
+  padding-top: 2rem;
 }
