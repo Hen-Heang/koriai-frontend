@@ -38,24 +38,24 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
+        "flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 lg:p-8",
         className
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <Target size={20} strokeWidth={2.5} />
+            <Target size={20} strokeWidth={2} />
           </div>
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-foreground">Your Goals</h3>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
-              {activeGoals.length} Active
+            <h3 className="text-base font-semibold tracking-tight text-foreground">Your goals</h3>
+            <p className="text-xs font-medium text-muted-foreground/60">
+              {activeGoals.length} active
             </p>
           </div>
         </div>
-        <UIButton asChild variant="ghost" size="sm" className="rounded-xl font-bold">
-          <Link href="/goals">View All</Link>
+        <UIButton asChild variant="ghost" size="sm" className="rounded-xl font-medium text-muted-foreground">
+          <Link href="/goals">View all</Link>
         </UIButton>
       </div>
 
@@ -63,7 +63,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-3xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
             ))}
           </div>
         ) : visible.length === 0 ? (
@@ -71,11 +71,11 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Target size={28} strokeWidth={1.75} />
             </div>
-            <h3 className="text-base font-bold tracking-tight">No active goals</h3>
+            <h3 className="text-base font-semibold tracking-tight">No active goals</h3>
             <p className="mb-6 mt-1 max-w-[200px] text-xs font-medium text-muted-foreground">
               Set a goal and track your progress in one place.
             </p>
-            <UIButton asChild size="sm" className="rounded-xl font-bold">
+            <UIButton asChild size="sm" className="rounded-xl font-medium">
               <Link href="/goals/create">Create a goal</Link>
             </UIButton>
           </div>
@@ -88,17 +88,17 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
               <Link
                 key={goal.id}
                 href={`/goals/${goal.id}`}
-                className="group flex items-center gap-4 rounded-3xl border border-border bg-background/40 p-4 transition-all hover:bg-accent/50 lg:p-5"
+                className="group flex items-center gap-4 rounded-2xl border border-border bg-background/40 p-4 transition-all hover:bg-accent/50 lg:p-5"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary transition-transform group-hover:scale-110">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-semibold text-primary">
                   {icon || (goal.title ? goal.title.charAt(0).toUpperCase() : "G")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-base font-bold text-foreground transition-colors group-hover:text-primary">
+                    <p className="truncate text-base font-semibold text-foreground transition-colors group-hover:text-primary">
                       {goal.title}
                     </p>
-                    <span className="shrink-0 text-xs font-bold tabular-nums text-primary">
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-primary">
                       {progress}%
                     </span>
                   </div>
@@ -113,7 +113,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />
-                    <span className="flex items-center gap-1 text-[11px] font-bold uppercase text-muted-foreground/60">
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground/60">
                       <ClipboardList className="h-3 w-3" />
                       {goal.taskCounts?.completed}/{goal.taskCounts?.total}
                     </span>

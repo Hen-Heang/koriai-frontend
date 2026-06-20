@@ -13,6 +13,10 @@ import {
   Send,
   Zap,
   CheckCircle2,
+  Languages,
+  Headphones,
+  Drama,
+  BookOpenText,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -21,36 +25,68 @@ import { Button } from "@/components/ui/button"
 
 const features = [
   {
-    title: "Goals & Dashboard",
-    description: "Set goals, break them into daily to-dos, and track your streak on a clean, focused dashboard.",
-    icon: Target,
-    color: "from-blue-500/20 to-indigo-500/10",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    iconBg: "bg-blue-100 dark:bg-blue-500/15",
-  },
-  {
     title: "AI Korean Coach",
-    description: "Ask anything in English and get natural Korean back — grammar, politeness levels, and examples, 24/7.",
+    description: "Ask anything in English and get natural Korean back — grammar, politeness levels, and real workplace phrasing, 24/7.",
     icon: MessageSquareText,
     color: "from-sky-500/20 to-blue-500/10",
     iconColor: "text-sky-600 dark:text-sky-400",
     iconBg: "bg-sky-100 dark:bg-sky-500/15",
   },
   {
-    title: "Vocabulary & Reading",
-    description: "Master 400+ words with spaced repetition and audio, plus bite-size reading lessons that stick.",
+    title: "Workplace Scenarios",
+    description: "Role-play standups, code reviews, and team meetings — the situations you actually face on a Korean dev team.",
+    icon: Drama,
+    color: "from-rose-500/20 to-pink-500/10",
+    iconColor: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-rose-100 dark:bg-rose-500/15",
+  },
+  {
+    title: "Developer Vocabulary",
+    description: "Spaced-repetition decks with audio, tuned to technical and on-the-job terms so the right word sticks.",
     icon: BookOpenCheck,
     color: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-600 dark:text-amber-400",
     iconBg: "bg-amber-100 dark:bg-amber-500/15",
   },
   {
-    title: "Daily Phrase & Exam Prep",
-    description: "A fresh phrase every day plus interview and exam practice to keep your Korean sharp.",
+    title: "Foundations",
+    description: "Build from Hangul up — grammar and core patterns explained for engineers who like things structured.",
+    icon: Languages,
+    color: "from-emerald-500/20 to-teal-500/10",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
+  },
+  {
+    title: "Listening & Reading",
+    description: "Train your ear with audio drills and read bite-size passages graded to your level.",
+    icon: Headphones,
+    color: "from-indigo-500/20 to-blue-500/10",
+    iconColor: "text-indigo-600 dark:text-indigo-400",
+    iconBg: "bg-indigo-100 dark:bg-indigo-500/15",
+  },
+  {
+    title: "Exam & Interview Prep",
+    description: "Rehearse Korean tech interviews and exam-style questions with instant, actionable feedback.",
     icon: GraduationCap,
     color: "from-violet-500/20 to-purple-500/10",
     iconColor: "text-violet-600 dark:text-violet-400",
     iconBg: "bg-violet-100 dark:bg-violet-500/15",
+  },
+  {
+    title: "Daily Phrase & Dev Notes",
+    description: "A fresh phrase every day, plus your own notebook to save words and corrections as you go.",
+    icon: BookOpenText,
+    color: "from-cyan-500/20 to-sky-500/10",
+    iconColor: "text-cyan-600 dark:text-cyan-400",
+    iconBg: "bg-cyan-100 dark:bg-cyan-500/15",
+  },
+  {
+    title: "Goals & Dashboard",
+    description: "Set learning goals, break them into daily to-dos, and keep your streak on a focused dashboard.",
+    icon: Target,
+    color: "from-blue-500/20 to-indigo-500/10",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-500/15",
   },
 ]
 
@@ -68,8 +104,8 @@ const chatMessages = [
 ]
 
 const statsData = [
-  { value: "400+", label: "Vocab terms" },
-  { value: "7", label: "Tools in one app" },
+  { value: "400+", label: "Dev vocab terms" },
+  { value: "10+", label: "Learning tools" },
   { value: "24/7", label: "AI Coach" },
 ]
 
@@ -148,14 +184,14 @@ export default function Home() {
               >
                 <motion.div variants={itemVariants} className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">
                   <BrainCircuit size={14} strokeWidth={2.5} />
-                  Plan · Learn · Grow daily
+                  Workplace Korean for developers
                 </motion.div>
 
                 <motion.h1 variants={itemVariants} className="mt-6 text-[2.8rem] font-bold leading-[1.08] tracking-tight text-foreground sm:text-[4.2rem]">
-                  Set goals, build habits, and{" "}
+                  Thrive on a Korean dev team. Learn the{" "}
                   <span className="relative inline-block">
                     <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
-                      learn Korean.
+                      Korean that matters.
                     </span>
                     <motion.span
                       initial={{ scaleX: 0 }}
@@ -167,10 +203,10 @@ export default function Home() {
                 </motion.h1>
 
                 <motion.p variants={itemVariants} className="mt-7 text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-relaxed max-w-[520px]">
-                  Hengo brings your{" "}
-                  <span className="font-semibold text-foreground/80">goals</span>,{" "}
-                  <span className="font-semibold text-foreground/80">daily to-dos</span>, and{" "}
-                  <span className="font-semibold text-foreground/80">Korean learning</span> into one app — plan your day, keep your streak, and study with an AI coach.
+                  Hengo is built for{" "}
+                  <span className="font-semibold text-foreground/80">foreign engineers in Korea</span>. Practice{" "}
+                  <span className="font-semibold text-foreground/80">standups and meetings</span> with an AI coach, drill{" "}
+                  <span className="font-semibold text-foreground/80">developer vocabulary</span>, and rehearse real workplace scenarios.
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -217,7 +253,7 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">Learners worldwide</span> planning their goals and studying Korean daily
+                    <span className="font-semibold text-foreground">Developers across Asia</span> learning Korean for their jobs in Korea
                   </p>
                 </motion.div>
               </motion.div>
@@ -368,13 +404,13 @@ export default function Home() {
               className="mb-16 text-center"
             >
               <p className="text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-                All-in-one
+                One app, every tool
               </p>
               <h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-                Everything you need to <span className="text-muted-foreground/40 italic font-medium">plan</span> your days and grow.
+                Everything you need for <span className="text-muted-foreground/40 italic font-medium">workplace</span> Korean.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                From goal-setting and daily tracking to an AI Korean coach, vocabulary, reading, and exam prep — Hengo keeps planning and learning in one place.
+                From an AI coach and workplace scenarios to developer vocabulary, listening, reading, and interview prep — Hengo covers the Korean you actually use on the job.
               </p>
             </motion.div>
 
@@ -423,13 +459,13 @@ export default function Home() {
                 className="space-y-8"
               >
                 <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-                  Plan, learn, and grow — in one app.
+                  Made for engineers, not tourists.
                 </h2>
                 <div className="space-y-6">
                   {[
-                    { title: "Goals & habit tracking", desc: "Set goals, add daily to-dos, and watch your streak grow on a focused dashboard." },
-                    { title: "AI Korean Coach", desc: "Ask anything and get natural Korean with grammar, politeness levels, and examples — anytime." },
-                    { title: "Vocabulary, Reading & Exam Prep", desc: "Spaced-repetition vocab with audio, bite-size reading, a daily phrase, and interview/exam practice." },
+                    { title: "Learn the Korean you'll actually use", desc: "Standup updates, code-review comments, and meeting phrases — not phrasebook small talk." },
+                    { title: "An AI coach that gets context", desc: "Ask in English, get natural Korean back with grammar, politeness levels, and examples — anytime." },
+                    { title: "Stay consistent with goals & streaks", desc: "Set learning goals, drill vocab with spaced repetition, and keep your streak on a focused dashboard." },
                   ].map((benefit) => (
                     <div key={benefit.title} className="flex gap-4">
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 mt-1">
@@ -455,7 +491,7 @@ export default function Home() {
                         <Zap size={32} fill="currentColor" />
                       </div>
                       <p className="text-lg font-bold text-foreground">Interactive Demo Coming Soon</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Join learners planning their goals and studying Korean every day.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Join developers learning the Korean they need for work every day.</p>
                    </div>
                 </div>
               </motion.div>
@@ -478,10 +514,10 @@ export default function Home() {
 
               <div className="relative z-10">
                 <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                  Ready to hit your goals?
+                  Ready to speak Korean at work?
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-                  Plan your day, build better habits, and learn Korean — all in one app. Start free today, no card required.
+                  Practice with an AI coach, master developer vocabulary, and rehearse real workplace scenarios. Start free today, no card required.
                 </p>
                 <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                   <Button

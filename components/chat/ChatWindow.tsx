@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, Plus, Mic, Headphones, Square } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -243,8 +244,8 @@ export function ChatWindow({
           )}
 
           <div className="relative shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-linear-to-br from-blue-500 to-indigo-600 text-[11px] font-bold text-white shadow-lg shadow-blue-500/20">
-              AI
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[1.1rem] shadow-lg shadow-blue-500/20">
+              <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
             </div>
             <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
           </div>
@@ -377,8 +378,8 @@ export function ChatWindow({
                     exit={{ opacity: 0 }}
                     className="flex items-center gap-4 sm:gap-6"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm sm:h-9 sm:w-9">
-                      <Sparkles size={18} strokeWidth={2.5} />
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm sm:h-9 sm:w-9">
+                      <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="h-full w-full" />
                     </div>
                     <TypingIndicator />
                   </motion.div>

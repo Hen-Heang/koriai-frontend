@@ -28,19 +28,19 @@ export function DailyGoalRing({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
+        "relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 lg:p-8",
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             {label}
           </p>
-          <h3 className="mt-1 text-lg font-bold tracking-tight text-foreground">{status}</h3>
+          <h3 className="mt-1 text-base font-semibold tracking-tight text-foreground">{status}</h3>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-          <Target size={20} strokeWidth={2.5} />
+          <Target size={20} strokeWidth={2} />
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export function DailyGoalRing({
           <span className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl">
             {clamped}%
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+          <span className="text-xs font-medium text-muted-foreground/60">
             Done
           </span>
         </div>
@@ -91,10 +91,10 @@ export function DailyGoalRing({
             className="h-full rounded-full bg-emerald-500" 
           />
         </div>
-        <div className="flex items-center justify-between text-xs font-bold">
+        <div className="flex items-center justify-between text-xs font-medium">
           <span className="text-muted-foreground">{detail}</span>
           <span className="text-emerald-600 dark:text-emerald-400">
-            {clamped >= 100 ? "Goal Met" : `${100 - clamped}% left`}
+            {clamped >= 100 ? "Goal met" : `${100 - clamped}% left`}
           </span>
         </div>
       </div>

@@ -96,9 +96,9 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     const allDone = completedCount === totalCount
     return (
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide">
+        <div className="flex items-center justify-between text-xs font-medium">
           <span className={cn(allDone ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60")}>
-            {allDone ? "All Tasks Done" : "Daily Progress"}
+            {allDone ? "All tasks done" : "Daily progress"}
           </span>
           <span className="tabular-nums text-muted-foreground">
             {completedCount}/{totalCount}
@@ -126,13 +126,13 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           if (e.key === "Enter") void handleQuickAdd()
         }}
         placeholder="Add a task for today…"
-        className="min-w-0 flex-1 border-0 bg-transparent text-sm font-bold outline-none placeholder:font-medium placeholder:text-muted-foreground/30"
+        className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground/40"
       />
       <Button
         size="sm"
         onClick={() => void handleQuickAdd()}
         disabled={!newTaskTitle.trim() || isAdding}
-        className="h-8 shrink-0 rounded-xl bg-primary px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm"
+        className="h-8 shrink-0 rounded-xl bg-primary px-3 text-xs font-medium text-white shadow-sm"
       >
         {isAdding ? "…" : "Add"}
       </Button>
@@ -147,7 +147,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
         onClick={() => (canUndo ? handleUndoMarkAllCompleted() : handleMarkAllCompleted())}
         disabled={isMarkingAll || (!canUndo && completedCount === totalCount)}
         className={cn(
-          "h-9 gap-2 rounded-2xl border-border bg-background/50 px-4 text-xs font-bold",
+          "h-9 gap-2 rounded-2xl border-border bg-background/50 px-4 text-xs font-medium",
           canUndo ? "text-red-500 hover:text-red-600" : "text-emerald-600 dark:text-emerald-400"
         )}
       >
@@ -164,18 +164,18 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-border bg-background/50 px-4 text-xs font-bold">
-              Filter Goals
+            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-border bg-background/50 px-4 text-xs font-medium">
+              Filter goals
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60 rounded-2xl p-2 shadow-xl">
-            <DropdownMenuLabel className="px-3 pt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">Show tasks from</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-60 rounded-2xl p-2 shadow-lg">
+            <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground/60">Show tasks from</DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuCheckboxItem
               checked={allSelected}
               onCheckedChange={() => toggleAll()}
               onSelect={(e) => e.preventDefault()}
-              className="rounded-xl font-bold"
+              className="rounded-xl font-medium"
             >
               All goals
             </DropdownMenuCheckboxItem>
@@ -209,7 +209,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className={cn(
-          "group/item relative flex cursor-pointer items-start gap-3.5 rounded-3xl border p-4 transition-all duration-300",
+          "group/item relative flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition-all duration-300",
           overdue
             ? "border-red-500/20 bg-red-500/[0.03] hover:bg-red-500/[0.05]"
             : "border-border bg-background/40 hover:bg-accent/50 lg:p-5"
@@ -246,17 +246,17 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                 }
               }}
               onBlur={commitEdit}
-              className="w-full rounded-lg border border-primary/40 bg-background px-2 py-1 text-base font-bold outline-none"
+              className="w-full rounded-lg border border-primary/40 bg-background px-2 py-1 text-sm font-medium outline-none"
             />
           ) : (
             <span className={cn(
-              "block text-base font-bold leading-snug tracking-tight transition-all",
+              "block text-sm font-medium leading-snug transition-all",
               task.completed ? "text-muted-foreground/40 line-through" : "text-foreground group-hover/item:text-primary"
             )}>
               {task.title || task.description}
             </span>
           )}
-          <div className="mt-2 flex items-center justify-between text-xs font-bold">
+          <div className="mt-2 flex items-center justify-between text-xs font-medium">
             <span className={cn("flex items-center gap-1.5", overdue ? "text-red-500/80" : "text-muted-foreground/60")}>
               {overdue ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
               {task.is_anytime ? "Anytime" : task.daily_start_time?.slice(0, 5)}
@@ -302,27 +302,27 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
 
   const sectionHeader = (label: string, count: number, accent?: string) => (
     <div className="flex items-center gap-2 px-1 py-2">
-      <span className={cn("text-[11px] font-bold uppercase tracking-wide", accent || "text-muted-foreground/40")}>
+      <span className={cn("text-[11px] font-semibold uppercase tracking-wide", accent || "text-muted-foreground/40")}>
         {label}
       </span>
-      <span className="text-[11px] font-bold tabular-nums text-muted-foreground/20">{count}</span>
+      <span className="text-[11px] font-medium tabular-nums text-muted-foreground/30">{count}</span>
       <div className="h-px flex-1 bg-foreground/5" />
     </div>
   )
 
   return (
     <div className={cn(
-      "flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 sm:rounded-3xl lg:p-8",
+      "flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 lg:p-8",
       className
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <ClipboardList size={20} strokeWidth={2.5} />
+            <ClipboardList size={20} strokeWidth={2} />
           </div>
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-foreground">Today&apos;s Tasks</h3>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+            <h3 className="text-base font-semibold tracking-tight text-foreground">Today&apos;s tasks</h3>
+            <p className="text-xs font-medium text-muted-foreground/60">
               {format(new Date(), "EEEE, MMM d")}
             </p>
           </div>
@@ -343,15 +343,15 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           <div className="space-y-2 lg:max-h-[500px] overflow-y-auto pr-1">
             {loading ? (
               <div className="space-y-3 pt-4">
-                <Skeleton className="h-20 w-full rounded-3xl" />
-                <Skeleton className="h-20 w-full rounded-3xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
               </div>
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
                   <CheckCircle size={28} />
                 </div>
-                <h3 className="text-base font-bold">All Clear</h3>
+                <h3 className="text-base font-semibold">All clear</h3>
                 <p className="mt-1 text-xs font-medium text-muted-foreground">No tasks left for today.</p>
               </div>
             ) : (
@@ -380,8 +380,8 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                       onClick={() => setShowCompleted(!showCompleted)}
                       className="flex w-full items-center gap-2 py-2"
                     >
-                      <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-600/60">Completed</span>
-                      <span className="text-[11px] font-bold text-muted-foreground/20">{groups.completed.length}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600/60">Completed</span>
+                      <span className="text-[11px] font-medium text-muted-foreground/30">{groups.completed.length}</span>
                       <div className="h-px flex-1 bg-foreground/5" />
                       <ChevronDown className={cn("h-4 w-4 text-muted-foreground/20", showCompleted && "rotate-180")} />
                     </button>

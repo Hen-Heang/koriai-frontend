@@ -95,7 +95,7 @@ export default function CreateGoalPage() {
                 <div className="rounded-xl bg-primary/10 p-2 text-primary">
                   <Zap size={20} />
                 </div>
-                <CardTitle className="text-xl font-bold">Quick Launch</CardTitle>
+                <CardTitle className="text-xl font-semibold">Quick launch</CardTitle>
               </div>
               <CardDescription>Enter a title to instantly create a new goal.</CardDescription>
             </CardHeader>
@@ -103,9 +103,9 @@ export default function CreateGoalPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="quick-goal-title"
-                  className="ml-1 text-xs font-bold uppercase tracking-wide text-muted-foreground"
+                  className="ml-1 text-xs font-medium text-muted-foreground"
                 >
-                  Goal Title
+                  Goal title
                 </Label>
                 <div className="flex items-center gap-2">
                   <EmojiIconPicker value={quickIcon} onChange={setQuickIcon} align="start">
@@ -115,7 +115,7 @@ export default function CreateGoalPage() {
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-xl transition-all hover:border-primary/40 hover:bg-primary/20"
                     >
                       {quickIcon ?? (
-                        <span className="text-sm font-bold text-primary">
+                        <span className="text-sm font-semibold text-primary">
                           {quickTitle.trim().charAt(0).toUpperCase() || "G"}
                         </span>
                       )}
@@ -138,8 +138,8 @@ export default function CreateGoalPage() {
 
               <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-3">
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">Infinite Duration</span>
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="text-sm font-semibold">Infinite duration</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">
                     No specific deadline
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export default function CreateGoalPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-2">
               <Filter size={14} className="text-primary" />
-              <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-medium text-muted-foreground">
                 Categories
               </h3>
             </div>
@@ -200,7 +200,7 @@ export default function CreateGoalPage() {
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Sparkles className="h-6 w-6" />
               </div>
-              <h3 className="mb-1 text-base font-bold">Custom Goal</h3>
+              <h3 className="mb-1 text-base font-semibold">Custom Goal</h3>
               <p className="px-4 text-xs font-medium text-muted-foreground">
                 Build a unique goal with full manual control.
               </p>
@@ -231,7 +231,7 @@ export default function CreateGoalPage() {
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
                   <Search className="h-8 w-8 text-muted-foreground opacity-30" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold tracking-tight">No templates found</h3>
+                <h3 className="mb-2 text-xl font-semibold tracking-tight">No templates found</h3>
                 <p className="max-w-xs text-sm font-medium text-muted-foreground">
                   No templates match your search.
                 </p>
@@ -256,13 +256,13 @@ export default function CreateGoalPage() {
                 {filteredTemplates.map((template) => (
                   <motion.div key={template.id} variants={itemVariants}>
                     <Card
-                      className="group relative flex h-full cursor-pointer flex-col rounded-3xl transition-all hover:border-primary/30 hover:shadow-lg"
+                      className="group relative flex h-full cursor-pointer flex-col rounded-2xl transition-colors hover:border-primary/30"
                       onClick={() => handleSelectTemplate(template)}
                     >
                       <CardHeader className="p-6 sm:p-7">
                         <div className="flex items-start justify-between gap-4">
                           <div
-                            className="mb-1 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-lg ring-2 ring-white/20 transition-transform group-hover:scale-110 dark:ring-white/5"
+                            className="mb-1 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm ring-1 ring-white/20 dark:ring-white/5"
                             style={{ background: template.color }}
                           >
                             {template.icon}
@@ -275,7 +275,7 @@ export default function CreateGoalPage() {
                             <ArrowRight className="h-5 w-5 text-primary" />
                           </Button>
                         </div>
-                        <CardTitle className="mt-4 text-xl font-bold leading-tight tracking-tight transition-colors group-hover:text-primary">
+                        <CardTitle className="mt-4 text-xl font-semibold leading-tight tracking-tight transition-colors group-hover:text-primary">
                           {template.name}
                         </CardTitle>
                         <CardDescription className="mt-1 line-clamp-2 text-sm font-medium leading-relaxed">
@@ -284,11 +284,11 @@ export default function CreateGoalPage() {
                       </CardHeader>
                       <CardContent className="mt-auto p-6 pt-0 sm:p-7 sm:pt-0">
                         <div className="mb-4">
-                          <span className="rounded-lg border border-primary/10 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                          <span className="rounded-lg border border-primary/10 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
                             {template.category}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
+                        <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-medium text-muted-foreground/60">
                           <span className="flex items-center gap-1.5">
                             <Sparkles size={12} className="text-primary/60" />
                             {template.sections.length} sections

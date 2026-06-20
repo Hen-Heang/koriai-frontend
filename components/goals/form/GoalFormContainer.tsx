@@ -166,7 +166,7 @@ export function GoalFormContainer({
         <div className="h-6 w-px bg-border" />
         <Sparkles className="h-5 w-5 text-primary" />
         <div>
-          <h1 className="text-xl font-bold">{isEdit ? "Edit Goal" : "Create New Goal"}</h1>
+          <h1 className="text-xl font-semibold">{isEdit ? "Edit goal" : "Create new goal"}</h1>
           <p className="text-xs text-muted-foreground">
             {isEdit ? "Update your goal details" : "Set up your goal in 2 simple steps"}
           </p>
@@ -187,13 +187,13 @@ export function GoalFormContainer({
               >
                 <span
                   className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
+                    "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold",
                     active ? "bg-background text-primary" : "bg-foreground/10"
                   )}
                 >
                   {i + 1}
                 </span>
-                <span className="hidden sm:inline">{i === 0 ? "Goal Details" : "AI Assistant"}</span>
+                <span className="hidden sm:inline">{i === 0 ? "Goal details" : "AI assistant"}</span>
               </div>
               {i === 0 && <div className="h-1 w-12 rounded-full bg-muted sm:w-20" />}
             </div>
@@ -201,7 +201,7 @@ export function GoalFormContainer({
         })}
       </div>
 
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <Form {...form}>
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             {step === "basics" ? (

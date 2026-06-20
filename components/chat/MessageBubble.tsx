@@ -1,12 +1,13 @@
 "use client"
 
 import { memo, useMemo, useState } from "react"
+import Image from "next/image"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
-import { Check, CheckCircle2, Copy, Languages, Sparkles } from "lucide-react"
+import { Check, CheckCircle2, Copy, Languages } from "lucide-react"
 import { SmartPeek } from "@/components/ui/SmartPeek"
 
 // ─── Inline parser ────────────────────────────────────────────────────────────
@@ -276,9 +277,7 @@ function MessageBubbleImpl({
           <div
             className={cn(
               "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[11px] font-bold text-white shadow-sm sm:h-9 sm:w-9",
-              isUser
-                ? "bg-slate-500"
-                : "bg-linear-to-br from-blue-500 to-indigo-600"
+              isUser && "bg-slate-500"
             )}
           >
             {isUser ? (
@@ -289,7 +288,7 @@ function MessageBubbleImpl({
                 <span className="text-[14px]">👤</span>
               )
             ) : (
-              <Sparkles size={18} strokeWidth={2.5} />
+              <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="h-full w-full" />
             )}
           </div>
         </div>

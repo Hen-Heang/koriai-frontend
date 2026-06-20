@@ -1,13 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import {
   ArrowRight,
   Flame,
   Sparkles,
   SpellCheck2,
   Target,
-  Zap,
   Cpu,
 } from "lucide-react"
 import { motion } from "motion/react"
@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { useProgress } from "@/hooks/useProgress"
 import { getStudyFocus } from "@/lib/study-focus"
+import { readBestStreak } from "@/lib/vocab-review"
 
 // recharts is heavy; defer it so the dashboard shell + above-the-fold cards
 // paint first, then the chart streams in.
@@ -30,7 +31,7 @@ const ProgressChart = dynamic(
   () => import("@/components/dashboard/ProgressChart").then((m) => m.ProgressChart),
   {
     ssr: false,
-    loading: () => <div className="h-72 w-full animate-pulse rounded-3xl bg-muted/20 sm:h-80" />,
+    loading: () => <div className="h-72 w-full animate-pulse rounded-2xl bg-muted/20 sm:h-80" />,
   }
 )
 
@@ -38,7 +39,7 @@ function DashboardLoadingState() {
   return (
     <div className="space-y-6 pb-8 sm:space-y-8 sm:pb-10">
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] 2xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-        <div className="overflow-hidden rounded-3xl bg-slate-950 p-5 shadow-2xl sm:rounded-3xl sm:p-8">
+        <div className="overflow-hidden rounded-2xl bg-slate-950 p-5 shadow-sm sm:p-8">
           <Skeleton className="h-4 w-36 bg-white/10" />
           <Skeleton className="mt-4 h-14 w-52 bg-white/10 sm:h-16 sm:w-72" />
           <Skeleton className="mt-4 h-5 w-full max-w-xl bg-white/10" />
@@ -46,7 +47,7 @@ function DashboardLoadingState() {
 
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.75rem] sm:p-5">
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
                 <Skeleton className="h-10 w-24 bg-white/10" />
                 <Skeleton className="mt-4 h-10 w-24 bg-white/10" />
                 <Skeleton className="mt-2 h-4 w-20 bg-white/10" />
@@ -61,7 +62,7 @@ function DashboardLoadingState() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-xl sm:rounded-3xl sm:p-6">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="mt-4 h-9 w-3/4" />
             <Skeleton className="mt-3 h-5 w-full" />
@@ -78,7 +79,7 @@ function DashboardLoadingState() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-1">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="rounded-3xl border border-border bg-card px-5 py-4 shadow-sm">
+              <div key={item} className="rounded-2xl border border-border bg-card px-5 py-4 shadow-sm">
                 <div className="flex items-center gap-4">
                   <Skeleton className="h-11 w-11 rounded-2xl" />
                   <div className="flex-1">
@@ -97,7 +98,7 @@ function DashboardLoadingState() {
         <Skeleton className="mt-3 h-9 w-80 max-w-full" />
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="rounded-[1.8rem] border border-border bg-card p-5 shadow-sm sm:rounded-3xl sm:p-6">
+            <div key={item} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <Skeleton className="h-14 w-14 rounded-2xl" />
               <Skeleton className="mt-5 h-6 w-28" />
               <Skeleton className="mt-3 h-4 w-full" />
@@ -108,14 +109,14 @@ function DashboardLoadingState() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-xl sm:rounded-3xl">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="mt-4 h-8 w-48" />
-          <Skeleton className="mt-6 h-72 w-full rounded-3xl" />
+          <Skeleton className="mt-6 h-72 w-full rounded-2xl" />
         </div>
         <div className="flex flex-col gap-6">
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-[1.8rem] border border-border bg-card p-5 shadow-xl sm:rounded-3xl sm:p-6">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <Skeleton className="h-5 w-28" />
               <Skeleton className="mx-auto mt-6 h-32 w-32 rounded-full sm:h-36 sm:w-36" />
               <div className="mt-6 grid grid-cols-2 gap-3">
@@ -123,7 +124,7 @@ function DashboardLoadingState() {
                 <Skeleton className="h-16 rounded-2xl" />
               </div>
             </div>
-            <div className="rounded-[1.8rem] border border-border bg-card p-5 shadow-xl sm:rounded-3xl sm:p-6">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="mt-4 h-12 w-28" />
               <Skeleton className="mt-4 h-5 w-full" />
@@ -133,7 +134,7 @@ function DashboardLoadingState() {
               </div>
             </div>
           </div>
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-xl sm:rounded-3xl">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <Skeleton className="h-5 w-40" />
             <div className="mt-6 space-y-3">
               {[1, 2, 3, 4].map((item) => (
@@ -146,7 +147,33 @@ function DashboardLoadingState() {
     </div>
   )
 }
-import { cn } from "@/lib/utils"
+// Personal-best vocab quiz streak, read from localStorage on mount (client-only
+// to avoid a hydration mismatch). Written by the vocab ReviewSession.
+function BestQuizStreakCard() {
+  const [best, setBest] = useState<number | null>(null)
+  useEffect(() => {
+    setBest(readBestStreak())
+  }, [])
+
+  return (
+    <Link
+      href="/vocab"
+      className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-orange-500/40 dark:bg-slate-900/40"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400">
+        <Flame size={20} strokeWidth={2} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xl font-bold tabular-nums text-foreground">
+          {best ?? "—"}
+          {best ? <span className="ml-1.5 text-sm font-medium text-muted-foreground">in a row</span> : null}
+        </p>
+        <p className="text-xs font-medium text-muted-foreground/70">Best quiz streak</p>
+      </div>
+      <ArrowRight size={16} className="text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-orange-500" />
+    </Link>
+  )
+}
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -163,46 +190,34 @@ function getToday() {
   })
 }
 
+const CORRECTION_PROMPT =
+  "/chat?prompt=" +
+  encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n")
+
 const quickActions = [
   {
     href: "/vocab",
     label: "Vocabulary",
     description: "Build your deck and clear due words with spaced repetition.",
     icon: Cpu,
-    gradient: "from-blue-600 to-indigo-600",
-    glow: "shadow-blue-500/10",
-    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
-    tag: "Core focus",
   },
   {
     href: "/daily-phrase",
     label: "Daily Phrase",
     description: "One workplace phrase a day — learn it, then write with it.",
     icon: Sparkles,
-    gradient: "from-blue-500 to-indigo-500",
-    glow: "shadow-blue-500/10",
-    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
-    tag: "New today",
   },
   {
-    href: "/chat?prompt=" + encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n"),
+    href: CORRECTION_PROMPT,
     label: "Correction",
     description: "Write Korean sentences and get AI corrections from your coach.",
     icon: SpellCheck2,
-    gradient: "from-sky-500 to-blue-500",
-    glow: "shadow-sky-500/10",
-    iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
-    tag: "Daily practice",
   },
   {
     href: "/goals",
     label: "Goals & Tasks",
     description: "Set goals, plan tasks, and track every deadline.",
     icon: Target,
-    gradient: "from-blue-500 to-blue-600",
-    glow: "shadow-blue-500/10",
-    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400",
-    tag: "Plan ahead",
   },
 ]
 
@@ -242,7 +257,7 @@ export default function DashboardPage() {
       detail: "Check what's due and plan your next tasks.",
     },
     {
-      href: "/chat?prompt=" + encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n"),
+      href: CORRECTION_PROMPT,
       title: "Write one sentence",
       detail: "Describe your work day in Korean and get an instant AI correction.",
     },
@@ -266,26 +281,18 @@ export default function DashboardPage() {
       className="space-y-8 pb-12 sm:space-y-10"
     >
       {/* ── Header ── */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+          <p className="text-sm font-medium text-muted-foreground">
             {getToday()}
           </p>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             {getGreeting()} 👋
           </h1>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
-            <Flame size={14} className="text-orange-500" />
-            <span className="text-xs font-bold sm:text-sm">{stats.streakDays} day streak</span>
-          </div>
-          <UIButton asChild size="sm" className="h-9 rounded-full bg-blue-600 px-4 font-bold hover:bg-blue-500">
-            <Link href="/vocab">
-              Continue
-              <ArrowRight size={14} className="ml-1" />
-            </Link>
-          </UIButton>
+        <div className="flex items-center gap-1.5 self-start rounded-full border border-border bg-card px-3 py-1.5 sm:self-auto">
+          <Flame size={14} className="text-orange-500" />
+          <span className="text-sm font-medium text-foreground">{stats.streakDays} day streak</span>
         </div>
       </motion.div>
 
@@ -298,41 +305,33 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-12 sm:gap-6">
         
         {/* Main Hero Card (8 cols) */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
-          className="relative col-span-1 overflow-hidden rounded-3xl border border-border bg-slate-950 p-6 text-white shadow-xl md:col-span-8 lg:p-10"
+          className="relative col-span-1 overflow-hidden rounded-2xl border border-border bg-slate-950 p-6 text-white shadow-sm md:col-span-8 lg:p-9"
         >
-          {/* Decorative Gradients */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-             <div className="absolute -left-1/4 -top-1/4 h-[150%] w-[150%] bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.15),transparent_40%)]" />
-             <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
-          </div>
+          {/* Single subtle accent — the hero is the page's only focal point */}
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-500/15 blur-[90px]" />
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-blue-300">
               <Sparkles size={12} />
-              Personal Plan
+              Personal plan
             </div>
-            <h2 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
+            <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
               {studyFocus.title}
             </h2>
-            <p className="mt-4 max-w-xl text-sm font-normal leading-relaxed text-slate-400 sm:text-base">
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
               {studyFocus.description}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <UIButton asChild size="lg" className="h-11 rounded-2xl bg-blue-600 px-6 font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-500 sm:h-12">
+            <div className="mt-7 flex flex-wrap gap-3">
+              <UIButton asChild size="lg" className="h-11 rounded-xl bg-blue-600 px-6 font-semibold hover:bg-blue-500 sm:h-12">
                 <Link href={studyFocus.ctaHref}>{studyFocus.ctaLabel}</Link>
               </UIButton>
-              <UIButton asChild variant="outline" size="lg" className="h-11 rounded-2xl border-white/10 bg-white/5 px-6 font-bold backdrop-blur-md hover:bg-white/10 sm:h-12">
-                <Link href="/vocab">Review Vocab</Link>
+              <UIButton asChild variant="outline" size="lg" className="h-11 rounded-xl border-white/10 bg-white/5 px-6 font-semibold hover:bg-white/10 sm:h-12">
+                <Link href="/chat">Ask the coach</Link>
               </UIButton>
             </div>
-          </div>
-
-          {/* Floating Korean Text Watermark */}
-          <div className="pointer-events-none absolute -bottom-10 -right-10 hidden text-[12rem] font-bold leading-none text-white/[0.02] select-none xl:block">
-            한국어
           </div>
         </motion.div>
 
@@ -353,18 +352,16 @@ export default function DashboardPage() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:shadow-lg dark:bg-slate-900/40"
+                className="group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40"
               >
-                <div className={cn("inline-flex rounded-2xl p-3", action.iconBg)}>
-                  <action.icon size={20} strokeWidth={2.5} />
+                <div className="inline-flex rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
+                  <action.icon size={20} strokeWidth={2} />
                 </div>
-                <h3 className="mt-4 text-base font-bold text-foreground">{action.label}</h3>
-                <p className="mt-1 text-xs font-normal text-muted-foreground line-clamp-2">{action.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wide", action.gradient.split(' ')[0].replace('from-', 'text-'))}>
-                    Start
-                  </span>
-                  <ArrowRight size={14} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+                <h3 className="mt-4 text-sm font-semibold text-foreground">{action.label}</h3>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{action.description}</p>
+                <div className="mt-4 flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  Start
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
                 </div>
               </Link>
             ))}
@@ -379,18 +376,17 @@ export default function DashboardPage() {
         {/* Streak & Stats Bento (5 cols) */}
         <motion.div variants={itemVariants} className="col-span-1 space-y-6 md:col-span-5 lg:col-span-4">
           <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Next Steps</h3>
-            <div className="mt-4 space-y-4">
+          <BestQuizStreakCard />
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40">
+            <h3 className="text-sm font-semibold text-foreground">Next steps</h3>
+            <div className="mt-4 space-y-3.5">
               {nextSteps.map((step, i) => (
                 <Link key={i} href={step.href} className="group flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent text-[13px] font-bold text-muted-foreground transition-colors group-hover:bg-blue-500 group-hover:text-white">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-xs font-semibold text-muted-foreground transition-colors group-hover:bg-blue-600 group-hover:text-white">
                     {i + 1}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
-                  </div>
-                  <ArrowRight size={14} className="text-muted-foreground/20 group-hover:translate-x-1 group-hover:text-blue-500" />
+                  <p className="min-w-0 flex-1 truncate text-sm text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
+                  <ArrowRight size={14} className="text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500" />
                 </Link>
               ))}
             </div>

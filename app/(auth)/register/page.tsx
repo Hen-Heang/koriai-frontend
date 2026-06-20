@@ -4,12 +4,11 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { AlertCircle, Eye, EyeOff, Loader2, ArrowRight, UserPlus, Sparkles } from "lucide-react"
+import { AlertCircle, Eye, EyeOff, Loader2, ArrowRight, Sparkles, MessagesSquare, BookOpen, Mic } from "lucide-react"
 import { motion } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
   FieldContent,
@@ -49,6 +48,11 @@ const NATIVE_LANGUAGES = [
   "Khmer", "English", "Chinese", "Japanese", "Vietnamese",
   "Thai", "Indonesian", "Filipino", "Malay", "Other",
 ]
+
+const selectClass =
+  "h-11 w-full rounded-xl border border-border bg-accent/5 px-3 text-sm text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
+const inputClass =
+  "h-11 rounded-xl border-border bg-accent/5 px-4 transition-all focus:bg-background"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -96,59 +100,59 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 selection:bg-blue-500/30 sm:px-6">
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-24 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-[100px] dark:bg-blue-500/5" />
-        <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-violet-500/10 blur-[100px] dark:bg-violet-500/5" />
-      </div>
+    <main className="flex min-h-screen w-full bg-background selection:bg-blue-500/30">
+      {/* Brand panel — desktop only */}
+      <BrandPanel />
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[520px]"
-      >
-        <div className="mb-8 flex items-center justify-between">
-          <Link href="/" className="group flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-600/20 transition-transform group-hover:scale-105">
-              <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground">Hengo</span>
+      {/* Form panel */}
+      <div className="relative flex w-full flex-col px-5 py-8 sm:px-8 lg:w-1/2 lg:px-12">
+        <div className="flex items-center justify-between lg:hidden">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-sm">
+              <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="h-full w-full" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight text-foreground">Hengo</span>
           </Link>
           <ThemeToggle />
         </div>
 
-        <Card className="overflow-hidden rounded-3xl border-border bg-card/80 shadow-2xl backdrop-blur-xl dark:bg-slate-900/60">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" />
+        <div className="hidden justify-end lg:flex">
+          <ThemeToggle />
+        </div>
 
-          <CardHeader className="space-y-2 pb-6 pt-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-                <UserPlus size={14} strokeWidth={3} />
-                Step {step} of 2
+        <div className="flex flex-1 items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="w-full max-w-[460px] py-10"
+          >
+            <div className="mb-7 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Step {step} of 2</span>
+                <div className="flex gap-1.5">
+                  <div className={`h-1.5 w-8 rounded-full transition-colors ${step >= 1 ? "bg-blue-500" : "bg-border"}`} />
+                  <div className={`h-1.5 w-8 rounded-full transition-colors ${step >= 2 ? "bg-blue-500" : "bg-border"}`} />
+                </div>
               </div>
-              <div className="flex gap-1.5">
-                <div className={`h-1.5 w-8 rounded-full transition-colors ${step >= 1 ? "bg-blue-500" : "bg-border"}`} />
-                <div className={`h-1.5 w-8 rounded-full transition-colors ${step >= 2 ? "bg-blue-500" : "bg-border"}`} />
+              <div className="space-y-1.5">
+                <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground">
+                  {step === 1 ? "Create your account" : "Tell us about you"}
+                </h1>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {step === 1
+                    ? "Built for foreign engineers working in Korean tech companies."
+                    : "Help the AI tutor personalise content for your background."}
+                </p>
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              {step === 1 ? "Create account" : "Your profile"}
-            </CardTitle>
-            <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-              {step === 1
-                ? "Built for foreign engineers working in Korean tech companies."
-                : "Help the AI tutor personalise content for your background."}
-            </p>
-          </CardHeader>
 
-          <CardContent className="space-y-8 pb-10">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {step === 1 && (
                 <FieldGroup className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Full Name</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Full name</FieldLabel>
                       <FieldContent>
                         <Input
                           name="displayName"
@@ -158,17 +162,17 @@ export default function RegisterPage() {
                           onChange={(e) => setDisplayName(e.target.value)}
                           required
                           autoFocus
-                          className="h-12 rounded-2xl border-border bg-accent/5 px-4 focus:bg-background transition-all"
+                          className={inputClass}
                         />
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Korean Level</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Korean level</FieldLabel>
                       <FieldContent>
                         <select
                           value={koreanLevel}
                           onChange={(e) => setKoreanLevel(e.target.value)}
-                          className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
+                          className={selectClass}
                         >
                           {KOREAN_LEVELS.map((l) => (
                             <option key={l.value} value={l.value}>{l.label}</option>
@@ -179,7 +183,7 @@ export default function RegisterPage() {
                   </div>
 
                   <Field>
-                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Email Address</FieldLabel>
+                    <FieldLabel className="text-sm font-medium text-foreground/80">Email</FieldLabel>
                     <FieldContent>
                       <Input
                         type="email"
@@ -189,13 +193,13 @@ export default function RegisterPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="h-12 rounded-2xl border-border bg-accent/5 px-4 focus:bg-background transition-all"
+                        className={inputClass}
                       />
                     </FieldContent>
                   </Field>
 
                   <Field>
-                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Password</FieldLabel>
+                    <FieldLabel className="text-sm font-medium text-foreground/80">Password</FieldLabel>
                     <FieldContent>
                       <div className="relative">
                         <Input
@@ -207,7 +211,7 @@ export default function RegisterPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           minLength={8}
-                          className="h-12 rounded-2xl border-border bg-accent/5 pl-4 pr-12 focus:bg-background transition-all"
+                          className="h-11 rounded-xl border-border bg-accent/5 pl-4 pr-12 transition-all focus:bg-background"
                         />
                         <button
                           type="button"
@@ -227,23 +231,23 @@ export default function RegisterPage() {
                 <FieldGroup className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Country</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Country</FieldLabel>
                       <FieldContent>
                         <Input
                           placeholder="e.g. Cambodia"
                           value={country}
                           onChange={(e) => setCountry(e.target.value)}
-                          className="h-12 rounded-2xl border-border bg-accent/5 px-4 focus:bg-background transition-all"
+                          className={inputClass}
                         />
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Native Language</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Native language</FieldLabel>
                       <FieldContent>
                         <select
                           value={nativeLanguage}
                           onChange={(e) => setNativeLanguage(e.target.value)}
-                          className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
+                          className={selectClass}
                         >
                           <option value="">Select language</option>
                           {NATIVE_LANGUAGES.map((l) => (
@@ -256,12 +260,12 @@ export default function RegisterPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Occupation</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Occupation</FieldLabel>
                       <FieldContent>
                         <select
                           value={occupation}
                           onChange={(e) => setOccupation(e.target.value)}
-                          className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
+                          className={selectClass}
                         >
                           <option value="">Select role</option>
                           {OCCUPATIONS.map((o) => (
@@ -271,7 +275,7 @@ export default function RegisterPage() {
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Years of Experience</FieldLabel>
+                      <FieldLabel className="text-sm font-medium text-foreground/80">Years of experience</FieldLabel>
                       <FieldContent>
                         <Input
                           type="number"
@@ -280,19 +284,19 @@ export default function RegisterPage() {
                           placeholder="e.g. 3"
                           value={yearsOfExperience}
                           onChange={(e) => setYearsOfExperience(e.target.value)}
-                          className="h-12 rounded-2xl border-border bg-accent/5 px-4 focus:bg-background transition-all"
+                          className={inputClass}
                         />
                       </FieldContent>
                     </Field>
                   </div>
 
                   <Field>
-                    <FieldLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground/70">Learning Goal</FieldLabel>
+                    <FieldLabel className="text-sm font-medium text-foreground/80">Learning goal</FieldLabel>
                     <FieldContent>
                       <select
                         value={learningGoal}
                         onChange={(e) => setLearningGoal(e.target.value)}
-                        className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
+                        className={selectClass}
                       >
                         <option value="">Select your main goal</option>
                         {LEARNING_GOALS.map((g) => (
@@ -304,7 +308,7 @@ export default function RegisterPage() {
                 </FieldGroup>
               )}
 
-              <div className="flex items-start gap-2 rounded-2xl bg-blue-500/5 p-3 text-xs font-medium text-blue-700 dark:text-blue-400">
+              <div className="flex items-start gap-2.5 rounded-xl bg-blue-500/5 px-3.5 py-3 text-xs leading-relaxed text-blue-700 dark:text-blue-400">
                 <Sparkles size={14} className="mt-0.5 shrink-0" />
                 <p>
                   {step === 1
@@ -315,11 +319,11 @@ export default function RegisterPage() {
 
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2.5 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-sm font-medium text-destructive"
                 >
-                  <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                  <AlertCircle size={17} className="mt-0.5 shrink-0" />
                   <p className="leading-relaxed">{error}</p>
                 </motion.div>
               )}
@@ -329,7 +333,7 @@ export default function RegisterPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-14 flex-1 rounded-2xl font-bold"
+                    className="h-12 flex-1 rounded-xl font-semibold"
                     onClick={() => setStep(1)}
                   >
                     Back
@@ -338,53 +342,101 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-14 flex-1 rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
+                  className="h-12 flex-1 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.99]"
                 >
                   {loading ? (
                     <>
-                      <Loader2 size={20} className="mr-2 animate-spin" />
+                      <Loader2 size={18} className="mr-2 animate-spin" />
                       Creating account…
                     </>
                   ) : step === 1 ? (
                     <>
-                      Next
-                      <ArrowRight size={18} className="ml-2" />
+                      Continue
+                      <ArrowRight size={17} className="ml-1.5" />
                     </>
                   ) : (
                     <>
-                      Create Account
-                      <ArrowRight size={18} className="ml-2" />
+                      Create account
+                      <ArrowRight size={17} className="ml-1.5" />
                     </>
                   )}
                 </Button>
               </div>
             </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/60" />
-              </div>
-              <div className="relative flex justify-center text-[11px] font-bold uppercase tracking-wide">
-                <span className="bg-card px-4 text-muted-foreground/60">Already have an account?</span>
-              </div>
-            </div>
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                Sign in
+              </Link>
+            </p>
+          </motion.div>
+        </div>
 
-            <Button
-              asChild
-              variant="outline"
-              className="h-14 w-full rounded-2xl border-border bg-background/50 font-bold hover:bg-accent active:scale-[0.98]"
-            >
-              <Link href="/login">Sign in to your profile</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <p className="mt-8 text-center text-xs font-medium text-muted-foreground">
+        <p className="text-center text-xs leading-relaxed text-muted-foreground/80">
           By creating an account, you agree to our{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
           <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
         </p>
-      </motion.div>
+      </div>
     </main>
+  )
+}
+
+const FEATURES = [
+  { icon: MessagesSquare, title: "AI conversation partner", desc: "Practice standups and meetings in real workplace Korean." },
+  { icon: BookOpen, title: "Developer vocabulary", desc: "Spaced-repetition decks tuned to technical, on-the-job terms." },
+  { icon: Mic, title: "Mock interviews", desc: "Rehearse Korean tech interviews with instant feedback." },
+]
+
+function BrandPanel() {
+  return (
+    <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-slate-950 p-12 text-white lg:flex">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-indigo-800 to-slate-950" />
+        <div className="absolute -left-20 top-1/3 h-[420px] w-[420px] rounded-full bg-sky-400/20 blur-[120px]" />
+        <div className="absolute bottom-0 right-0 h-[360px] w-[360px] rounded-full bg-violet-500/20 blur-[120px]" />
+      </div>
+
+      <span className="pointer-events-none absolute -bottom-10 -right-4 select-none text-[14rem] font-black leading-none text-white/[0.06]">
+        한국어
+      </span>
+
+      <div className="relative z-10 flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+          <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
+        </span>
+        <span className="text-xl font-semibold tracking-tight">Hengo</span>
+      </div>
+
+      <div className="relative z-10 max-w-md space-y-8">
+        <div className="space-y-3">
+          <h2 className="text-3xl font-semibold leading-snug tracking-tight">
+            Start speaking Korean at work with confidence.
+          </h2>
+          <p className="text-sm leading-relaxed text-white/70">
+            Join foreign developers learning the exact Korean they need for life inside Korean tech teams.
+          </p>
+        </div>
+
+        <ul className="space-y-5">
+          {FEATURES.map((f) => (
+            <li key={f.title} className="flex gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15">
+                <f.icon size={17} className="text-sky-200" />
+              </span>
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-white">{f.title}</p>
+                <p className="text-xs leading-relaxed text-white/60">{f.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="relative z-10 text-xs text-white/50">
+        Free to start · No credit card required
+      </p>
+    </aside>
   )
 }
