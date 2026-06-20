@@ -27,6 +27,7 @@ import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from 
 import { isCorrectTerm, readBestStreak, shuffle, writeBestStreak } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
+import { toast } from "sonner"
 
 function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   const distractors = shuffle(pool.filter((w) => w.id !== correct.id)).slice(0, 3)
@@ -768,15 +769,47 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     setKnewCount(0)
     setStreak(0)
     setBestStreak(0)
+    setPendingSaves(0)
+    setSaveError(false)
     setPhase("quiz")
   }
+
+  // Live sync status for the session header: how many ratings are in flight and
+  // whether the last one failed to persist.
+  const [pendingSaves, setPendingSaves] = useState(0)
+  const [saveError, setSaveError] = useState(false)
+
+  // Persist a rating with one retry. Grading stays optimistic (UI advances
+  // immediately), but a failed save is retried once and then surfaced — so a
+  // dropped review can't silently fail to sync to the user's other devices.
+  const rateWithRetry = useCallback(
+    async (id: string, rating: ReviewRating) => {
+      setPendingSaves((p) => p + 1)
+      try {
+        try {
+          await onRate(id, rating)
+        } catch {
+          await onRate(id, rating) // retry once
+        }
+        setSaveError(false)
+      } catch {
+        setSaveError(true)
+        toast.error("Couldn't save that review", {
+          description: "Check your connection — it may not have synced to your other devices.",
+        })
+      } finally {
+        setPendingSaves((p) => Math.max(0, p - 1))
+      }
+    },
+    [onRate]
+  )
 
   const handleGrade = useCallback(
     (rating: ReviewRating) => {
       const card = queue[currentIndex]
       if (!card) return
-      // Fire-and-forget so grading feels instant; the hook reconciles state.
-      void Promise.resolve(onRate(card.id, rating)).catch(() => {})
+      // Optimistic: advance instantly; rateWithRetry persists + surfaces failures.
+      void rateWithRetry(card.id, rating)
 
       if (rating === "AGAIN") {
         setLapsedIds((prev) => new Set(prev).add(card.id))
@@ -809,7 +842,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         setCurrentIndex((i) => i + 1)
       }
     },
-    [queue, currentIndex, onRate]
+    [queue, currentIndex, rateWithRetry]
   )
 
   const total = queue.length
@@ -817,6 +850,11 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   // ── idle ──────────────────────────────────────────────────────────────────
   if (phase === "idle") {
     const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
+    // A "due review" session (words the SRS scheduled for today) vs. a free
+    // "practice the whole deck" session when nothing is due — kept distinct so
+    // the full-deck fallback never reads as the due count resetting.
+    const isDueSession = dueToday.length > 0
+    const caughtUp = !isDueSession && allWords.length > 0
     return (
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-3xl">
         {/* Top Header */}
@@ -826,9 +864,11 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Memory Lab</h2>
           <p className="mt-2 text-sm font-medium text-muted-foreground/60">
-            {dueToday.length > 0
-              ? `${dueToday.length} reviews awaiting attention`
-              : "Review your saved dictionary items"}
+            {isDueSession
+              ? `${dueToday.length} ${dueToday.length === 1 ? "word" : "words"} due for review`
+              : caughtUp
+                ? "You're all caught up — practice your full deck anytime"
+                : "Add words to start building your deck"}
           </p>
         </div>
 
@@ -885,7 +925,13 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
           >
             <Sparkles size={20} strokeWidth={2.5} />
-            {loading ? "Loading..." : "Enter Session"}
+            {loading
+              ? "Loading..."
+              : deckSize === 0
+                ? "No words yet"
+                : isDueSession
+                  ? `Review ${dueToday.length} due`
+                  : "Practice all words"}
           </button>
         </div>
       </div>
@@ -998,6 +1044,33 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
             {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
           </span>
+          {/* Sync status — reassures the user reviews are persisting (and warns if not) */}
+          {(saveError || pendingSaves > 0 || knewCount + lapsedIds.size > 0) && (
+            <span
+              className={cn(
+                "flex items-center gap-1 text-[11px] font-medium",
+                saveError
+                  ? "text-red-500"
+                  : pendingSaves > 0
+                    ? "text-muted-foreground/60"
+                    : "text-emerald-600 dark:text-emerald-400"
+              )}
+            >
+              {saveError ? (
+                <>
+                  <XCircle size={12} strokeWidth={3} /> Not saved
+                </>
+              ) : pendingSaves > 0 ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" /> Saving…
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={12} strokeWidth={3} /> Synced
+                </>
+              )}
+            </span>
+          )}
         </div>
         {/* Live tally: remembered vs. relearning */}
         <div className="flex items-center gap-2.5 text-xs font-bold tabular-nums">
