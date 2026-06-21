@@ -11,6 +11,7 @@ import {
   Flame,
   Gauge,
   Headphones,
+  Layers3,
   Lightbulb,
   Loader2,
   RotateCcw,
@@ -714,6 +715,20 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
   const [reversed, setReversed] = useState(false)
+  // Empty set reviews the whole deck; otherwise restricts the session (and
+  // the quiz-mode distractor pool) to the chosen vocab categories.
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
+  const toggleCategory = useCallback((cat: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(cat)) {
+        next.delete(cat)
+      } else {
+        next.add(cat)
+      }
+      return next
+    })
+  }, [])
   const [queue, setQueue] = useState<VocabItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lapsedIds, setLapsedIds] = useState<Set<string>>(new Set())
@@ -749,7 +764,29 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     }
   }, [phase, bestStreak])
 
-  const canUseChoice = allWords.length >= 4
+  // Distinct categories across the whole deck, for the picker — derived at
+  // runtime since vocab categories are free-form strings, not a fixed enum.
+  const categories = useMemo(
+    () => Array.from(new Set(allWords.map((w) => w.category).filter(Boolean))).sort(),
+    [allWords]
+  )
+
+  const filteredAllWords = useMemo(
+    () =>
+      selectedCategories.size === 0
+        ? allWords
+        : allWords.filter((w) => selectedCategories.has(w.category)),
+    [allWords, selectedCategories]
+  )
+  const filteredDueToday = useMemo(
+    () =>
+      selectedCategories.size === 0
+        ? dueToday
+        : dueToday.filter((w) => selectedCategories.has(w.category)),
+    [dueToday, selectedCategories]
+  )
+
+  const canUseChoice = filteredAllWords.length >= 4
 
   // Lock the page behind the full-screen review so only the session scrolls.
   useEffect(() => {
@@ -762,7 +799,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   }, [phase])
 
   function startQuiz() {
-    const deck = dueToday.length > 0 ? dueToday : allWords
+    const deck = filteredDueToday.length > 0 ? filteredDueToday : filteredAllWords
     setQueue(shuffle(deck))
     setCurrentIndex(0)
     setLapsedIds(new Set())
@@ -849,12 +886,12 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
   // ── idle ──────────────────────────────────────────────────────────────────
   if (phase === "idle") {
-    const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
+    const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
     // A "due review" session (words the SRS scheduled for today) vs. a free
     // "practice the whole deck" session when nothing is due — kept distinct so
     // the full-deck fallback never reads as the due count resetting.
-    const isDueSession = dueToday.length > 0
-    const caughtUp = !isDueSession && allWords.length > 0
+    const isDueSession = filteredDueToday.length > 0
+    const caughtUp = !isDueSession && filteredAllWords.length > 0
     return (
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-3xl">
         {/* Top Header */}
@@ -865,7 +902,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Memory Lab</h2>
           <p className="mt-2 text-sm font-medium text-muted-foreground/60">
             {isDueSession
-              ? `${dueToday.length} ${dueToday.length === 1 ? "word" : "words"} due for review`
+              ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
               : caughtUp
                 ? "You're all caught up — practice your full deck anytime"
                 : "Add words to start building your deck"}
@@ -873,14 +910,59 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         </div>
 
         <div className="flex flex-col gap-6 p-5 sm:p-8">
+          {/* Category Selector — multi-select; restricts the session (and quiz
+              distractor pool) to the chosen categories, or the whole deck if none are picked */}
+          {categories.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <Layers3 size={12} strokeWidth={3} />
+                Categories
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories(new Set())}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                    selectedCategories.size === 0
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                  )}
+                >
+                  All Categories
+                </button>
+                {categories.map((cat) => {
+                  const selected = selectedCategories.has(cat)
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCategory(cat)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                        selected
+                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                      )}
+                    >
+                      {selected && <CheckCircle2 size={12} strokeWidth={3} />}
+                      {cat}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Deck Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-emerald-600">{dueToday.length}</p>
+              <p className="text-3xl font-bold text-emerald-600">{filteredDueToday.length}</p>
               <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
             </div>
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-foreground">{allWords.length}</p>
+              <p className="text-3xl font-bold text-foreground">{filteredAllWords.length}</p>
               <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
             </div>
           </div>
@@ -930,7 +1012,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
               : deckSize === 0
                 ? "No words yet"
                 : isDueSession
-                  ? `Review ${dueToday.length} due`
+                  ? `Review ${filteredDueToday.length} due`
                   : "Practice all words"}
           </button>
         </div>
@@ -1123,7 +1205,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             ) : (
               <ChoiceCard
                 card={card}
-                allWords={allWords}
+                allWords={filteredAllWords}
                 streak={streak}
                 onResult={registerResult}
                 onKnew={() => handleGrade("GOOD")}
