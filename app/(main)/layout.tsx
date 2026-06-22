@@ -7,15 +7,14 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import {
   BookOpen,
   BookOpenText,
-  CalendarDays,
   Drama,
   Gauge,
   GraduationCap,
   Headphones,
   Languages,
   Menu,
-  NotebookPen,
   Target,
+  Trophy,
   // History, // moved into Settings page
   MessageCircle,
   // Mic, // hidden Speaking nav
@@ -23,13 +22,13 @@ import {
   Settings,
   Sparkles,
   // Theater, // hidden Meeting Sim nav
-  // Trophy, // hidden Achievements nav
   // Wand2, // hidden Message Gen nav
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
+import { LevelBadge } from "@/components/achievements/LevelBadge"
 import { UserAvatar } from "@/components/ui/UserAvatar"
 import {
   Sheet,
@@ -44,37 +43,36 @@ import { cn } from "@/lib/utils"
 // Each section renders under a subtle uppercase label.
 const navSections = [
   {
-    // Goals is the primary surface — keep it at the very top of the sidebar.
+    // Today/Goals/Dashboard/Achievements are the primary "Plan" loop — keep
+    // them at the very top of the sidebar, ahead of the wider Learn catalog.
     label: "Plan",
     links: [
       { href: "/practice", label: "Today", icon: Sparkles },
       { href: "/goals", label: "Goals", icon: Target },
       { href: "/dashboard", label: "Dashboard", icon: Gauge },
+      { href: "/achievements", label: "Achievements", icon: Trophy },
     ],
   },
   {
     label: "Learn",
-    // Foundations (beginner basics) leads, then the exam tools (Vocab · Exam
-    // Prep · Listening) — the daily study loop — then reading/coach surfaces.
+    // AI Coach leads as the other primary surface, then Foundations (beginner
+    // basics), then the exam tools (Vocab · Exam Prep · Listening), then
+    // reading/scenario surfaces. Daily Phrase merged into Today (/practice);
+    // Dev Notes moved into Settings — neither has a nav entry here anymore.
     links: [
+      { href: "/chat", label: "AI Coach", icon: MessageCircle },
       { href: "/learn", label: "Foundations", icon: Languages },
       { href: "/vocab", label: "Vocabulary", icon: BookOpen },
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
       { href: "/listening", label: "Listening", icon: Headphones },
       { href: "/scenarios", label: "Scenarios", icon: Drama },
       { href: "/reading", label: "Reading", icon: BookOpenText },
-      { href: "/notes", label: "Dev Notes", icon: NotebookPen },
-      { href: "/daily-phrase", label: "Daily Phrase", icon: CalendarDays },
-      // AI Coach now hosts Chat + Analyze + Generate as tabs (see /chat).
-      { href: "/chat", label: "AI Coach", icon: MessageCircle },
-      // ── built but hidden — restore by uncommenting (icons imported above) ──
-      // { href: "/achievements", label: "Achievements", icon: Trophy },
     ],
   },
   {
     label: "Account",
     links: [
-      // ── History moved into Settings — reach it from the Settings page ──
+      // ── History & Dev Notes moved into Settings — reach them from there ──
       // { href: "/history", label: "History", icon: History },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
@@ -88,8 +86,8 @@ const allLinks = navSections.flatMap((section) => section.links)
 // (Dashboard) leads, then the daily practice surfaces. A flat, uniform bar (no
 // elevated center pill) — that treatment only balances on an odd slot count,
 // and tab spacing is tightened so all six fit comfortably on a phone.
-// "More" still exposes everything else (Reading, Daily Phrase, Listening,
-// Settings), so nothing is unreachable.
+// "More" still exposes everything else (Today, Reading, Listening, Settings,
+// Achievements), so nothing is unreachable.
 const bottomTabs = [
   { href: "/dashboard", label: "Home", icon: Gauge },
   { href: "/vocab", label: "Vocab", icon: BookOpen },
@@ -99,7 +97,7 @@ const bottomTabs = [
 ]
 
 // Everything not already a bottom tab — surfaced through the "More" sheet so
-// mobile users can still reach Reading, Daily Phrase, Exam Prep, Settings, etc.
+// mobile users can still reach Today, Reading, Achievements, Settings, etc.
 const moreLinks = allLinks.filter(
   (link) => !bottomTabs.some((tab) => tab.href === link.href)
 )
@@ -325,6 +323,7 @@ export default function MainLayout({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <LevelBadge />
                 <NotificationBell />
                 <ThemeToggle />
                 <UserAvatar
@@ -353,6 +352,7 @@ export default function MainLayout({
                   <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                   <span className="text-[11px] font-bold uppercase tracking-wide text-foreground/60 text-nowrap">AI Sync Active</span>
                </div>
+               <LevelBadge />
                <NotificationBell />
                <ThemeToggle />
                <UserAvatar href="/settings" title="Profile & settings" />

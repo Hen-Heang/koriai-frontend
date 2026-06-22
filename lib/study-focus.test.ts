@@ -64,7 +64,7 @@ describe("getStudyFocus", () => {
         })
       )
     ).toMatchObject({
-      ctaHref: "/daily-phrase",
+      ctaHref: "/practice",
       badge: "Keep momentum",
     })
   })

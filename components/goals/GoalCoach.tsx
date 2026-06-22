@@ -13,17 +13,27 @@ import type { Task } from "@/lib/tasks"
 
 interface GoalCoachProps {
   goalId: string
+  /** Steers the quick-fill note suggestions — "education" surfaces Korean-learning presets. */
+  goalType?: string
   /** Called after tasks are generated so the parent can refetch + jump to Tasks. */
   onGenerated?: (tasks: Task[]) => void
 }
 
 const COUNTS = [5, 7, 10]
 
+// Naming an actual app feature here matters: LearningPracticeCard matches
+// these same keywords to turn the generated tasks into "Practice →" links.
+const EDUCATION_NOTE_PRESETS = [
+  "Focus on workplace vocabulary and daily phrases",
+  "Mix in roleplay scenarios and listening practice",
+  "Prioritize speaking practice and grammar corrections",
+]
+
 /**
  * AI Goal Coach — generates a plan of tasks for the goal via the backend
  * OpenAI endpoint (POST /goals/{id}/generate-tasks) and inserts them.
  */
-export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
+export function GoalCoach({ goalId, goalType, onGenerated }: GoalCoachProps) {
   const [count, setCount] = useState(7)
   const [note, setNote] = useState("")
   const [loading, setLoading] = useState(false)
@@ -94,6 +104,20 @@ export function GoalCoach({ goalId, onGenerated }: GoalCoachProps) {
               placeholder="e.g. focus on speaking practice, beginner level…"
               className="h-11 rounded-xl"
             />
+            {goalType === "education" && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {EDUCATION_NOTE_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setNote(preset)}
+                    className="rounded-full border border-border bg-muted/30 px-3 py-1 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button onClick={generate} disabled={loading} className="h-12 w-full gap-2 rounded-2xl text-base font-bold">

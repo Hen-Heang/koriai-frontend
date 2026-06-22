@@ -2,11 +2,12 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { AlertCircle, ChevronLeft, History, MessageCircle, PanelLeft, ScanText, Wand2 } from "lucide-react"
+import { AlertCircle, ChevronLeft, History, MessageCircle, PanelLeft, RotateCcw, ScanText, Wand2 } from "lucide-react"
 import { motion } from "motion/react"
 
 import { ChatWindow } from "@/components/chat/ChatWindow"
 import { ConversationSidebar } from "@/components/chat/ConversationSidebar"
+import { CorrectionsReview } from "@/components/chat/CorrectionsReview"
 import { MessageAnalyzer } from "@/components/ai/MessageAnalyzer"
 import { MessageGenerator } from "@/components/ai/MessageGenerator"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -14,12 +15,13 @@ import { useConversations } from "@/hooks/useConversations"
 import { chatApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-type AiMode = "chat" | "analyze" | "generate"
+type AiMode = "chat" | "analyze" | "generate" | "corrections"
 
 const MODES: { id: AiMode; label: string; icon: typeof MessageCircle }[] = [
   { id: "chat", label: "Chat", icon: MessageCircle },
   { id: "analyze", label: "Analyze", icon: ScanText },
   { id: "generate", label: "Generate", icon: Wand2 },
+  { id: "corrections", label: "Corrections", icon: RotateCcw },
 ]
 
 export default function ChatPage() {
@@ -39,7 +41,7 @@ function ChatPageContent() {
   // A ?prompt= deep link is a correction/chat request, so it always lands on Chat.
   const queryMode = searchParams.get("mode")
   const [mode, setMode] = useState<AiMode>(
-    !initialDraft && (queryMode === "analyze" || queryMode === "generate")
+    !initialDraft && (queryMode === "analyze" || queryMode === "generate" || queryMode === "corrections")
       ? (queryMode as AiMode)
       : "chat"
   )
@@ -266,7 +268,13 @@ function ChatPageContent() {
         ) : (
           <div className="h-full overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-6xl">
-              {mode === "analyze" ? <MessageAnalyzer /> : <MessageGenerator initialCategory={initialCategory} />}
+              {mode === "analyze" ? (
+                <MessageAnalyzer />
+              ) : mode === "corrections" ? (
+                <CorrectionsReview onDone={() => setMode("chat")} />
+              ) : (
+                <MessageGenerator initialCategory={initialCategory} />
+              )}
             </div>
           </div>
         )}

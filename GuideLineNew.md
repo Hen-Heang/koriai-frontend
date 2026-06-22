@@ -42,12 +42,11 @@ Examples:
 
 ## Frontend
 
-* Next.js 15 (App Router)
+* Next.js 16 (App Router)
 * TypeScript
-* Tailwind CSS
+* Tailwind CSS v4
 * Shadcn UI
 * React Query (TanStack Query)
-* Zustand
 * React Hook Form
 * Zod
 
@@ -78,6 +77,28 @@ Use AI for:
 
 * GitHub Actions
 
+
+---
+
+# Implementation Status (see README.md for the up-to-date route table)
+
+This document is the original product vision/module list — kept for reference, not
+re-synced module-by-module. Several modules below are already shipped under different
+names/routes than originally specced:
+
+* Module 2 (Vocabulary) → `/vocab` (decks, AI generation, textbook import, dictionary)
+* Module 3/9 (AI Coach / Workplace Analyzer) → `/chat` (Chat / Analyze / Generate tabs)
+* Module 4 (Daily Phrase) → `/daily-phrase`
+* Module 5 (Message Generator) → the "Generate" tab in `/chat`
+* Module 6 (Meeting Simulator) → `/scenarios` (roleplay scenarios that hand off into `/chat`)
+* Module 10 (Flashcards/SRS) → `/vocab` review sessions, plus the "Corrections" tab in `/chat` (SRS review of past corrections; `/mistakes` redirects there)
+* Module 11 (Progress Dashboard) → `/dashboard`
+* Exam Prep (`/interview`) and Foundations (`/learn` — beginner Hangul/grammar tracks) and
+  Dev Notes (`/notes` — a personal study knowledge library) are newer additions not in the
+  original module list above.
+
+Not yet built: Module 7 (Listening Practice — page exists at `/listening` but hidden from
+nav), Module 8 (Speaking Practice), Module 12 (Achievements — page exists, hidden from nav).
 
 ---
 

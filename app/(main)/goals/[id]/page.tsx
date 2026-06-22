@@ -47,11 +47,12 @@ import { EditGoalSlidePanel } from "@/components/goals/EditGoalSlidePanel"
 import { InviteMembers } from "@/components/goals/InviteMembers"
 import { ShareGoalCard } from "@/components/goals/ShareGoalCard"
 import { GoalMilestones, type Milestone } from "@/components/goals/GoalMilestones"
+import { LearningPracticeCard } from "@/components/goals/LearningPracticeCard"
 import { GoalCoach } from "@/components/goals/GoalCoach"
 import { GoalCoachChat } from "@/components/goals/GoalCoachChat"
 import dynamic from "next/dynamic"
 import { parseYMD } from "@/lib/calendar"
-import { goalsApi, getApiErrorMessage } from "@/lib/api"
+import { goalsApi, tasksApi, getApiErrorMessage } from "@/lib/api"
 import { goalsQueryKey } from "@/hooks/useGoals"
 import { getUserId } from "@/lib/auth-store"
 import { EXAM_DATE, SCRIPT_DUE_DATE } from "@/lib/study-plan"
@@ -179,6 +180,18 @@ export default function GoalDetailPage() {
     void queryClient.invalidateQueries({ queryKey: tasksKey })
     void queryClient.invalidateQueries({ queryKey: goalsQueryKey(userId) })
   }, [queryClient, goalKey, tasksKey, userId])
+
+  const toggleTaskCompletion = useCallback(
+    async (taskId: string, completed: boolean) => {
+      try {
+        await tasksApi.update(taskId, { completed: !completed })
+        refresh()
+      } catch {
+        toast.error("Could not update task", { description: "Please try again." })
+      }
+    },
+    [refresh]
+  )
 
   const updateStatus = useCallback(
     async (status: string, successMsg: string) => {
@@ -483,6 +496,8 @@ export default function GoalDetailPage() {
             )}
           </div>
 
+          <LearningPracticeCard tasks={tasks} onToggle={toggleTaskCompletion} />
+
           <GoalMilestones
             goal={goal}
             suggestions={examGoalSuggestions}
@@ -607,6 +622,7 @@ export default function GoalDetailPage() {
           <GoalCoachChat goalId={id} goalTitle={goal.title} />
           <GoalCoach
             goalId={id}
+            goalType={goal.metadata?.goal_type}
             onGenerated={() => {
               void queryClient.invalidateQueries({ queryKey: tasksKey })
               void queryClient.invalidateQueries({ queryKey: goalKey })

@@ -15,6 +15,7 @@ import dynamic from "next/dynamic"
 
 import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
 import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
+import { ProgressIntelligence } from "@/components/dashboard/ProgressIntelligence"
 import { StreakCard } from "@/components/dashboard/StreakCard"
 import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
@@ -175,7 +176,7 @@ const quickActions = [
     tag: "Core focus",
   },
   {
-    href: "/daily-phrase",
+    href: "/practice",
     label: "Daily Phrase",
     description: "One workplace phrase a day — learn it, then write with it.",
     icon: Sparkles,
@@ -232,31 +233,6 @@ export default function DashboardPage() {
   if (loading) {
     return <DashboardLoadingState />
   }
-
-  const goalPct = Math.min(stats.dailyGoalProgress, 100)
-
-  const nextSteps = [
-    {
-      href: "/goals",
-      title: "Review your goals",
-      detail: "Check what's due and plan your next tasks.",
-    },
-    {
-      href: "/chat?prompt=" + encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n"),
-      title: "Write one sentence",
-      detail: "Describe your work day in Korean and get an instant AI correction.",
-    },
-    {
-      href: "/vocab",
-      title: "Clear today's reviews",
-      detail: "Knock out the words due in your spaced repetition queue.",
-    },
-    {
-      href: "/daily-phrase",
-      title: "Learn today's phrase",
-      detail: "Pick up one workplace expression and write a sentence with it.",
-    },
-  ]
 
   return (
     <motion.div 
@@ -379,22 +355,7 @@ export default function DashboardPage() {
         {/* Streak & Stats Bento (5 cols) */}
         <motion.div variants={itemVariants} className="col-span-1 space-y-6 md:col-span-5 lg:col-span-4">
           <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Next Steps</h3>
-            <div className="mt-4 space-y-4">
-              {nextSteps.map((step, i) => (
-                <Link key={i} href={step.href} className="group flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent text-[13px] font-bold text-muted-foreground transition-colors group-hover:bg-blue-500 group-hover:text-white">
-                    {i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400">{step.title}</p>
-                  </div>
-                  <ArrowRight size={14} className="text-muted-foreground/20 group-hover:translate-x-1 group-hover:text-blue-500" />
-                </Link>
-              ))}
-            </div>
-          </div>
+          <ProgressIntelligence />
         </motion.div>
 
         {/* Goals & Tasks (Full width) */}

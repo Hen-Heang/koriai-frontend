@@ -31,21 +31,28 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` (no vitest config
 
 | Area | Route | What it does |
 |---|---|---|
-| **Goals** | `/goals` | Primary surface. Plan goals, track deadlines, manage tasks, calendar view. |
-| **Dashboard** | `/dashboard` | Daily goal ring, streak, progress chart, next steps. |
-| **Vocabulary** | `/vocab` | Spaced-repetition decks, AI deck generation, list import, review sessions. |
-| **Reading** | `/reading` | Multi-unit reading with tap-to-translate, audio, and quizzes. |
-| **Daily Phrase** | `/daily-phrase` | One curated workplace phrase per day with a sentence challenge. |
+| **Landing page** | `/` | Marketing/intro page — feature highlights, links to Login/Register. |
+| **Login / Register** | `/login`, `/register` | Email/password + Google sign-in auth flows (route group `(auth)`). |
+| **Today** | `/practice` | Home surface. A "Today's Mission" checklist (vocab due, daily phrase, mistakes due, scenario practice) with progress x/4, the full Daily Phrase experience inline, plus suggestions for the message generator and listening practice — all mixed for the user's level. Includes a level-up suggestion banner. `/daily-phrase` redirects here (merged, no separate page); the "Review mistakes" action and `/mistakes` both lead to the Corrections tab in AI Coach (also merged). |
+| **Goals** | `/goals` | Plan goals, track deadlines, manage tasks, calendar view. A goal's Overview tab shows a "Learning Practice" card (`components/goals/LearningPracticeCard.tsx`) — any task whose text names a learning feature (vocab, scenario, listening, etc., via `lib/learning-task-link.ts`) gets a direct "Practice →" deep link. Education-type goals also get quick-fill note presets in the AI Goal Coach to nudge generated tasks toward that vocabulary. Goals/tasks are otherwise a generic productivity feature with no other backend link to real learning activity. |
+| **Dashboard** | `/dashboard` | Daily goal ring, streak, progress chart. A "Needs Attention" panel (`components/dashboard/ProgressIntelligence.tsx`) ranks real due-counts (vocab due, mistakes due, overdue goals, unlearned daily phrase) into a prioritized list with direct links — replaces the old static "Next Steps" list. There's no backend per-skill accuracy breakdown to rank against, so this sticks to real due-counts rather than a fabricated weakness score. |
+| **Achievements** | `/achievements` | XP, levels, and skill badges. A compact level/XP badge (`components/achievements/LevelBadge.tsx`) also surfaces in both the desktop and mobile top bars on every page. |
+| **AI Coach** | `/chat` | Unified AI workspace with four tabs: **Chat** (free conversation with Dev Mode + Korean voice mode), **Analyze** (decode a real Korean message — tone, politeness, replies), **Generate** (turn an English intent into Korean across formality levels), **Corrections** (SRS review of past mistakes, graded Again/Hard/Good/Easy — mistakes come from chat, so the review lives here too). |
+| **Foundations** | `/learn` | Absolute-beginner Korean — Survival / Alphabet / Grammar tracks, per-lesson runner (`/learn/[lessonId]`). |
+| **Vocabulary** | `/vocab` | Spaced-repetition decks, AI deck generation, list/textbook import, dictionary lookup, review sessions. |
 | **Exam Prep** | `/interview` | Mock interview Q&A with an AI examiner, speech input, and feedback. |
-| **AI Coach** | `/chat` | Unified AI workspace with three tabs: **Chat** (free conversation with Dev Mode + Korean voice mode), **Analyze** (decode a real Korean message — tone, politeness, replies), **Generate** (turn an English intent into Korean across formality levels). |
-| **Settings** | `/settings` | Profile, Korean level, work context, model preference, avatar. Links to practice History. |
-
-Built but currently hidden from navigation (wired to the backend, easy to restore by uncommenting in `app/(main)/layout.tsx`): **Listening** (`/listening`) and **Achievements** (`/achievements`). **History** (`/history`) is reachable from the Settings page.
+| **Listening** | `/listening` | AI-generated listening passages — slow/normal speed playback, transcript, quiz. |
+| **Scenarios** | `/scenarios` | Roleplay prompts for real-life and workplace situations; launches a guided AI conversation in Chat. |
+| **Reading** | `/reading` | Multi-unit reading with tap-to-translate, audio, and quizzes. |
+| **History** | `/history` | "Progress Lab" — past study sessions/attempts across features. Reachable from Settings, not in the main nav. |
+| **Dev Notes** | `/notes` | Personal knowledge library (Java/Spring/SQL/etc. study notes) with search, markdown editor (`/notes/new`), and per-note view (`/notes/[slug]`). Reachable from Settings ("Developer Notes"), not in the main nav. |
+| **Settings** | `/settings` | Profile, Korean level, work context, model preference, avatar. Links to History and Developer Notes. |
 
 ### Navigation
 
-- **Desktop:** a grouped sidebar (`Plan` / `Learn` / `Account`) in `app/(main)/layout.tsx`.
-- **Mobile:** a bottom tab bar — Home · Vocab · **Goals** (elevated center) · AI · Exam. The AI Coach is one tap away; Reading lives in the desktop sidebar.
+- **Desktop:** a grouped sidebar (`Plan` / `Learn` / `Account`) in `app/(main)/layout.tsx`. `Plan` is the primary loop — Today → Goals → Dashboard → Achievements; `Learn` leads with AI Coach, then Foundations → Vocabulary → Exam Prep → Listening → Scenarios → Reading; `Account` has Settings only (History and Dev Notes are reachable from inside Settings, not the sidebar).
+- **Header:** a compact level/XP badge (`LevelBadge`) sits in both the desktop and mobile top bars on every page, linking to `/achievements`.
+- **Mobile:** a six-slot bottom bar — Home · Vocab · Goals · Exam · AI · **More**. "More" opens a bottom sheet listing every remaining sidebar link (Today, Foundations, Listening, Scenarios, Reading, Achievements, Settings) so nothing is unreachable on a phone.
 - **Immersive chat:** on `/chat` the mobile header, bottom tabs, and content padding are removed for a full-screen experience.
 
 ## Architecture
@@ -76,10 +83,15 @@ app/
     layout.tsx    sidebar, mobile tabs, immersive-chat handling
     chat/         AI Coach (Chat / Analyze / Generate tabs)
     goals/  dashboard/  vocab/  reading/  daily-phrase/  interview/  settings/
+    practice/     Today — Daily Practice Hub
+    learn/        Foundations (Survival / Alphabet / Grammar lessons)
+    scenarios/    Roleplay Scenarios
+    notes/        Dev Notes (knowledge library), notes/new, notes/[slug]
+    mistakes/     SRS review of past corrections
 components/
   ui/             reusable shadcn-style primitives (keep generic)
-  chat/  ai/  vocab/  goals/  calendar/  reading/  dashboard/  ...
-hooks/            useChat, useVocab, etc. (some manage state directly)
+  chat/  ai/  vocab/  goals/  calendar/  reading/  dashboard/  learn/  notes/  ...
+hooks/            useChat, useVocab, useFoundations, useNotes, etc. (some manage state directly)
 lib/
   api/            backend integration — per-domain service package (client + barrel)
   auth-store.ts   JWT in localStorage

@@ -47,7 +47,7 @@ export function getStudyFocus(stats: DashboardStats): StudyFocus {
     title: "Turn today into output practice",
     description:
       "Your consistency looks solid. Learn today's phrase and write your own sentence with it to turn passive understanding into active Korean production.",
-    ctaLabel: "Open daily phrase",
-    ctaHref: "/daily-phrase",
+    ctaLabel: "Open today's mission",
+    ctaHref: "/practice",
   }
 }

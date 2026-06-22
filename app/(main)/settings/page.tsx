@@ -17,6 +17,7 @@ import {
   Globe,
   Briefcase,
   History,
+  NotebookPen,
   Camera,
   Loader2,
   Bell,
@@ -423,6 +424,31 @@ export default function SettingsPage() {
                   </p>
                   <p className="text-xs font-medium text-muted-foreground/60">
                     Corrections, calendar &amp; grammar patterns
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+            </button>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SectionCard>
+            <button
+              type="button"
+              onClick={() => router.push("/notes")}
+              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-blue-500/5 active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20 transition-transform group-hover:scale-110">
+                  <NotebookPen size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground uppercase tracking-wider">
+                    Developer Notes
+                  </p>
+                  <p className="text-xs font-medium text-muted-foreground/60">
+                    Your personal study knowledge library
                   </p>
                 </div>
               </div>
