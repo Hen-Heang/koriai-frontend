@@ -162,7 +162,7 @@ function FlashCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Flip card — Duolingo-style chunky rounded card */}
-      <div className="perspective-[1000px] h-80 sm:h-96">
+      <div className="perspective-[1000px] h-[min(20rem,48dvh)] sm:h-96">
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -635,7 +635,7 @@ function ListeningCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Audio stage */}
-      <div className="flex h-80 flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
+      <div className="flex h-[min(20rem,48dvh)] flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
         <span className="rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
           Listen &amp; Recall
         </span>
@@ -1112,7 +1112,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   if (!card) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
       {/* Session Progress Header */}
       <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
         <button

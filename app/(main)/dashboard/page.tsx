@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import {
   ArrowRight,
   Flame,
@@ -150,11 +150,14 @@ function DashboardLoadingState() {
 }
 // Personal-best vocab quiz streak, read from localStorage on mount (client-only
 // to avoid a hydration mismatch). Written by the vocab ReviewSession.
+function subscribeNoop() {
+  return () => {}
+}
+function getServerBestStreak() {
+  return null
+}
 function BestQuizStreakCard() {
-  const [best, setBest] = useState<number | null>(null)
-  useEffect(() => {
-    setBest(readBestStreak())
-  }, [])
+  const best = useSyncExternalStore(subscribeNoop, readBestStreak, getServerBestStreak)
 
   return (
     <Link
