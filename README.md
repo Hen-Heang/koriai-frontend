@@ -55,6 +55,19 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` (no vitest config
 - **Mobile:** a six-slot bottom bar — Home · Vocab · Goals · Exam · AI · **More**. "More" opens a bottom sheet listing every remaining sidebar link (Today, Foundations, Listening, Scenarios, Reading, Achievements, Settings) so nothing is unreachable on a phone.
 - **Immersive chat:** on `/chat` the mobile header, bottom tabs, and content padding are removed for a full-screen experience.
 
+## Design system
+
+The UI follows one calm, consistent visual language (applied across auth, landing, dashboard, and the goals module — keep new screens on the same system):
+
+- **Radius:** one token — `rounded-2xl` for cards/inputs/surfaces, `rounded-xl` for buttons, `rounded-full` for chips. Avoid arbitrary radii (`rounded-[1.5rem]`, etc.).
+- **Elevation:** subtle `border` + `shadow-sm`; avoid `shadow-xl`/`shadow-2xl` and decorative glows. A single dark hero is the page's focal point.
+- **Icons:** `lucide-react` at `strokeWidth={2}`, ~16–20px in cards.
+- **Typography:** bold is reserved for the page `h1` and key metrics (streak, %, countdown); card titles use `font-semibold`, labels/body use `font-medium` or muted. Avoid `uppercase tracking-wide` eyebrows — prefer sentence case ("New goal", "Active streak").
+- **Color:** a single blue accent on neutral surfaces; semantic colors (amber/rose/emerald) only for status. Hover states are calm (border/color change, no scale or lift).
+- **Text vs. icon:** prefer icon-only controls where the meaning is obvious (view toggles, pagination chevrons) and keep text for primary actions and navigation.
+- **Brand:** product name **Hengo**; logo at `public/hengo-icon.svg` (used for the AI Coach avatar and auth/landing marks).
+- **Mobile:** tuned for iPhone 12 Pro Max — `env(safe-area-inset-*)` padding and `100dvh`-style units.
+
 ## Architecture
 
 - **API layer — `lib/api/` is the single integration point.** A per-domain service package: `client.ts` holds the one axios instance + interceptors, each domain has its own file (`auth`, `chat`, `vocab`, `goals`, `interview`, `reading`, `progress`, `learning`, `tts`, `push`, `user`), and `index.ts` re-exports everything so callers still `import { … } from "@/lib/api"`. The backend wraps every payload in an envelope, so responses are unwrapped with `r.data.data`. Add new backend calls to the matching domain file, not inline in components.

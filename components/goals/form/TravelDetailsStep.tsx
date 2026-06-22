@@ -41,7 +41,7 @@ export function TravelDetailsStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="mb-2 text-xl font-bold text-foreground">Travel Details</h2>
+        <h2 className="mb-2 text-xl font-semibold text-foreground">Travel details</h2>
         <p className="mb-3 text-muted-foreground">
           Provide more information about your trip to tailor the plan.
         </p>
@@ -124,7 +124,7 @@ export function TravelDetailsStep({
           name="travel_budget"
           render={({ field }) => (
             <FormItem className="mb-3">
-              <FormLabel>Budget Range</FormLabel>
+              <FormLabel>Budget range</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select budget range" />

@@ -67,11 +67,11 @@ import { cn } from "@/lib/utils"
 // SmartAnalytics pulls in recharts; Calendar is a large date-grid component.
 const SmartAnalytics = dynamic(
   () => import("@/components/goals/SmartAnalytics").then((m) => m.SmartAnalytics),
-  { ssr: false, loading: () => <div className="h-64 w-full animate-pulse rounded-3xl bg-muted/20" /> }
+  { ssr: false, loading: () => <div className="h-64 w-full animate-pulse rounded-2xl bg-muted/20" /> }
 )
 const Calendar = dynamic(
   () => import("@/components/calendar/Calendar").then((m) => m.Calendar),
-  { ssr: false, loading: () => <div className="h-full w-full animate-pulse rounded-3xl bg-muted/20" /> }
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse rounded-2xl bg-muted/20" /> }
 )
 
 type DetailTab = "overview" | "tasks" | "members" | "coach" | "settings"
@@ -295,13 +295,13 @@ export default function GoalDetailPage() {
     return (
       <div className="space-y-8 pb-12">
         <Skeleton className="h-6 w-24 rounded-lg" />
-        <Skeleton className="h-64 w-full rounded-3xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-3xl" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
-        <Skeleton className="h-[400px] w-full rounded-3xl" />
+        <Skeleton className="h-[400px] w-full rounded-2xl" />
       </div>
     )
   }
@@ -309,18 +309,18 @@ export default function GoalDetailPage() {
   if (!goal) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-muted/20 text-muted-foreground/40">
+        <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground/40">
           <Target size={48} strokeWidth={1.5} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Goal not found</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Goal not found</h2>
           <p className="mt-2 max-w-sm text-sm font-medium text-muted-foreground">
             This goal may have been deleted or moved.
           </p>
         </div>
-        <Button asChild variant="outline" className="rounded-2xl font-bold">
+        <Button asChild variant="outline" className="rounded-2xl font-semibold">
           <Link href="/goals">
-            <ArrowLeft size={18} strokeWidth={2.5} className="mr-2" /> Back to Goals
+            <ArrowLeft size={18} strokeWidth={2} className="mr-2" /> Back to Goals
           </Link>
         </Button>
       </div>
@@ -349,16 +349,16 @@ export default function GoalDetailPage() {
     <div className="space-y-8 pb-12" data-goal-id={id}>
       <Link
         href="/goals"
-        className="group inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted-foreground/60 transition-colors hover:text-foreground"
+        className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground/60 transition-colors hover:text-foreground"
       >
-        <ArrowLeft size={16} strokeWidth={2.5} className="transition-transform group-hover:-translate-x-1" />
+        <ArrowLeft size={16} strokeWidth={2} className="transition-transform group-hover:-translate-x-1" />
         Back to Goals
       </Link>
 
       {/* Hero Card */}
       <section
         className={cn(
-          "relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-xl sm:rounded-3xl sm:p-10",
+          "relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40 dark:backdrop-blur-xl sm:p-10",
           deadlineStyling?.borderColor
         )}
       >
@@ -370,17 +370,17 @@ export default function GoalDetailPage() {
         <div className="relative z-10 space-y-6 sm:space-y-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4 sm:gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-3xl font-bold text-primary shadow-inner sm:h-24 sm:w-24 sm:rounded-3xl sm:text-5xl">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-3xl font-semibold text-primary sm:h-24 sm:w-24 sm:text-5xl">
                 {icon || (goal.title ? goal.title.charAt(0).toUpperCase() : "G")}
               </div>
               <div className="min-w-0 flex-1 space-y-2 sm:space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary hover:bg-primary/20 sm:px-3 sm:py-1">
+                  <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-medium text-primary hover:bg-primary/20 sm:px-3 sm:py-1">
                     {goal.metadata?.goal_type || "General"}
                   </Badge>
                   {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                 </div>
-                <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground break-words sm:text-4xl lg:text-5xl">
+                <h1 className="text-2xl font-semibold leading-tight tracking-tight text-foreground break-words sm:text-4xl lg:text-5xl">
                   {goal.title}
                 </h1>
               </div>
@@ -406,18 +406,18 @@ export default function GoalDetailPage() {
                     <MoreHorizontal className="h-5 w-5 sm:h-6 sm:w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl">
-                  <DropdownMenuItem className="rounded-xl font-bold" onSelect={() => setShowEditPanel(true)}>
-                    <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit Goal
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-sm">
+                  <DropdownMenuItem className="rounded-xl font-medium" onSelect={() => setShowEditPanel(true)}>
+                    <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit
                   </DropdownMenuItem>
                   {!isCompleted && (
-                    <DropdownMenuItem className="rounded-xl font-bold" disabled={isMutatingStatus} onSelect={() => updateStatus("completed", "Goal completed!")}>
-                      <CheckCircle2 className="mr-3 h-4 w-4 text-blue-500" /> Mark Complete
+                    <DropdownMenuItem className="rounded-xl font-medium" disabled={isMutatingStatus} onSelect={() => updateStatus("completed", "Goal completed!")}>
+                      <CheckCircle2 className="mr-3 h-4 w-4 text-blue-500" /> Mark complete
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator className="my-2" />
-                  <DropdownMenuItem variant="destructive" className="rounded-xl font-bold" onSelect={() => setShowDeleteDialog(true)}>
-                    <Trash2 className="mr-3 h-4 w-4" /> Delete Goal
+                  <DropdownMenuItem variant="destructive" className="rounded-xl font-medium" onSelect={() => setShowDeleteDialog(true)}>
+                    <Trash2 className="mr-3 h-4 w-4" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -425,16 +425,16 @@ export default function GoalDetailPage() {
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 sm:text-xs">
-              <span>Goal Progress</span>
-              <span className="text-xs font-bold text-primary sm:text-sm">{taskProgress}%</span>
+            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground/60 sm:text-xs">
+              <span>Progress</span>
+              <span className="text-xs font-semibold text-primary sm:text-sm">{taskProgress}%</span>
             </div>
-            <div className="relative h-3 w-full overflow-hidden rounded-full bg-foreground/5 shadow-inner sm:h-4">
+            <div className="relative h-3 w-full overflow-hidden rounded-full bg-foreground/5 sm:h-4">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${taskProgress}%` }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                className="h-full rounded-full shadow-lg"
+                className="h-full rounded-full"
                 style={{ background: progressGradient(taskProgress) }}
               />
             </div>
@@ -453,38 +453,38 @@ export default function GoalDetailPage() {
       {/* Content Tabs */}
       <Tabs value={tab} onValueChange={changeTab} className="flex-col space-y-6 sm:space-y-8">
         <div className="no-scrollbar overflow-x-auto pb-1">
-          <TabsList className="inline-flex h-12 w-auto min-w-full justify-start gap-1 rounded-[1.25rem] bg-foreground/5 p-1.5 backdrop-blur-sm sm:h-14 sm:gap-2 sm:rounded-2xl sm:p-2 sm:justify-center">
-            <TabsTrigger value="overview" className="rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide sm:rounded-xl sm:px-6 sm:text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="tasks" className="rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide sm:rounded-xl sm:px-6 sm:text-xs">Tasks</TabsTrigger>
-            <TabsTrigger value="members" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide sm:rounded-xl sm:px-6 sm:text-xs">
+          <TabsList className="inline-flex h-12 w-auto min-w-full justify-start gap-1 rounded-2xl bg-foreground/5 p-1.5 backdrop-blur-sm sm:h-14 sm:gap-2 sm:p-2 sm:justify-center">
+            <TabsTrigger value="overview" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Overview</TabsTrigger>
+            <TabsTrigger value="tasks" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Tasks</TabsTrigger>
+            <TabsTrigger value="members" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">
               <Users size={12} className="sm:size-3.5" /> Members
               {memberCount > 0 && <span className="tabular-nums opacity-60">{memberCount}</span>}
             </TabsTrigger>
-            <TabsTrigger value="coach" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide sm:rounded-xl sm:px-6 sm:text-xs">
+            <TabsTrigger value="coach" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">
               <Sparkles size={12} className="sm:size-3.5" /> Coach
             </TabsTrigger>
-            {isOwner && <TabsTrigger value="settings" className="rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide sm:rounded-xl sm:px-6 sm:text-xs">Settings</TabsTrigger>}
+            {isOwner && <TabsTrigger value="settings" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Settings</TabsTrigger>}
           </TabsList>
         </div>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:rounded-3xl sm:p-8">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">Description</h3>
+            <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+              <h3 className="text-sm font-semibold text-foreground">Description</h3>
               <p className="mt-4 text-base font-medium leading-relaxed text-foreground/80">
                 {goal.description || "No description provided."}
               </p>
             </Card>
 
             {deadlineInfo && (
-              <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:rounded-3xl sm:p-8">
-                <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">Timeline</h3>
+              <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+                <h3 className="text-sm font-semibold text-foreground">Timeline</h3>
                 <div className="mt-6 space-y-6">
-                  <div className="flex items-center justify-between font-bold uppercase tracking-wide">
+                  <div className="flex items-center justify-between font-medium">
                     <span className="text-[11px] text-muted-foreground/60">Time Elapsed</span>
                     <span className="text-xs text-foreground">{deadlineInfo.daysElapsed} / {deadlineInfo.totalDays} days</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5 shadow-inner">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${deadlineInfo.progressPercentage}%` }}
@@ -509,14 +509,14 @@ export default function GoalDetailPage() {
           />
 
           <div>
-            <h3 className="mb-4 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+            <h3 className="mb-4 px-1 text-sm font-semibold text-foreground">
               Smart analytics
             </h3>
             <SmartAnalytics tasks={tasks} targetDate={goal.target_date} />
           </div>
         </TabsContent>
 
-        <TabsContent value="tasks" className="rounded-[1.75rem] border border-border bg-card/50 p-1 shadow-2xl overflow-hidden sm:rounded-3xl">
+        <TabsContent value="tasks" className="rounded-2xl border border-border bg-card/50 p-1 shadow-sm overflow-hidden">
           <div className="h-[clamp(420px,75dvh,700px)]">
             <Calendar
               goalId={id}
@@ -528,8 +528,8 @@ export default function GoalDetailPage() {
 
         <TabsContent value="members" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+            <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+              <h3 className="text-sm font-semibold text-foreground">
                 People on this goal
               </h3>
               {members.length === 0 ? (
@@ -552,23 +552,23 @@ export default function GoalDetailPage() {
                     return (
                       <li key={m.id} className="flex items-center gap-3 rounded-xl p-2">
                         <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
+                          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                             {name.slice(0, 1).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-foreground">
+                          <p className="truncate text-sm font-semibold text-foreground">
                             {name}
                             {isSelf && <span className="ml-1 text-muted-foreground/60">(you)</span>}
                           </p>
-                          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+                          <p className="text-[11px] font-medium text-muted-foreground/50">
                             {m.role}
                           </p>
                         </div>
                         {isCreator ? (
                           <Badge
                             variant="secondary"
-                            className="border-none bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary"
+                            className="border-none bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary"
                           >
                             Owner
                           </Badge>
@@ -576,7 +576,7 @@ export default function GoalDetailPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-lg text-xs font-bold text-muted-foreground hover:text-destructive"
+                            className="rounded-lg text-xs font-semibold text-muted-foreground hover:text-destructive"
                             onClick={leaveGoal}
                           >
                             <LogOut size={14} /> Leave
@@ -601,8 +601,8 @@ export default function GoalDetailPage() {
             </Card>
 
             {isOwner && (
-              <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
-                <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+              <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+                <h3 className="text-sm font-semibold text-foreground">
                   Invite members
                 </h3>
                 <p className="mt-2 mb-6 text-sm font-medium leading-relaxed text-muted-foreground">
@@ -633,15 +633,15 @@ export default function GoalDetailPage() {
 
         {isOwner && (
           <TabsContent value="settings" className="space-y-6">
-            <Card className="overflow-hidden rounded-3xl border-border bg-card/50 shadow-sm">
+            <Card className="overflow-hidden rounded-2xl border-border bg-card/50 shadow-sm">
               <div className="divide-y divide-border/60">
-                <SettingsRow title="Edit Goal" description="Update details, dates, and visuals." action={<Button variant="outline" className="rounded-xl font-bold" onClick={() => setShowEditPanel(true)}>Edit</Button>} />
+                <SettingsRow title="Edit Goal" description="Update details, dates, and visuals." action={<Button variant="outline" className="rounded-xl font-semibold" onClick={() => setShowEditPanel(true)}>Edit</Button>} />
                 <SettingsRow title="Target Date" description="Extend or change your deadline." action={<div className="w-56"><DateTimePicker value={goal.target_date ? new Date(goal.target_date) : null} onChange={extendDeadline} /></div>} />
-                <SettingsRow title="Goal Status" description="Archive or reactivate this goal." action={<Button variant="outline" className="rounded-xl font-bold" onClick={() => updateStatus(isArchived ? "active" : "archived", "Status updated")}>{isArchived ? "Unarchive" : "Archive"}</Button>} />
+                <SettingsRow title="Goal Status" description="Archive or reactivate this goal." action={<Button variant="outline" className="rounded-xl font-semibold" onClick={() => updateStatus(isArchived ? "active" : "archived", "Status updated")}>{isArchived ? "Unarchive" : "Archive"}</Button>} />
               </div>
             </Card>
-            <Card className="rounded-3xl border-destructive/20 bg-destructive/[0.02] p-2">
-              <SettingsRow title="Delete Goal" description="Permanently remove this goal and its tasks." action={<Button variant="destructive" className="rounded-xl font-bold" onClick={() => setShowDeleteDialog(true)}>Delete</Button>} />
+            <Card className="rounded-2xl border-destructive/20 bg-destructive/[0.02] p-2">
+              <SettingsRow title="Delete Goal" description="Permanently remove this goal and its tasks." action={<Button variant="destructive" className="rounded-xl font-semibold" onClick={() => setShowDeleteDialog(true)}>Delete</Button>} />
             </Card>
           </TabsContent>
         )}
@@ -655,13 +655,13 @@ export default function GoalDetailPage() {
 
 function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-[1.5rem] border border-border bg-card p-4 shadow-sm dark:bg-slate-900/40 sm:gap-3 sm:rounded-3xl sm:p-6">
-      <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-foreground/5 shadow-inner sm:h-12 sm:w-12 sm:rounded-2xl", color)}>
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm dark:bg-slate-900/40 sm:gap-3 sm:p-6">
+      <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-foreground/5 sm:h-12 sm:w-12", color)}>
         {icon}
       </div>
       <div>
-        <p className="text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
-        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:text-[11px]">{label}</p>
+        <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
+        <p className="text-[9px] font-medium text-muted-foreground/40 sm:text-[11px]">{label}</p>
       </div>
     </div>
   )
@@ -679,7 +679,7 @@ function SettingsRow({
   return (
     <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="min-w-0">
-        <p className="text-sm font-bold text-foreground">{title}</p>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
         <p className="text-xs font-medium leading-relaxed text-muted-foreground">{description}</p>
       </div>
       <div className="shrink-0">{action}</div>

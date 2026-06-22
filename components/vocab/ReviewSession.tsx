@@ -8,8 +8,10 @@ import {
   CheckCircle2,
   ChevronRight,
   Eye,
+  Flame,
   Gauge,
   Headphones,
+  Layers3,
   Lightbulb,
   Loader2,
   RotateCcw,
@@ -23,9 +25,10 @@ import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import { vocabApi } from "@/lib/api"
 import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from "@/lib/srs"
-import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
+import { isCorrectTerm, readBestStreak, shuffle, writeBestStreak } from "@/lib/vocab-review"
 import type { VocabItem } from "@/lib/types"
 import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
+import { toast } from "sonner"
 
 function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
   const distractors = shuffle(pool.filter((w) => w.id !== correct.id)).slice(0, 3)
@@ -237,15 +240,70 @@ function FlashCard({
   )
 }
 
+// ─── Correct-answer reaction ─────────────────────────────────────────────────
+// A celebratory burst shown the instant a test answer is right. The combo
+// (consecutive correct answers this session) escalates the praise so a hot
+// streak feels rewarding and keeps the learner motivated.
+const PRAISE = ["Nice!", "잘했어요!", "Perfect!", "You got it!", "Excellent!", "Spot on!"]
+
+function praiseFor(combo: number): string {
+  if (combo >= 10) return "Unstoppable! 🚀"
+  if (combo >= 5) return "On fire! 🔥"
+  if (combo >= 3) return `${combo} in a row! ⚡`
+  return PRAISE[Math.floor(Math.random() * PRAISE.length)]
+}
+
+// Light haptic tap on supported mobile devices — a tiny "yes!" you can feel.
+function buzz() {
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    navigator.vibrate(15)
+  }
+}
+
+function CorrectReaction({ combo }: { combo: number }) {
+  const message = useMemo(() => praiseFor(combo), [combo])
+  const emojis = combo >= 5 ? ["🔥", "⭐", "🎉", "✨", "💪", "🚀"] : ["🎉", "✨", "⭐", "👏"]
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85, y: 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 420, damping: 18 }}
+      className="relative flex items-center justify-center gap-2 overflow-visible rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-3"
+    >
+      {/* floating emoji burst */}
+      <div className="pointer-events-none absolute inset-x-0 top-0">
+        {emojis.map((e, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0, y: 0 }}
+            animate={{ opacity: [0, 1, 0], y: -52 - i * 3 }}
+            transition={{ duration: 1, delay: i * 0.05, ease: "easeOut" }}
+            className="absolute left-1/2 top-1 text-lg"
+            style={{ marginLeft: (i - (emojis.length - 1) / 2) * 28 }}
+          >
+            {e}
+          </motion.span>
+        ))}
+      </div>
+      <CheckCircle2 size={18} strokeWidth={3} className="text-emerald-600 dark:text-emerald-400" />
+      <span className="text-base font-semibold text-emerald-700 dark:text-emerald-400">{message}</span>
+    </motion.div>
+  )
+}
+
 // ─── Multiple choice ───────────────────────────────────────────────────────────
 function ChoiceCard({
   card,
   allWords,
+  streak,
+  onResult,
   onKnew,
   onLearning,
 }: {
   card: VocabItem
   allWords: VocabItem[]
+  streak: number
+  onResult: (correct: boolean) => void
   onKnew: () => void | Promise<void>
   onLearning: () => void
 }) {
@@ -256,6 +314,9 @@ function ChoiceCard({
   function pick(id: string) {
     if (answered) return
     setSelected(id)
+    const correct = id === card.id
+    onResult(correct)
+    if (correct) buzz()
   }
 
   return (
@@ -315,8 +376,9 @@ function ChoiceCard({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-2"
+            className="mt-2 space-y-3"
           >
+            {selected === card.id && <CorrectReaction combo={streak + 1} />}
             <button
               type="button"
               onClick={() => (selected === card.id ? onKnew() : onLearning())}
@@ -335,10 +397,14 @@ function ChoiceCard({
 // ─── Typed recall ──────────────────────────────────────────────────────────────
 function RecallCard({
   card,
+  streak,
+  onResult,
   onKnew,
   onLearning,
 }: {
   card: VocabItem
+  streak: number
+  onResult: (correct: boolean) => void
   onKnew: () => void | Promise<void>
   onLearning: () => void
 }) {
@@ -348,7 +414,10 @@ function RecallCard({
 
   function submit() {
     if (answered || !answer.trim()) return
-    setResult(isCorrectTerm(answer, card.term) ? "correct" : "incorrect")
+    const correct = isCorrectTerm(answer, card.term)
+    setResult(correct ? "correct" : "incorrect")
+    onResult(correct)
+    if (correct) buzz()
   }
 
   function next() {
@@ -414,7 +483,10 @@ function RecallCard({
             </button>
             <button
               type="button"
-              onClick={() => setResult("incorrect")}
+              onClick={() => {
+                setResult("incorrect")
+                onResult(false)
+              }}
               className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent active:scale-95"
             >
               <Eye size={16} strokeWidth={2.5} />
@@ -432,6 +504,7 @@ function RecallCard({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            {result === "correct" && <CorrectReaction combo={streak + 1} />}
             <div
               className={cn(
                 "flex items-center justify-between gap-3 rounded-2xl border p-4",
@@ -642,12 +715,78 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
   const [reversed, setReversed] = useState(false)
+  // Empty set reviews the whole deck; otherwise restricts the session (and
+  // the quiz-mode distractor pool) to the chosen vocab categories.
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
+  const toggleCategory = useCallback((cat: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(cat)) {
+        next.delete(cat)
+      } else {
+        next.add(cat)
+      }
+      return next
+    })
+  }, [])
   const [queue, setQueue] = useState<VocabItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lapsedIds, setLapsedIds] = useState<Set<string>>(new Set())
   const [knewCount, setKnewCount] = useState(0)
+  // Consecutive correct answers this session (Quiz/Recall) — drives the
+  // escalating correct-answer reaction. Resets on a wrong answer.
+  const [streak, setStreak] = useState(0)
+  // Longest streak reached this session — surfaced on the results screen.
+  const [bestStreak, setBestStreak] = useState(0)
+  // All-time best (persisted) and whether this session beat it.
+  const [allTimeBest, setAllTimeBest] = useState(0)
+  const [isNewRecord, setIsNewRecord] = useState(false)
+  const registerResult = useCallback((correct: boolean) => {
+    setStreak((s) => {
+      const next = correct ? s + 1 : 0
+      setBestStreak((b) => (next > b ? next : b))
+      return next
+    })
+  }, [])
 
-  const canUseChoice = allWords.length >= 4
+  // On session end, reconcile this session's best with the stored all-time best
+  // (read fresh from storage so a record set in another tab still counts).
+  useEffect(() => {
+    if (phase !== "done") return
+    const stored = readBestStreak()
+    if (bestStreak > stored) {
+      writeBestStreak(bestStreak)
+      setAllTimeBest(bestStreak)
+      setIsNewRecord(true)
+    } else {
+      setAllTimeBest(stored)
+      setIsNewRecord(false)
+    }
+  }, [phase, bestStreak])
+
+  // Distinct categories across the whole deck, for the picker — derived at
+  // runtime since vocab categories are free-form strings, not a fixed enum.
+  const categories = useMemo(
+    () => Array.from(new Set(allWords.map((w) => w.category).filter(Boolean))).sort(),
+    [allWords]
+  )
+
+  const filteredAllWords = useMemo(
+    () =>
+      selectedCategories.size === 0
+        ? allWords
+        : allWords.filter((w) => selectedCategories.has(w.category)),
+    [allWords, selectedCategories]
+  )
+  const filteredDueToday = useMemo(
+    () =>
+      selectedCategories.size === 0
+        ? dueToday
+        : dueToday.filter((w) => selectedCategories.has(w.category)),
+    [dueToday, selectedCategories]
+  )
+
+  const canUseChoice = filteredAllWords.length >= 4
 
   // Lock the page behind the full-screen review so only the session scrolls.
   useEffect(() => {
@@ -660,20 +799,54 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   }, [phase])
 
   function startQuiz() {
-    const deck = dueToday.length > 0 ? dueToday : allWords
+    const deck = filteredDueToday.length > 0 ? filteredDueToday : filteredAllWords
     setQueue(shuffle(deck))
     setCurrentIndex(0)
     setLapsedIds(new Set())
     setKnewCount(0)
+    setStreak(0)
+    setBestStreak(0)
+    setPendingSaves(0)
+    setSaveError(false)
     setPhase("quiz")
   }
+
+  // Live sync status for the session header: how many ratings are in flight and
+  // whether the last one failed to persist.
+  const [pendingSaves, setPendingSaves] = useState(0)
+  const [saveError, setSaveError] = useState(false)
+
+  // Persist a rating with one retry. Grading stays optimistic (UI advances
+  // immediately), but a failed save is retried once and then surfaced — so a
+  // dropped review can't silently fail to sync to the user's other devices.
+  const rateWithRetry = useCallback(
+    async (id: string, rating: ReviewRating) => {
+      setPendingSaves((p) => p + 1)
+      try {
+        try {
+          await onRate(id, rating)
+        } catch {
+          await onRate(id, rating) // retry once
+        }
+        setSaveError(false)
+      } catch {
+        setSaveError(true)
+        toast.error("Couldn't save that review", {
+          description: "Check your connection — it may not have synced to your other devices.",
+        })
+      } finally {
+        setPendingSaves((p) => Math.max(0, p - 1))
+      }
+    },
+    [onRate]
+  )
 
   const handleGrade = useCallback(
     (rating: ReviewRating) => {
       const card = queue[currentIndex]
       if (!card) return
-      // Fire-and-forget so grading feels instant; the hook reconciles state.
-      void Promise.resolve(onRate(card.id, rating)).catch(() => {})
+      // Optimistic: advance instantly; rateWithRetry persists + surfaces failures.
+      void rateWithRetry(card.id, rating)
 
       if (rating === "AGAIN") {
         setLapsedIds((prev) => new Set(prev).add(card.id))
@@ -706,14 +879,19 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         setCurrentIndex((i) => i + 1)
       }
     },
-    [queue, currentIndex, onRate]
+    [queue, currentIndex, rateWithRetry]
   )
 
   const total = queue.length
 
   // ── idle ──────────────────────────────────────────────────────────────────
   if (phase === "idle") {
-    const deckSize = dueToday.length > 0 ? dueToday.length : allWords.length
+    const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
+    // A "due review" session (words the SRS scheduled for today) vs. a free
+    // "practice the whole deck" session when nothing is due — kept distinct so
+    // the full-deck fallback never reads as the due count resetting.
+    const isDueSession = filteredDueToday.length > 0
+    const caughtUp = !isDueSession && filteredAllWords.length > 0
     return (
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-3xl">
         {/* Top Header */}
@@ -723,21 +901,68 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Memory Lab</h2>
           <p className="mt-2 text-sm font-medium text-muted-foreground/60">
-            {dueToday.length > 0
-              ? `${dueToday.length} reviews awaiting attention`
-              : "Review your saved dictionary items"}
+            {isDueSession
+              ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
+              : caughtUp
+                ? "You're all caught up — practice your full deck anytime"
+                : "Add words to start building your deck"}
           </p>
         </div>
 
         <div className="flex flex-col gap-6 p-5 sm:p-8">
+          {/* Category Selector — multi-select; restricts the session (and quiz
+              distractor pool) to the chosen categories, or the whole deck if none are picked */}
+          {categories.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <Layers3 size={12} strokeWidth={3} />
+                Categories
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories(new Set())}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                    selectedCategories.size === 0
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                  )}
+                >
+                  All Categories
+                </button>
+                {categories.map((cat) => {
+                  const selected = selectedCategories.has(cat)
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCategory(cat)}
+                      aria-pressed={selected}
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                        selected
+                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                      )}
+                    >
+                      {selected && <CheckCircle2 size={12} strokeWidth={3} />}
+                      {cat}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Deck Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-emerald-600">{dueToday.length}</p>
+              <p className="text-3xl font-bold text-emerald-600">{filteredDueToday.length}</p>
               <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
             </div>
             <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-foreground">{allWords.length}</p>
+              <p className="text-3xl font-bold text-foreground">{filteredAllWords.length}</p>
               <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
             </div>
           </div>
@@ -782,7 +1007,13 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
           >
             <Sparkles size={20} strokeWidth={2.5} />
-            {loading ? "Loading..." : "Enter Session"}
+            {loading
+              ? "Loading..."
+              : deckSize === 0
+                ? "No words yet"
+                : isDueSession
+                  ? `Review ${filteredDueToday.length} due`
+                  : "Practice all words"}
           </button>
         </div>
       </div>
@@ -830,6 +1061,30 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             />
           </div>
 
+          {/* Best streak — only meaningful for the test modes that score answers */}
+          {(mode === "choice" || mode === "recall") && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: isNewRecord ? 0.9 : 1 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.3, type: isNewRecord ? "spring" : "tween", stiffness: 400, damping: 16 }}
+              className={cn(
+                "flex items-center gap-2.5 rounded-2xl border px-5 py-3 text-sm font-semibold",
+                isNewRecord && bestStreak > 0
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                  : "border-orange-500/20 bg-orange-500/5 text-orange-600 dark:text-orange-400"
+              )}
+            >
+              <Flame size={18} strokeWidth={2.5} />
+              {isNewRecord && bestStreak > 0
+                ? `New personal best! 🎉 ${bestStreak} in a row`
+                : bestStreak > 0
+                  ? `Best this session: ${bestStreak} · All-time: ${allTimeBest}`
+                  : allTimeBest > 0
+                    ? `No streak this time — your record is ${allTimeBest}`
+                    : "No streak yet — chain correct answers next time!"}
+            </motion.div>
+          )}
+
           <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -871,6 +1126,33 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
             {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
           </span>
+          {/* Sync status — reassures the user reviews are persisting (and warns if not) */}
+          {(saveError || pendingSaves > 0 || knewCount + lapsedIds.size > 0) && (
+            <span
+              className={cn(
+                "flex items-center gap-1 text-[11px] font-medium",
+                saveError
+                  ? "text-red-500"
+                  : pendingSaves > 0
+                    ? "text-muted-foreground/60"
+                    : "text-emerald-600 dark:text-emerald-400"
+              )}
+            >
+              {saveError ? (
+                <>
+                  <XCircle size={12} strokeWidth={3} /> Not saved
+                </>
+              ) : pendingSaves > 0 ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" /> Saving…
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={12} strokeWidth={3} /> Synced
+                </>
+              )}
+            </span>
+          )}
         </div>
         {/* Live tally: remembered vs. relearning */}
         <div className="flex items-center gap-2.5 text-xs font-bold tabular-nums">
@@ -909,6 +1191,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             ) : mode === "recall" ? (
               <RecallCard
                 card={card}
+                streak={streak}
+                onResult={registerResult}
                 onKnew={() => handleGrade("GOOD")}
                 onLearning={() => handleGrade("AGAIN")}
               />
@@ -921,7 +1205,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             ) : (
               <ChoiceCard
                 card={card}
-                allWords={allWords}
+                allWords={filteredAllWords}
+                streak={streak}
+                onResult={registerResult}
                 onKnew={() => handleGrade("GOOD")}
                 onLearning={() => handleGrade("AGAIN")}
               />

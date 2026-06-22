@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, CalendarDays, Plus } from "lucide-react"
+import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { PageHero } from "@/components/app/page-hero"
@@ -64,17 +64,6 @@ export default function GoalsPage() {
 
   const deadlineMessage = useMemo(() => getDeadlineNotificationMessage(sortedGoals), [sortedGoals])
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        toast.info("Search is coming soon")
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
-
   const handleEditGoal = useCallback((goal: Goal, event: React.MouseEvent) => {
     event.stopPropagation()
     setEditingGoal(goal)
@@ -93,20 +82,20 @@ export default function GoalsPage() {
       <PageHero
         eyebrow="Planner"
         title="Goals"
-        description="Set goals, break them into scheduled tasks, and track every deadline in one place."
-        className="rounded-3xl sm:rounded-3xl"
+        description="Plan goals, schedule tasks, and track every deadline in one place."
+        className="rounded-2xl"
         actions={
           <div className="flex w-full gap-3 sm:w-auto">
-            <Button asChild variant="outline" className="h-11 flex-1 rounded-2xl border-border bg-background/50 font-bold backdrop-blur-sm sm:flex-none sm:px-6">
+            <Button asChild variant="outline" className="h-11 flex-1 rounded-xl border-border bg-background/50 font-medium backdrop-blur-sm sm:flex-none sm:px-6">
               <Link href="/goals/calendar">
-                <CalendarDays size={18} strokeWidth={2.5} className="mr-2" />
+                <CalendarDays size={18} strokeWidth={2} className="mr-2" />
                 Calendar
               </Link>
             </Button>
-            <Button asChild className="h-11 flex-1 rounded-2xl bg-blue-600 font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-500 sm:flex-none sm:px-6">
+            <Button asChild className="h-11 flex-1 rounded-xl bg-blue-600 font-semibold hover:bg-blue-500 sm:flex-none sm:px-6">
               <Link href="/goals/create">
-                <Plus size={18} strokeWidth={2.5} className="mr-2" />
-                New Goal
+                <Plus size={18} strokeWidth={2} className="mr-2" />
+                New goal
               </Link>
             </Button>
           </div>
@@ -118,8 +107,8 @@ export default function GoalsPage() {
       />
 
       {deadlineMessage && (
-        <div className="flex items-center gap-3 rounded-[1.5rem] border border-amber-500/20 bg-amber-500/5 px-5 py-4 text-sm font-bold text-amber-700 dark:text-amber-300">
-          <AlertTriangle size={20} strokeWidth={2.5} className="shrink-0 text-amber-500" />
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4 text-sm font-medium text-amber-700 dark:text-amber-300">
+          <AlertTriangle size={20} strokeWidth={2} className="shrink-0 text-amber-500" />
           {deadlineMessage}
         </div>
       )}
@@ -140,16 +129,16 @@ export default function GoalsPage() {
                       setCurrentPage(1)
                     }}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold uppercase tracking-wide transition-all",
+                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm capitalize transition-all",
                       isSelected
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground/60 hover:text-foreground hover:bg-background/40"
+                        ? "bg-background font-semibold text-foreground shadow-sm"
+                        : "font-medium text-muted-foreground/60 hover:text-foreground hover:bg-background/40"
                     )}
                   >
                     {tab}
                     <span
                       className={cn(
-                        "rounded-lg px-2 py-0.5 text-[11px] font-bold tabular-nums",
+                        "rounded-lg px-2 py-0.5 text-[11px] font-medium tabular-nums",
                         isSelected ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-foreground/5 text-muted-foreground/40"
                       )}
                     >
@@ -173,34 +162,36 @@ export default function GoalsPage() {
           />
 
           {filteredTotalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 pt-4">
+            <div className="flex items-center justify-center gap-3 pt-4">
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
-                className="h-10 rounded-xl font-bold"
+                aria-label="Previous page"
+                className="h-9 w-9 rounded-xl"
               >
-                Previous
+                <ChevronLeft size={18} />
               </Button>
-              <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/60 tabular-nums">
-                Page {currentPage} of {filteredTotalPages}
+              <span className="min-w-[5rem] text-center text-xs font-medium text-muted-foreground/70 tabular-nums">
+                {currentPage} / {filteredTotalPages}
               </span>
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 disabled={currentPage >= filteredTotalPages}
                 onClick={() => setCurrentPage(currentPage + 1)}
-                className="h-10 rounded-xl font-bold"
+                aria-label="Next page"
+                className="h-9 w-9 rounded-xl"
               >
-                Next
+                <ChevronRight size={18} />
               </Button>
             </div>
           )}
         </div>
 
         <aside className="xl:sticky xl:top-8 xl:self-start">
-          <TodaysTasks className="shadow-2xl shadow-blue-600/5" />
+          <TodaysTasks />
         </aside>
       </div>
 

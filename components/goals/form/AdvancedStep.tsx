@@ -35,7 +35,7 @@ export function AdvancedStep({ form, onPrevStep, onSubmit, isSubmitting, isEdit 
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h3 className="text-lg font-semibold">AI Task Generation</h3>
+        <h3 className="text-lg font-semibold">AI task generation</h3>
         <p className="text-sm text-muted-foreground">
           Let AI create a personalized action plan to help you achieve your goal.
         </p>
@@ -50,7 +50,7 @@ export function AdvancedStep({ form, onPrevStep, onSubmit, isSubmitting, isEdit 
               <div className="flex-1 space-y-0.5 pr-4">
                 <FormLabel className="flex items-center gap-2 text-base font-semibold">
                   <Sparkles className="h-5 w-5 text-primary" />
-                  Generate Daily Action Plan with AI
+                  Generate daily action plan with AI
                 </FormLabel>
                 <p className="mt-2 text-sm text-muted-foreground">
                   AI will analyze your goal and create daily tasks and milestones.
@@ -69,7 +69,7 @@ export function AdvancedStep({ form, onPrevStep, onSubmit, isSubmitting, isEdit 
             name="ai_prompt"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium">Additional Instructions (Optional)</FormLabel>
+                <FormLabel className="text-sm font-medium">Additional instructions (optional)</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="E.g., I prefer morning workouts, focus on beginner tasks"
@@ -98,7 +98,7 @@ export function AdvancedStep({ form, onPrevStep, onSubmit, isSubmitting, isEdit 
           ) : (
             <>
               {generateTasksWithAI ? <Sparkles className="h-4 w-4" /> : <Target className="h-4 w-4" />}
-              {isEdit ? "Update Goal" : generateTasksWithAI ? "Create & Generate Tasks" : "Create Goal"}
+              {isEdit ? "Update goal" : generateTasksWithAI ? "Create & generate tasks" : "Create goal"}
             </>
           )}
         </Button>

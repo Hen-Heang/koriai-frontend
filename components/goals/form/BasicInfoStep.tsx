@@ -96,7 +96,7 @@ export function BasicInfoStep({ form, onNextStep, selectedGoalType }: BasicInfoS
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-xl transition-all hover:border-primary/40 hover:bg-primary/20"
                     >
                       {iconField.value || (
-                        <span className="text-sm font-bold text-primary">
+                        <span className="text-sm font-semibold text-primary">
                           {field.value?.trim().charAt(0).toUpperCase() || "G"}
                         </span>
                       )}
@@ -145,7 +145,7 @@ export function BasicInfoStep({ form, onNextStep, selectedGoalType }: BasicInfoS
           name="start_date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium">Start Date</FormLabel>
+              <FormLabel className="text-sm font-medium">Start date</FormLabel>
               <DateTimePicker
                 granularity="day"
                 value={field.value ?? new Date()}
@@ -161,7 +161,7 @@ export function BasicInfoStep({ form, onNextStep, selectedGoalType }: BasicInfoS
           name="target_date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium">Target Date</FormLabel>
+              <FormLabel className="text-sm font-medium">Target date</FormLabel>
               <DateTimePicker
                 granularity="day"
                 value={field.value ?? null}

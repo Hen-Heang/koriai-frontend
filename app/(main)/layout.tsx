@@ -185,10 +185,16 @@ export default function MainLayout({
     }
   }, [])
 
+  useEffect(() => {
+    if (mounted && !isAuthenticated()) {
+      router.replace("/login")
+    }
+  }, [mounted, router])
+
   if (!mounted) return null
 
+  // Redirect is handled by the effect above; render nothing until it kicks in.
   if (!isAuthenticated()) {
-    router.replace("/login")
     return null
   }
 
@@ -240,25 +246,25 @@ export default function MainLayout({
                       href={href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "group relative flex items-center gap-3 rounded-2xl px-4 py-2.5 text-[14px] font-bold transition-all",
+                        "group relative flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-colors",
                         active
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                          ? "bg-blue-500/10 text-blue-700 dark:bg-blue-400/12 dark:text-blue-300"
                           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground dark:hover:bg-white/5"
                       )}
                     >
                       {active && (
                         <motion.span
                           layoutId="sidebar-active-bar"
-                          className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-white"
+                          className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-blue-600 dark:bg-blue-400"
                           transition={{ type: "spring", stiffness: 400, damping: 32 }}
                         />
                       )}
                       <Icon
                         size={18}
-                        strokeWidth={2.5}
+                        strokeWidth={2.25}
                         className={cn(
                           "shrink-0 transition-transform",
-                          active ? "scale-105" : "group-hover:scale-110 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                          active ? "text-blue-600 dark:text-blue-400" : "group-hover:scale-110 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                         )}
                       />
                       {label}
@@ -269,26 +275,23 @@ export default function MainLayout({
             ))}
           </nav>
 
-          {/* AI badge */}
-          <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 shadow-sm">
-            <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
+          {/* AI status */}
+          <div className="mx-4 mb-3 flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                <Sparkles size={12} strokeWidth={2.5} />
-                <span className="text-[10px] font-bold uppercase tracking-wide">AI Active</span>
-              </div>
-              <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground/70">
-                Monitoring your fluency live
+              <p className="text-[11px] font-semibold text-foreground/80">AI Coach online</p>
+              <p className="mt-0.5 truncate text-[10.5px] font-medium text-muted-foreground/60">
+                Real-time Korean feedback
               </p>
             </div>
           </div>
 
           {/* Theme + bottom */}
           <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/40">
               © 2026 Hen Heang
             </span>
             <ThemeToggle />
@@ -348,9 +351,12 @@ export default function MainLayout({
               </h2>
             </div>
             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 shadow-sm">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-foreground/60 text-nowrap">AI Sync Active</span>
+               <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-1.5">
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground text-nowrap">AI Coach Online</span>
                </div>
                <LevelBadge />
                <NotificationBell />
@@ -396,7 +402,7 @@ export default function MainLayout({
           aria-hidden={isKeyboardOpen}
         >
           <div className="mx-auto max-w-md px-2 sm:px-3.5">
-            <div className="relative flex items-center justify-around rounded-[1.75rem] border border-border/80 bg-background/70 p-1 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-[32px] ring-1 ring-black/[0.04] dark:border-white/15 dark:bg-slate-900/60 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:ring-white/10">
+            <div className="relative flex items-center justify-around rounded-[1.75rem] border border-border/80 bg-background/70 p-1 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-[32px] ring-1 ring-black/4 dark:border-white/15 dark:bg-slate-900/60 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:ring-white/10">
               
               {/* Sliding Active Indicator (Telegram-style) */}
               <AnimatePresence initial={false}>
@@ -440,7 +446,7 @@ export default function MainLayout({
                         strokeWidth={active ? 2.8 : 2.2}
                         className={cn(
                           "transition-all duration-300",
-                          active ? "scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" : "scale-100"
+                          active ? "scale-110" : "scale-100"
                         )}
                       />
                     </div>
@@ -475,7 +481,7 @@ export default function MainLayout({
                     strokeWidth={onMoreRoute ? 2.8 : 2.2}
                     className={cn(
                       "transition-all duration-300",
-                      onMoreRoute ? "scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" : "scale-100"
+                      onMoreRoute ? "scale-110" : "scale-100"
                     )}
                   />
                 </div>

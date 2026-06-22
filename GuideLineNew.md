@@ -531,6 +531,15 @@ Use:
 * Clean Dashboard Layout
 * Professional SaaS UI
 
+Design System (keep every screen consistent):
+
+* One radius — `rounded-2xl` for cards and inputs (no arbitrary radii)
+* Calm elevation — borders + subtle `shadow-sm`; no heavy drop shadows or decorative glows
+* `lucide-react` icons at `strokeWidth={2}`; a single blue accent on neutral surfaces, semantic colors only for status
+* Typographic hierarchy — bold only for page titles and key numbers; semibold card titles; medium/muted labels; sentence case (no `uppercase tracking-wide` eyebrows)
+* Icon-only controls where meaning is obvious (view toggles, pagination); text for primary actions and navigation
+* Brand: **Hengo** — logo at `public/hengo-icon.svg`
+
 Pages:
 
 Landing Page
