@@ -33,24 +33,8 @@ export function isCorrectTerm(input: string, term: string): boolean {
   return variants.has(answer)
 }
 
-// All-time best correct-streak in vocab tests (Quiz/Recall), persisted across
-// sessions in localStorage. Guarded so it's a no-op server-side and in tests.
-export const BEST_STREAK_KEY = "vocab_best_streak"
-
-export function readBestStreak(): number {
-  if (typeof localStorage === "undefined") return 0
-  const v = Number(localStorage.getItem(BEST_STREAK_KEY))
-  return Number.isFinite(v) && v > 0 ? v : 0
-}
-
-export function writeBestStreak(value: number) {
-  if (typeof localStorage === "undefined") return
-  try {
-    localStorage.setItem(BEST_STREAK_KEY, String(value))
-  } catch {
-    /* ignore quota / privacy-mode errors */
-  }
-}
+// All-time best correct-streak in vocab tests (Quiz/Recall) — see
+// lib/vocab-best-streak-store.ts for the backend-backed store.
 
 export type MasteryFilter = "all" | "weak" | "learning" | "mastered"
 

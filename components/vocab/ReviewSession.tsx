@@ -25,7 +25,8 @@ import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import { vocabApi } from "@/lib/api"
 import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from "@/lib/srs"
-import { isCorrectTerm, readBestStreak, shuffle, writeBestStreak } from "@/lib/vocab-review"
+import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
+import { loadBestStreak, submitBestStreak } from "@/lib/vocab-best-streak-store"
 import type { VocabItem } from "@/lib/types"
 import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
 import { toast } from "sonner"
@@ -730,7 +731,17 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     })
   }, [])
   const [queue, setQueue] = useState<VocabItem[]>([])
+  // Fixed at session start — unlike queue.length, this doesn't grow when an
+  // "Again" grade requeues a card, so the "X / Y" counter and progress bar
+  // stay stable instead of silently inflating mid-session.
+  const [sessionTotal, setSessionTotal] = useState(0)
   const [currentIndex, setCurrentIndex] = useState(0)
+  // Grade actions taken this session. currentIndex doesn't advance on "Again"
+  // (the requeued card's replacement slides into the same array slot), so the
+  // visible "X / Y" counter must track THIS instead — otherwise it freezes on
+  // the same number while a different word is shown, reading as "I just
+  // reviewed this, why does it still say I need to review?"
+  const [attemptsCount, setAttemptsCount] = useState(0)
   const [lapsedIds, setLapsedIds] = useState<Set<string>>(new Set())
   const [knewCount, setKnewCount] = useState(0)
   // Consecutive correct answers this session (Quiz/Recall) — drives the
@@ -750,17 +761,29 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   }, [])
 
   // On session end, reconcile this session's best with the stored all-time best
-  // (read fresh from storage so a record set in another tab still counts).
+  // (read fresh from the backend so a record set on another device still counts).
   useEffect(() => {
     if (phase !== "done") return
-    const stored = readBestStreak()
-    if (bestStreak > stored) {
-      writeBestStreak(bestStreak)
-      setAllTimeBest(bestStreak)
-      setIsNewRecord(true)
-    } else {
-      setAllTimeBest(stored)
-      setIsNewRecord(false)
+    let active = true
+    ;(async () => {
+      try {
+        const stored = await loadBestStreak()
+        if (bestStreak > stored) {
+          const next = await submitBestStreak(bestStreak)
+          if (!active) return
+          setAllTimeBest(next)
+          setIsNewRecord(true)
+        } else {
+          if (!active) return
+          setAllTimeBest(stored)
+          setIsNewRecord(false)
+        }
+      } catch {
+        /* best-effort — the session result itself isn't affected */
+      }
+    })()
+    return () => {
+      active = false
     }
   }, [phase, bestStreak])
 
@@ -801,7 +824,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   function startQuiz() {
     const deck = filteredDueToday.length > 0 ? filteredDueToday : filteredAllWords
     setQueue(shuffle(deck))
+    setSessionTotal(deck.length)
     setCurrentIndex(0)
+    setAttemptsCount(0)
     setLapsedIds(new Set())
     setKnewCount(0)
     setStreak(0)
@@ -847,6 +872,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
       if (!card) return
       // Optimistic: advance instantly; rateWithRetry persists + surfaces failures.
       void rateWithRetry(card.id, rating)
+      setAttemptsCount((a) => a + 1)
 
       if (rating === "AGAIN") {
         setLapsedIds((prev) => new Set(prev).add(card.id))
@@ -882,7 +908,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     [queue, currentIndex, rateWithRetry]
   )
 
-  const total = queue.length
+  // Stays fixed for the duration of the session — see sessionTotal above.
+  const total = sessionTotal || queue.length
 
   // ── idle ──────────────────────────────────────────────────────────────────
   if (phase === "idle") {
@@ -1124,7 +1151,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         <div className="flex items-center gap-3">
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
           <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
-            {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
+            {Math.min(attemptsCount + 1, total)} <span className="opacity-20 mx-1">/</span> {total}
           </span>
           {/* Sync status — reassures the user reviews are persisting (and warns if not) */}
           {(saveError || pendingSaves > 0 || knewCount + lapsedIds.size > 0) && (
@@ -1160,7 +1187,14 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <CheckCircle2 size={13} strokeWidth={3} />
             {knewCount}
           </span>
-          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+          <span
+            className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+            title={
+              lapsedIds.size > 0
+                ? `${lapsedIds.size} relearning — you'll see ${lapsedIds.size === 1 ? "it" : "them"} again before this session ends`
+                : "Relearning — words graded \"Again\" come back later in this session"
+            }
+          >
             <RotateCcw size={13} strokeWidth={3} />
             {lapsedIds.size}
           </span>
@@ -1170,7 +1204,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
       {/* Smooth Progress Indicator */}
       <div className="h-1 w-full bg-accent/10">
         <motion.div
-          animate={{ width: `${(currentIndex / total) * 100}%` }}
+          animate={{ width: `${Math.min((attemptsCount / total) * 100, 100)}%` }}
           transition={{ duration: 0.5 }}
           className="h-full bg-emerald-500"
         />

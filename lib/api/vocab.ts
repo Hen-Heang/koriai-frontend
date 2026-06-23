@@ -27,4 +27,11 @@ export const vocabApi = {
     api.get(`/vocab/${id}/sentence-challenge`).then((r) => r.data.data),
   checkSentence: (id: string, data: { challengePrompt: string; attempt: string }) =>
     api.post(`/vocab/${id}/check-sentence`, data).then((r) => r.data.data),
+
+  // All-time best correct-streak in quiz/recall review mode, server-backed so
+  // it syncs across devices.
+  getBestStreak: () =>
+    api.get("/vocab/best-streak").then((r) => r.data.data) as Promise<{ bestStreak: number }>,
+  submitBestStreak: (streak: number) =>
+    api.post(`/vocab/best-streak?streak=${streak}`).then((r) => r.data.data) as Promise<{ bestStreak: number }>,
 }

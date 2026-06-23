@@ -24,7 +24,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { useProgress } from "@/hooks/useProgress"
 import { getStudyFocus } from "@/lib/study-focus"
-import { readBestStreak } from "@/lib/vocab-review"
+import {
+  getBestStreak,
+  getBestStreakServerSnapshot,
+  subscribeBestStreak,
+} from "@/lib/vocab-best-streak-store"
 
 // recharts is heavy; defer it so the dashboard shell + above-the-fold cards
 // paint first, then the chart streams in.
@@ -148,16 +152,10 @@ function DashboardLoadingState() {
     </div>
   )
 }
-// Personal-best vocab quiz streak, read from localStorage on mount (client-only
-// to avoid a hydration mismatch). Written by the vocab ReviewSession.
-function subscribeNoop() {
-  return () => {}
-}
-function getServerBestStreak() {
-  return null
-}
+// Personal-best vocab quiz streak, server-backed so it syncs across devices.
+// Written by the vocab ReviewSession.
 function BestQuizStreakCard() {
-  const best = useSyncExternalStore(subscribeNoop, readBestStreak, getServerBestStreak)
+  const best = useSyncExternalStore(subscribeBestStreak, getBestStreak, getBestStreakServerSnapshot)
 
   return (
     <Link
