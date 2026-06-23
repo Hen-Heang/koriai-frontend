@@ -34,14 +34,16 @@ async function load(userId: number): Promise<ProfileAvatar> {
 
   inflight = (async () => {
     try {
-      const user = await userApi.getById(userId)
+      const user = await userApi.getById(userId).catch(() => null)
       const initials = deriveInitials(user?.displayName, user?.email)
       let url: string | null = null
       if (user?.hasProfileImage) {
         url = await userApi.getProfileImageUrl(userId).catch(() => null)
       }
       const data: ProfileAvatar = { url, initials }
-      cache = { id: userId, data }
+      // Don't cache a fallback from a failed fetch — retry on the next mount
+      // instead of sticking with "ME" for the rest of the session.
+      if (user) cache = { id: userId, data }
       return data
     } finally {
       inflight = null
