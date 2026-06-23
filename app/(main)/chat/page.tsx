@@ -197,8 +197,9 @@ function ChatPageContent() {
                   type="button"
                   onClick={() => setMode(id)}
                   aria-current={active ? "true" : undefined}
+                  aria-label={label}
                   className={cn(
-                    "relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
+                    "relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
                     active ? "text-white" : "text-muted-foreground/70 hover:text-foreground"
                   )}
                 >
@@ -209,8 +210,12 @@ function ChatPageContent() {
                       transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
                   )}
-                  <Icon size={14} strokeWidth={2.6} />
-                  <span>{label}</span>
+                  <Icon size={14} strokeWidth={2.6} className="shrink-0" />
+                  {/* On phones only the active tab shows its label so the 4-mode
+                      bar fits; every tab keeps its label from sm up. */}
+                  <span className={cn(active ? "inline" : "hidden", "sm:inline")}>
+                    {label}
+                  </span>
                 </button>
               )
             })}

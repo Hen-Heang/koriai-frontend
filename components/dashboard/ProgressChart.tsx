@@ -12,6 +12,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProgressPoint } from "@/lib/types"
+import { formatDuration } from "@/lib/utils"
 
 function subscribeToHydration(callback: () => void) {
   queueMicrotask(callback)
@@ -78,6 +79,7 @@ export function ProgressChart({ data }: { data: ProgressPoint[] }) {
                 }}
                 labelStyle={{ fontWeight: "900", marginBottom: "4px", color: "var(--color-foreground)", textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.1em" }}
                 itemStyle={{ padding: 0, fontSize: "14px", fontWeight: "bold" }}
+                formatter={(value) => [formatDuration(Number(value)), "Activity"]}
               />
               <Area
                 type="monotone"
