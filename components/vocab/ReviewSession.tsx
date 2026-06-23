@@ -811,9 +811,10 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
   const canUseChoice = filteredAllWords.length >= 4
 
-  // Lock the page behind the full-screen review so only the session scrolls.
+  // Lock the page behind the full-screen review (and results) so only the
+  // session scrolls.
   useEffect(() => {
-    if (phase !== "quiz") return
+    if (phase !== "quiz" && phase !== "done") return
     const previous = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => {
@@ -1054,8 +1055,21 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
     const headline = pct >= 80 ? "Perfect Loop" : pct >= 50 ? "Solid Growth" : "Keep Building"
     
     return (
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 sm:rounded-3xl">
-        <div className="flex flex-col items-center gap-8 px-5 py-10 text-center sm:px-8 sm:py-16">
+      <div className="fixed inset-0 z-[60] flex flex-col bg-background">
+        {/* Stay immersive coming out of the quiz — back button mirrors the
+            session header instead of dropping straight into the page shell. */}
+        <div className="flex items-center border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
+          <button
+            onClick={() => setPhase("idle")}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={20} strokeWidth={2.5} />
+          </button>
+          <span className="ml-3 text-[13px] font-bold uppercase tracking-wide text-foreground">Session Results</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-5 py-10 text-center sm:px-8 sm:py-16">
           <div className="relative">
             <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 shadow-inner ring-1 ring-emerald-500/20">
               <Trophy size={48} strokeWidth={2} />
@@ -1129,6 +1143,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
               Finish Lab
             </button>
           </div>
+        </div>
         </div>
       </div>
     )
