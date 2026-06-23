@@ -138,6 +138,8 @@ const WEATHER_PREP: InterviewPrep = {
     { term: "그립다", meaning: "to miss, to long for" },
     { term: "견디다", meaning: "to endure, to bear" },
     { term: "차이", meaning: "a difference" },
+    // From TalkToMeInKorean "1100 Short & Useful Korean Phrases" (Pattern 009 example).
+    { term: "미세먼지", meaning: "fine dust / particulate pollution" },
   ],
   keyPhrases: [
     { ko: "한국 여름은 정말 덥고 습해요.", en: "Korean summer is really hot and humid." },
@@ -177,6 +179,12 @@ const WEATHER_PREP: InterviewPrep = {
       ko: "이제는 한국 더위를 잘 견딜 수 있어요.",
       en: "Now I can endure the Korean heat well.",
     },
+    // From TalkToMeInKorean "Real-Life Korean Conversations: Intermediate",
+    // Dialogue 02 "Exchanging Numbers" (formal small talk about weather).
+    {
+      ko: "날씨가 추워서 오시느라 고생하셨죠?",
+      en: "It must've been hard to come here because of the cold weather, right?",
+    },
   ],
   sampleQuestions: [
     { ko: "한국의 여름 날씨는 어때요?", en: "How is Korea's summer weather?" },
@@ -215,6 +223,8 @@ const WEATHER_PREP: InterviewPrep = {
       ko: "여름에 더위를 식히기 위해 어떤 음식이나 음료를 마셔요?",
       en: "What food or drinks do you have to cool down in the summer?",
     },
+    // From TalkToMeInKorean "1100 Short & Useful Korean Phrases" (Pattern 024 example).
+    { ko: "날씨 어떤 것 같아요?", en: "What do you think about the weather?" },
   ],
 }
 
