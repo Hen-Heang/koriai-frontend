@@ -101,6 +101,9 @@ export default function ReadingUnitPage() {
   const [savingAll, setSavingAll] = useState(false)
   const [vocabMessage, setVocabMessage] = useState("")
 
+  const [savedSentences, setSavedSentences] = useState<Set<number>>(new Set())
+  const [savingSentence, setSavingSentence] = useState<number | null>(null)
+
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
@@ -150,6 +153,23 @@ export default function ReadingUnitPage() {
       setVocabMessage(getApiErrorMessage(err, "Could not save this word."))
     } finally {
       setSavingWord(null)
+    }
+  }
+
+  // Saves a whole paragraph (not a single word) into its own "Saved Sentences"
+  // deck on the Vocab page — sentence mining, distinct from the word-by-word
+  // flashcard category above.
+  async function handleSaveSentence(index: number, korean: string, english: string) {
+    if (savedSentences.has(index) || savingSentence !== null) return
+    setSavingSentence(index)
+    try {
+      await vocabApi.save({ term: korean, meaning: english, category: "Saved Sentences" })
+      setSavedSentences((prev) => new Set(prev).add(index))
+      toast.success("Sentence saved to your Vocab deck.")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not save this sentence."))
+    } finally {
+      setSavingSentence(null)
     }
   }
 
@@ -330,6 +350,26 @@ export default function ReadingUnitPage() {
                   <p className="flex-1 text-[15px] font-medium leading-8 text-foreground sm:text-base sm:leading-9">
                     <PeekableText text={p.korean} />
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveSentence(i, p.korean, p.english)}
+                    disabled={savedSentences.has(i) || savingSentence === i}
+                    title={savedSentences.has(i) ? "Saved to your Vocab deck" : "Save this sentence to your Vocab deck"}
+                    className={cn(
+                      "mt-1 shrink-0 rounded-xl p-1.5 transition-all active:scale-90",
+                      savedSentences.has(i)
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    )}
+                  >
+                    {savingSentence === i ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : savedSentences.has(i) ? (
+                      <CheckCircle2 size={16} strokeWidth={2.5} />
+                    ) : (
+                      <BookmarkPlus size={16} strokeWidth={2.5} />
+                    )}
+                  </button>
                   <SpeakButton text={p.korean} className="mt-1 shrink-0" />
                 </div>
 
