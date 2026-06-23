@@ -17,12 +17,14 @@ import { PageHero } from "@/components/app/page-hero"
 import { getApiErrorMessage } from "@/lib/api"
 import {
   READING_CATEGORIES,
-  getReadingProgress,
-  getReadingProgressServerSnapshot,
-  subscribeReadingProgress,
   type ReadingCategory,
   type ReadingProgressEntry,
 } from "@/lib/reading"
+import {
+  getReadingProgress,
+  getReadingProgressServerSnapshot,
+  subscribeReadingProgress,
+} from "@/lib/reading-progress-store"
 import {
   getAllReadingUnits,
   getReadingUnitsServerSnapshot,

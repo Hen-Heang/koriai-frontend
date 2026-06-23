@@ -26,16 +26,15 @@ import { SmartPeek } from "@/components/ui/SmartPeek"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { getApiErrorMessage, readingApi, vocabApi } from "@/lib/api"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { READING_CATEGORIES, type ReadingUnit } from "@/lib/reading"
 import {
-  READING_CATEGORIES,
   getReadingProgress,
   getReadingProgressServerSnapshot,
   markUnitCompleted,
   markUnitQuizResult,
   markUnitStarted,
   subscribeReadingProgress,
-  type ReadingUnit,
-} from "@/lib/reading"
+} from "@/lib/reading-progress-store"
 import { deleteReadingUnit } from "@/lib/reading-store"
 import { cn } from "@/lib/utils"
 
@@ -108,7 +107,7 @@ export default function ReadingUnitPage() {
 
   useEffect(() => {
     if (!unit) return
-    markUnitStarted(unit.id)
+    void markUnitStarted(unit.id)
   }, [unit])
 
   if (loadingUnit) {
@@ -182,7 +181,7 @@ export default function ReadingUnitPage() {
     )
     setScore(correct)
     setSubmitted(true)
-    markUnitQuizResult(unit.id, correct, unit.quiz.length)
+    void markUnitQuizResult(unit.id, correct, unit.quiz.length)
   }
 
   function handleRetryQuiz() {
@@ -469,7 +468,7 @@ export default function ReadingUnitPage() {
               <Button
                 type="button"
                 onClick={() => {
-                  markUnitCompleted(unit.id)
+                  void markUnitCompleted(unit.id)
                   void logActivity()
                 }}
                 className="h-10 shrink-0 rounded-xl bg-emerald-600 px-5 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-500 active:scale-95"

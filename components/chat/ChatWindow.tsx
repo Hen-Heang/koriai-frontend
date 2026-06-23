@@ -14,6 +14,7 @@ import { useChat } from "@/hooks/useChat"
 import { useProfileImage } from "@/hooks/useProfileImage"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { ttsApi } from "@/lib/api"
+import { CHAT_PRESETS } from "@/lib/chat-presets"
 import type { ChatMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -218,6 +219,11 @@ export function ChatWindow({
     sendMessage(suggestion.text)
   }
 
+  function startPreset(prompt: string) {
+    if (!conversationId || isStreaming || isLoadingMessages) return
+    sendMessage(prompt)
+  }
+
   const isEmpty = messages.length === 0 && !isLoadingMessages
 
   return (
@@ -338,6 +344,34 @@ export function ChatWindow({
                     ? "Master technical Korean for your career."
                     : "How can I help you practice today?"}
                 </p>
+              </div>
+
+              <div className="w-full max-w-2xl space-y-2.5 px-4">
+                <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                  Practice a scenario
+                </p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {CHAT_PRESETS.map((preset, i) => (
+                    <motion.button
+                      key={preset.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.03 }}
+                      type="button"
+                      disabled={!conversationId || isStreaming}
+                      onClick={() => startPreset(preset.prompt)}
+                      className="group flex flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/50 p-3 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+                    >
+                      <span className="text-lg">{preset.emoji}</span>
+                      <span className="text-[12px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        {preset.label}
+                      </span>
+                      <span className="text-[11px] font-medium leading-snug text-muted-foreground/60">
+                        {preset.description}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2 px-4">

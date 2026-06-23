@@ -2,7 +2,8 @@
 // source of truth; this module keeps an in-memory cache and exposes a
 // useSyncExternalStore-compatible API plus async create/update/delete helpers.
 import { readingApi, type ReadingUnitPayload } from "@/lib/api"
-import { removeUnitProgress, type ReadingUnit } from "@/lib/reading"
+import type { ReadingUnit } from "@/lib/reading"
+import { removeUnitProgress } from "@/lib/reading-progress-store"
 
 export type { ReadingUnitPayload }
 
