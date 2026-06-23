@@ -73,7 +73,7 @@ const WEATHER_SCRIPT_OUTLINE: ScriptSection[] = [
     id: "compare",
     titleKo: "캄보디아 날씨와 비교",
     titleEn: "Compared with Cambodia",
-    hint: "캄보디아 날씨와 어떻게 다른지 비교하세요. 어디가 더 덥고 더 습한지, 건기와 우기의 차이 등.",
+    hint: "캄보디아 날씨와 어떻게 다른지 비교하세요. 어디가 더 덥고 더 습한지, 한국의 사계절과 캄보디아의 건기·우기의 차이, 기후 차이 등을 이야기해 보세요.",
   },
   {
     id: "daily-life",
@@ -91,7 +91,7 @@ const WEATHER_SCRIPT_OUTLINE: ScriptSection[] = [
     id: "reflection",
     titleKo: "나의 경험과 느낀 점",
     titleEn: "My experience & reflection",
-    hint: "처음 한국 여름을 겪었을 때와 지금을 비교해 보세요. '처음에는 ~했지만 지금은 ~' 표현이 유용합니다.",
+    hint: "처음 한국 여름을 겪었을 때와 지금을 비교해 보세요. '처음에는 ~했지만 지금은 ~' 표현이 유용합니다. 적응하다, 견디다, 고향 날씨가 그립다 같은 표현도 써 보세요.",
   },
   {
     id: "conclusion",
@@ -125,6 +125,19 @@ const WEATHER_PREP: InterviewPrep = {
     { term: "일사병", meaning: "heatstroke" },
     { term: "냉방병", meaning: "illness from too much AC" },
     { term: "익숙해지다", meaning: "to get used to (something)" },
+    { term: "건기", meaning: "the dry season (Cambodia)" },
+    { term: "우기", meaning: "the wet/rainy season (Cambodia)" },
+    { term: "기후", meaning: "climate" },
+    { term: "계절", meaning: "season" },
+    { term: "사계절", meaning: "the four seasons" },
+    { term: "폭염", meaning: "a heat wave" },
+    { term: "자외선", meaning: "UV rays" },
+    { term: "그늘", meaning: "shade" },
+    { term: "환절기", meaning: "the changing-of-seasons period" },
+    { term: "적응하다", meaning: "to adapt (to something)" },
+    { term: "그립다", meaning: "to miss, to long for" },
+    { term: "견디다", meaning: "to endure, to bear" },
+    { term: "차이", meaning: "a difference" },
   ],
   keyPhrases: [
     { ko: "한국 여름은 정말 덥고 습해요.", en: "Korean summer is really hot and humid." },
@@ -145,6 +158,24 @@ const WEATHER_PREP: InterviewPrep = {
     {
       ko: "건강을 위해서 무리하지 않으려고 해요.",
       en: "For my health, I try not to overdo it.",
+    },
+    {
+      ko: "캄보디아는 건기와 우기로 나뉘어요.",
+      en: "Cambodia is divided into a dry season and a rainy season.",
+    },
+    {
+      ko: "한국은 사계절이 있지만 캄보디아는 그렇지 않아요.",
+      en: "Korea has four seasons, but Cambodia doesn't.",
+    },
+    {
+      ko: "한국 장마가 캄보디아 우기보다 짧은 것 같아요.",
+      en: "Korea's rainy season seems shorter than Cambodia's wet season.",
+    },
+    { ko: "그늘에 있어도 더울 때가 많아요.", en: "Even in the shade, it's often still hot." },
+    { ko: "고향 날씨가 그리울 때도 있어요.", en: "Sometimes I miss the weather back home." },
+    {
+      ko: "이제는 한국 더위를 잘 견딜 수 있어요.",
+      en: "Now I can endure the Korean heat well.",
     },
   ],
   sampleQuestions: [
@@ -171,6 +202,19 @@ const WEATHER_PREP: InterviewPrep = {
       ko: "여름에 건강을 지키기 위해서 어떻게 해요?",
       en: "How do you stay healthy in the summer?",
     },
+    { ko: "고향 날씨가 그리울 때가 있어요?", en: "Do you ever miss the weather back home?" },
+    {
+      ko: "한국 날씨에 적응하는 데 얼마나 걸렸어요?",
+      en: "How long did it take you to adapt to Korean weather?",
+    },
+    {
+      ko: "캄보디아의 건기와 우기에 대해 설명해 줄 수 있어요?",
+      en: "Can you explain Cambodia's dry and rainy seasons?",
+    },
+    {
+      ko: "여름에 더위를 식히기 위해 어떤 음식이나 음료를 마셔요?",
+      en: "What food or drinks do you have to cool down in the summer?",
+    },
   ],
 }
 
@@ -186,11 +230,11 @@ export const INTERVIEW_TOPICS: InterviewTopic[] = [
     examinerBrief: [
       "The candidate is from Cambodia and is living through a Korean summer right now (June–August).",
       "Follow this natural question arc, one question per turn, going a little deeper each time:",
-      "1) Describe Korea's summer weather (덥다, 습하다, 무덥다, 장마).",
-      "2) Compare it with Cambodia's weather (which is hotter, which is more humid, the dry/rainy seasons).",
-      "3) The rainy season 장마 and daily life (commute, 땀, 에어컨, sleep, 열대야).",
+      "1) Describe Korea's summer weather (덥다, 습하다, 무덥다, 장마, 폭염, 자외선).",
+      "2) Compare it with Cambodia's weather (Korea's 사계절 vs Cambodia's 건기/우기, which is hotter, which is more humid, climate/기후 differences, 차이).",
+      "3) The rainy season 장마 and daily life (commute, 땀, 에어컨, 그늘, sleep, 열대야, 환절기).",
       "4) Health effects of the heat (더위를 먹다, 일사병, 냉방병, tiredness) and how the candidate copes (수분 보충, rest).",
-      "5) A personal reflection (a hard day because of the weather, or how they got used to it: 익숙해지다).",
+      "5) A personal reflection (a hard day because of the weather, missing home weather: 고향이 그립다, or how they adapted/endured: 익숙해지다, 적응하다, 견디다).",
       "Keep vocabulary practical and everyday; encourage the candidate to compare with Cambodia and to give personal examples.",
     ].join("\n"),
     prep: WEATHER_PREP,
