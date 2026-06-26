@@ -27,7 +27,7 @@ import { vocabApi } from "@/lib/api"
 import { formatInterval, previewIntervalDays, RATINGS, type ReviewRating } from "@/lib/srs"
 import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
 import { loadBestStreak, submitBestStreak } from "@/lib/vocab-best-streak-store"
-import type { VocabItem } from "@/lib/types"
+import type { SentenceChallengeResponse, SentenceCheckResponse, VocabItem } from "@/lib/types"
 import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
 import { toast } from "sonner"
 
@@ -43,7 +43,7 @@ function Pronunciation({ text, className }: { text?: string | null; className?: 
   return <p className={cn("font-bold text-muted-foreground/70", className)}>[{text}]</p>
 }
 
-type Mode = "flashcard" | "choice" | "recall" | "listening"
+type Mode = "flashcard" | "choice" | "recall" | "listening" | "sentence"
 type Phase = "idle" | "quiz" | "done"
 
 type ReviewSessionProps = {
@@ -711,6 +711,184 @@ function ListeningCard({
   )
 }
 
+// ─── Sentence writing ──────────────────────────────────────────────────────────
+// Shows the Korean term, fetches an AI challenge prompt, lets the learner write
+// a sentence, then auto-grades the card (≥80 → GOOD, ≥50 → HARD, else → AGAIN).
+function SentenceCard({
+  card,
+  onGrade,
+}: {
+  card: VocabItem
+  onGrade: (rating: ReviewRating) => void | Promise<void>
+}) {
+  const [phase, setPhase] = useState<"loading" | "writing" | "checking" | "result">("loading")
+  const [challenge, setChallenge] = useState<SentenceChallengeResponse | null>(null)
+  const [attempt, setAttempt] = useState("")
+  const [result, setResult] = useState<SentenceCheckResponse | null>(null)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    let active = true
+    setPhase("loading")
+    setError("")
+    setAttempt("")
+    setResult(null)
+    setChallenge(null)
+    vocabApi
+      .getSentenceChallenge(card.id)
+      .then((data) => { if (active) { setChallenge(data); setPhase("writing") } })
+      .catch(() => { if (active) { setError("Could not load challenge — tap Retry."); setPhase("writing") } })
+    return () => { active = false }
+  }, [card.id])
+
+  async function handleCheck() {
+    if (!challenge || !attempt.trim() || phase === "checking") return
+    setPhase("checking")
+    setError("")
+    try {
+      const data = await vocabApi.checkSentence(card.id, {
+        challengePrompt: challenge.challengePrompt,
+        attempt: attempt.trim(),
+      })
+      setResult(data)
+      setPhase("result")
+    } catch {
+      setError("Could not evaluate — please try again.")
+      setPhase("writing")
+    }
+  }
+
+  function advanceCard(rating: ReviewRating) {
+    onGrade(rating)
+  }
+
+  const scoreColor =
+    !result ? ""
+    : result.score >= 80 ? "text-emerald-600 dark:text-emerald-400"
+    : result.score >= 60 ? "text-amber-600 dark:text-amber-400"
+    : "text-red-600 dark:text-red-400"
+
+  const scoreBg =
+    !result ? ""
+    : result.score >= 80 ? "border-emerald-500/20 bg-emerald-500/5"
+    : result.score >= 60 ? "border-amber-500/20 bg-amber-500/5"
+    : "border-red-500/20 bg-red-500/5"
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Prompt card */}
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:p-10">
+        <span className="mb-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Write a Sentence</span>
+        <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">
+          {card.term}
+        </p>
+        {card.pronunciation && (
+          <p className="mt-3 text-lg font-bold text-muted-foreground/50 sm:text-2xl">[{card.pronunciation}]</p>
+        )}
+        <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/70 [overflow-wrap:anywhere]">{card.meaning}</p>
+        <div className="mt-5">
+          <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
+        </div>
+      </div>
+
+      {error && (
+        <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs font-bold text-destructive">
+          {error}
+        </p>
+      )}
+
+      {phase === "loading" && (
+        <div className="flex items-center gap-2.5 rounded-2xl border border-violet-500/20 bg-violet-500/5 px-4 py-4">
+          <Loader2 size={16} className="animate-spin text-violet-500" />
+          <span className="text-xs font-bold text-muted-foreground">Building your challenge...</span>
+        </div>
+      )}
+
+      {(phase === "writing" || phase === "checking") && challenge && (
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4 space-y-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Task</span>
+            <p className="text-sm font-bold text-foreground leading-relaxed">{challenge.challengePrompt}</p>
+            {challenge.contextHint && (
+              <p className="text-xs font-medium text-muted-foreground/60 italic">{challenge.contextHint}</p>
+            )}
+          </div>
+
+          <textarea
+            value={attempt}
+            onChange={(e) => setAttempt(e.target.value)}
+            disabled={phase === "checking"}
+            placeholder={`Write your Korean sentence using "${card.term}"…`}
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault()
+                void handleCheck()
+              }
+            }}
+            className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/20 disabled:opacity-60 transition-colors"
+          />
+
+          <button
+            type="button"
+            onClick={handleCheck}
+            disabled={!attempt.trim() || phase === "checking"}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 disabled:opacity-40"
+          >
+            {phase === "checking" ? (
+              <><Loader2 size={16} className="animate-spin" /> Evaluating...</>
+            ) : (
+              <><CheckCircle2 size={16} strokeWidth={2.5} /> Check my sentence</>
+            )}
+          </button>
+        </div>
+      )}
+
+      {phase === "result" && result && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          {/* Score */}
+          <div className={cn("rounded-2xl border p-4 flex items-center gap-4", scoreBg)}>
+            <div className={cn("text-4xl font-bold tabular-nums", scoreColor)}>{result.score}</div>
+            <div className="flex-1 min-w-0">
+              <p className={cn("text-xs font-bold uppercase tracking-wide", scoreColor)}>
+                {result.correct ? "Good job" : "Keep practicing"}
+              </p>
+              <p className="mt-1 text-xs font-medium text-muted-foreground/80 leading-relaxed">{result.feedback}</p>
+            </div>
+          </div>
+
+          {result.correctedSentence && result.correctedSentence !== attempt.trim() && (
+            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-3 space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">Corrected</span>
+              <p className="text-sm font-bold text-foreground">{result.correctedSentence}</p>
+            </div>
+          )}
+
+          {result.betterAlternative && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">More natural</span>
+              <p className="text-sm font-bold text-foreground">{result.betterAlternative}</p>
+            </div>
+          )}
+
+          {result.grammarNote && (
+            <div className="flex items-start gap-2 rounded-2xl border border-border bg-accent/5 p-3">
+              <Lightbulb size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-muted-foreground/50" />
+              <p className="text-xs font-medium text-muted-foreground/80 leading-relaxed">{result.grammarNote}</p>
+            </div>
+          )}
+
+          {/* Grade buttons — score drives the recommendation, learner confirms */}
+          <div className="space-y-2">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">How well did you do?</p>
+            <GradeButtons card={card} onGrade={advanceCard} />
+          </div>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSessionProps) {
   // isOpen=false → compact launch card on the vocab page
@@ -1059,7 +1237,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Study Mode</p>
               <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
-                {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening"] as Mode[]).map((m) => (
+                {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening", "sentence"] as Mode[]).map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -1072,7 +1250,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
                     )}
                   >
                     {m === "listening" && <Headphones size={13} strokeWidth={3} />}
-                    {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : "Listen"}
+                    {m === "sentence" && <Sparkles size={13} strokeWidth={3} />}
+                    {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : m === "listening" ? "Listen" : "Write"}
                   </button>
                 ))}
               </div>
@@ -1302,7 +1481,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             exit={{ opacity: 0, scale: 0.98, x: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {mode === "listening" ? (
+            {mode === "sentence" ? (
+              <SentenceCard card={card} onGrade={handleGrade} />
+            ) : mode === "listening" ? (
               <ListeningCard card={card} onGrade={handleGrade} />
             ) : mode === "recall" ? (
               <RecallCard

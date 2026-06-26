@@ -10,10 +10,12 @@ import {
   Archive,
   ArrowLeft,
   CalendarDays,
+  Check,
   CheckCircle2,
   ClipboardList,
   Clock,
   Flag,
+  Loader2,
   LogOut,
   MoreHorizontal,
   Pencil,
@@ -98,6 +100,9 @@ export default function GoalDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isMutatingStatus, setIsMutatingStatus] = useState(false)
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descDraft, setDescDraft] = useState("")
+  const [savingDesc, setSavingDesc] = useState(false)
 
   useEffect(() => {
     try {
@@ -291,6 +296,20 @@ export default function GoalDetailPage() {
     [id, queryClient]
   )
 
+  const saveDescription = useCallback(async () => {
+    if (!goal) return
+    setSavingDesc(true)
+    try {
+      const updated = await goalsApi.update(goal.id, { description: descDraft })
+      queryClient.setQueryData<Goal>(goalKey, (prev) => (prev ? { ...prev, ...updated } : updated))
+      setEditingDesc(false)
+    } catch (e) {
+      toast.error("Could not save description", { description: getApiErrorMessage(e, "Please try again.") })
+    } finally {
+      setSavingDesc(false)
+    }
+  }, [goal, descDraft, queryClient, goalKey])
+
   if (goalLoading) {
     return (
       <div className="space-y-8 pb-12">
@@ -370,7 +389,7 @@ export default function GoalDetailPage() {
         <div className="relative z-10 space-y-6 sm:space-y-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4 sm:gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-3xl font-semibold text-primary sm:h-24 sm:w-24 sm:text-5xl">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-semibold text-primary sm:h-16 sm:w-16 sm:text-3xl">
                 {icon || (goal.title ? goal.title.charAt(0).toUpperCase() : "G")}
               </div>
               <div className="min-w-0 flex-1 space-y-2 sm:space-y-3">
@@ -380,7 +399,7 @@ export default function GoalDetailPage() {
                   </Badge>
                   {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                 </div>
-                <h1 className="text-2xl font-semibold leading-tight tracking-tight text-foreground break-words sm:text-4xl lg:text-5xl">
+                <h1 className="text-2xl font-semibold leading-tight tracking-tight text-foreground break-words sm:text-3xl lg:text-4xl">
                   {goal.title}
                 </h1>
               </div>
@@ -392,18 +411,18 @@ export default function GoalDetailPage() {
                 size="icon"
                 onClick={toggleStar}
                 className={cn(
-                  "h-10 w-10 rounded-xl transition-all sm:h-12 sm:w-12",
+                  "h-9 w-9 rounded-xl transition-all sm:h-10 sm:w-10",
                   goal.isStarred
                     ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
                     : "bg-background/50 text-muted-foreground/30 hover:bg-background hover:text-amber-500"
                 )}
               >
-                <Star className={cn("h-5 w-5 sm:h-6 sm:w-6", goal.isStarred && "fill-current")} />
+                <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", goal.isStarred && "fill-current")} />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl bg-background/50 backdrop-blur-sm sm:h-12 sm:w-12">
-                    <MoreHorizontal className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl bg-background/50 backdrop-blur-sm sm:h-10 sm:w-10">
+                    <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-sm">
@@ -445,7 +464,7 @@ export default function GoalDetailPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <StatCard icon={<ClipboardList size={18} className="sm:size-[22px]" />} label="Tasks" value={`${completedTasks}/${totalTasks}`} color="text-blue-500" />
-        <StatCard icon={<Target size={18} className="sm:size-[22px]" />} label="Progress" value={`${taskProgress}%`} color="text-blue-500" />
+        <StatCard icon={<Users size={18} className="sm:size-[22px]" />} label="Members" value={String(memberCount || 1)} color="text-violet-500" />
         <StatCard icon={<Clock size={18} className="sm:size-[22px]" />} label="Days Left" value={String(deadlineInfo?.daysRemaining ?? "—")} color="text-orange-500" />
         <StatCard icon={<CalendarDays size={18} className="sm:size-[22px]" />} label="Target" value={goal.target_date ? format(new Date(goal.target_date), "MMM d") : "TBD"} color="text-purple-500" />
       </div>
@@ -468,36 +487,70 @@ export default function GoalDetailPage() {
         </div>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+
+          {/* Description — inline editable */}
+          <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-foreground">Description</h3>
-              <p className="mt-4 text-base font-medium leading-relaxed text-foreground/80">
-                {goal.description || "No description provided."}
-              </p>
-            </Card>
+              {!editingDesc && (
+                <button
+                  type="button"
+                  onClick={() => { setDescDraft(goal.description || ""); setEditingDesc(true) }}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground/50 transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <Pencil size={12} strokeWidth={2.5} /> Edit
+                </button>
+              )}
+            </div>
 
-            {deadlineInfo && (
-              <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
-                <h3 className="text-sm font-semibold text-foreground">Timeline</h3>
-                <div className="mt-6 space-y-6">
-                  <div className="flex items-center justify-between font-medium">
-                    <span className="text-[11px] text-muted-foreground/60">Time Elapsed</span>
-                    <span className="text-xs text-foreground">{deadlineInfo.daysElapsed} / {deadlineInfo.totalDays} days</span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${deadlineInfo.progressPercentage}%` }}
-                      className={cn("h-full rounded-full", deadlineStyling?.progressColor || "bg-primary")} 
-                    />
-                  </div>
+            {editingDesc ? (
+              <div className="mt-4 space-y-3">
+                <textarea
+                  autoFocus
+                  value={descDraft}
+                  onChange={(e) => setDescDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setEditingDesc(false)
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void saveDescription()
+                  }}
+                  placeholder="Describe your goal in detail — what success looks like, why it matters, key context…"
+                  rows={5}
+                  className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium leading-relaxed text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void saveDescription()}
+                    disabled={savingDesc}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                  >
+                    {savingDesc ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={3} />}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingDesc(false)}
+                    className="inline-flex h-9 items-center rounded-xl border border-border px-4 text-xs font-semibold text-muted-foreground transition-all hover:bg-accent active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <span className="ml-auto hidden text-[10px] font-medium text-muted-foreground/40 sm:inline">⌘ Enter to save</span>
                 </div>
-              </Card>
+              </div>
+            ) : (
+              <p
+                onClick={() => { setDescDraft(goal.description || ""); setEditingDesc(true) }}
+                className={cn(
+                  "mt-4 cursor-text text-sm font-medium leading-relaxed transition-colors",
+                  goal.description ? "text-foreground/80" : "italic text-muted-foreground/30"
+                )}
+              >
+                {goal.description || "No description yet — click to add one."}
+              </p>
             )}
-          </div>
+          </Card>
 
-          <LearningPracticeCard tasks={tasks} onToggle={toggleTaskCompletion} />
-
+          {/* Sub-goals / Milestones */}
           <GoalMilestones
             goal={goal}
             suggestions={examGoalSuggestions}
@@ -508,10 +561,30 @@ export default function GoalDetailPage() {
             }
           />
 
+          {/* Timeline */}
+          {deadlineInfo && (
+            <Card className="rounded-2xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
+              <h3 className="text-sm font-semibold text-foreground">Timeline</h3>
+              <div className="mt-5 space-y-3">
+                <div className="flex items-center justify-between text-xs font-medium">
+                  <span className="text-muted-foreground/50">Time elapsed</span>
+                  <span className="tabular-nums text-foreground">{deadlineInfo.daysElapsed} / {deadlineInfo.totalDays} days</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${deadlineInfo.progressPercentage}%` }}
+                    className={cn("h-full rounded-full", deadlineStyling?.progressColor || "bg-primary")}
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          <LearningPracticeCard tasks={tasks} onToggle={toggleTaskCompletion} />
+
           <div>
-            <h3 className="mb-4 px-1 text-sm font-semibold text-foreground">
-              Smart analytics
-            </h3>
+            <h3 className="mb-4 px-1 text-sm font-semibold text-foreground">Smart analytics</h3>
             <SmartAnalytics tasks={tasks} targetDate={goal.target_date} />
           </div>
         </TabsContent>
@@ -561,7 +634,7 @@ export default function GoalDetailPage() {
                             {name}
                             {isSelf && <span className="ml-1 text-muted-foreground/60">(you)</span>}
                           </p>
-                          <p className="text-[11px] font-medium text-muted-foreground/50">
+                          <p className="text-[11px] font-medium capitalize text-muted-foreground/50">
                             {m.role}
                           </p>
                         </div>
@@ -661,7 +734,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
       </div>
       <div>
         <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
-        <p className="text-[9px] font-medium text-muted-foreground/40 sm:text-[11px]">{label}</p>
+        <p className="text-[10px] font-medium text-muted-foreground/40 sm:text-[11px]">{label}</p>
       </div>
     </div>
   )

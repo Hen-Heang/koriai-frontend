@@ -16,8 +16,6 @@ import {
   Palette,
   ShieldCheck,
   Sun,
-  Zap,
-  Activity,
   Globe,
   Briefcase,
   NotebookPen,
@@ -26,12 +24,14 @@ import {
   Bell,
   Send,
   AlarmClock,
+  Trophy,
+  Check,
+  Map,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 
-import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -64,28 +64,36 @@ function SectionCard({ children, className }: { children: React.ReactNode; class
 
 function SectionRow({ children, last }: { children: React.ReactNode; last?: boolean }) {
   return (
-    <div className={cn("px-6 py-5", !last && "border-b border-border/60")}>
+    <div className={cn("px-5 py-4", !last && "border-b border-border/60")}>
       {children}
     </div>
   )
 }
 
-function SectionHeader({ icon: Icon, title, description, color = "text-blue-600" }: {
+function SectionHeader({ icon: Icon, title, description, color = "text-blue-500" }: {
   icon: React.ElementType
   title: string
-  description: string
+  description?: string
   color?: string
 }) {
   return (
-    <div className="flex items-center gap-4">
-      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/5 ring-1 ring-border/50", color)}>
-        <Icon size={20} strokeWidth={2.5} />
+    <div className="flex items-center gap-3">
+      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/5", color)}>
+        <Icon size={15} strokeWidth={2} />
       </div>
       <div>
-        <p className="text-sm font-bold text-foreground uppercase tracking-wider">{title}</p>
-        <p className="text-[12px] font-medium text-muted-foreground">{description}</p>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        {description && <p className="text-[11px] font-medium text-muted-foreground/50">{description}</p>}
       </div>
     </div>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground/50 px-1">
+      {children}
+    </label>
   )
 }
 
@@ -93,7 +101,7 @@ function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
   icon: React.ElementType
   title: string
   description: string
-  color: "violet" | "blue" | "amber"
+  color: "violet" | "blue" | "amber" | "emerald"
   onClick: () => void
 }) {
   return (
@@ -102,29 +110,31 @@ function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
         type="button"
         onClick={onClick}
         className={cn(
-          "group flex w-full items-center justify-between px-6 py-5 text-left transition-all active:scale-[0.98]",
+          "group flex w-full items-center justify-between px-5 py-4 text-left transition-all active:scale-[0.98]",
           color === "violet" && "hover:bg-violet-500/5",
           color === "blue" && "hover:bg-blue-500/5",
-          color === "amber" && "hover:bg-amber-500/5"
+          color === "amber" && "hover:bg-amber-500/5",
+          color === "emerald" && "hover:bg-emerald-500/5",
         )}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:scale-110",
-              color === "violet" && "bg-violet-500/10 text-violet-500 ring-violet-500/20",
-              color === "blue" && "bg-blue-500/10 text-blue-500 ring-blue-500/20",
-              color === "amber" && "bg-amber-500/10 text-amber-500 ring-amber-500/20"
+              "flex h-9 w-9 items-center justify-center rounded-2xl transition-transform group-hover:scale-110",
+              color === "violet" && "bg-violet-500/10 text-violet-500",
+              color === "blue" && "bg-blue-500/10 text-blue-500",
+              color === "amber" && "bg-amber-500/10 text-amber-500",
+              color === "emerald" && "bg-emerald-500/10 text-emerald-500",
             )}
           >
-            <Icon size={18} strokeWidth={2.5} />
+            <Icon size={17} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-sm font-bold text-foreground uppercase tracking-wider">{title}</p>
-            <p className="text-xs font-medium text-muted-foreground/60">{description}</p>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
+            <p className="text-[11px] font-medium text-muted-foreground/50">{description}</p>
           </div>
         </div>
-        <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+        <ChevronRight size={15} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
       </button>
     </SectionCard>
   )
@@ -132,27 +142,18 @@ function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
 } as const
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 } as const
 
 const themeOptions = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Laptop },
+  { value: "system", label: "Auto", icon: Laptop },
 ] as const
 
 export default function SettingsPage() {
@@ -206,8 +207,6 @@ export default function SettingsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Study reminders save eagerly on each change. Optimistically update local
-  // state, persist, and revert + toast on failure.
   async function saveStudyReminders(enabled: boolean, hour: number) {
     const userId = getUserId()
     if (!userId) return
@@ -229,7 +228,7 @@ export default function SettingsPage() {
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    e.target.value = "" // allow re-selecting the same file later
+    e.target.value = ""
     if (!file) return
     const userId = getUserId()
     if (!userId) return
@@ -247,7 +246,6 @@ export default function SettingsPage() {
       await userApi.uploadProfileImage(userId, file)
       const url = await userApi.getProfileImageUrl(userId)
       setAvatarUrl(url)
-      // Bust the shared avatar cache so the navbar + chat show the new photo.
       refreshProfileImage()
     } catch {
       setError("Could not upload image. Please try again.")
@@ -294,14 +292,12 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
-    // Best-effort server-side revoke so the refresh token can't be reused; clear
-    // local state and redirect regardless of whether the call succeeds.
     const refreshToken = getRefreshToken()
     if (refreshToken) {
       try {
         await authApi.logout(refreshToken)
       } catch {
-        /* ignore — proceed with local logout */
+        /* ignore */
       }
     }
     clearAuth()
@@ -315,39 +311,31 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="mt-4 h-11 w-48" />
-            <Skeleton className="mt-3 h-5 w-full max-w-sm" />
-            <div className="mt-6 flex gap-3">
-              <Skeleton className="h-10 w-28 rounded-xl" />
-            </div>
-          </div>
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center gap-5">
-              <Skeleton className="h-16 w-16 rounded-2xl" />
+        <div className="space-y-4">
+          <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-14 w-14 rounded-2xl" />
               <div className="flex-1">
-                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-5 w-32" />
                 <Skeleton className="mt-2 h-4 w-40" />
               </div>
             </div>
           </div>
+          <Skeleton className="h-12 w-full rounded-2xl" />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {[1, 2].map((item) => (
-            <div key={item} className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-10 w-10 rounded-2xl" />
+            <div key={item} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-xl" />
                 <div>
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="mt-2 h-4 w-44" />
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="mt-1.5 h-3 w-40" />
                 </div>
               </div>
-              <div className="mt-6 space-y-4">
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-24 w-full rounded-2xl" />
+              <div className="mt-5 space-y-3">
+                <Skeleton className="h-11 w-full rounded-2xl" />
+                <Skeleton className="h-11 w-full rounded-2xl" />
               </div>
             </div>
           ))}
@@ -362,36 +350,40 @@ export default function SettingsPage() {
       animate="visible"
       variants={containerVariants}
       onSubmit={handleSave}
-      className="grid gap-6 pb-12 xl:grid-cols-[0.75fr_1.25fr]"
+      className="grid gap-5 pb-12 xl:grid-cols-[0.75fr_1.25fr]"
     >
       {/* Left Sidebar */}
-      <div className="space-y-6 xl:sticky xl:top-8 xl:self-start">
+      <div className="space-y-4 xl:sticky xl:top-8 xl:self-start">
+
+        {/* Header */}
         <motion.div variants={itemVariants}>
-          <PageHero
-            eyebrow="Account"
-            title="Settings"
-            description="Manage your profile, language level, and defaults."
-            actions={
-              <Button type="button" variant="outline" className="h-10 rounded-xl font-bold active:scale-95" onClick={handleClose}>
-                <ArrowLeft size={14} strokeWidth={3} className="mr-2" />
-                Back
-              </Button>
-            }
-            className="p-6"
-          />
+          <div className="flex items-center gap-3 px-1 py-1">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+            >
+              <ArrowLeft size={18} strokeWidth={2.5} />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Settings</h1>
+              <p className="text-[11px] font-medium text-muted-foreground/50">Profile, preferences & account</p>
+            </div>
+          </div>
         </motion.div>
 
+        {/* Profile card */}
         <motion.div variants={itemVariants}>
-          <SectionCard className="border-blue-500/10 bg-blue-500/[0.02]">
+          <SectionCard>
             <SectionRow last>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-4">
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
                     title="Change profile photo"
-                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-2xl font-bold text-white shadow-xl shadow-blue-500/20 active:scale-95"
+                    className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95"
                   >
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -401,9 +393,9 @@ export default function SettingsPage() {
                     )}
                     <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                       {uploadingAvatar ? (
-                        <Loader2 size={18} className="animate-spin text-white" />
+                        <Loader2 size={16} className="animate-spin text-white" />
                       ) : (
-                        <Camera size={18} className="text-white" />
+                        <Camera size={16} className="text-white" />
                       )}
                     </span>
                   </button>
@@ -414,58 +406,72 @@ export default function SettingsPage() {
                     className="hidden"
                     onChange={handleAvatarChange}
                   />
-                  <div className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
-                    <CheckCircle2 size={12} className="text-white" strokeWidth={4} />
+                  <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
+                    <CheckCircle2 size={10} className="text-white" strokeWidth={4} />
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-lg font-bold text-foreground">
+                  <p className="truncate text-base font-bold text-foreground">
                     {displayName || "Your name"}
                   </p>
-                  <p className="truncate text-sm font-medium text-muted-foreground/60">{email}</p>
+                  <p className="truncate text-xs font-medium text-muted-foreground/50">{email}</p>
                 </div>
               </div>
             </SectionRow>
           </SectionCard>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="space-y-3">
+        {/* Save button */}
+        <motion.div variants={itemVariants} className="space-y-2">
           <Button
             type="submit"
             disabled={saving}
-            className="h-14 w-full rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
+            className="h-12 w-full rounded-2xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
           >
             {saving ? (
-              <><Activity size={20} className="mr-2 animate-pulse" /> Saving...</>
+              <><Loader2 size={16} className="mr-2 animate-spin" /> Saving…</>
+            ) : saved ? (
+              <><Check size={16} className="mr-2" strokeWidth={3} /> Saved</>
             ) : (
-              <><Zap size={20} className="mr-2" strokeWidth={2.5} /> Update Profile</>
+              "Save changes"
             )}
           </Button>
 
-          {saved && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-blue-600 dark:text-blue-400"
-            >
-              <CheckCircle2 size={16} strokeWidth={3} />
-              <span className="text-sm font-bold tracking-tight">Changes saved successfully</span>
-            </motion.div>
-          )}
           {error && (
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive text-center">
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive text-center">
               {error}
             </div>
           )}
         </motion.div>
 
+        {/* Nav rows */}
+        <motion.div variants={itemVariants}>
+          <SettingsNavRow
+            icon={Trophy}
+            title="Achievements"
+            description="Badges and milestones"
+            color="amber"
+            onClick={() => router.push("/achievements")}
+          />
+        </motion.div>
+
         <motion.div variants={itemVariants}>
           <SettingsNavRow
             icon={NotebookPen}
-            title="Developer Notes"
-            description="Your personal study knowledge library"
+            title="Notes"
+            description="Your study knowledge library"
             color="blue"
             onClick={() => router.push("/notes")}
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SettingsNavRow
+            icon={Map}
+            title="Learning Roadmap"
+            description="Java → Spring → Senior Engineer"
+            color="violet"
+            onClick={() => router.push("/roadmap")}
           />
         </motion.div>
 
@@ -473,8 +479,8 @@ export default function SettingsPage() {
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow last>
-              <SectionHeader icon={Palette} title="Appearance" description="Light, dark, or follow the system" color="text-pink-500" />
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <SectionHeader icon={Palette} title="Appearance" color="text-pink-500" />
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 {themeOptions.map(({ value, label, icon: Icon }) => {
                   const active = theme === value
                   return (
@@ -483,13 +489,13 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setTheme(value)}
                       className={cn(
-                        "flex flex-col items-center gap-2 rounded-2xl border py-4 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.97]",
+                        "flex flex-col items-center gap-1.5 rounded-2xl border py-3.5 text-[11px] font-semibold transition-all active:scale-[0.97]",
                         active
-                          ? "border-pink-500/40 bg-pink-500/10 text-pink-600 dark:text-pink-400"
-                          : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
+                          ? "border-pink-500/30 bg-pink-500/10 text-pink-600 dark:text-pink-400"
+                          : "border-border bg-accent/5 text-muted-foreground/50 hover:text-foreground"
                       )}
                     >
-                      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                      <Icon size={16} strokeWidth={active ? 2.5 : 1.75} />
                       {label}
                     </button>
                   )
@@ -499,27 +505,23 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Notifications */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
-              <SectionHeader
-                icon={Bell}
-                title="Notifications"
-                description="Study & task reminders, goal invites — in the browser and on Telegram"
-                color="text-violet-500"
-              />
+              <SectionHeader icon={Bell} title="Notifications" color="text-violet-500" />
             </SectionRow>
 
             {/* Browser push */}
             <SectionRow>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground">Browser notifications</p>
-                  <p className="text-[12px] font-medium text-muted-foreground">
+                  <p className="text-sm font-semibold text-foreground">Browser</p>
+                  <p className="text-[11px] font-medium text-muted-foreground/50">
                     {push.supported
                       ? push.webState === "denied"
-                        ? "Blocked — enable notifications for this site in your browser."
-                        : "Get push alerts even when KoriAI isn't open."
+                        ? "Blocked in browser settings."
+                        : "Alerts when KoriAI isn't open."
                       : "Not supported in this browser."}
                   </p>
                 </div>
@@ -536,39 +538,39 @@ export default function SettingsPage() {
             <SectionRow>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500 ring-1 ring-sky-500/20">
-                    <Send size={16} strokeWidth={2.5} />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
+                    <Send size={14} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground">Telegram</p>
-                    <p className="text-[12px] font-medium text-muted-foreground">
-                      {push.telegramLinked ? "Connected — alerts go to your chat." : "Connect to get alerts in Telegram."}
+                    <p className="text-sm font-semibold text-foreground">Telegram</p>
+                    <p className="text-[11px] font-medium text-muted-foreground/50">
+                      {push.telegramLinked ? "Connected" : "Get alerts in Telegram"}
                     </p>
                   </div>
                 </div>
                 {push.telegramLinked ? (
-                  <Button variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
                     Disconnect
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={() => push.linkTelegram()}>
+                  <Button type="button" size="sm" onClick={() => push.linkTelegram()}>
                     Connect
                   </Button>
                 )}
               </div>
             </SectionRow>
 
-            {/* Study reminders (daily reviews-due + streak-saver) */}
+            {/* Study reminders */}
             <SectionRow last>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
-                    <AlarmClock size={16} strokeWidth={2.5} />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                    <AlarmClock size={14} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground">Daily study reminders</p>
-                    <p className="text-[12px] font-medium text-muted-foreground">
-                      A nudge when reviews are due, and a streak-saver if you haven&apos;t studied.
+                    <p className="text-sm font-semibold text-foreground">Daily reminders</p>
+                    <p className="text-[11px] font-medium text-muted-foreground/50">
+                      Review nudge + streak saver
                     </p>
                   </div>
                 </div>
@@ -580,16 +582,16 @@ export default function SettingsPage() {
                 />
               </div>
               {studyRemindersEnabled && (
-                <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
-                  <label htmlFor="study-hour" className="text-[12px] font-bold text-muted-foreground">
-                    Remind me to review at
+                <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
+                  <label htmlFor="study-hour" className="text-[11px] font-medium text-muted-foreground/50">
+                    Remind me at
                   </label>
                   <select
                     id="study-hour"
                     value={studyReminderHour}
                     disabled={savingReminders}
                     onChange={(e) => saveStudyReminders(studyRemindersEnabled, Number(e.target.value))}
-                    className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-bold text-foreground outline-none transition-all focus:ring-2 focus:ring-emerald-500/20"
+                    className="h-9 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition-all focus:ring-2 focus:ring-emerald-500/20"
                   >
                     {Array.from({ length: 24 }, (_, h) => (
                       <option key={h} value={h}>
@@ -603,65 +605,56 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Sign out */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <button
               type="button"
               onClick={handleSignOut}
-              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-red-500/5 active:scale-[0.98]"
+              className="group flex w-full items-center justify-between px-5 py-4 text-left transition-all hover:bg-red-500/5 active:scale-[0.98]"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 ring-1 ring-red-500/20 transition-transform group-hover:scale-110">
-                  <LogOut size={18} strokeWidth={2.5} />
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 transition-transform group-hover:scale-110">
+                  <LogOut size={16} strokeWidth={2} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-red-600 uppercase tracking-wider">
-                    Sign out
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground/60">
-                    End your active session
-                  </p>
+                  <p className="text-sm font-semibold text-red-600 dark:text-red-400">Sign out</p>
+                  <p className="text-[11px] font-medium text-muted-foreground/50">End your session</p>
                 </div>
               </div>
-              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+              <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
             </button>
           </SectionCard>
         </motion.div>
       </div>
 
       {/* Right Content */}
-      <div className="space-y-6">
+      <div className="space-y-4">
+
+        {/* Profile Details */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
-              <SectionHeader icon={User} title="Profile Details" description="Personal information and public identity" color="text-blue-500" />
+              <SectionHeader icon={User} title="Profile" description="Name and public identity" color="text-blue-500" />
             </SectionRow>
-
-            <SectionRow>
+            <SectionRow last>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
-                    Display name
-                  </label>
+                  <FieldLabel>Display name</FieldLabel>
                   <Input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your name"
-                    className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all"
+                    className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
-                    Email address
-                  </label>
+                  <FieldLabel>Email address</FieldLabel>
                   <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/5 px-4 py-3 opacity-60">
-                    <Mail size={16} className="text-muted-foreground" strokeWidth={2.5} />
-                    <span className="flex-1 truncate text-sm font-bold text-foreground">
-                      {email}
-                    </span>
+                    <Mail size={14} className="text-muted-foreground" strokeWidth={2} />
+                    <span className="flex-1 truncate text-sm font-semibold text-foreground">{email}</span>
                     <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                      <ShieldCheck size={10} strokeWidth={3} />
-                      Verified
+                      <ShieldCheck size={10} strokeWidth={3} /> Verified
                     </span>
                   </div>
                 </div>
@@ -670,20 +663,21 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Background */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
-              <SectionHeader icon={Globe} title="Background" description="Your origin and native language" color="text-sky-500" />
+              <SectionHeader icon={Globe} title="Background" description="Country and native language" color="text-sky-500" />
             </SectionRow>
             <SectionRow last>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Country</label>
-                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Cambodia" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
+                  <FieldLabel>Country</FieldLabel>
+                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Cambodia" className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all" />
                 </div>
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Native Language</label>
-                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <FieldLabel>Native language</FieldLabel>
+                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select language</option>
                     {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
                   </select>
@@ -693,27 +687,28 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Work Details */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
-              <SectionHeader icon={Briefcase} title="Work Details" description="Your role and experience in tech" color="text-amber-500" />
+              <SectionHeader icon={Briefcase} title="Work" description="Role and experience in tech" color="text-amber-500" />
             </SectionRow>
             <SectionRow last>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Occupation</label>
-                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <FieldLabel>Occupation</FieldLabel>
+                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select role</option>
                     {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Years of Experience</label>
-                  <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-bold focus:bg-background transition-all" />
+                  <FieldLabel>Years of experience</FieldLabel>
+                  <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">Learning Goal</label>
-                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-12 w-full rounded-2xl border border-border bg-accent/5 px-3 py-1 text-sm font-bold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <FieldLabel>Learning goal</FieldLabel>
+                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
                     <option value="">Select your main goal</option>
                     {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
@@ -723,19 +718,19 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Learning Level */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
               <SectionHeader
                 icon={BrainCircuit}
-                title="Learning Level"
-                description="Adjusts AI complexity to match your fluency"
+                title="Korean Level"
+                description="Adjusts AI complexity to your fluency"
                 color="text-violet-500"
               />
             </SectionRow>
-
             <SectionRow last>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {levels.map((level) => {
                   const active = koreanLevel === level.value
                   return (
@@ -744,33 +739,30 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setKoreanLevel(level.value)}
                       className={cn(
-                        "group relative flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98]",
+                        "group relative flex w-full items-center gap-4 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
                         active
-                          ? "border-blue-500/40 bg-blue-500/5 shadow-inner ring-1 ring-blue-500/20"
+                          ? "border-blue-500/30 bg-blue-500/5 ring-1 ring-blue-500/20"
                           : "border-border bg-accent/5 hover:border-blue-500/20 hover:bg-background"
                       )}
                     >
                       <div className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl transition-transform group-hover:scale-110",
-                        active ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "bg-background shadow-sm"
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110",
+                        active ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-background shadow-sm"
                       )}>
                         {level.emoji}
                       </div>
                       <div className="flex-1">
-                        <p className={cn(
-                          "text-sm font-bold tracking-tight",
-                          active ? "text-foreground" : "text-muted-foreground"
-                        )}>
+                        <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
                           {level.label}
                         </p>
-                        <p className="text-xs font-medium text-muted-foreground/60">{level.desc}</p>
+                        <p className="text-[11px] font-medium text-muted-foreground/50">{level.desc}</p>
                       </div>
                       {active ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
-                          <CheckCircle2 size={14} strokeWidth={3} />
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white">
+                          <Check size={11} strokeWidth={3} />
                         </div>
                       ) : (
-                        <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/20 transition-transform group-hover:translate-x-1" />
+                        <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
                       )}
                     </button>
                   )
@@ -780,20 +772,20 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Model */}
         <motion.div variants={itemVariants}>
           <SectionCard>
             <SectionRow>
               <SectionHeader
                 icon={Cpu}
-                title="Model Intelligence"
-                description="Powering your conversation and feedback"
+                title="AI Model"
+                description="Powers your conversations and feedback"
                 color="text-sky-500"
               />
             </SectionRow>
-
             <SectionRow last>
               <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-3">
                   {models.map((model) => {
                     const active = preferredModel === model.value && !customModel
                     return (
@@ -802,19 +794,16 @@ export default function SettingsPage() {
                         type="button"
                         onClick={() => { setPreferredModel(model.value); setCustomModel("") }}
                         className={cn(
-                          "group relative flex flex-col gap-1 rounded-2xl border px-5 py-4 text-left transition-all active:scale-[0.98]",
+                          "group relative flex flex-col gap-0.5 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
                           active
-                            ? "border-sky-500/40 bg-sky-500/5 shadow-inner ring-1 ring-sky-500/20"
+                            ? "border-sky-500/30 bg-sky-500/5 ring-1 ring-sky-500/20"
                             : "border-border bg-accent/5 hover:border-sky-500/20 hover:bg-background"
                         )}
                       >
-                        <p className={cn(
-                          "text-sm font-bold tracking-tight",
-                          active ? "text-foreground" : "text-muted-foreground"
-                        )}>
+                        <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
                           {model.label}
                         </p>
-                        <p className="text-xs font-medium text-muted-foreground/60">{model.desc}</p>
+                        <p className="text-[11px] font-medium text-muted-foreground/50">{model.desc}</p>
                         {active && (
                           <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
                         )}
@@ -823,15 +812,13 @@ export default function SettingsPage() {
                   })}
                 </div>
 
-                <div className="pt-2">
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 px-1">
-                    Advanced Custom Model
-                  </label>
+                <div>
+                  <FieldLabel>Custom model</FieldLabel>
                   <Input
                     value={customModel}
                     onChange={(e) => setCustomModel(e.target.value)}
                     placeholder="e.g. gpt-4-turbo"
-                    className="h-12 rounded-2xl border-border bg-accent/5 px-4 font-mono text-xs focus:bg-background transition-all"
+                    className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-mono text-xs focus:bg-background transition-all"
                   />
                 </div>
               </div>
@@ -839,9 +826,9 @@ export default function SettingsPage() {
           </SectionCard>
         </motion.div>
 
-        {/* Mobile-only copyright */}
-        <motion.div variants={itemVariants} className="pt-4 text-center xl:hidden">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/30">
+        {/* Mobile copyright */}
+        <motion.div variants={itemVariants} className="pt-2 text-center xl:hidden">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/25">
             © 2026 Hen Heang · FullStack Developer
           </p>
         </motion.div>

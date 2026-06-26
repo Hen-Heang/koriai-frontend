@@ -61,7 +61,7 @@ const navSections: Array<{ label: string; links: NavLink[] }> = [
       { href: "/interview", label: "Exam Prep", icon: GraduationCap },
       { href: "/scenarios", label: "Scenarios", icon: Drama },
       { href: "/reading", label: "Reading", icon: BookOpenText },
-      { href: "/listening", label: "Listening", icon: Headphones, soon: true },
+      // { href: "/listening", label: "Listening", icon: Headphones, soon: true },
     ],
   },
   {
@@ -96,7 +96,7 @@ const moreGroups: Array<{ label: string; links: NavLink[] }> = [
     links: allLinks.filter(
       (l) =>
         !bottomTabs.some((t) => t.href === l.href) &&
-        ["/learn", "/interview", "/scenarios", "/reading", "/listening"].includes(l.href)
+        ["/learn", "/interview", "/scenarios", "/reading"].includes(l.href)
     ),
   },
   {

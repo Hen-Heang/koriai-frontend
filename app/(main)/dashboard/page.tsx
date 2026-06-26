@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react"
 import {
   ArrowRight,
   Flame,
+  GraduationCap,
   Sparkles,
   SpellCheck2,
   Target,
@@ -12,11 +13,13 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import dynamic from "next/dynamic"
+import { cn } from "@/lib/utils"
 
 import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
 import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
 import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
 import { ProgressIntelligence } from "@/components/dashboard/ProgressIntelligence"
+import { RoadmapTeaser } from "@/components/dashboard/RoadmapTeaser"
 import { StreakCard } from "@/components/dashboard/StreakCard"
 import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
 import { Button as UIButton } from "@/components/ui/button"
@@ -221,6 +224,12 @@ const quickActions = [
     description: "Set goals, plan tasks, and track every deadline.",
     icon: Target,
   },
+  {
+    href: "/interview",
+    label: "Exam Prep",
+    description: "Practice interview questions and build your Korean for the workplace.",
+    icon: GraduationCap,
+  },
 ]
 
 const containerVariants = {
@@ -331,12 +340,15 @@ export default function DashboardPage() {
 
         {/* Quick Actions (Full width grid) */}
         <motion.div variants={itemVariants} className="col-span-1 md:col-span-12">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {quickActions.map((action) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+            {quickActions.map((action, i) => (
               <Link
                 key={action.label}
                 href={action.href}
-                className="group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40"
+                className={cn(
+                  "group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40",
+                  i === quickActions.length - 1 && "col-span-2 sm:col-span-1"
+                )}
               >
                 <div className="inline-flex rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
                   <action.icon size={20} strokeWidth={2} />
@@ -361,6 +373,7 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} className="col-span-1 space-y-6 md:col-span-5 lg:col-span-4">
           <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
           <BestQuizStreakCard />
+          <RoadmapTeaser />
           <ProgressIntelligence />
         </motion.div>
 

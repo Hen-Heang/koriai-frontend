@@ -89,9 +89,8 @@ export function GoalMilestones({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Flag size={15} strokeWidth={2.5} className="text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
-            Milestones
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">Sub-goals</h3>
+          <span className="rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground/50">milestones</span>
           {saving && <Loader2 size={13} className="animate-spin text-muted-foreground/40" />}
         </div>
         {milestones.length > 0 && (
@@ -162,9 +161,8 @@ export function GoalMilestones({
         })}
 
         {milestones.length === 0 && !adding && (
-          <p className="rounded-2xl border border-dashed border-border bg-background/30 px-4 py-5 text-center text-sm font-medium text-muted-foreground/70">
-            Break this goal into a few checkpoints you want to hit — they&apos;ll show your
-            progress and keep you focused.
+          <p className="rounded-2xl border border-dashed border-border bg-background/30 px-4 py-5 text-center text-sm font-medium text-muted-foreground/50">
+            Add sub-goals to break this into clear checkpoints — each one you check off moves the milestone bar forward.
           </p>
         )}
       </div>
@@ -219,7 +217,7 @@ export function GoalMilestones({
             onClick={() => setAdding(true)}
             className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-95"
           >
-            <Plus size={14} strokeWidth={3} /> Add milestone
+            <Plus size={14} strokeWidth={3} /> Add sub-goal
           </button>
 
           {/* One-tap starter list (e.g. exam goals seeded from the study plan). */}
