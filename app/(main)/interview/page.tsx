@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { chatApi, getApiErrorMessage, ttsApi } from "@/lib/api"
 import {
   buildAnswerMessage,
@@ -100,6 +101,7 @@ async function autoSpeak(text: string) {
 
 export default function InterviewPage() {
   const { logActivity } = useLogActivity()
+  useSessionTimer("interview")
 
   const [phase, setPhase] = useState<"select" | "session" | "summary">("select")
   const [entries, setEntries] = useState<SessionEntry[]>([])

@@ -14,10 +14,10 @@ import { motion } from "motion/react"
 import dynamic from "next/dynamic"
 
 import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
+import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
 import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
 import { ProgressIntelligence } from "@/components/dashboard/ProgressIntelligence"
 import { StreakCard } from "@/components/dashboard/StreakCard"
-import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
 import { Button as UIButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -205,8 +205,8 @@ const quickActions = [
   },
   {
     href: "/practice",
-    label: "Daily Phrase",
-    description: "One workplace phrase a day — learn it, then write with it.",
+    label: "Today",
+    description: "Today's phrase, due reviews, and your daily mission in one place.",
     icon: Sparkles,
   },
   {
@@ -272,6 +272,13 @@ export default function DashboardPage() {
           <span className="text-sm font-medium text-foreground">{stats.streakDays} day streak</span>
         </div>
       </motion.div>
+
+      {/* First-run onboarding — shown once to users with no activity yet */}
+      {stats.wordsSaved === 0 && stats.streakDays === 0 && (
+        <motion.div variants={itemVariants}>
+          <FirstRunBanner />
+        </motion.div>
+      )}
 
       {/* ── Exam countdown reminder ── */}
       <motion.div variants={itemVariants}>
@@ -357,10 +364,9 @@ export default function DashboardPage() {
           <ProgressIntelligence />
         </motion.div>
 
-        {/* Goals & Tasks (Full width) */}
-        <motion.div variants={itemVariants} className="col-span-1 grid gap-6 md:col-span-12 md:grid-cols-2">
+        {/* Goals overview — full width, analytics only */}
+        <motion.div variants={itemVariants} className="col-span-1 md:col-span-12">
           <GoalsOverview />
-          <TodaysTasks />
         </motion.div>
 
       </div>

@@ -713,6 +713,9 @@ function ListeningCard({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSessionProps) {
+  // isOpen=false → compact launch card on the vocab page
+  // isOpen=true  → fullscreen (idle setup → quiz → done)
+  const [isOpen, setIsOpen] = useState(false)
   const [phase, setPhase] = useState<Phase>("idle")
   const [mode, setMode] = useState<Mode>("flashcard")
   const [reversed, setReversed] = useState(false)
@@ -811,16 +814,15 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
   const canUseChoice = filteredAllWords.length >= 4
 
-  // Lock the page behind the full-screen review (and results) so only the
-  // session scrolls.
+  // Lock page scroll only when Memory Lab is open fullscreen.
   useEffect(() => {
-    if (phase !== "quiz" && phase !== "done") return
+    if (!isOpen) return
     const previous = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => {
       document.body.style.overflow = previous
     }
-  }, [phase])
+  }, [isOpen])
 
   function startQuiz() {
     const deck = filteredDueToday.length > 0 ? filteredDueToday : filteredAllWords
@@ -912,127 +914,189 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   // Stays fixed for the duration of the session — see sessionTotal above.
   const total = sessionTotal || queue.length
 
-  // ── idle ──────────────────────────────────────────────────────────────────
-  if (phase === "idle") {
+  // ── idle (compact card on vocab page) ────────────────────────────────────
+  if (phase === "idle" && !isOpen) {
     const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
-    // A "due review" session (words the SRS scheduled for today) vs. a free
-    // "practice the whole deck" session when nothing is due — kept distinct so
-    // the full-deck fallback never reads as the due count resetting.
     const isDueSession = filteredDueToday.length > 0
-    const caughtUp = !isDueSession && filteredAllWords.length > 0
     return (
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40 dark:backdrop-blur-md sm:rounded-3xl">
-        {/* Top Header */}
-        <div className="bg-emerald-500/[0.03] px-5 py-7 text-center border-b border-border/60 sm:px-8 sm:py-8">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
-            <BrainCircuit size={32} strokeWidth={2.5} />
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40">
+        {/* Header */}
+        <div className="bg-emerald-500/[0.03] px-5 py-6 text-center border-b border-border/60 sm:px-8">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
+            <BrainCircuit size={28} strokeWidth={2.5} />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Memory Lab</h2>
-          <p className="mt-2 text-sm font-medium text-muted-foreground/60">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Memory Lab</h2>
+          <p className="mt-1 text-sm font-medium text-muted-foreground/60">
             {isDueSession
               ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
-              : caughtUp
-                ? "You're all caught up — practice your full deck anytime"
-                : "Add words to start building your deck"}
+              : filteredAllWords.length > 0
+                ? "All caught up — practice anytime"
+                : "Add words to start your deck"}
           </p>
         </div>
 
-        <div className="flex flex-col gap-6 p-5 sm:p-8">
-          {/* Category Selector — multi-select; restricts the session (and quiz
-              distractor pool) to the chosen categories, or the whole deck if none are picked */}
-          {categories.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
-                <Layers3 size={12} strokeWidth={3} />
-                Categories
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-col gap-4 p-5 sm:p-6">
+          {/* Deck stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-600">{filteredDueToday.length}</p>
+              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{filteredAllWords.length}</p>
+              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
+            </div>
+          </div>
+
+          {/* Open fullscreen */}
+          <button
+            type="button"
+            disabled={loading || deckSize === 0}
+            onClick={() => setIsOpen(true)}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+          >
+            <Sparkles size={18} strokeWidth={2.5} />
+            {loading ? "Loading..." : deckSize === 0 ? "No words yet" : "Open Memory Lab"}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── idle fullscreen (setup: categories, mode) ──────────────────────────────
+  if (phase === "idle" && isOpen) {
+    const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
+    const isDueSession = filteredDueToday.length > 0
+    return (
+      <div className="fixed inset-0 z-[60] flex flex-col bg-background">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={20} strokeWidth={2.5} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-bold tracking-tight text-foreground">Memory Lab</p>
+            <p className="text-[11px] font-medium text-muted-foreground/50 leading-tight">
+              {isDueSession
+                ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
+                : "Practice the full deck"}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-base font-bold text-emerald-600 leading-none">{filteredDueToday.length}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Due</p>
+            </div>
+            <div className="h-5 w-px bg-border/60" />
+            <div className="text-right">
+              <p className="text-base font-bold text-foreground leading-none">{filteredAllWords.length}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Total</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6">
+          <div className="mx-auto w-full max-w-2xl space-y-6">
+
+            {/* Category grid */}
+            {categories.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                  <Layers3 size={12} strokeWidth={3} />
+                  Filter by Category
+                  {selectedCategories.size > 0 && (
+                    <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-600 dark:text-emerald-400">
+                      {selectedCategories.size} selected
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => setSelectedCategories(new Set())}
                   className={cn(
-                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                    "w-full rounded-2xl border px-4 py-3 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98]",
                     selectedCategories.size === 0
                       ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                      : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
                   )}
                 >
                   All Categories
                 </button>
-                {categories.map((cat) => {
-                  const selected = selectedCategories.has(cat)
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => toggleCategory(cat)}
-                      aria-pressed={selected}
-                      className={cn(
-                        "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
-                        selected
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
-                      )}
-                    >
-                      {selected && <CheckCircle2 size={12} strokeWidth={3} />}
-                      {cat}
-                    </button>
-                  )
-                })}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {categories.map((cat) => {
+                    const selected = selectedCategories.has(cat)
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => toggleCategory(cat)}
+                        aria-pressed={selected}
+                        className={cn(
+                          "flex items-center gap-2 rounded-2xl border px-3.5 py-3 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98]",
+                          selected
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
+                        )}
+                      >
+                        {selected
+                          ? <CheckCircle2 size={13} strokeWidth={3} className="shrink-0" />
+                          : <div className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-current opacity-30" />
+                        }
+                        <span className="truncate">{cat}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Deck Stats Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-emerald-600">{filteredDueToday.length}</p>
-              <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
-            </div>
-            <div className="rounded-3xl border border-border bg-accent/5 p-5 text-center">
-              <p className="text-3xl font-bold text-foreground">{filteredAllWords.length}</p>
-              <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
+            {/* Mode selector */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Study Mode</p>
+              <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
+                {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening"] as Mode[]).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-bold uppercase tracking-wide transition-all",
+                      mode === m
+                        ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {m === "listening" && <Headphones size={13} strokeWidth={3} />}
+                    {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : "Listen"}
+                  </button>
+                ))}
+              </div>
+              {mode === "flashcard" && (
+                <button
+                  type="button"
+                  onClick={() => setReversed((r) => !r)}
+                  className="mx-auto flex items-center gap-2 rounded-full border border-border bg-accent/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground active:scale-95"
+                >
+                  <ArrowLeftRight size={13} strokeWidth={3} />
+                  {reversed ? "English → Korean" : "Korean → English"}
+                </button>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Mode Selector - iOS style */}
-          <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
-            {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-bold uppercase tracking-wide transition-all",
-                  mode === m
-                    ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {m === "listening" && <Headphones size={13} strokeWidth={3} />}
-                {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : "Listen"}
-              </button>
-            ))}
-          </div>
-
-          {/* Direction toggle for flashcards */}
-          {mode === "flashcard" && (
-            <button
-              type="button"
-              onClick={() => setReversed((r) => !r)}
-              className="mx-auto -mt-2 flex items-center gap-2 rounded-full border border-border bg-accent/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground active:scale-95"
-            >
-              <ArrowLeftRight size={13} strokeWidth={3} />
-              {reversed ? "English → Korean" : "Korean → English"}
-            </button>
-          )}
-
-          {/* Action Button */}
+        {/* Pinned Start button */}
+        <div className="border-t border-border/60 px-4 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6">
           <button
             type="button"
             disabled={loading || deckSize === 0}
             onClick={startQuiz}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+            className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-base font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 disabled:opacity-40"
           >
             <Sparkles size={20} strokeWidth={2.5} />
             {loading
@@ -1060,7 +1124,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             session header instead of dropping straight into the page shell. */}
         <div className="flex items-center border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
           <button
-            onClick={() => setPhase("idle")}
+            type="button"
+            onClick={() => { setPhase("idle"); setIsOpen(false) }}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
           >
             <ArrowLeft size={20} strokeWidth={2.5} />
@@ -1137,7 +1202,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             </button>
             <button
               type="button"
-              onClick={() => setPhase("idle")}
+              onClick={() => { setPhase("idle"); setIsOpen(false) }}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
             >
               Finish Lab
@@ -1158,8 +1223,10 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
       {/* Session Progress Header */}
       <div className="flex items-center justify-between border-b border-border/60 bg-accent/5 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:py-5">
         <button
+          type="button"
           onClick={() => setPhase("idle")}
           className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground/40 hover:bg-accent/50 hover:text-foreground transition-colors"
+          aria-label="Back to setup"
         >
           <ArrowLeft size={20} strokeWidth={2.5} />
         </button>

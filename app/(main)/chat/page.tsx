@@ -12,6 +12,7 @@ import { MessageAnalyzer } from "@/components/ai/MessageAnalyzer"
 import { MessageGenerator } from "@/components/ai/MessageGenerator"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useConversations } from "@/hooks/useConversations"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { chatApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -33,6 +34,7 @@ export default function ChatPage() {
 }
 
 function ChatPageContent() {
+  useSessionTimer("chat")
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialDraft = searchParams.get("prompt") ?? undefined

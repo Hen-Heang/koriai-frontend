@@ -9,14 +9,17 @@ import {
   BrainCircuit,
   Cpu,
   CheckCircle2,
+  Laptop,
   LogOut,
   ChevronRight,
+  Moon,
+  Palette,
   ShieldCheck,
+  Sun,
   Zap,
   Activity,
   Globe,
   Briefcase,
-  History,
   NotebookPen,
   Camera,
   Loader2,
@@ -24,6 +27,7 @@ import {
   Send,
   AlarmClock,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 
@@ -85,6 +89,47 @@ function SectionHeader({ icon: Icon, title, description, color = "text-blue-600"
   )
 }
 
+function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
+  icon: React.ElementType
+  title: string
+  description: string
+  color: "violet" | "blue" | "amber"
+  onClick: () => void
+}) {
+  return (
+    <SectionCard>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "group flex w-full items-center justify-between px-6 py-5 text-left transition-all active:scale-[0.98]",
+          color === "violet" && "hover:bg-violet-500/5",
+          color === "blue" && "hover:bg-blue-500/5",
+          color === "amber" && "hover:bg-amber-500/5"
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:scale-110",
+              color === "violet" && "bg-violet-500/10 text-violet-500 ring-violet-500/20",
+              color === "blue" && "bg-blue-500/10 text-blue-500 ring-blue-500/20",
+              color === "amber" && "bg-amber-500/10 text-amber-500 ring-amber-500/20"
+            )}
+          >
+            <Icon size={18} strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-foreground uppercase tracking-wider">{title}</p>
+            <p className="text-xs font-medium text-muted-foreground/60">{description}</p>
+          </div>
+        </div>
+        <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
+      </button>
+    </SectionCard>
+  )
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -104,9 +149,16 @@ const itemVariants = {
   },
 } as const
 
+const themeOptions = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Laptop },
+] as const
+
 export default function SettingsPage() {
   const router = useRouter()
   const push = usePush()
+  const { theme, setTheme } = useTheme()
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
   const [koreanLevel, setKoreanLevel] = useState("BEGINNER")
@@ -408,52 +460,42 @@ export default function SettingsPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <SectionCard>
-            <button
-              type="button"
-              onClick={() => router.push("/history")}
-              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-violet-500/5 active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-500 ring-1 ring-violet-500/20 transition-transform group-hover:scale-110">
-                  <History size={18} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground uppercase tracking-wider">
-                    Study History
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground/60">
-                    Corrections, calendar &amp; grammar patterns
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
-            </button>
-          </SectionCard>
+          <SettingsNavRow
+            icon={NotebookPen}
+            title="Developer Notes"
+            description="Your personal study knowledge library"
+            color="blue"
+            onClick={() => router.push("/notes")}
+          />
         </motion.div>
 
+        {/* Appearance */}
         <motion.div variants={itemVariants}>
           <SectionCard>
-            <button
-              type="button"
-              onClick={() => router.push("/notes")}
-              className="group flex w-full items-center justify-between px-6 py-5 text-left transition-all hover:bg-blue-500/5 active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20 transition-transform group-hover:scale-110">
-                  <NotebookPen size={18} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground uppercase tracking-wider">
-                    Developer Notes
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground/60">
-                    Your personal study knowledge library
-                  </p>
-                </div>
+            <SectionRow last>
+              <SectionHeader icon={Palette} title="Appearance" description="Light, dark, or follow the system" color="text-pink-500" />
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {themeOptions.map(({ value, label, icon: Icon }) => {
+                  const active = theme === value
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setTheme(value)}
+                      className={cn(
+                        "flex flex-col items-center gap-2 rounded-2xl border py-4 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.97]",
+                        active
+                          ? "border-pink-500/40 bg-pink-500/10 text-pink-600 dark:text-pink-400"
+                          : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
+                      )}
+                    >
+                      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                      {label}
+                    </button>
+                  )
+                })}
               </div>
-              <ChevronRight size={16} strokeWidth={2.5} className="text-muted-foreground/30 transition-transform group-hover:translate-x-1" />
-            </button>
+            </SectionRow>
           </SectionCard>
         </motion.div>
 

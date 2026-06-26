@@ -9,6 +9,7 @@ import { ReviewSession } from "@/components/vocab/ReviewSession"
 import { TextbookImport } from "@/components/vocab/TextbookImport"
 import { VocabDictionary } from "@/components/vocab/VocabDictionary"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { useVocab } from "@/hooks/useVocab"
 
 const containerVariants = {
@@ -33,6 +34,7 @@ const itemVariants = {
 export default function VocabPage() {
   const { dueToday, error, loading, rateWord, words, addWord, generate, importList, updateWord, deleteWord } = useVocab()
   const { logActivity } = useLogActivity()
+  useSessionTimer("vocab")
 
   const topics = Array.from(new Set(words.map((w) => w.category).filter(Boolean))).sort()
 

@@ -26,6 +26,7 @@ import { SmartPeek } from "@/components/ui/SmartPeek"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { getApiErrorMessage, readingApi, vocabApi } from "@/lib/api"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { READING_CATEGORIES, type ReadingUnit } from "@/lib/reading"
 import {
   getReadingProgress,
@@ -73,6 +74,7 @@ export default function ReadingUnitPage() {
   const [unit, setUnit] = useState<ReadingUnit | null>(null)
   const [loadingUnit, setLoadingUnit] = useState(true)
   const { logActivity } = useLogActivity()
+  useSessionTimer("reading")
 
   useEffect(() => {
     let active = true

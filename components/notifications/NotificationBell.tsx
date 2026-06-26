@@ -87,7 +87,7 @@ function NotificationRow({
   const { title, body } = describe(n)
   const isInvite = n.type === "invitation"
   const invitePending = isInvite && (!n.invitationStatus || n.invitationStatus === "pending")
-  const canOpen = !isInvite && (!!n.goalId || !!n.url)
+  const hasDestination = !invitePending && (!!n.goalId || !!n.url)
 
   return (
     <div
@@ -96,21 +96,7 @@ function NotificationRow({
         !n.read
           ? "border-l-[3px] border-l-primary border-border bg-primary/[0.03]"
           : "border-border bg-card",
-        canOpen && "cursor-pointer hover:bg-accent/50"
       )}
-      onClick={canOpen ? () => onNavigate(n) : undefined}
-      role={canOpen ? "button" : undefined}
-      tabIndex={canOpen ? 0 : undefined}
-      onKeyDown={
-        canOpen
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault()
-                onNavigate(n)
-              }
-            }
-          : undefined
-      }
     >
       <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", tone)}>
         <Icon className="h-4 w-4" />
@@ -126,7 +112,7 @@ function NotificationRow({
           <p className="mt-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">Accepted</p>
         )}
         {isInvite && n.invitationStatus === "declined" && (
-          <p className="mt-1.5 text-xs font-bold text-muted-foreground">Declined</p>
+          <p className="mt-1.5 text-xs font-bold text-muted-foreground/60">Declined</p>
         )}
 
         {invitePending && (
@@ -159,18 +145,29 @@ function NotificationRow({
           <span className="text-xs font-medium text-muted-foreground/70">
             {n.createdAt ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true }) : ""}
           </span>
-          {!n.read && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onMarkRead(n.id)
-              }}
-              className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Check className="h-3 w-3" /> Mark read
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {hasDestination && (
+              <button
+                type="button"
+                onClick={() => onNavigate(n)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-primary transition-colors hover:text-primary/70"
+              >
+                View detail
+              </button>
+            )}
+            {!n.read && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMarkRead(n.id)
+                }}
+                className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Check className="h-3 w-3" /> Mark read
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

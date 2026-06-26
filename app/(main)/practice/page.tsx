@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
   CheckCircle2,
   Circle,
   Drama,
-  Headphones,
+  Flame,
   MessageCircle,
   RotateCcw,
   Sparkles,
@@ -22,7 +23,7 @@ import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DailyPhraseCard } from "@/components/practice/DailyPhraseCard"
 import { isScenarioDoneToday, markScenarioDoneToday } from "@/lib/daily-mission"
-import { levelApi, practiceApi, getApiErrorMessage } from "@/lib/api"
+import { levelApi, practiceApi, progressApi, getApiErrorMessage } from "@/lib/api"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { LevelSuggestion } from "@/lib/api/user"
@@ -37,6 +38,8 @@ export default function PracticePage() {
   const [suggestion, setSuggestion] = useState<LevelSuggestion | null>(null)
   const [applying, setApplying] = useState(false)
   const [scenarioDone, setScenarioDone] = useState(false)
+  const [streakDays, setStreakDays] = useState(0)
+  const [activityToday, setActivityToday] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -60,6 +63,15 @@ export default function PracticePage() {
       .catch(() => {
         /* level suggestion is a bonus banner — fail silently */
       })
+    progressApi
+      .getStreak()
+      .then((res) => {
+        if (active) {
+          setStreakDays(res.streakDays)
+          setActivityToday(res.activityToday)
+        }
+      })
+      .catch(() => { /* streak is decorative — fail silently */ })
     return () => {
       active = false
     }
@@ -92,23 +104,28 @@ export default function PracticePage() {
     ? [
         {
           key: "vocab",
-          label: data.dueVocabCount > 0 ? `Review ${data.dueVocabCount} vocab cards` : "Vocab caught up",
+          label: data.dueVocabCount > 0 ? `Review ${data.dueVocabCount} vocab cards` : "No vocab due today",
+          // 0 due = SRS is clear = genuinely done for today
           done: data.dueVocabCount === 0,
+          href: "/vocab",
         },
         {
           key: "phrase",
           label: "Learn today's phrase",
           done: data.dailyPhrase.learned,
+          href: null,
         },
         {
           key: "mistakes",
-          label: data.dueCorrectionsCount > 0 ? `Clear ${data.dueCorrectionsCount} repeated mistakes` : "No mistakes due",
+          label: data.dueCorrectionsCount > 0 ? `Clear ${data.dueCorrectionsCount} repeated mistakes` : "No mistakes due today",
           done: data.dueCorrectionsCount === 0,
+          href: "/chat?mode=corrections",
         },
         {
           key: "scenario",
-          label: "Practice today's scenario in AI Coach",
+          label: "Practice today's scenario with AI Coach",
           done: scenarioDone,
+          href: null,
         },
       ]
     : []
@@ -126,11 +143,47 @@ export default function PracticePage() {
               ? [
                   { label: "Level", value: data.userLevel },
                   { label: "Progress", value: `${completedCount}/${missions.length}` },
+                  { label: "Streak", value: streakDays > 0 ? `${streakDays} days` : "—" },
                 ]
               : undefined
           }
         />
       </motion.div>
+
+      {/* Streak banner — shown only when streak is active */}
+      {streakDays > 0 && (
+        <motion.div variants={itemVariants}>
+          {activityToday ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-3.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                <Flame size={18} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {streakDays}-day streak · already practiced today
+                </p>
+                <p className="text-xs font-medium text-muted-foreground/60">
+                  Great work — your streak is safe. Come back tomorrow to keep it going.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/5 px-5 py-3.5">
+              <div className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                <Flame size={18} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                  {streakDays}-day streak — don&apos;t break it!
+                </p>
+                <p className="text-xs font-medium text-muted-foreground/60">
+                  Complete at least one mission below to keep your streak alive today.
+                </p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {suggestion?.upgradeAvailable && suggestion.suggestedLevel && (
         <motion.div
@@ -190,23 +243,36 @@ export default function PracticePage() {
               />
             </div>
             <ul className="mt-5 space-y-3">
-              {missions.map((m) => (
-                <li key={m.key} className="flex items-center gap-3">
-                  {m.done ? (
-                    <CheckCircle2 size={20} className="shrink-0 text-emerald-500" strokeWidth={2.5} />
-                  ) : (
-                    <Circle size={20} className="shrink-0 text-muted-foreground/30" strokeWidth={2.5} />
-                  )}
-                  <span
-                    className={cn(
-                      "text-sm font-bold",
-                      m.done ? "text-muted-foreground/60 line-through" : "text-foreground"
+              {missions.map((m) => {
+                const inner = (
+                  <>
+                    {m.done ? (
+                      <CheckCircle2 size={20} className="shrink-0 text-emerald-500" strokeWidth={2.5} />
+                    ) : (
+                      <Circle size={20} className="shrink-0 text-muted-foreground/30" strokeWidth={2.5} />
                     )}
-                  >
-                    {m.label}
-                  </span>
-                </li>
-              ))}
+                    <span
+                      className={cn(
+                        "text-sm font-bold",
+                        m.done ? "text-muted-foreground/60 line-through" : "text-foreground"
+                      )}
+                    >
+                      {m.label}
+                    </span>
+                  </>
+                )
+                return (
+                  <li key={m.key}>
+                    {m.href && !m.done ? (
+                      <Link href={m.href} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        {inner}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3">{inner}</div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </motion.div>
 
@@ -236,10 +302,10 @@ export default function PracticePage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">No reviews due right now — nice work.</p>
+                <p className="text-sm text-muted-foreground">No reviews due — nice work.</p>
               )}
               <ActionButton onClick={() => router.push("/vocab")} className="bg-emerald-600 hover:bg-emerald-500">
-                Review vocab
+                {data.dueVocabCount > 0 ? "Review vocab" : "Add more words"}
               </ActionButton>
             </Card>
 
@@ -263,7 +329,7 @@ export default function PracticePage() {
                 <p className="text-sm text-muted-foreground">No repeated mistakes due — keep it up.</p>
               )}
               <ActionButton onClick={() => router.push("/chat?mode=corrections")} className="bg-red-600 hover:bg-red-500">
-                Review mistakes
+                {data.dueCorrectionsCount > 0 ? "Review mistakes" : "Go to AI Coach"}
               </ActionButton>
             </Card>
 
@@ -297,27 +363,9 @@ export default function PracticePage() {
               <ActionButton
                 onClick={() => router.push(`/chat?mode=generate&category=${encodeURIComponent(data.suggestedMessageCategory)}`)}
                 className="bg-violet-600 hover:bg-violet-500"
-              >
-                Generate a message
-              </ActionButton>
-            </Card>
-
-            {/* Listening */}
-            <Card
-              icon={<Headphones size={20} strokeWidth={2.5} />}
-              iconClass="bg-amber-500/10 text-amber-600 dark:text-amber-400"
-              eyebrow="Listening"
-              title={data.suggestedListeningTopic}
-            >
-              <p className="text-sm text-muted-foreground">
-                Generate a short workplace conversation on this topic and test your comprehension.
-              </p>
-              <ActionButton
-                onClick={() => router.push(`/listening?topic=${encodeURIComponent(data.suggestedListeningTopic)}`)}
-                className="bg-amber-600 hover:bg-amber-500"
                 icon={<Sparkles size={14} className="mr-2" />}
               >
-                Generate lesson
+                Generate a message
               </ActionButton>
             </Card>
           </motion.div>

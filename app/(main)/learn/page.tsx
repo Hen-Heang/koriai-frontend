@@ -17,6 +17,7 @@ import { PageHero } from "@/components/app/page-hero"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFoundationsLessons } from "@/hooks/useFoundations"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { LearnTrack } from "@/lib/types"
@@ -28,6 +29,7 @@ const TRACKS: Array<{ key: LearnTrack; label: string; icon: typeof Type; blurb: 
 ]
 
 export default function LearnPage() {
+  useSessionTimer("foundations")
   const [track, setTrack] = useState<LearnTrack>("survival")
   const { lessons, loading, error } = useFoundationsLessons(track)
 

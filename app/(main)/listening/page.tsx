@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useChoices } from "@/hooks/useChoices"
 import { listeningApi, ttsApi, getApiErrorMessage } from "@/lib/api"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { ListeningAttemptResult, ListeningLesson } from "@/lib/types"
@@ -61,6 +62,7 @@ function ListeningPageContent() {
   const [result, setResult] = useState<ListeningAttemptResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const { logActivity } = useLogActivity()
+  useSessionTimer("listening")
 
   // Audio playback
   const audioRef = useRef<HTMLAudioElement | null>(null)

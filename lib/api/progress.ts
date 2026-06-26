@@ -12,4 +12,6 @@ export const progressApi = {
   getStreak: () => api.get("/dashboard/streak").then((r) => r.data.data) as Promise<{ streakDays: number; activityToday: boolean }>,
   getActivityDays: (month: string) =>
     api.get(`/dashboard/activity?month=${month}`).then((r) => r.data.data) as Promise<string[]>,
+  logDuration: (feature: string, durationMs: number) =>
+    api.post("/activity/log", { feature, durationMs }).then((r) => r.data.data),
 }

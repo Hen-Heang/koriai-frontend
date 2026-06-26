@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
+  ArrowLeft,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -22,6 +24,7 @@ import {
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
+import { Button } from "@/components/ui/button"
 import { TipCard } from "@/components/app/tip-card"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -49,6 +52,7 @@ const ICONS: Record<string, LucideIcon> = {
 }
 
 export default function AchievementsPage() {
+  const router = useRouter()
   const [summary, setSummary] = useState<AchievementSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -97,6 +101,17 @@ export default function AchievementsPage() {
               value: summary ? `${summary.unlockedCount}/${summary.totalCount}` : "—",
             },
           ]}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 rounded-xl font-bold active:scale-95"
+              onClick={() => router.push("/settings")}
+            >
+              <ArrowLeft size={14} strokeWidth={3} className="mr-2" />
+              Back
+            </Button>
+          }
         />
       </motion.div>
 
