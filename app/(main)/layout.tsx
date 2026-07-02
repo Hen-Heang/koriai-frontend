@@ -86,6 +86,7 @@ const bottomTabs: NavLink[] = [
 const allLinks: NavLink[] = [
   ...navSections.flatMap((s) => s.links),
   { href: "/chat", label: "AI Coach", icon: MessageCircle },
+  { href: "/account", label: "Account", icon: Settings },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
@@ -112,7 +113,7 @@ const moreGroups: Array<{ label: string; links: NavLink[] }> = [
     links: allLinks.filter(
       (l) =>
         !bottomTabs.some((t) => t.href === l.href) &&
-        ["/settings"].includes(l.href)
+        ["/account", "/settings"].includes(l.href)
     ),
   },
 ]
