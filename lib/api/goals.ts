@@ -1,9 +1,13 @@
 // ── Goal tracking (ported from Orbit / DailyGoalMap) ─────────────────────────
-// Replaces Orbit's direct-to-Supabase data layer. Backend endpoints live on the
-// Spring Boot service; goals/tasks are scoped to the JWT user. See INTEGRATION.md.
+// Back on Orbit's original Supabase tables (goals / tasks / goal_members /
+// goal_stars / notifications) and SECURITY DEFINER RPCs, since KoriAI now shares
+// the Orbit Supabase project. Scoping comes from RLS + auth.uid().
 import type { Goal } from "@/lib/goals"
 import type { Task } from "@/lib/tasks"
-import { api, API_BASE_URL } from "./client"
+import { supabase } from "@/lib/supabase"
+import { getUserId, requireUserId } from "@/lib/auth-store"
+import { aiPost, authHeaders } from "./ai-client"
+import { readSseStream } from "./sse"
 
 export interface CreateGoalPayload {
   title: string
@@ -16,11 +20,12 @@ export interface CreateGoalPayload {
 
 export type UpdateGoalPayload = Partial<CreateGoalPayload>
 
-// Goal member (backend GoalMemberResponse, camelCase).
+// Goal member (camelCase, shape kept from the Spring GoalMemberResponse; ids are
+// Supabase auth UUIDs now).
 export interface GoalMemberDto {
   id: string
   goalId: string
-  userId: number
+  userId: string
   role: "creator" | "member" | string
   displayName: string | null
   email: string | null
@@ -28,43 +33,238 @@ export interface GoalMemberDto {
   lastSeen: string | null
 }
 
-export const goalsApi = {
-  list: (status?: string) =>
-    api
-      .get("/goals", { params: status ? { status } : undefined })
-      .then((r) => r.data.data) as Promise<Goal[]>,
-  get: (id: string) => api.get(`/goals/${id}`).then((r) => r.data.data) as Promise<Goal>,
-  create: (data: CreateGoalPayload) =>
-    api.post("/goals", data).then((r) => r.data.data) as Promise<Goal>,
-  update: (id: string, data: UpdateGoalPayload) =>
-    api.put(`/goals/${id}`, data).then((r) => r.data.data) as Promise<Goal>,
-  remove: (id: string) => api.delete(`/goals/${id}`).then((r) => r.data.data),
-  // Share-link / join-by-code (backend GoalMemberController). Anyone with the
-  // share code can preview + join; only the creator can regenerate it.
-  previewByShareCode: (code: string) =>
-    api.get(`/goals/by-share-code/${code}`).then((r) => r.data.data) as Promise<Goal>,
-  joinByShareCode: (code: string) =>
-    api.post(`/goals/by-share-code/${code}/join`).then((r) => r.data.data) as Promise<Goal>,
-  regenerateShareCode: (id: string) =>
-    api
-      .post(`/goals/${id}/share-code/regenerate`)
-      .then((r) => r.data.data) as Promise<{ shareCode: string }>,
-  // Members (GoalMemberController). Backend returns camelCase GoalMemberResponse.
-  getMembers: (id: string) =>
-    api.get(`/goals/${id}/members`).then((r) => r.data.data) as Promise<GoalMemberDto[]>,
-  leaveGoal: (id: string) => api.delete(`/goals/${id}/members/me`).then((r) => r.data.data),
-  removeMember: (id: string, userId: number) =>
-    api.delete(`/goals/${id}/members/${userId}`).then((r) => r.data.data),
-  toggleStar: (id: string) =>
-    api.post(`/goals/${id}/star`).then((r) => r.data.data) as Promise<{ isStarred: boolean }>,
-  getTasks: (id: string) =>
-    api.get(`/goals/${id}/tasks`).then((r) => r.data.data) as Promise<Task[]>,
-  // AI-generate tasks for a goal (reuses the server OpenAI key); returns created tasks.
-  generateTasks: (id: string, body?: { count?: number; note?: string }) =>
-    api.post(`/goals/${id}/generate-tasks`, body ?? {}).then((r) => r.data.data) as Promise<Task[]>,
+type GoalRow = Goal & {
+  goal_stars?: { user_id: string }[]
+  tasks?: { id: string; completed: boolean }[]
+}
 
-  // Per-goal AI coach chat — SSE stream. Ephemeral: pass recent history each turn.
-  // Mirrors chatApi.streamMessage's event protocol (token / done / error).
+// Nested selects → isStarred / taskCounts enrichment in one query.
+const GOAL_SELECT = "*, goal_stars(user_id), tasks(id, completed)"
+
+function enrichGoal(row: GoalRow): Goal {
+  const me = getUserId()
+  const { goal_stars, tasks, ...goal } = row
+  const total = tasks?.length ?? 0
+  const completed = tasks?.filter((t) => t.completed).length ?? 0
+  return {
+    ...goal,
+    isStarred: Boolean(goal_stars?.some((s) => s.user_id === me)),
+    taskCounts: { total, completed, incomplete: total - completed },
+  } as Goal
+}
+
+export const goalsApi = {
+  list: async (status?: string): Promise<Goal[]> => {
+    let query = supabase.from("goals").select(GOAL_SELECT).order("created_at", { ascending: false })
+    if (status) query = query.eq("status", status)
+    const { data, error } = await query
+    if (error) throw error
+    return (data as unknown as GoalRow[]).map(enrichGoal)
+  },
+
+  get: async (id: string): Promise<Goal> => {
+    const { data, error } = await supabase.from("goals").select(GOAL_SELECT).eq("id", id).single()
+    if (error) throw error
+    return enrichGoal(data as unknown as GoalRow)
+  },
+
+  create: async (data: CreateGoalPayload): Promise<Goal> => {
+    const userId = requireUserId()
+    const { data: row, error } = await supabase
+      .from("goals")
+      .insert({
+        user_id: userId,
+        title: data.title,
+        description: data.description ?? "",
+        target_date: data.target_date ?? null,
+        no_duration: data.no_duration ?? false,
+        status: data.status ?? "active",
+        metadata: data.metadata,
+      })
+      .select()
+      .single()
+    if (error) throw error
+    // Creator membership row (used by the members list / shared goals).
+    try {
+      await supabase.rpc("join_goal", { p_goal_id: row.id, p_user_id: userId, p_role: "creator" })
+    } catch {
+      /* best-effort — the goal is still usable without a membership row */
+    }
+    return goalsApi.get(row.id)
+  },
+
+  update: async (id: string, data: UpdateGoalPayload): Promise<Goal> => {
+    const { error } = await supabase
+      .from("goals")
+      .update({
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.target_date !== undefined ? { target_date: data.target_date } : {}),
+        ...(data.no_duration !== undefined ? { no_duration: data.no_duration } : {}),
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.metadata !== undefined ? { metadata: data.metadata } : {}),
+      })
+      .eq("id", id)
+    if (error) throw error
+    return goalsApi.get(id)
+  },
+
+  remove: async (id: string) => {
+    const { error } = await supabase.from("goals").delete().eq("id", id)
+    if (error) throw error
+  },
+
+  // Share-link / join-by-code — Orbit's SECURITY DEFINER RPCs (they can read a
+  // goal the caller isn't a member of yet).
+  previewByShareCode: async (code: string): Promise<Goal> => {
+    const { data, error } = await supabase.rpc("get_goal_by_share_code", { p_share_code: code })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row) throw new Error("Invalid share code")
+    return row as Goal
+  },
+
+  joinByShareCode: async (code: string): Promise<Goal> => {
+    const goal = await goalsApi.previewByShareCode(code)
+    const { error } = await supabase.rpc("join_goal", {
+      p_goal_id: goal.id,
+      p_user_id: requireUserId(),
+      p_role: "member",
+    })
+    if (error) throw error
+    return goalsApi.get(goal.id)
+  },
+
+  regenerateShareCode: async (id: string): Promise<{ shareCode: string }> => {
+    const { data, error } = await supabase.rpc("regenerate_goal_share_code", { p_goal_id: id })
+    if (error) throw error
+    const code = Array.isArray(data) ? data[0] : data
+    return { shareCode: typeof code === "string" ? code : String(code ?? "") }
+  },
+
+  getMembers: async (id: string): Promise<GoalMemberDto[]> => {
+    const { data, error } = await supabase.rpc("get_goal_members", { p_goal_id: id })
+    if (error) throw error
+    type Row = {
+      id: string
+      goal_id: string
+      user_id: string
+      role: string
+      display_name?: string | null
+      email?: string | null
+      joined_at?: string | null
+      last_seen?: string | null
+    }
+    return ((data ?? []) as Row[]).map((m) => ({
+      id: m.id,
+      goalId: m.goal_id,
+      userId: m.user_id,
+      role: m.role,
+      displayName: m.display_name ?? null,
+      email: m.email ?? null,
+      joinedAt: m.joined_at ?? null,
+      lastSeen: m.last_seen ?? null,
+    }))
+  },
+
+  leaveGoal: async (id: string) => {
+    const { error } = await supabase
+      .from("goal_members")
+      .delete()
+      .eq("goal_id", id)
+      .eq("user_id", requireUserId())
+    if (error) throw error
+  },
+
+  removeMember: async (id: string, userId: string) => {
+    const { data: member, error } = await supabase
+      .from("goal_members")
+      .select("id")
+      .eq("goal_id", id)
+      .eq("user_id", userId)
+      .maybeSingle()
+    if (error) throw error
+    if (!member) return
+    const { error: rpcError } = await supabase.rpc("remove_goal_member", { p_member_id: member.id })
+    if (rpcError) throw rpcError
+  },
+
+  toggleStar: async (id: string): Promise<{ isStarred: boolean }> => {
+    const userId = requireUserId()
+    const { data: existing, error } = await supabase
+      .from("goal_stars")
+      .select("goal_id")
+      .eq("goal_id", id)
+      .eq("user_id", userId)
+      .maybeSingle()
+    if (error) throw error
+    if (existing) {
+      const { error: delError } = await supabase
+        .from("goal_stars")
+        .delete()
+        .eq("goal_id", id)
+        .eq("user_id", userId)
+      if (delError) throw delError
+      return { isStarred: false }
+    }
+    const { error: insError } = await supabase
+      .from("goal_stars")
+      .insert({ goal_id: id, user_id: userId })
+    if (insError) throw insError
+    return { isStarred: true }
+  },
+
+  getTasks: async (id: string): Promise<Task[]> => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("goal_id", id)
+      .order("start_date", { ascending: true })
+    if (error) throw error
+    return data as Task[]
+  },
+
+  // AI-generate tasks for a goal (server AI key via app/api/ai); inserts and
+  // returns the created tasks.
+  generateTasks: async (id: string, body?: { count?: number; note?: string }): Promise<Task[]> => {
+    const userId = requireUserId()
+    const goal = await goalsApi.get(id)
+    const { tasks } = await aiPost<{
+      tasks: Array<{
+        title: string
+        description?: string
+        start_date: string
+        end_date: string
+        duration_minutes?: number | null
+      }>
+    }>("/goals/generate-tasks", {
+      goalTitle: goal.title,
+      goalDescription: goal.description,
+      targetDate: goal.target_date,
+      metadata: goal.metadata,
+      count: body?.count,
+      note: body?.note,
+    })
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert(
+        tasks.map((t) => ({
+          user_id: userId,
+          goal_id: id,
+          title: t.title,
+          description: t.description ?? "",
+          start_date: t.start_date,
+          end_date: t.end_date,
+          duration_minutes: t.duration_minutes ?? null,
+        })),
+      )
+      .select()
+    if (error) throw error
+    return data as Task[]
+  },
+
+  // Per-goal AI coach chat — SSE stream from the Next.js route (same
+  // token / done / error event protocol the Spring stream used).
   coachStream: async (
     id: string,
     message: string,
@@ -73,63 +273,47 @@ export const goalsApi = {
     onDone: () => void,
     signal?: AbortSignal,
   ): Promise<void> => {
-    const token =
-      typeof window !== "undefined" ? window.localStorage.getItem("token") : null
-    const response = await fetch(`${API_BASE_URL}/goals/${id}/coach/stream`, {
+    const response = await fetch(`/api/ai/goals/coach`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ message, history }),
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify({ goalId: id, message, history }),
       signal,
     })
     if (!response.ok) throw new Error(`Coach stream failed: ${response.status}`)
-    if (!response.body) throw new Error("No response body")
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ""
-    let eventName = ""
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split("\n")
-      buffer = lines.pop() ?? ""
-      for (const line of lines) {
-        if (line.startsWith("event:")) eventName = line.slice(6).trim()
-        else if (line.startsWith("data:")) {
-          const raw = line.slice(5).trim()
-          if (eventName === "token") {
-            try {
-              onToken(JSON.parse(raw).token)
-            } catch {
-              /* ignore malformed chunk */
-            }
-          } else if (eventName === "done") {
-            onDone()
-          } else if (eventName === "error") {
-            let msg = "Coach is unavailable right now."
-            try {
-              msg = JSON.parse(raw).message || msg
-            } catch {
-              /* ignore */
-            }
-            throw new Error(msg)
-          }
-          eventName = ""
+    await readSseStream(response, (event, raw) => {
+      if (event === "token") {
+        try {
+          onToken(JSON.parse(raw).token)
+        } catch {
+          /* ignore malformed chunk */
         }
+      } else if (event === "done") {
+        onDone()
+      } else if (event === "error") {
+        let msg = "Coach is unavailable right now."
+        try {
+          msg = JSON.parse(raw).message || msg
+        } catch {
+          /* ignore */
+        }
+        throw new Error(msg)
       }
-    }
+    })
   },
-  // Sends a goal invitation to another user. The receiver gets it through the
-  // goal-notifications feed and responds via notificationsApi.respond.
-  // Backend: POST /api/goal-notifications/invite with { goalId, receiverUserId }.
-  invite: (id: string, receiverId: number) =>
-    api
-      .post("/goal-notifications/invite", { goalId: id, receiverUserId: receiverId })
-      .then((r) => r.data.data),
+
+  // Sends a goal invitation: a pending row in Orbit's notifications table that
+  // the receiver answers via notificationsApi.respond.
+  invite: async (id: string, receiverId: string) => {
+    const { error } = await supabase.from("notifications").insert({
+      type: "goal_invitation",
+      goal_id: id,
+      sender_id: requireUserId(),
+      receiver_id: receiverId,
+      invitation_status: "pending",
+    })
+    if (error) throw error
+  },
 }
 
 export interface CreateTaskPayload {
@@ -152,25 +336,52 @@ export type UpdateTaskPayload = Partial<CreateTaskPayload>
 export const tasksApi = {
   // Range query backs both the calendar and the "today" widget.
   // goalId omitted = all the user's tasks; goalId null = personal tasks only.
-  range: (params: { from?: string; to?: string; goalId?: string | null }) =>
-    api.get("/tasks", { params }).then((r) => r.data.data) as Promise<Task[]>,
-  create: (data: CreateTaskPayload) =>
-    api.post("/tasks", data).then((r) => r.data.data) as Promise<Task>,
-  update: (id: string, data: UpdateTaskPayload) =>
-    api.put(`/tasks/${id}`, data).then((r) => r.data.data) as Promise<Task>,
-  remove: (id: string) => api.delete(`/tasks/${id}`).then((r) => r.data.data),
+  range: async (params: { from?: string; to?: string; goalId?: string | null }): Promise<Task[]> => {
+    let query = supabase.from("tasks").select("*").order("start_date", { ascending: true })
+    if (params.from) query = query.gte("end_date", params.from)
+    if (params.to) query = query.lte("start_date", params.to)
+    if (params.goalId === null) query = query.is("goal_id", null)
+    else if (params.goalId) query = query.eq("goal_id", params.goalId)
+    const { data, error } = await query
+    if (error) throw error
+    return data as Task[]
+  },
+
+  create: async (data: CreateTaskPayload): Promise<Task> => {
+    const { data: row, error } = await supabase
+      .from("tasks")
+      .insert({ user_id: requireUserId(), ...data })
+      .select()
+      .single()
+    if (error) throw error
+    return row as Task
+  },
+
+  update: async (id: string, data: UpdateTaskPayload): Promise<Task> => {
+    const { data: row, error } = await supabase
+      .from("tasks")
+      .update({ ...data, updated_by: getUserId() })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+    return row as Task
+  },
+
+  remove: async (id: string) => {
+    const { error } = await supabase.from("tasks").delete().eq("id", id)
+    if (error) throw error
+  },
 }
 
-// Goal notifications. Backend serializes these as camelCase (no @JsonNaming),
-// unlike the snake_case goals/tasks payloads. Realtime is deferred — the client
-// polls + invalidates instead (see INTEGRATION.md). Sending invites is wired via
-// goalsApi.invite; this feed delivers them and respond() accepts/rejects.
+// Goal notifications over Orbit's notifications table; the enriched feed
+// (sender display name, goal title) comes from Orbit's RPC.
 export interface GoalNotification {
   id: string
   type: string
   goalId: string | null
-  senderId: number | null
-  receiverId: number | null
+  senderId: string | null
+  receiverId: string | null
   invitationStatus: string | null
   read: boolean
   url: string | null
@@ -180,13 +391,109 @@ export interface GoalNotification {
 }
 
 export const notificationsApi = {
-  list: (onlyUnread = false) =>
-    api
-      .get("/goal-notifications", { params: { onlyUnread } })
-      .then((r) => r.data.data) as Promise<GoalNotification[]>,
-  markRead: (id: string) => api.put(`/goal-notifications/${id}/read`).then((r) => r.data.data),
-  respond: (id: string, accept: boolean) =>
-    api
-      .put(`/goal-notifications/${id}/respond`, null, { params: { accept } })
-      .then((r) => r.data.data),
+  list: async (onlyUnread = false): Promise<GoalNotification[]> => {
+    const { data, error } = await supabase.rpc("get_enriched_notifications", {
+      p_user_id: requireUserId(),
+      p_limit: 50,
+      p_before: null,
+      p_only_unread: onlyUnread,
+      p_only_invites: false,
+    })
+    if (error) throw error
+    type Row = {
+      id: string
+      type: string
+      goal_id: string | null
+      sender_id: string | null
+      receiver_id: string | null
+      invitation_status: string | null
+      read_at: string | null
+      url: string | null
+      sender_display_name?: string | null
+      goal_title?: string | null
+      created_at: string | null
+    }
+    return ((data ?? []) as Row[]).map((n) => ({
+      id: n.id,
+      type: n.type,
+      goalId: n.goal_id,
+      senderId: n.sender_id,
+      receiverId: n.receiver_id,
+      invitationStatus: n.invitation_status,
+      read: Boolean(n.read_at),
+      url: n.url,
+      senderDisplayName: n.sender_display_name ?? null,
+      goalTitle: n.goal_title ?? null,
+      createdAt: n.created_at,
+    }))
+  },
+
+  markRead: async (id: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", id)
+    if (error) throw error
+  },
+
+  respond: async (id: string, accept: boolean) => {
+    const { data: notification, error } = await supabase
+      .from("notifications")
+      .select("goal_id")
+      .eq("id", id)
+      .single()
+    if (error) throw error
+    const { error: updateError } = await supabase
+      .from("notifications")
+      .update({
+        invitation_status: accept ? "accepted" : "declined",
+        read_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+    if (updateError) throw updateError
+    if (accept && notification.goal_id) {
+      const { error: joinError } = await supabase.rpc("join_goal", {
+        p_goal_id: notification.goal_id,
+        p_user_id: requireUserId(),
+        p_role: "member",
+      })
+      if (joinError) throw joinError
+    }
+  },
 }
+
+/* ── Spring backend implementation (kept for later restore; full version incl.
+      the /goals/{id}/coach/stream SSE parser is in git history) ───────────────
+import { api, API_BASE_URL } from "./client"
+
+export const goalsApi = {
+  list: (status?: string) => api.get("/goals", { params: status ? { status } : undefined }).then((r) => r.data.data),
+  get: (id: string) => api.get(`/goals/${id}`).then((r) => r.data.data),
+  create: (data: CreateGoalPayload) => api.post("/goals", data).then((r) => r.data.data),
+  update: (id: string, data: UpdateGoalPayload) => api.put(`/goals/${id}`, data).then((r) => r.data.data),
+  remove: (id: string) => api.delete(`/goals/${id}`).then((r) => r.data.data),
+  previewByShareCode: (code: string) => api.get(`/goals/by-share-code/${code}`).then((r) => r.data.data),
+  joinByShareCode: (code: string) => api.post(`/goals/by-share-code/${code}/join`).then((r) => r.data.data),
+  regenerateShareCode: (id: string) => api.post(`/goals/${id}/share-code/regenerate`).then((r) => r.data.data),
+  getMembers: (id: string) => api.get(`/goals/${id}/members`).then((r) => r.data.data),
+  leaveGoal: (id: string) => api.delete(`/goals/${id}/members/me`).then((r) => r.data.data),
+  removeMember: (id: string, userId: number) => api.delete(`/goals/${id}/members/${userId}`).then((r) => r.data.data),
+  toggleStar: (id: string) => api.post(`/goals/${id}/star`).then((r) => r.data.data),
+  getTasks: (id: string) => api.get(`/goals/${id}/tasks`).then((r) => r.data.data),
+  generateTasks: (id: string, body?: { count?: number; note?: string }) => api.post(`/goals/${id}/generate-tasks`, body ?? {}).then((r) => r.data.data),
+  invite: (id: string, receiverId: number) => api.post("/goal-notifications/invite", { goalId: id, receiverUserId: receiverId }).then((r) => r.data.data),
+}
+
+export const tasksApi = {
+  range: (params) => api.get("/tasks", { params }).then((r) => r.data.data),
+  create: (data) => api.post("/tasks", data).then((r) => r.data.data),
+  update: (id, data) => api.put(`/tasks/${id}`, data).then((r) => r.data.data),
+  remove: (id) => api.delete(`/tasks/${id}`).then((r) => r.data.data),
+}
+
+export const notificationsApi = {
+  list: (onlyUnread = false) => api.get("/goal-notifications", { params: { onlyUnread } }).then((r) => r.data.data),
+  markRead: (id: string) => api.put(`/goal-notifications/${id}/read`).then((r) => r.data.data),
+  respond: (id: string, accept: boolean) => api.put(`/goal-notifications/${id}/respond`, null, { params: { accept } }).then((r) => r.data.data),
+}
+────────────────────────────────────────────────────────────────────────────── */

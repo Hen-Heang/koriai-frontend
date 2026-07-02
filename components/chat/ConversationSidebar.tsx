@@ -11,12 +11,12 @@ import { cn } from "@/lib/utils"
 interface ConversationSidebarProps {
   conversations: Conversation[]
   isLoading: boolean
-  activeId: number | null
-  onSelect: (id: number) => void
+  activeId: string | null
+  onSelect: (id: string) => void
   onNew: () => void
   isStartingNew?: boolean
-  onRename: (id: number, title: string) => void
-  onDelete: (id: number) => void
+  onRename: (id: string, title: string) => void
+  onDelete: (id: string) => void
   /** When provided, renders a collapse button (desktop rail only). */
   onCollapse?: () => void
 }
@@ -32,9 +32,9 @@ export function ConversationSidebar({
   onDelete,
   onCollapse,
 }: ConversationSidebarProps) {
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState("")
-  const [confirmId, setConfirmId] = useState<number | null>(null)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   const startEdit = (c: Conversation) => {
     setConfirmId(null)

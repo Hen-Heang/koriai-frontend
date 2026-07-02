@@ -45,6 +45,48 @@ export function previewIntervalDays(card: SrsState, rating: ReviewRating): numbe
   return Math.min(next, MAX_INTERVAL_DAYS)
 }
 
+export interface SrsCardState extends SrsState {
+  lapses: number
+  mastery: number // 0–100 (see lib/vocab-review.ts MasteryFilter bands)
+}
+
+export interface SrsResult extends SrsCardState {
+  intervalDays: number
+  nextReview: string // ISO timestamp
+}
+
+const MASTERY_DELTA: Record<ReviewRating, number> = {
+  AGAIN: -15,
+  HARD: 5,
+  GOOD: 10,
+  EASY: 15,
+}
+
+/**
+ * Full post-grade state (was computed by the backend SrsScheduler; now the
+ * client owns it and persists the result to Supabase). SM-2 ease adjustments:
+ * AGAIN −0.2 + lapse + reps reset, HARD −0.15, GOOD unchanged, EASY +0.15.
+ */
+export function applyRating(card: SrsCardState, rating: ReviewRating): SrsResult {
+  const interval = previewIntervalDays(card, rating)
+  const baseEase = card.easeFactor < MIN_EASE ? START_EASE : card.easeFactor
+
+  let easeFactor = baseEase
+  if (rating === "AGAIN") easeFactor = baseEase - 0.2
+  else if (rating === "HARD") easeFactor = baseEase - 0.15
+  else if (rating === "EASY") easeFactor = baseEase + 0.15
+  easeFactor = Math.max(MIN_EASE, Math.round(easeFactor * 100) / 100)
+
+  const repetitions = rating === "AGAIN" ? 0 : Math.max(0, card.repetitions) + 1
+  const lapses = Math.max(0, card.lapses) + (rating === "AGAIN" ? 1 : 0)
+  const mastery = Math.max(0, Math.min(100, card.mastery + MASTERY_DELTA[rating]))
+
+  const next = new Date()
+  next.setDate(next.getDate() + interval)
+
+  return { easeFactor, intervalDays: interval, repetitions, lapses, mastery, nextReview: next.toISOString() }
+}
+
 /** "Today", "3d", "2.5mo", "1y" — compact Anki-style interval labels. */
 export function formatInterval(days: number): string {
   if (days <= 0) return "Today"

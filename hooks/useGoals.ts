@@ -38,7 +38,7 @@ const sortGoals = (list: Goal[], opt: SortOption): Goal[] => {
 }
 
 // Query key factory so cache invalidation/updates stay consistent.
-export const goalsQueryKey = (userId?: number | null) => ["goals", userId] as const
+export const goalsQueryKey = (userId?: string | null) => ["goals", userId] as const
 
 const ITEMS_PER_PAGE = 4
 

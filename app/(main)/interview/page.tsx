@@ -118,7 +118,7 @@ export default function InterviewPage() {
   const [history, setHistory] = useState<ScorecardRecord[]>(loadScorecards)
 
   const speech = useSpeechRecognition({ lang: "ko-KR" })
-  const conversationRef = useRef<number | null>(null)
+  const conversationRef = useRef<string | null>(null)
 
   const topic = INTERVIEW_TOPICS[0]
 

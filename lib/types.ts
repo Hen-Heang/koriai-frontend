@@ -147,9 +147,9 @@ export interface DashboardStats {
 }
 
 export interface Conversation {
-  id: number
-  userId: number
-  scenarioId?: number | null
+  id: string
+  userId: string
+  scenarioId?: string | null
   title: string
   conversationType: string
   modelUsed: string
@@ -159,8 +159,8 @@ export interface Conversation {
 }
 
 export interface Message {
-  id: number
-  conversationId: number
+  id: string
+  conversationId: string
   role: string
   content: string
   corrections?: string | null
@@ -288,7 +288,7 @@ export interface PracticeToday {
 }
 
 export interface MessageAnalysis {
-  id: number
+  id: string
   source?: string | null
   originalText: string
   literalMeaning: string

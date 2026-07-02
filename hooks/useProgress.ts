@@ -18,7 +18,7 @@ const emptyStats: DashboardStats = {
   dueReviews: 0,
 }
 
-export const dashboardQueryKey = (userId?: number | null) => ["dashboard", userId] as const
+export const dashboardQueryKey = (userId?: string | null) => ["dashboard", userId] as const
 
 export function useProgress() {
   const userId = getUserId()

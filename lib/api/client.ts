@@ -1,5 +1,18 @@
+// Spring backend axios client — kept for later restore, not used while the app
+// runs on Supabase (see lib/supabase.ts). getRefreshToken/setTokens no longer
+// exist in lib/auth-store.ts (Supabase manages its own token refresh), so this
+// file would need those re-added when the Spring backend comes back.
 import axios from "axios"
-import { clearAuth, getRefreshToken, setTokens } from "@/lib/auth-store"
+import { clearAuth } from "@/lib/auth-store"
+
+function getRefreshToken(): string | null {
+  return typeof window !== "undefined" ? window.localStorage.getItem("refreshToken") : null
+}
+
+function setTokens(token: string, refreshToken: string) {
+  window.localStorage.setItem("token", token)
+  window.localStorage.setItem("refreshToken", refreshToken)
+}
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api"

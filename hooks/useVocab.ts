@@ -46,7 +46,7 @@ async function fetchWords(): Promise<VocabData> {
   }
 }
 
-export const vocabQueryKey = (userId?: number | null) => ["vocab", userId] as const
+export const vocabQueryKey = (userId?: string | null) => ["vocab", userId] as const
 
 export function useVocab() {
   const userId = getUserId()

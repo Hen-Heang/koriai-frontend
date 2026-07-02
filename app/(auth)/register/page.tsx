@@ -16,8 +16,7 @@ import {
   FieldGroup,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { authApi, getApiErrorMessage } from "@/lib/api"
-import { setAuth } from "@/lib/auth-store"
+import { authApi } from "@/lib/api"
 
 const KOREAN_LEVELS = [
   { value: "BEGINNER", label: "Beginner" },
@@ -90,10 +89,13 @@ export default function RegisterPage() {
         yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
         learningGoal: learningGoal || undefined,
       })
-      setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
+      if (data.needsEmailConfirmation) {
+        setError("Check your inbox and confirm your email, then sign in.")
+        return
+      }
       router.push("/dashboard")
     } catch (error) {
-      setError(getApiErrorMessage(error, "Registration failed. Email may already be in use."))
+      setError(error instanceof Error ? error.message : "Registration failed. Email may already be in use.")
     } finally {
       setLoading(false)
     }

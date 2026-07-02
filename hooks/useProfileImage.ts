@@ -25,10 +25,10 @@ function deriveInitials(displayName?: string | null, email?: string | null): str
 
 // Cache the result for the session so the navbar, chat, and any other consumer
 // share a single network round trip instead of each fetching the blob again.
-let cache: { id: number; data: ProfileAvatar } | null = null
+let cache: { id: string; data: ProfileAvatar } | null = null
 let inflight: Promise<ProfileAvatar> | null = null
 
-async function load(userId: number): Promise<ProfileAvatar> {
+async function load(userId: string): Promise<ProfileAvatar> {
   if (cache && cache.id === userId) return cache.data
   if (inflight) return inflight
 

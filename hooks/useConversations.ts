@@ -8,7 +8,7 @@ import { chatApi, getApiErrorMessage } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
 
 export interface Conversation {
-  id: number
+  id: string
   title: string
   conversationType?: string
   messageCount?: number
@@ -16,7 +16,7 @@ export interface Conversation {
   updatedAt?: string
 }
 
-export const conversationsQueryKey = (userId?: number | null) =>
+export const conversationsQueryKey = (userId?: string | null) =>
   ["conversations", userId] as const
 
 /**
@@ -41,7 +41,7 @@ export function useConversations() {
   )
 
   const rename = useCallback(
-    async (id: number, title: string) => {
+    async (id: string, title: string) => {
       const trimmed = title.trim()
       if (!trimmed) return
       const before = queryClient.getQueryData<Conversation[]>(key)
@@ -61,7 +61,7 @@ export function useConversations() {
   )
 
   const remove = useCallback(
-    async (id: number) => {
+    async (id: string) => {
       const before = queryClient.getQueryData<Conversation[]>(key)
       queryClient.setQueryData<Conversation[]>(key, (list) =>
         (list ?? []).filter((c) => c.id !== id)

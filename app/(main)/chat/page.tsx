@@ -51,7 +51,7 @@ function ChatPageContent() {
   const { conversations, isLoading: conversationsLoading, rename, remove, refresh } =
     useConversations()
 
-  const [conversationId, setConversationId] = useState<number | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [bootstrapped, setBootstrapped] = useState(false)
   const [error, setError] = useState("")
   const [isStartingNewChat, setIsStartingNewChat] = useState(false)
@@ -107,14 +107,14 @@ function ChatPageContent() {
     }
   }, [refresh])
 
-  const selectConversation = useCallback((id: number) => {
+  const selectConversation = useCallback((id: string) => {
     setConversationId(id)
     setSheetOpen(false)
   }, [])
 
   // Deleting the open chat drops back to bootstrap (resume next / create fresh).
   const handleDelete = useCallback(
-    async (id: number) => {
+    async (id: string) => {
       await remove(id)
       if (id === conversationId) {
         setConversationId(null)

@@ -46,7 +46,7 @@ const isDueTodayOrCarriedOver = (t: Task, today: Date): boolean => {
   return endOk || !t.completed
 }
 
-export const todaysTasksQueryKey = (userId?: number | null) =>
+export const todaysTasksQueryKey = (userId?: string | null) =>
   ["tasks", "today", userId] as const
 
 export function useTodaysTasks() {

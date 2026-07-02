@@ -282,7 +282,7 @@ export default function GoalDetailPage() {
 
   // Owner removes another member.
   const removeMember = useCallback(
-    async (memberUserId: number, name: string) => {
+    async (memberUserId: string, name: string) => {
       try {
         await goalsApi.removeMember(id, memberUserId)
         void queryClient.invalidateQueries({ queryKey: membersKey })

@@ -59,7 +59,7 @@ const TECHNICAL_SUGGESTIONS: Suggestion[] = [
 type ChatWindowProps = {
   title: string
   subtitle: string
-  conversationId?: number
+  conversationId?: string
   initialMessages?: ChatMessage[]
   initialDraft?: string
   onNewChat?: () => void

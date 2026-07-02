@@ -61,6 +61,16 @@ export function usePush() {
     }
   }, [])
 
+  const sendTest = useCallback(async () => {
+    try {
+      const result = await pushApi.sendTest()
+      if (result.sent > 0) toast.success("Test notification sent")
+      else toast.error("No active subscription found — try re-enabling notifications")
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Could not send test notification"))
+    }
+  }, [])
+
   const linkTelegram = useCallback(async () => {
     try {
       const { deepLink } = await pushApi.telegramLink()
@@ -105,6 +115,7 @@ export function usePush() {
     telegramLinked,
     enableWeb,
     disableWeb,
+    sendTest,
     linkTelegram,
     unlinkTelegram,
   }

@@ -76,10 +76,10 @@ function gradeLocally(lesson: LessonDetail, answers: Array<number | string>): Le
   }
 }
 
-export const foundationsListKey = (track: LearnTrack, userId?: number | null) =>
+export const foundationsListKey = (track: LearnTrack, userId?: string | null) =>
   ["foundations", "lessons", track, userId] as const
 
-export const foundationsLessonKey = (id: string, userId?: number | null) =>
+export const foundationsLessonKey = (id: string, userId?: string | null) =>
   ["foundations", "lesson", id, userId] as const
 
 // Track list for the /learn page: seed lessons with the user's server-backed

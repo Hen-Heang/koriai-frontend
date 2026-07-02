@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authApi, userApi } from "@/lib/api"
-import { clearAuth, getRefreshToken, getUserId } from "@/lib/auth-store"
+import { getUserId } from "@/lib/auth-store"
 import { refreshProfileImage } from "@/hooks/useProfileImage"
 import { usePush } from "@/hooks/usePush"
 import { cn } from "@/lib/utils"
@@ -292,15 +292,11 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
-    const refreshToken = getRefreshToken()
-    if (refreshToken) {
-      try {
-        await authApi.logout(refreshToken)
-      } catch {
-        /* ignore */
-      }
+    try {
+      await authApi.logout()
+    } catch {
+      /* ignore */
     }
-    clearAuth()
     router.replace("/login")
   }
 
@@ -525,12 +521,19 @@ export default function SettingsPage() {
                       : "Not supported in this browser."}
                   </p>
                 </div>
-                <Switch
-                  checked={push.webEnabled}
-                  disabled={!push.supported || push.webBusy || push.webState === "denied"}
-                  onCheckedChange={(v) => (v ? push.enableWeb() : push.disableWeb())}
-                  aria-label="Toggle browser notifications"
-                />
+                <div className="flex items-center gap-2">
+                  {push.webEnabled && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => push.sendTest()}>
+                      Send test
+                    </Button>
+                  )}
+                  <Switch
+                    checked={push.webEnabled}
+                    disabled={!push.supported || push.webBusy || push.webState === "denied"}
+                    onCheckedChange={(v) => (v ? push.enableWeb() : push.disableWeb())}
+                    aria-label="Toggle browser notifications"
+                  />
+                </div>
               </div>
             </SectionRow>
 

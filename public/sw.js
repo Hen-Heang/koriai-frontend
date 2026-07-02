@@ -1,6 +1,7 @@
 // KoriAI service worker — Web Push delivery.
-// Receives pushes from the backend WebPushService (payload: { title, body, url })
-// and shows a notification; clicking focuses an open tab or opens the URL.
+// Receives pushes from Orbit's `send-push` Supabase Edge Function
+// (payload: { title, body, url }) and shows a notification; clicking focuses
+// an open tab or opens the URL.
 
 self.addEventListener("install", () => self.skipWaiting())
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()))

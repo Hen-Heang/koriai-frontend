@@ -6,7 +6,7 @@ import { chatApi } from "@/lib/api"
 import type { ChatMessage, MessageRole } from "@/lib/types"
 
 type UseChatOptions = {
-  conversationId?: number
+  conversationId?: string
   initialMessages?: ChatMessage[]
 }
 
@@ -117,7 +117,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
         setError("")
         const history = Array.isArray(data) ? data : []
         const normalized = history.map((item, index) => {
-          const message = item as Record<string, unknown>
+          const message = item as unknown as Record<string, unknown>
           const role: MessageRole =
             message.role === "assistant" || message.senderType === "ASSISTANT"
               ? "assistant"

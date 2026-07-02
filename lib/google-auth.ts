@@ -1,5 +1,4 @@
 import { authApi } from "@/lib/api"
-import { setAuth } from "@/lib/auth-store"
 
 const GIS_SRC = "https://accounts.google.com/gsi/client"
 
@@ -42,25 +41,19 @@ export async function makeNonce(): Promise<{ nonce: string; hashedNonce: string 
 }
 
 export interface GoogleSessionResult {
-  accessToken: string
-  refreshToken: string
-  userId: number
+  userId: string
   email: string
 }
 
 /**
- * Establishes a Spring-JWT session from a Google credential (ID token): the kori
- * backend verifies the token, finds-or-creates the user by email, and returns the
- * same JWT the email/password flow issues. One backend, one identity.
- *
- * `rawNonce` is accepted so the backend can verify it against the hashed nonce
- * Google was initialized with (replay protection) once that check is wired.
+ * Establishes a Supabase session from a Google credential (ID token). Google was
+ * initialized with the SHA-256 hash of `rawNonce`; Supabase re-hashes the raw
+ * value to verify they match (replay protection). The Google provider with this
+ * client ID must be enabled under Supabase Auth > Providers.
  */
 export async function handleGoogleCredential(
   credential: string,
-  _rawNonce: string,
+  rawNonce: string,
 ): Promise<GoogleSessionResult> {
-  const data = (await authApi.loginWithGoogle(credential)) as GoogleSessionResult
-  setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
-  return data
+  return authApi.loginWithGoogle(credential, rawNonce)
 }

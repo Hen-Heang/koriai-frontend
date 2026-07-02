@@ -11,7 +11,7 @@ import { getUserId } from "@/lib/auth-store"
 // bell polls every 60s and refetches after each action (INTEGRATION.md: "Realtime
 // patching is deferred → replaced by Query invalidation").
 
-export const notificationsQueryKey = (userId?: number | null) =>
+export const notificationsQueryKey = (userId?: string | null) =>
   ["goal-notifications", userId] as const
 
 export function useNotifications() {

@@ -454,7 +454,13 @@ export default function HistoryPage() {
   useEffect(() => {
     correctionApi
       .history(100)
-      .then((data) => setCorrections(Array.isArray(data) ? data : []))
+      .then((data) =>
+        setCorrections(
+          Array.isArray(data)
+            ? data.map((c) => ({ ...c, explanation: c.explanation ?? "" }))
+            : []
+        )
+      )
       .catch(() => setCorrections([]))
       .finally(() => setLoadingCorrections(false))
   }, [])

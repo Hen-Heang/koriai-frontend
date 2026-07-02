@@ -1,3 +1,55 @@
+// Auth state, backed by the Supabase session (supabase-js persists it in
+// localStorage under SUPABASE_STORAGE_KEY). The exported function names are kept
+// from the Spring-JWT era so callers don't change; user ids are now Supabase
+// auth UUIDs (string), not numeric backend ids.
+import { supabase, SUPABASE_STORAGE_KEY } from "@/lib/supabase"
+
+type StoredSession = {
+  access_token?: string
+  refresh_token?: string
+  user?: { id?: string; email?: string }
+}
+
+// Synchronous session read for render-time guards (supabase.auth.getSession()
+// is async). supabase-js keeps this key in sync on login/refresh/logout.
+function readSession(): StoredSession | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = window.localStorage.getItem(SUPABASE_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as StoredSession) : null
+  } catch {
+    return null
+  }
+}
+
+export function getToken(): string | null {
+  return readSession()?.access_token ?? null
+}
+
+export function getUserId(): string | null {
+  return readSession()?.user?.id ?? null
+}
+
+export function getUserEmail(): string | null {
+  return readSession()?.user?.email ?? null
+}
+
+export function isAuthenticated(): boolean {
+  return Boolean(getToken())
+}
+
+/** getUserId(), but throws instead of returning null — the common case in lib/api/*.ts writes. */
+export function requireUserId(): string {
+  const userId = getUserId()
+  if (!userId) throw new Error("Not signed in")
+  return userId
+}
+
+export async function clearAuth() {
+  await supabase.auth.signOut()
+}
+
+/* ── Spring backend implementation (kept for later restore) ──────────────────
 const TOKEN_KEY = "token"
 const REFRESH_TOKEN_KEY = "refreshToken"
 const USER_ID_KEY = "userId"
@@ -10,11 +62,6 @@ export function setAuth(token: string, refreshToken: string, userId: number, ema
   localStorage.setItem(EMAIL_KEY, email)
 }
 
-/**
- * Updates just the tokens after a silent refresh. The backend rotates the refresh
- * token on every refresh, so we always overwrite the stored one — keeping the old
- * value would make the next refresh fail.
- */
 export function setTokens(token: string, refreshToken: string) {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
@@ -43,3 +90,4 @@ export function getUserId(): number | null {
 export function isAuthenticated(): boolean {
   return Boolean(getToken())
 }
+────────────────────────────────────────────────────────────────────────────── */

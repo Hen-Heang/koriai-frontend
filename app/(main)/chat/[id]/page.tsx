@@ -7,14 +7,13 @@ type ChatDetailPageProps = {
 
 export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
   const { id } = await params
-  const conversationId = Number(id)
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
       <ChatWindow
         title={`Conversation ${id}`}
         subtitle="Detailed view for a specific AI conversation thread."
-        conversationId={Number.isFinite(conversationId) ? conversationId : undefined}
+        conversationId={id || undefined}
       />
       <Card className="rounded-3xl border-border/60 bg-white/90 shadow-lg shadow-slate-950/5">
         <CardHeader>

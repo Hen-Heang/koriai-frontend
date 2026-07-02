@@ -11,10 +11,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.5",
     "@hookform/resolvers": "^5.2.2",
     "@sentry/nextjs": "^10.43.0",
     "@supabase/supabase-js": "^2.108.1",
     "@tanstack/react-query": "^5.90.21",
+    "ai": "^7.0.11",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

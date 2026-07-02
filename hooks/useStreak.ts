@@ -7,7 +7,7 @@ import { progressApi } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
 
 // Query key factory so any caller can invalidate/read the cached streak.
-export const streakQueryKey = (userId?: number | null) => ["streak", userId] as const
+export const streakQueryKey = (userId?: string | null) => ["streak", userId] as const
 
 /**
  * Study streak for the authenticated user. Auto-fetches + caches via TanStack

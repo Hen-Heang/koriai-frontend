@@ -31,8 +31,8 @@ export function InviteMembers({ goalId, onInvited }: InviteMembersProps) {
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [results, setResults] = useState<SearchUser[]>([])
   const [loading, setLoading] = useState(false)
-  const [pendingId, setPendingId] = useState<number | null>(null)
-  const [invitedIds, setInvitedIds] = useState<Set<number>>(new Set())
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set())
 
   // Debounce the query (250ms) to avoid a request per keystroke.
   useEffect(() => {

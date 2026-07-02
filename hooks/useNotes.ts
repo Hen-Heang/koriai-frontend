@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { notesApi, type NoteInput, type NoteMeta } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
 
-export const notesQueryKey = (userId?: number | null) => ["notes", userId] as const
+export const notesQueryKey = (userId?: string | null) => ["notes", userId] as const
 export const noteQueryKey = (slug: string) => ["note", slug] as const
 
 // List of note metadata for the library/index page.

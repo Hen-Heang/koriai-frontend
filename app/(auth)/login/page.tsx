@@ -16,8 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { authApi, getApiErrorMessage } from "@/lib/api"
-import { setAuth } from "@/lib/auth-store"
+import { authApi } from "@/lib/api"
 import { GoogleSignInButton } from "@/components/google-sign-in-button"
 
 export default function LoginPage() {
@@ -33,11 +32,10 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      const data = await authApi.login({ email, password })
-      setAuth(data.accessToken, data.refreshToken, data.userId, data.email)
+      await authApi.login({ email, password })
       router.push("/dashboard")
     } catch (error) {
-      setError(getApiErrorMessage(error, "Invalid email or password."))
+      setError(error instanceof Error ? error.message : "Invalid email or password.")
     } finally {
       setLoading(false)
     }
