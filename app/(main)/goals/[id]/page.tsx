@@ -77,6 +77,18 @@ const Calendar = dynamic(
 )
 
 type DetailTab = "overview" | "tasks" | "members" | "coach" | "settings"
+
+// Shared-layout sliding pill rendered behind whichever tab trigger is active —
+// framer-motion FLIPs it between siblings on tab change instead of a per-trigger bg color.
+function TabPill() {
+  return (
+    <motion.span
+      layoutId="goal-detail-tab-pill"
+      className="absolute inset-0 -z-10 rounded-full bg-background shadow-[0_1px_3px_rgba(15,23,42,0.08)] ring-1 ring-border/80 dark:bg-white/10 dark:ring-white/15"
+      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+    />
+  )
+}
 const TAB_STORAGE_KEY = "dg_goal_detail_tab"
 
 const progressGradient = (progress: number) =>
@@ -472,17 +484,52 @@ export default function GoalDetailPage() {
       {/* Content Tabs */}
       <Tabs value={tab} onValueChange={changeTab} className="flex-col space-y-6 sm:space-y-8">
         <div className="no-scrollbar overflow-x-auto pb-1">
-          <TabsList className="inline-flex h-12 w-auto min-w-full justify-start gap-1 rounded-2xl bg-foreground/5 p-1.5 backdrop-blur-sm sm:h-14 sm:gap-2 sm:p-2 sm:justify-center">
-            <TabsTrigger value="overview" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="tasks" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Tasks</TabsTrigger>
-            <TabsTrigger value="members" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">
+          <TabsList className="inline-flex h-12 w-auto min-w-full justify-start gap-1 rounded-full border border-border/60 bg-foreground/3 p-1.5 shadow-sm backdrop-blur-sm sm:h-14 sm:justify-center sm:gap-1.5 sm:p-2 dark:border-white/10 dark:bg-white/3">
+            <TabsTrigger
+              value="overview"
+              className="relative z-10 rounded-full px-3 text-[11px] font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-transparent sm:px-6 sm:text-xs"
+            >
+              {tab === "overview" && <TabPill />}
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="tasks"
+              className="relative z-10 rounded-full px-3 text-[11px] font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-transparent sm:px-6 sm:text-xs"
+            >
+              {tab === "tasks" && <TabPill />}
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger
+              value="members"
+              className="relative z-10 flex items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-transparent sm:px-6 sm:text-xs"
+            >
+              {tab === "members" && <TabPill />}
               <Users size={12} className="sm:size-3.5" /> Members
-              {memberCount > 0 && <span className="tabular-nums opacity-60">{memberCount}</span>}
+              {memberCount > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="h-4 min-w-4 rounded-full bg-foreground/10 px-1 text-[10px] leading-none tabular-nums text-foreground/70"
+                >
+                  {memberCount}
+                </Badge>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="coach" className="flex items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">
-              <Sparkles size={12} className="sm:size-3.5" /> Coach
+            <TabsTrigger
+              value="coach"
+              className="relative z-10 flex items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-transparent sm:px-6 sm:text-xs"
+            >
+              {tab === "coach" && <TabPill />}
+              <Sparkles size={12} className="text-violet-500/80 sm:size-3.5" /> Coach
             </TabsTrigger>
-            {isOwner && <TabsTrigger value="settings" className="rounded-lg px-3 text-[11px] font-medium sm:rounded-xl sm:px-6 sm:text-xs">Settings</TabsTrigger>}
+            {isOwner && (
+              <TabsTrigger
+                value="settings"
+                className="relative z-10 rounded-full px-3 text-[11px] font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-transparent sm:px-6 sm:text-xs"
+              >
+                {tab === "settings" && <TabPill />}
+                Settings
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
