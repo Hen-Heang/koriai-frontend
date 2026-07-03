@@ -70,6 +70,12 @@ function PeekableText({ text }: { text: string }) {
 export default function ReadingUnitPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  // On a hard page load, Next's client useParams() returns the raw
+  // (still percent-encoded) segment for non-ASCII ids — decode it once here so
+  // the Supabase query builder doesn't encode it a second time and look up a
+  // literal "%EC%9A%B4..." string that matches no row. A no-op for ids that
+  // arrive already-decoded (soft nav) since they contain no "%".
+  const unitId = decodeURIComponent(params.id)
 
   const [unit, setUnit] = useState<ReadingUnit | null>(null)
   const [loadingUnit, setLoadingUnit] = useState(true)
@@ -79,14 +85,14 @@ export default function ReadingUnitPage() {
   useEffect(() => {
     let active = true
     readingApi
-      .getUnit(params.id)
+      .getUnit(unitId)
       .then((u) => active && setUnit(u))
       .catch(() => active && setUnit(null))
       .finally(() => active && setLoadingUnit(false))
     return () => {
       active = false
     }
-  }, [params.id])
+  }, [unitId])
 
   const progressMap = useSyncExternalStore(
     subscribeReadingProgress,
