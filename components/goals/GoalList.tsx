@@ -404,7 +404,7 @@ export function GoalList({
                       </Badge>
                       {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                     </div>
-                    <h3 className="mt-2 truncate text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
+                    <h3 className="mt-2 line-clamp-2 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
                       {goal.title}
                     </h3>
 

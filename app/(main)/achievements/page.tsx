@@ -5,21 +5,16 @@ import { useRouter } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowLeft,
+  Blocks,
   BookOpen,
-  CalendarDays,
-  CheckCircle2,
+  CheckCheck,
   Flame,
-  Headphones,
+  GraduationCap,
   Library,
   Lock,
   MessagesSquare,
-  NotebookText,
   Sparkles,
-  SpellCheck2,
-  Sprout,
-  TrendingUp,
   Trophy,
-  Wand2,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -35,20 +30,17 @@ import type { AchievementSummary } from "@/lib/types"
 
 const containerVariants = staggerContainer(0.06)
 
+// Keyed by the exact lucide export name used in the achievement catalog
+// (lib/api/progress.ts CATALOG) — keep these in sync.
 const ICONS: Record<string, LucideIcon> = {
-  sprout: Sprout,
-  book: BookOpen,
-  library: Library,
-  flame: Flame,
-  "spell-check": SpellCheck2,
-  notebook: NotebookText,
-  headphones: Headphones,
-  messages: MessagesSquare,
-  trophy: Trophy,
-  "check-circle": CheckCircle2,
-  "calendar-days": CalendarDays,
-  wand: Wand2,
-  "trending-up": TrendingUp,
+  BookOpen,
+  Library,
+  GraduationCap,
+  MessagesSquare,
+  Flame,
+  Trophy,
+  CheckCheck,
+  Blocks,
 }
 
 export default function AchievementsPage() {
@@ -89,6 +81,18 @@ export default function AchievementsPage() {
       className="space-y-8 pb-12"
     >
       <motion.div variants={itemVariants}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.push("/settings")}
+          className="h-9 rounded-xl px-3 font-bold text-muted-foreground hover:text-foreground active:scale-95"
+        >
+          <ArrowLeft size={16} strokeWidth={2.5} className="mr-1.5" />
+          Back to Settings
+        </Button>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
         <PageHero
           eyebrow="Achievements"
           title="Your Progress & XP"
@@ -101,17 +105,6 @@ export default function AchievementsPage() {
               value: summary ? `${summary.unlockedCount}/${summary.totalCount}` : "—",
             },
           ]}
-          actions={
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 rounded-xl font-bold active:scale-95"
-              onClick={() => router.push("/settings")}
-            >
-              <ArrowLeft size={14} strokeWidth={3} className="mr-2" />
-              Back
-            </Button>
-          }
         />
       </motion.div>
 

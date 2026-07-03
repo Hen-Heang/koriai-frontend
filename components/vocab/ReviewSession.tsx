@@ -96,7 +96,7 @@ function GradeButtons({
           <span className="text-xs font-bold uppercase tracking-wider">
             {GRADE_STYLES[rating].label}
           </span>
-          <span className="text-[11px] font-bold opacity-80">
+          <span className="text-[12px] font-bold opacity-80">
             {formatInterval(previewIntervalDays(card, rating))}
           </span>
         </button>
@@ -175,7 +175,7 @@ function FlashCard({
             onClick={() => setFlipped(true)}
             className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
+            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
             <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{reversed ? card.meaning : card.term}</p>
             {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
             <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
@@ -187,7 +187,7 @@ function FlashCard({
           <div
             className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
+            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
             <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{reversed ? card.term : card.meaning}</p>
             <Pronunciation text={card.pronunciation} className="mt-2 text-base sm:text-2xl" />
             {/* Always surface the other side too, so each card reinforces Korean + reading + meaning together. */}
@@ -324,7 +324,7 @@ function ChoiceCard({
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Select Meaning</span>
+        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Select Meaning</span>
         <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{card.term}</p>
         <Pronunciation text={card.pronunciation} className="mt-3 text-lg sm:text-2xl" />
         <div className="mt-6">
@@ -433,7 +433,7 @@ function RecallCard({
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Type in Korean</span>
+        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Type in Korean</span>
         <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{card.meaning}</p>
         {card.pronunciation && answered && (
           <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
@@ -516,7 +516,7 @@ function RecallCard({
             >
               <div className="min-w-0">
                 <p className={cn(
-                  "text-[11px] font-bold uppercase tracking-wide",
+                  "text-[12px] font-bold uppercase tracking-wide",
                   result === "correct" ? "text-emerald-600" : "text-red-500"
                 )}>
                   {result === "correct" ? "Correct" : "Answer"}
@@ -637,7 +637,7 @@ function ListeningCard({
     <div className="flex flex-col gap-6">
       {/* Audio stage */}
       <div className="flex h-[min(20rem,48dvh)] flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
-        <span className="rounded-full bg-accent/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+        <span className="rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
           Listen &amp; Recall
         </span>
 
@@ -778,7 +778,7 @@ function SentenceCard({
     <div className="flex flex-col gap-5">
       {/* Prompt card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:p-10">
-        <span className="mb-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Write a Sentence</span>
+        <span className="mb-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Write a Sentence</span>
         <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">
           {card.term}
         </p>
@@ -807,7 +807,7 @@ function SentenceCard({
       {(phase === "writing" || phase === "checking") && challenge && (
         <div className="space-y-3">
           <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4 space-y-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Task</span>
+            <span className="text-[12px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Task</span>
             <p className="text-sm font-bold text-foreground leading-relaxed">{challenge.challengePrompt}</p>
             {challenge.contextHint && (
               <p className="text-xs font-medium text-muted-foreground/60 italic">{challenge.contextHint}</p>
@@ -859,14 +859,14 @@ function SentenceCard({
 
           {result.correctedSentence && result.correctedSentence !== attempt.trim() && (
             <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-3 space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">Corrected</span>
+              <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">Corrected</span>
               <p className="text-sm font-bold text-foreground">{result.correctedSentence}</p>
             </div>
           )}
 
           {result.betterAlternative && (
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">More natural</span>
+              <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">More natural</span>
               <p className="text-sm font-bold text-foreground">{result.betterAlternative}</p>
             </div>
           )}
@@ -880,7 +880,7 @@ function SentenceCard({
 
           {/* Grade buttons — score drives the recommendation, learner confirms */}
           <div className="space-y-2">
-            <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">How well did you do?</p>
+            <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">How well did you do?</p>
             <GradeButtons card={card} onGrade={advanceCard} />
           </div>
         </motion.div>
@@ -1118,11 +1118,11 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
               <p className="text-2xl font-bold text-emerald-600">{filteredDueToday.length}</p>
-              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
+              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
             </div>
             <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{filteredAllWords.length}</p>
-              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
+              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
             </div>
           </div>
 
@@ -1157,8 +1157,8 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <ArrowLeft size={20} strokeWidth={2.5} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold tracking-tight text-foreground">Memory Lab</p>
-            <p className="text-[11px] font-medium text-muted-foreground/50 leading-tight">
+            <p className="text-[16px] font-bold tracking-tight text-foreground">Memory Lab</p>
+            <p className="text-[12px] font-medium text-muted-foreground/50 leading-tight">
               {isDueSession
                 ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
                 : "Practice the full deck"}
@@ -1167,12 +1167,12 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-base font-bold text-emerald-600 leading-none">{filteredDueToday.length}</p>
-              <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Due</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Due</p>
             </div>
             <div className="h-5 w-px bg-border/60" />
             <div className="text-right">
               <p className="text-base font-bold text-foreground leading-none">{filteredAllWords.length}</p>
-              <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Total</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Total</p>
             </div>
           </div>
         </div>
@@ -1184,7 +1184,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             {/* Category grid */}
             {categories.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
                   <Layers3 size={12} strokeWidth={3} />
                   Filter by Category
                   {selectedCategories.size > 0 && (
@@ -1235,7 +1235,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
             {/* Mode selector */}
             <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Study Mode</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Study Mode</p>
               <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
                 {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening", "sentence"] as Mode[]).map((m) => (
                   <button
@@ -1309,7 +1309,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           >
             <ArrowLeft size={20} strokeWidth={2.5} />
           </button>
-          <span className="ml-3 text-[13px] font-bold uppercase tracking-wide text-foreground">Session Results</span>
+          <span className="ml-3 text-[14px] font-bold uppercase tracking-wide text-foreground">Session Results</span>
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
@@ -1330,7 +1330,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
 
           <div>
             <h2 className="text-4xl font-bold tracking-tight text-foreground">{headline}</h2>
-            <p className="mt-3 text-[15px] font-medium text-muted-foreground/60 leading-relaxed">
+            <p className="mt-3 text-[16px] font-medium text-muted-foreground/60 leading-relaxed">
               You knew <span className="text-emerald-600 font-bold">{knew}</span> of <span className="text-foreground font-bold">{total}</span> words on the first try.
               Keep this momentum up to strengthen long-term memory.
             </p>
@@ -1411,14 +1411,14 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         </button>
         <div className="flex items-center gap-3">
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-          <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
+          <span className="text-[14px] font-bold uppercase tracking-wide text-foreground">
             {Math.min(attemptsCount + 1, total)} <span className="opacity-20 mx-1">/</span> {total}
           </span>
           {/* Sync status — reassures the user reviews are persisting (and warns if not) */}
           {(saveError || pendingSaves > 0 || knewCount + lapsedIds.size > 0) && (
             <span
               className={cn(
-                "flex items-center gap-1 text-[11px] font-medium",
+                "flex items-center gap-1 text-[12px] font-medium",
                 saveError
                   ? "text-red-500"
                   : pendingSaves > 0

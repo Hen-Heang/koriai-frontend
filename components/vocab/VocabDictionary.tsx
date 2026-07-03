@@ -23,6 +23,10 @@ type VocabDictionaryProps = {
   words: VocabItem[]
   loading: boolean
   dueCount?: number
+  // Controlled from the page so a quick-search box near the top of /vocab
+  // can drive the same filtered list without duplicating state.
+  query: string
+  onQueryChange: (query: string) => void
   onUpdate: (
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
@@ -92,8 +96,15 @@ const SORT_ORDERS: { value: SortOrder; label: string }[] = [
   { value: "due", label: "Due soonest" },
 ]
 
-export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDelete }: VocabDictionaryProps) {
-  const [query, setQuery] = useState("")
+export function VocabDictionary({
+  words,
+  loading,
+  dueCount = 0,
+  query,
+  onQueryChange,
+  onUpdate,
+  onDelete,
+}: VocabDictionaryProps) {
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
   const [sortOrder, setSortOrder] = useState<SortOrder>("alpha")
   const [viewMode, setViewMode] = useState<VocabViewMode>("list")
@@ -110,7 +121,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
     value === "all" ? words.length : words.filter((w) => matchesMastery(w.mastery, value)).length
 
   return (
-    <div className="space-y-6">
+    <div id="vocab-dictionary" className="scroll-mt-20 space-y-6">
       <div className="px-4">
         <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground/60">Your Dictionary</h4>
         <p className="mt-1 text-xs font-bold text-muted-foreground/30">
@@ -127,14 +138,14 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
             <Search size={16} strokeWidth={2.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => onQueryChange(e.target.value)}
               placeholder="Search words, meanings, tags..."
               className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 transition-colors focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:bg-slate-900/40 sm:text-sm"
             />
             {query && (
               <button
                 type="button"
-                onClick={() => setQuery("")}
+                onClick={() => onQueryChange("")}
                 aria-label="Clear search"
                 className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
               >
@@ -250,7 +261,7 @@ export function VocabDictionary({ words, loading, dueCount = 0, onUpdate, onDele
             <Layers3 size={40} strokeWidth={1.5} />
           </div>
           <h3 className="text-xl font-bold text-foreground">Start Your Collection</h3>
-          <p className="mx-auto mt-3 max-w-xs text-[15px] font-medium leading-relaxed text-muted-foreground/60">
+          <p className="mx-auto mt-3 max-w-xs text-[16px] font-medium leading-relaxed text-muted-foreground/60">
             Save words from chat sessions or use the AI Deck Builder to start mastering Korean vocabulary.
           </p>
         </div>

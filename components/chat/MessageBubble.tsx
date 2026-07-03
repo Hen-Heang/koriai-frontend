@@ -196,7 +196,7 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
       }
       case "bullet":
         return (
-          <ul key={idx} className="mt-3 space-y-2 text-[15px]">
+          <ul key={idx} className="mt-3 space-y-2 text-[16px]">
             {block.items.map((item, i) => (
               <li key={i} className="flex gap-3">
                 <span className="mt-[0.7em] h-[5px] w-[5px] shrink-0 rounded-full bg-current opacity-30" />
@@ -207,10 +207,10 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
         )
       case "ordered":
         return (
-          <ol key={idx} className="mt-3 space-y-2 text-[15px]">
+          <ol key={idx} className="mt-3 space-y-2 text-[16px]">
             {block.items.map((item, i) => (
               <li key={i} className="flex gap-3">
-                <span className="mt-px w-4 shrink-0 text-right text-[13px] font-semibold tabular-nums text-muted-foreground/60">
+                <span className="mt-px w-4 shrink-0 text-right text-[14px] font-semibold tabular-nums text-muted-foreground/60">
                   {i + 1}.
                 </span>
                 <span className="leading-7">{renderInline(item, isUserBubble, peek)}</span>
@@ -222,7 +222,7 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
         return <hr key={idx} className="my-6 border-border/50" />
       case "paragraph":
         return (
-          <p key={idx} className="mt-4 text-[15px] leading-7">
+          <p key={idx} className="mt-4 text-[16px] leading-7">
             {renderInline(block.text, isUserBubble, peek)}
           </p>
         )
@@ -276,7 +276,7 @@ function MessageBubbleImpl({
         <div className="shrink-0 pt-1">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[11px] font-bold text-white shadow-sm sm:h-9 sm:w-9",
+              "flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl text-[12px] font-bold text-white shadow-sm sm:h-9 sm:w-9",
               isUser && "bg-slate-500"
             )}
           >
@@ -285,7 +285,7 @@ function MessageBubbleImpl({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={userAvatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <span className="text-[14px]">👤</span>
+                <span className="text-[15px]">👤</span>
               )
             ) : (
               <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="h-full w-full" />
@@ -299,7 +299,7 @@ function MessageBubbleImpl({
              <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
                {isUser ? "You" : "Hengo Tutor"}
              </span>
-             <span className="text-[11px] font-bold text-muted-foreground/20">
+             <span className="text-[12px] font-bold text-muted-foreground/20">
                {new Date(message.createdAt).toLocaleTimeString([], {
                  hour: "2-digit",
                  minute: "2-digit",
@@ -320,16 +320,16 @@ function MessageBubbleImpl({
             >
               <div className="flex items-center gap-2 border-b border-amber-500/10 bg-amber-500/5 px-4 py-2.5">
                 <CheckCircle2 size={14} className="text-amber-600 dark:text-amber-400" strokeWidth={2.5} />
-                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Suggested Improvement</p>
+                <p className="text-[12px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Suggested Improvement</p>
               </div>
               <div className="p-4">
-                <div className="text-[14px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">
+                <div className="text-[15px] font-bold leading-relaxed text-amber-900 dark:text-amber-100">
                   {renderInline(message.correction)}
                 </div>
                 {message.translation && (
                   <div className="mt-3 flex items-start gap-3 rounded-xl bg-white/50 p-3 dark:bg-black/30">
                     <Languages size={14} className="mt-0.5 shrink-0 text-amber-600/60" />
-                    <p className="text-[12px] font-medium leading-relaxed text-amber-800/80 dark:text-amber-200/70 italic">
+                    <p className="text-[13px] font-medium leading-relaxed text-amber-800/80 dark:text-amber-200/70 italic">
                       {message.translation}
                     </p>
                   </div>

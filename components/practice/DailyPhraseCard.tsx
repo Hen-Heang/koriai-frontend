@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { BookmarkPlus, CheckCircle2, PenLine } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { SpeakButton } from "@/components/ui/SpeakButton"
@@ -18,16 +19,17 @@ export function DailyPhraseCard({
 }) {
   const [saving, setSaving] = useState(false)
   const [marking, setMarking] = useState(false)
-  const [saveMessage, setSaveMessage] = useState("")
+  const [justSaved, setJustSaved] = useState(false)
 
   async function handleSave() {
     setSaving(true)
-    setSaveMessage("")
     try {
       await dailyPhraseApi.addToFlashcards(phrase.id)
-      setSaveMessage("Added to your flashcards.")
+      toast.success("Added to your flashcards")
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2000)
     } catch (err) {
-      setSaveMessage(getApiErrorMessage(err, "Could not save this phrase."))
+      toast.error(getApiErrorMessage(err, "Could not save this phrase."))
     } finally {
       setSaving(false)
     }
@@ -39,8 +41,9 @@ export function DailyPhraseCard({
       const next = !phrase.learned
       await dailyPhraseApi.markLearned(phrase.id, next)
       onChange({ ...phrase, learned: next })
-    } catch {
-      /* leave the button as-is so the user can retry */
+      toast.success(next ? "Marked as learned" : "Marked as not learned")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not update this phrase."))
     } finally {
       setMarking(false)
     }
@@ -93,12 +96,19 @@ export function DailyPhraseCard({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="h-10 rounded-xl border border-border bg-background px-5 text-xs font-bold text-foreground hover:bg-accent active:scale-95"
+          className={
+            justSaved
+              ? "h-10 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white active:scale-95"
+              : "h-10 rounded-xl border border-border bg-background px-5 text-xs font-bold text-foreground hover:bg-accent active:scale-95"
+          }
         >
-          <BookmarkPlus size={14} className="mr-2" strokeWidth={2.5} />
-          {saving ? "Saving..." : "Add to flashcards"}
+          {justSaved ? (
+            <CheckCircle2 size={14} className="mr-2" strokeWidth={2.5} />
+          ) : (
+            <BookmarkPlus size={14} className="mr-2" strokeWidth={2.5} />
+          )}
+          {saving ? "Saving..." : justSaved ? "Added" : "Add to flashcards"}
         </Button>
-        {saveMessage && <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{saveMessage}</span>}
       </div>
 
       {phrase.similarExpressions && phrase.similarExpressions.length > 0 && (

@@ -144,8 +144,9 @@
 @layer base {
   html {
     @apply font-sans scroll-smooth;
-    font-size: clamp(16px, 0.28vw + 15.2px, 18px);
+    font-size: clamp(17px, 1.1vw + 15.5px, 19px);
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   * {
@@ -159,13 +160,37 @@
       radial-gradient(circle at top right, color-mix(in oklab, var(--chart-2) 10%, transparent), transparent 22%),
       linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white), var(--background));
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     line-height: 1.55;
+    letter-spacing: -0.006em;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-foreground;
+    line-height: 1.2;
+  }
+
   ::selection {
     background: color-mix(in oklab, var(--primary) 28%, transparent);
+  }
+
+  /* Phones (iPhone SE → Pro Max): bump body copy a notch stronger and
+     bigger than desktop since Tailwind's rem scale alone reads thin at
+     arm's length on a 6.1"–6.7" screen. */
+  @media (max-width: 430px) {
+    html {
+      font-size: 18px;
+    }
+
+    body {
+      font-weight: 450;
+    }
+
+    p, li, span, label, div {
+      letter-spacing: -0.011em;
+    }
   }
 }
 

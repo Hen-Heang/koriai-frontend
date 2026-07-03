@@ -9,6 +9,9 @@ import { aiPost } from "./ai-client"
 // the mirror of the old backend SrsScheduler) and persisted here. AI features
 // (lookup / generate / sentence challenge) go through app/api/ai/* routes.
 
+// Max due cards surfaced per day (review session + practice dashboard).
+const DAILY_REVIEW_LIMIT = 5
+
 type VocabRow = {
   id: string
   category: string
@@ -92,12 +95,16 @@ export const vocabApi = {
     return (data as VocabRow[]).map(toItem)
   },
 
+  // Capped at DAILY_REVIEW_LIMIT so a big backlog doesn't dump dozens of cards
+  // on the learner at once — the most overdue ones surface first, and the next
+  // batch appears once these are reviewed (next_review moves past "now").
   getDueWords: async (): Promise<VocabItem[]> => {
     const { data, error } = await supabase
       .from("kori_vocab_cards")
       .select("*")
       .lte("next_review", new Date().toISOString())
       .order("next_review", { ascending: true })
+      .limit(DAILY_REVIEW_LIMIT)
     if (error) throw error
     return (data as VocabRow[]).map(toItem)
   },

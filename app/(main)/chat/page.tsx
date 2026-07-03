@@ -201,7 +201,7 @@ function ChatPageContent() {
                   aria-current={active ? "true" : undefined}
                   aria-label={label}
                   className={cn(
-                    "relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
+                    "relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
                     active ? "text-white" : "text-muted-foreground/70 hover:text-foreground"
                   )}
                 >

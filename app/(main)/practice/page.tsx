@@ -100,6 +100,10 @@ export default function PracticePage() {
     )
   }
 
+  function scrollToPhrase() {
+    document.getElementById("daily-phrase")?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   const missions = data
     ? [
         {
@@ -108,24 +112,28 @@ export default function PracticePage() {
           // 0 due = SRS is clear = genuinely done for today
           done: data.dueVocabCount === 0,
           href: "/vocab",
+          onClick: null,
         },
         {
           key: "phrase",
           label: "Learn today's phrase",
           done: data.dailyPhrase.learned,
           href: null,
+          onClick: scrollToPhrase,
         },
         {
           key: "mistakes",
           label: data.dueCorrectionsCount > 0 ? `Clear ${data.dueCorrectionsCount} repeated mistakes` : "No mistakes due today",
           done: data.dueCorrectionsCount === 0,
           href: "/chat?mode=corrections",
+          onClick: null,
         },
         {
           key: "scenario",
           label: "Practice today's scenario with AI Coach",
           done: scenarioDone,
           href: null,
+          onClick: goToScenario,
         },
       ]
     : []
@@ -141,9 +149,14 @@ export default function PracticePage() {
           stats={
             data
               ? [
-                  { label: "Level", value: data.userLevel },
-                  { label: "Progress", value: `${completedCount}/${missions.length}` },
-                  { label: "Streak", value: streakDays > 0 ? `${streakDays} days` : "—" },
+                  { label: "Level", value: data.userLevel, href: "/settings" },
+                  {
+                    label: "Progress",
+                    value: `${completedCount}/${missions.length}`,
+                    onClick: () =>
+                      document.getElementById("todays-mission")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                  },
+                  { label: "Streak", value: streakDays > 0 ? `${streakDays} days` : "—", href: "/history" },
                 ]
               : undefined
           }
@@ -225,8 +238,9 @@ export default function PracticePage() {
         <>
           {/* Today's Mission checklist */}
           <motion.div
+            id="todays-mission"
             variants={itemVariants}
-            className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40"
+            className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 scroll-mt-20"
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
@@ -267,6 +281,14 @@ export default function PracticePage() {
                       <Link href={m.href} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         {inner}
                       </Link>
+                    ) : m.onClick && !m.done ? (
+                      <button
+                        type="button"
+                        onClick={m.onClick}
+                        className="flex w-full items-center gap-3 text-left hover:opacity-80 transition-opacity"
+                      >
+                        {inner}
+                      </button>
                     ) : (
                       <div className="flex items-center gap-3">{inner}</div>
                     )}
@@ -277,7 +299,7 @@ export default function PracticePage() {
           </motion.div>
 
           {/* Daily phrase — merged in full from the old standalone page */}
-          <motion.div variants={itemVariants}>
+          <motion.div id="daily-phrase" variants={itemVariants} className="scroll-mt-20">
             <DailyPhraseCard
               phrase={data.dailyPhrase}
               onChange={(next) => setData((prev) => (prev ? { ...prev, dailyPhrase: next } : prev))}

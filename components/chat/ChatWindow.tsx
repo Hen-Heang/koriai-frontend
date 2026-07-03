@@ -3,12 +3,20 @@
 import { useEffect, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, Plus, Mic, Headphones, Square } from "lucide-react"
+import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Plus, Mic, Headphones, Square } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { MessageBubble } from "@/components/chat/MessageBubble"
 import { TypingIndicator } from "@/components/chat/TypingIndicator"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { useChat } from "@/hooks/useChat"
 import { useProfileImage } from "@/hooks/useProfileImage"
@@ -256,53 +264,52 @@ export function ChatWindow({
             <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-[15px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
+            <h3 className="truncate text-[16px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
             <div className="mt-1.5 flex items-center gap-1.5">
               <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
-              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">{subtitle}</p>
+              <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground/60">{subtitle}</p>
             </div>
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {/* Technical Mode Toggle */}
+          {/* Technical Mode + Voice toggles — full controls on tablet/desktop */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsTechnicalMode(!isTechnicalMode)}
             className={cn(
-              "flex h-9 items-center gap-2 rounded-xl px-3 text-[11px] font-bold uppercase tracking-wider transition-all",
-              isTechnicalMode 
-                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+              "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
+              isTechnicalMode
+                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                 : "border-border/60 bg-background/50 text-muted-foreground/60"
             )}
           >
             {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
-            <span className="hidden sm:inline">{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
+            <span>{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
           </Button>
 
-          {/* Voice Conversation Mode toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setVoiceMode(!voiceMode)}
             title="Korean voice conversation: speak and hear replies with subtitles"
             className={cn(
-              "flex h-9 items-center gap-2 rounded-xl px-3 text-[11px] font-bold uppercase tracking-wider transition-all",
+              "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
               voiceMode
                 ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                 : "border-border/60 bg-background/50 text-muted-foreground/60"
             )}
           >
             <Headphones size={14} />
-            <span className="hidden sm:inline">{voiceMode ? "Voice ON" : "Voice"}</span>
+            <span>{voiceMode ? "Voice ON" : "Voice"}</span>
           </Button>
 
           {onNewChat && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-95"
+              className="hidden h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-95 sm:flex"
               onClick={onNewChat}
               disabled={isStartingNewChat}
               title="Start fresh"
@@ -310,11 +317,47 @@ export function ChatWindow({
               <SquarePen size={16} strokeWidth={2.5} />
             </Button>
           )}
+
+          {/* Mobile: same controls collapsed into one menu so the narrow header isn't a wall of icons */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground transition-all active:scale-95 sm:hidden"
+                title="Chat options"
+              >
+                <EllipsisVertical size={18} strokeWidth={2.5} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuCheckboxItem
+                checked={isTechnicalMode}
+                onCheckedChange={() => setIsTechnicalMode(!isTechnicalMode)}
+              >
+                {isTechnicalMode ? <Terminal size={14} className="mr-2" /> : <Briefcase size={14} className="mr-2" />}
+                Dev Mode (technical Korean)
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={voiceMode} onCheckedChange={() => setVoiceMode(!voiceMode)}>
+                <Headphones size={14} className="mr-2" />
+                Voice conversation
+              </DropdownMenuCheckboxItem>
+              {onNewChat && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onNewChat} disabled={isStartingNewChat}>
+                    <SquarePen size={14} className="mr-2" />
+                    Start fresh chat
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* ── Messages Container ── */}
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-6 sm:px-8">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-6 sm:px-8">
         <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col">
           {isLoadingMessages ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
@@ -323,7 +366,7 @@ export function ChatWindow({
                   <Sparkles size={24} className="animate-pulse" />
                 </div>
               </div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Syncing History</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Syncing History</p>
             </div>
           ) : isEmpty ? (
             /* ── Native-Style Empty State ── */
@@ -339,7 +382,7 @@ export function ChatWindow({
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
                   {isTechnicalMode ? "Dev Tutor" : "Hengo"}
                 </h2>
-                <p className="mx-auto max-w-xs text-[13px] font-medium leading-relaxed text-muted-foreground/60">
+                <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground/60">
                   {isTechnicalMode 
                     ? "Master technical Korean for your career."
                     : "How can I help you practice today?"}
@@ -347,7 +390,7 @@ export function ChatWindow({
               </div>
 
               <div className="w-full max-w-2xl space-y-2.5 px-4">
-                <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
                   Practice a scenario
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -363,10 +406,10 @@ export function ChatWindow({
                       className="group flex flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/50 p-3 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
                     >
                       <span className="text-lg">{preset.emoji}</span>
-                      <span className="text-[12px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      <span className="text-[13px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                         {preset.label}
                       </span>
-                      <span className="text-[11px] font-medium leading-snug text-muted-foreground/60">
+                      <span className="text-[12px] font-medium leading-snug text-muted-foreground/60">
                         {preset.description}
                       </span>
                     </motion.button>
@@ -387,7 +430,7 @@ export function ChatWindow({
                     className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
                   >
                     <span className="text-sm">{s.emoji}</span>
-                    <span className="text-[13px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <span className="text-[14px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {s.label}
                     </span>
                   </motion.button>
@@ -450,13 +493,13 @@ export function ChatWindow({
               )}
             >
               {micError ? (
-                <p className="text-[12px] font-medium text-destructive">{micError}</p>
+                <p className="text-[13px] font-semibold text-destructive">{micError}</p>
               ) : (
                 <>
-                  <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                  <span className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                     <Mic size={12} className="animate-pulse" /> Listening
                   </span>
-                  <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
+                  <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground">
                     {liveTranscript || "한국어로 말해 보세요…"}
                   </p>
                 </>
@@ -484,7 +527,7 @@ export function ChatWindow({
               onKeyDown={handleKeyDown}
               placeholder="Ask Hengo anything..."
               aria-label="Chat message"
-              className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-[15px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
+              className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-[16px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
               disabled={!conversationId || isStreaming || isLoadingMessages}
               rows={1}
             />
@@ -531,7 +574,7 @@ export function ChatWindow({
             </div>
           </form>
           
-          <p className="mt-3 text-center text-[11px] font-medium text-muted-foreground/40 sm:text-xs">
+          <p className="mt-3 text-center text-[12px] font-medium text-muted-foreground/40 sm:text-xs">
             Hengo can make mistakes. Consider checking important information.
           </p>
         </div>

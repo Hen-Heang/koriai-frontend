@@ -1,6 +1,7 @@
 import type { Achievement, AchievementSummary, DashboardStats, LevelInfo, ProgressPoint } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
+import { getDailyGoalMinutes } from "@/lib/onboarding-store"
 
 // Dashboard / streak / achievements, computed client-side from Supabase counts
 // (the Spring backend used to compose these responses server-side).
@@ -117,6 +118,9 @@ async function getCounts(): Promise<Counts> {
 
 export const achievementsApi = {
   getSummary: async (): Promise<AchievementSummary> => {
+    // Sync unlocked rows with current counts first, so XP/level always
+    // reflect real activity instead of whatever was last recorded.
+    await achievementsApi.check()
     const { data, error } = await supabase
       .from("kori_achievements")
       .select("code, unlocked_at")
@@ -196,7 +200,7 @@ export const progressApi = {
       })
     }
 
-    const DAILY_GOAL_MINUTES = 15
+    const DAILY_GOAL_MINUTES = getDailyGoalMinutes()
     const stats: DashboardStats = {
       streakDays: computeStreak(dates).streakDays,
       weeklyMinutes,

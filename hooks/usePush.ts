@@ -107,6 +107,16 @@ export function usePush() {
     }
   }, [queryClient, telegramKey])
 
+  const sendTelegramTest = useCallback(async () => {
+    try {
+      const result = await pushApi.sendTelegramTest()
+      if (result.sent > 0) toast.success("Test message sent")
+      else toast.error("Telegram isn't linked — try connecting again")
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Could not send test message"))
+    }
+  }, [])
+
   return {
     supported: isWebPushSupported(),
     webState,
@@ -118,5 +128,6 @@ export function usePush() {
     sendTest,
     linkTelegram,
     unlinkTelegram,
+    sendTelegramTest,
   }
 }

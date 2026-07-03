@@ -52,6 +52,12 @@ export interface InterviewTopic {
   prep?: InterviewPrep
   /** Outline for the written script submitted before the exam. */
   scriptOutline?: ScriptSection[]
+  /**
+   * The candidate's own drafted script, keyed by `scriptOutline` section id.
+   * Used to pre-fill the script editor once (first visit only) — after that,
+   * whatever the candidate has saved (locally or in their account) wins.
+   */
+  scriptSeed?: Record<string, string>
 }
 
 // Section-by-section scaffold for the script the candidate writes and submits.
@@ -100,6 +106,23 @@ const WEATHER_SCRIPT_OUTLINE: ScriptSection[] = [
     hint: "이야기를 간단히 정리하고 마무리 인사를 하세요. 예: 들어 주셔서 감사합니다.",
   },
 ]
+
+// The candidate's own drafted script, transcribed into the outline sections above.
+const WEATHER_SCRIPT_SEED: Record<string, string> = {
+  intro:
+    "안녕하세요. 저는 히엉(Henry)입니다. 오늘 주제는 한국 여름 날씨와 캄보디아 날씨의 다른 점과 생활/건강에 미치는 영향입니다.\n오늘은 한국과 캄보디아의 여름이 어떻게 다른지, 그리고 그 날씨가 우리 생활과 건강에 주는 영향을 제 경험과 함께 이야기해보겠습니다.",
+  "korea-summer":
+    "한국의 여름은 6월부터 8월까지입니다. 보통 30도 정도인데, 더운 날은 35도가 넘습니다. 그리고 장마라고 해서 비가 계속 오는 때가 있습니다. 습도도 높아서 실제 온도보다 더 덥게 느껴집니다.\n그래서 사람들은 우산을 항상 가지고 다니고, 수영장이나 바다에 가기도 하고, 삼계탕을 먹으면서 힘을 얻기도 합니다.",
+  compare:
+    "캄보디아는 좀 다릅니다. 일 년 내내 덥고, 건기와 우기 두 계절만 있습니다. 가장 더운 때는 3월부터 5월인데, 40도 가까이 올라갑니다. 그래서 낮에는 너무 더워서 밖에 잘 나가지 않고, 저녁이 되면 시원해져서 저는 그때 친구들과 밖에 나가곤 했습니다.\n한국도 비슷하게, 더운 날에는 다들 에어컨이나 선풍기를 틀어놓은 곳에서 시간을 보냅니다.",
+  "daily-life":
+    "날씨가 다르니까 저희의 생활 방식도 조금 달라졌습니다. 다니는 시간도 바꾸게 되고, 낮에는 활동을 줄이게 됩니다.",
+  health:
+    "건강에도 영향을 많이 줍니다. 더우면 쉽게 피곤해지고, 심하면 더위를 먹을 수도 있어서 조심해야 합니다.\n그래서 저는 이 날씨에 적응하기 위해 물을 많이 마시려고 노력합니다.",
+  reflection:
+    "이번 여름은 한국에서 보내는 첫 여름이라 아직 익숙하지 않습니다. 날씨가 많이 덥고 습해서 가끔 잠을 잘 못 잘 때도 있습니다. 그래도 조금씩 적응하고 있습니다.\n나중에 기회가 된다면 여름에 바다나 산에도 한번 가보고 싶습니다.",
+  conclusion: "이상으로 발표를 마치겠습니다. 들어 주셔서 감사합니다.",
+}
 
 // Curated study material for the chosen exam topic. Drilled daily, this is the
 // 15–20 words and the handful of phrases that cover most of the Q&A.
@@ -249,6 +272,7 @@ export const INTERVIEW_TOPICS: InterviewTopic[] = [
     ].join("\n"),
     prep: WEATHER_PREP,
     scriptOutline: WEATHER_SCRIPT_OUTLINE,
+    scriptSeed: WEATHER_SCRIPT_SEED,
   },
 ]
 

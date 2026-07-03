@@ -19,7 +19,7 @@ export function useNotifications() {
   const queryClient = useQueryClient()
   const key = notificationsQueryKey(userId)
 
-  const { data: notifications = [], isPending } = useQuery({
+  const { data: notifications = [], isPending, isError } = useQuery({
     queryKey: key,
     queryFn: () => notificationsApi.list(false),
     enabled: userId != null,
@@ -99,6 +99,7 @@ export function useNotifications() {
     notifications,
     unreadCount,
     isLoading: isPending,
+    isError,
     markRead,
     markAllRead,
     respond,

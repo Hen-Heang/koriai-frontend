@@ -95,7 +95,7 @@ export default function GoalDetailPage() {
 
   const deepLinkTaskId = searchParams.get("task") ?? searchParams.get("taskId")
 
-  const [tab, setTab] = useState<DetailTab>("overview")
+  const [tab, setTab] = useState<DetailTab>("tasks")
   const [showEditPanel, setShowEditPanel] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)

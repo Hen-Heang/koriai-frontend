@@ -11,8 +11,10 @@ import {
   Edit,
   Mail,
   Plus,
+  RefreshCw,
   Target,
   Trash2,
+  TriangleAlert,
   UserPlus,
   UserX,
 } from "lucide-react"
@@ -177,7 +179,7 @@ function NotificationRow({
 export function NotificationBell() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const { notifications, unreadCount, isLoading, markRead, markAllRead, respond } =
+  const { notifications, unreadCount, isLoading, isError, markRead, markAllRead, respond, refresh } =
     useNotifications()
 
   const handleNavigate = (n: GoalNotification) => {
@@ -232,6 +234,26 @@ export function NotificationBell() {
         <div className="max-h-[70vh] space-y-2 overflow-y-auto p-3 sm:max-h-[28rem]">
           {isLoading ? (
             [0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+                <TriangleAlert size={28} strokeWidth={1.75} />
+              </div>
+              <p className="text-sm font-bold tracking-tight text-foreground">Couldn&apos;t load notifications</p>
+              <p className="mt-1 max-w-[220px] text-xs font-medium text-muted-foreground">
+                Something went wrong reaching the server. Check your connection and try again.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void refresh()}
+                className="mt-4 h-9 rounded-xl px-4 text-xs font-bold"
+              >
+                <RefreshCw size={14} className="mr-1.5" />
+                Retry
+              </Button>
+            </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">

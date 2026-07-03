@@ -1,6 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 type PageHeroProps = {
@@ -11,6 +12,10 @@ type PageHeroProps = {
   stats?: Array<{
     label: string
     value: string
+    // Either makes the tile tappable — href navigates, onClick handles
+    // in-page behavior (e.g. scrolling to a section).
+    href?: string
+    onClick?: () => void
   }>
   className?: string
 }
@@ -56,19 +61,42 @@ export function PageHero({
           {actions && <div className="flex w-full flex-wrap gap-3 lg:w-auto lg:justify-end">{actions}</div>}
           {stats && stats.length > 0 && (
             <div className="flex flex-wrap gap-4">
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-border bg-background/50 px-5 py-4 backdrop-blur-sm dark:bg-white/5 sm:min-w-[100px]"
-                >
-                  <p className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
+              {stats.map((stat) => {
+                const tappable = Boolean(stat.href || stat.onClick)
+                const tileClass = cn(
+                  "rounded-2xl border border-border bg-background/50 px-5 py-4 text-left backdrop-blur-sm dark:bg-white/5 sm:min-w-[100px]",
+                  tappable && "transition-all hover:border-blue-500/40 hover:bg-accent/30 active:scale-95"
+                )
+                const inner = (
+                  <>
+                    <p className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                      {stat.value}
+                    </p>
+                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                      {stat.label}
+                    </p>
+                  </>
+                )
+                if (stat.href) {
+                  return (
+                    <Link key={stat.label} href={stat.href} className={tileClass}>
+                      {inner}
+                    </Link>
+                  )
+                }
+                if (stat.onClick) {
+                  return (
+                    <button key={stat.label} type="button" onClick={stat.onClick} className={tileClass}>
+                      {inner}
+                    </button>
+                  )
+                }
+                return (
+                  <div key={stat.label} className={tileClass}>
+                    {inner}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

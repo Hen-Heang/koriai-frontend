@@ -45,10 +45,10 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-            <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Card Generator</p>
+            <p className="text-[12px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Card Generator</p>
           </div>
           <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">AI Deck Builder</h3>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
+          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[16px]">
             Select a category to expand your vocabulary with relevant high-frequency terms.
           </p>
         </div>
@@ -71,7 +71,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
           >
             <span className="text-lg sm:text-xl">{cat.emoji}</span>
             <span className={cn(
-              "text-[11px] font-bold uppercase tracking-tight sm:text-xs",
+              "text-[12px] font-bold uppercase tracking-tight sm:text-xs",
               selectedCategory === cat.id ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground/60"
             )}>
               {cat.label}
@@ -97,7 +97,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate }: DeckBuilderPro
             </>
           )}
         </Button>
-        <div className="flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:justify-end">
+        <div className="flex items-center justify-center gap-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:justify-end">
           <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-0">
             <span>{dueCount} REVIEWS DUE</span>
             <span className="sm:mt-0.5">{totalCount} TOTAL CARDS</span>

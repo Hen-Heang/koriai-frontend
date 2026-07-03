@@ -552,9 +552,14 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 {push.telegramLinked ? (
-                  <Button type="button" variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
-                    Disconnect
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => push.sendTelegramTest()}>
+                      Send test
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
+                      Disconnect
+                    </Button>
+                  </div>
                 ) : (
                   <Button type="button" size="sm" onClick={() => push.linkTelegram()}>
                     Connect

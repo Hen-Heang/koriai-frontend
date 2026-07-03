@@ -38,6 +38,9 @@ import { cn } from "@/lib/utils"
 
 const topic = INTERVIEW_TOPICS[0]
 const STORAGE_KEY = `koriai-interview-script:${topic.id}`
+// Guards the one-time seed below so it never re-applies after a deliberate
+// Clear All (which removes STORAGE_KEY but leaves this flag set).
+const SEEDED_FLAG_KEY = `${STORAGE_KEY}:seeded`
 // Custom (user-added) section definitions live separately from the section text
 // so the existing per-topic text payload keeps syncing to the backend unchanged.
 const CUSTOM_KEY = `koriai-interview-script-custom:${topic.id}`
@@ -164,6 +167,32 @@ export default function InterviewScriptPage() {
     }
   }, [])
 
+  // First-ever visit, with nothing local and nothing in the account yet: seed
+  // the editor with the candidate's own drafted script so it isn't blank. Runs
+  // at most once per device (SEEDED_FLAG_KEY), so a deliberate Clear All is
+  // never silently undone.
+  function seedScriptOnce() {
+    try {
+      if (window.localStorage.getItem(SEEDED_FLAG_KEY)) return
+      window.localStorage.setItem(SEEDED_FLAG_KEY, "1")
+    } catch {
+      return
+    }
+    if (!topic.scriptSeed) return
+    setValues((prev) => {
+      if (Object.keys(prev).length > 0) return prev
+      const seeded = topic.scriptSeed!
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+        setSavedAt(new Date())
+      } catch {
+        // ignore
+      }
+      scheduleSync(seeded)
+      return seeded
+    })
+  }
+
   // Best-effort hydrate from the account. If the backend isn't reachable or has
   // nothing yet, the local copy (already loaded) stands. Local edits win, so we
   // only adopt the remote copy when nothing has been written on this device.
@@ -172,13 +201,17 @@ export default function InterviewScriptPage() {
     interviewApi
       .getScript(topic.id)
       .then((remote) => {
-        if (!active || !remote?.sections) return
-        if (Object.keys(remote.sections).length === 0) return
-        setValues((prev) => (Object.keys(prev).length > 0 ? prev : remote.sections))
-        setSynced(true)
+        if (!active) return
+        if (remote?.sections && Object.keys(remote.sections).length > 0) {
+          setValues((prev) => (Object.keys(prev).length > 0 ? prev : remote.sections))
+          setSynced(true)
+          return
+        }
+        seedScriptOnce()
       })
       .catch(() => {
         // Offline or endpoint not live yet — the local copy is the source of truth.
+        seedScriptOnce()
       })
     return () => {
       active = false

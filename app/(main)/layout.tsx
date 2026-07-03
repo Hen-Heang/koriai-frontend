@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "motion/react"
 
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { LevelBadge } from "@/components/achievements/LevelBadge"
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow"
 import { UserAvatar } from "@/components/ui/UserAvatar"
 import {
   Sheet,
@@ -31,7 +32,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { isAuthenticated } from "@/lib/auth-store"
+import { userApi } from "@/lib/api"
+import { isAuthenticated, getUserId } from "@/lib/auth-store"
+import { hasCompletedOnboarding, markOnboardingComplete } from "@/lib/onboarding-store"
 import { cn } from "@/lib/utils"
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
@@ -131,6 +134,7 @@ export default function MainLayout({
   const router = useRouter()
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const slotCount = bottomTabs.length + 1
   const primaryTabIndex = bottomTabs.findIndex(
@@ -201,6 +205,29 @@ export default function MainLayout({
       router.replace("/login")
     }
   }, [mounted, router])
+
+  useEffect(() => {
+    if (!mounted || !isAuthenticated()) return
+    const userId = getUserId()
+    if (!userId || hasCompletedOnboarding(userId)) return
+    let active = true
+    // Cross-device fallback: the "seen it" flag is local-only, so also check
+    // whether the profile already has a learning goal set (from a prior
+    // session on another device) before showing the wizard again.
+    userApi
+      .getById(userId)
+      .then((profile) => {
+        if (!active) return
+        if (profile.learningGoal) markOnboardingComplete(userId)
+        else setShowOnboarding(true)
+      })
+      .catch(() => {
+        /* if the profile check fails, don't block the app on the wizard */
+      })
+    return () => {
+      active = false
+    }
+  }, [mounted])
 
   if (!mounted) return null
   if (!isAuthenticated()) return null
@@ -335,8 +362,8 @@ export default function MainLayout({
                   </div>
                 </Link>
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-bold tracking-tight text-foreground leading-none">Hengo</span>
-                  <span className="mt-0.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tight">by Hen Heang</span>
+                  <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">Hengo</span>
+                  <span className="mt-0.5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-tight">by Hen Heang</span>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
@@ -445,8 +472,8 @@ export default function MainLayout({
                     </div>
                     <span
                       className={cn(
-                        "w-full truncate px-0.5 text-center text-[10px] uppercase tracking-[0.03em] leading-none transition-all duration-300",
-                        active ? "font-bold opacity-100" : "font-bold opacity-60 translate-y-0.5"
+                        "w-full truncate px-0.5 text-center text-[11px] uppercase tracking-[0.02em] leading-none transition-all duration-300",
+                        active ? "font-extrabold opacity-100" : "font-bold opacity-70 translate-y-0.5"
                       )}
                     >
                       {label}
@@ -475,8 +502,8 @@ export default function MainLayout({
                 </div>
                 <span
                   className={cn(
-                    "w-full truncate px-0.5 text-center text-[10px] uppercase tracking-[0.03em] leading-none transition-all duration-300",
-                    onMoreRoute ? "font-bold opacity-100" : "font-bold opacity-60 translate-y-0.5"
+                    "w-full truncate px-0.5 text-center text-[11px] uppercase tracking-[0.02em] leading-none transition-all duration-300",
+                    onMoreRoute ? "font-extrabold opacity-100" : "font-bold opacity-70 translate-y-0.5"
                   )}
                 >
                   More
@@ -497,7 +524,7 @@ export default function MainLayout({
             {moreGroups.map((group) => (
               group.links.length > 0 && (
                 <div key={group.label}>
-                  <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                  <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground/50">
                     {group.label}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -534,6 +561,13 @@ export default function MainLayout({
           </div>
         </SheetContent>
       </Sheet>
+
+      {showOnboarding && (
+        <OnboardingFlow userId={getUserId()!} onDone={() => {
+          markOnboardingComplete(getUserId())
+          setShowOnboarding(false)
+        }} />
+      )}
     </div>
   )
 }

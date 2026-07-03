@@ -59,19 +59,19 @@ function EditForm({
   return (
     <div className="space-y-2.5 pt-2">
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
         <input value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} className={cn(inputClass, "mt-1 text-lg font-bold")} />
       </div>
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
         <input value={meaning} onChange={(e) => setMeaning(e.target.value)} className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
         <input value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
         <textarea value={example} onChange={(e) => setExample(e.target.value)} rows={2} className={cn(inputClass, "mt-1 resize-none")} />
       </div>
       {error && <p className="text-xs font-bold text-destructive">{error}</p>}
@@ -198,7 +198,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
                       type="button"
                       onClick={handleDelete}
                       disabled={deleting}
-                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[11px] font-bold uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
+                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[12px] font-bold uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
                     >
                       {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} strokeWidth={2.5} />}
                       {deleting ? "Deleting" : "Sure?"}
@@ -220,7 +220,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
               </div>
               {item.difficultyLevel && (
                 <span className={cn(
-                  "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
+                  "rounded-full px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider",
                   item.difficultyLevel === "Easy" ? "bg-emerald-500/10 text-emerald-600" :
                   item.difficultyLevel === "Medium" ? "bg-amber-500/10 text-amber-600" :
                   "bg-red-500/10 text-red-600"
@@ -236,9 +236,9 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={12} className="text-muted-foreground/40" />
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">Usage Context</span>
+                <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Usage Context</span>
               </div>
-              <p className="text-sm font-bold leading-relaxed text-foreground/80 [overflow-wrap:anywhere] sm:text-[15px]">
+              <p className="text-sm font-bold leading-relaxed text-foreground/80 [overflow-wrap:anywhere] sm:text-[16px]">
                 {item.example}
               </p>
               {item.exampleTranslation && (
@@ -258,18 +258,18 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             item.tags.map((tag) => (
               <span
                 key={tag}
-                className="flex items-center gap-1 rounded-full bg-accent/30 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70"
+                className="flex items-center gap-1 rounded-full bg-accent/30 px-2.5 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground/70"
               >
                 <Tag size={10} strokeWidth={3} />
                 {tag}
               </span>
             ))
           ) : (
-            <span className="text-[11px] font-bold text-muted-foreground/30 italic">No tags</span>
+            <span className="text-[12px] font-bold text-muted-foreground/30 italic">No tags</span>
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+        <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
           <Calendar size={12} strokeWidth={3} />
           <span>Next: {item.nextReview}</span>
         </div>

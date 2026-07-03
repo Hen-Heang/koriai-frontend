@@ -126,7 +126,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
             >
               <ArrowLeft size={20} strokeWidth={2.5} />
             </button>
-            <span className="text-[13px] font-bold uppercase tracking-wide text-foreground">
+            <span className="text-[14px] font-bold uppercase tracking-wide text-foreground">
               {currentIndex + 1} <span className="opacity-20 mx-1">/</span> {total}
             </span>
           </div>
@@ -140,7 +140,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
               transition={{ duration: 0.25 }}
               className="rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 dark:bg-slate-900/60 sm:p-8"
             >
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
                 What you wrote
               </p>
               <p className="mt-2 break-keep text-2xl font-bold leading-snug text-red-700 line-through dark:text-red-400 sm:text-3xl">
@@ -158,7 +158,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
               ) : (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-4">
                   <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/[0.06] p-5 dark:bg-emerald-500/[0.08]">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">
+                    <p className="text-[12px] font-bold uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">
                       Correct
                     </p>
                     <p className="mt-1 break-keep text-2xl font-bold leading-snug text-foreground sm:text-3xl">
@@ -190,7 +190,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
                         )}
                       >
                         <span className="text-xs font-bold uppercase tracking-wider">{GRADE_STYLES[rating].label}</span>
-                        <span className="text-[11px] font-bold opacity-80">
+                        <span className="text-[12px] font-bold opacity-80">
                           {formatInterval(previewIntervalDays(card, rating))}
                         </span>
                       </button>

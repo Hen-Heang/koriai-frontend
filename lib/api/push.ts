@@ -1,9 +1,10 @@
-// Push notifications (browser Web Push). KoriAI's own dedicated pipeline —
-// separate from Orbit/dailygoalmap's: subscriptions live in
-// `public.kori_push_subscriptions` (RLS: owner-only), keyed to KoriAI's own
-// VAPID identity, and delivery goes through the `kori-send-push` Edge
-// Function. Telegram linking is a separate Orbit feature (send-telegram /
-// telegram-webhook) not yet wired into KoriAI's UI — left as "not configured".
+// Push notifications. KoriAI's own dedicated pipeline — separate from
+// Orbit/dailygoalmap's: subscriptions live in `public.kori_push_subscriptions`
+// / `public.kori_telegram_links` (RLS: owner-only), keyed to KoriAI's own
+// VAPID identity, and delivery goes through `kori-send-push` /
+// `kori-send-telegram`. Telegram shares the same bot as Orbit (a bot can only
+// have one webhook), so `telegram-webhook` was extended with an additive
+// fallback for `kori_telegram_link_codes` — Orbit's own path is untouched.
 import { supabase } from "@/lib/supabase"
 import { getUserId } from "@/lib/auth-store"
 
@@ -19,16 +20,48 @@ export interface WebPushSubscriptionJSON {
   keys: { p256dh: string; auth: string }
 }
 
-const TELEGRAM_UNAVAILABLE = "Telegram linking is not available yet in KoriAI."
+const TELEGRAM_BOT_USERNAME = "OrbitReminderBot"
+
+function randomLinkCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
+}
 
 export const pushApi = {
-  // ── Telegram (deferred — Orbit's send-telegram/telegram-webhook aren't
-  // wired into KoriAI's account-linking UI yet) ──
+  // ── Telegram ──
   telegramLink: async (): Promise<TelegramLink> => {
-    throw new Error(TELEGRAM_UNAVAILABLE)
+    const userId = getUserId()
+    if (!userId) throw new Error("Not signed in")
+    const code = randomLinkCode()
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    const { error } = await supabase
+      .from("kori_telegram_link_codes")
+      .insert({ code, user_id: userId, expires_at: expiresAt })
+    if (error) throw error
+    return {
+      deepLink: `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${code}`,
+      code,
+      botUsername: TELEGRAM_BOT_USERNAME,
+    }
   },
-  telegramStatus: async (): Promise<{ linked: boolean }> => ({ linked: false }),
-  telegramUnlink: async () => undefined,
+
+  telegramStatus: async (): Promise<{ linked: boolean }> => {
+    const userId = getUserId()
+    if (!userId) return { linked: false }
+    const { data, error } = await supabase
+      .from("kori_telegram_links")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle()
+    if (error) throw error
+    return { linked: !!data }
+  },
+
+  telegramUnlink: async () => {
+    const userId = getUserId()
+    if (!userId) return
+    await supabase.from("kori_telegram_links").delete().eq("user_id", userId)
+  },
 
   // ── Web Push ──
   vapidPublicKey: async (): Promise<{ publicKey: string }> => {
@@ -74,6 +107,22 @@ export const pushApi = {
     })
     if (error) throw error
     return data as { sent: number; total: number; removedStale: number }
+  },
+
+  // Sends a real Telegram message to the current user via `kori-send-telegram`.
+  sendTelegramTest: async () => {
+    const userId = getUserId()
+    if (!userId) throw new Error("Not signed in")
+    const { data, error } = await supabase.functions.invoke("kori-send-telegram", {
+      body: {
+        userId,
+        title: "KoriAI",
+        body: "Telegram notifications are working 🎉",
+        url: "https://hengo.henheang.site/settings",
+      },
+    })
+    if (error) throw error
+    return data as { sent: number }
   },
 }
 

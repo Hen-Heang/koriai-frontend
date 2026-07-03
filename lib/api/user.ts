@@ -99,6 +99,18 @@ export const userApi = {
     if (error) throw error
   },
 
+  // Partial upsert (only these two columns) so it's safe to call for a
+  // brand-new profile row without clobbering fields the full-form
+  // updateProfile() above would otherwise null out.
+  completeOnboarding: async (id: string, data: { koreanLevel: string; learningGoal: string }) => {
+    const { error } = await supabase.from("kori_profiles").upsert({
+      id,
+      korean_level: data.koreanLevel,
+      learning_goal: data.learningGoal,
+    })
+    if (error) throw error
+  },
+
   updatePreferredModel: async (id: string, preferredModel: string) => {
     const { error } = await supabase
       .from("kori_profiles")

@@ -107,15 +107,15 @@ export function ExamCountdownBanner() {
             </>
           )}
 
-          <p className="mt-1.5 truncate text-xs font-medium text-muted-foreground">
-            K-Specialist speaking exam · Aug 29
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+            <span>K-Specialist speaking exam · Aug 29</span>
             {daysToScript >= 0 && (
-              <span className="ml-2 inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
+              <span className="inline-flex shrink-0 items-center gap-1 text-blue-600 dark:text-blue-400">
                 <FileText size={12} strokeWidth={2} />
                 script due in {daysToScript}d
               </span>
             )}
-          </p>
+          </div>
         </div>
 
         <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-transform group-hover:translate-x-0.5 sm:inline-flex">
