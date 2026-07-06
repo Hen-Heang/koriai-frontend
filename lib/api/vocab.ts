@@ -9,8 +9,10 @@ import { aiPost } from "./ai-client"
 // the mirror of the old backend SrsScheduler) and persisted here. AI features
 // (lookup / generate / sentence challenge) go through app/api/ai/* routes.
 
-// Max due cards surfaced per day (review session + practice dashboard).
-const DAILY_REVIEW_LIMIT = 5
+// Cards fetched per review batch. Not a daily cap: when a batch is cleared the
+// next one loads (useVocab invalidates once dueWords empties), so the learner
+// can keep going until the true due count (getDueCount) reaches zero.
+const REVIEW_SESSION_SIZE = 20
 
 type VocabRow = {
   id: string
@@ -95,20 +97,30 @@ export const vocabApi = {
     return (data as VocabRow[]).map(toItem)
   },
 
-  // Capped at DAILY_REVIEW_LIMIT so a big backlog doesn't dump dozens of cards
-  // on the learner at once — the most overdue ones surface first, and the next
-  // batch appears once these are reviewed (next_review moves past "now").
-  // The .lte() filter is the server-side twin of isDue() in lib/srs.ts — keep
-  // both comparing full ISO timestamps.
+  // One batch of due cards, most overdue first — a session-sized slice so a big
+  // backlog doesn't render hundreds of cards at once. The full backlog size
+  // comes from getDueCount. The .lte() filter is the server-side twin of
+  // isDue() in lib/srs.ts — keep both comparing full ISO timestamps.
   getDueWords: async (): Promise<VocabItem[]> => {
     const { data, error } = await supabase
       .from("kori_vocab_cards")
       .select("*")
       .lte("next_review", new Date().toISOString())
       .order("next_review", { ascending: true })
-      .limit(DAILY_REVIEW_LIMIT)
+      .limit(REVIEW_SESSION_SIZE)
     if (error) throw error
     return (data as VocabRow[]).map(toItem)
+  },
+
+  // True number of due cards (not capped at the batch size) — what the stats
+  // and the Practice page show.
+  getDueCount: async (): Promise<number> => {
+    const { count, error } = await supabase
+      .from("kori_vocab_cards")
+      .select("id", { count: "exact", head: true })
+      .lte("next_review", new Date().toISOString())
+    if (error) throw error
+    return count ?? 0
   },
 
   markReviewed: (id: string, correct = true) => rateCard(id, correct ? "GOOD" : "AGAIN"),
@@ -263,34 +275,3 @@ export const vocabApi = {
     return { bestStreak }
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const vocabApi = {
-  getSavedWords: () => api.get("/vocab").then((r) => r.data.data),
-  getDueWords: () => api.get("/vocab/review/due").then((r) => r.data.data),
-  markReviewed: (id: string, correct = true) => api.post(`/vocab/${id}/review?correct=${correct}`).then((r) => r.data.data),
-  rate: (id: string, rating: "AGAIN" | "HARD" | "GOOD" | "EASY") =>
-    api.post(`/vocab/${id}/rate?rating=${rating}`).then((r) => r.data.data),
-  save: (data: { category?: string; term: string; meaning: string; example?: string }) =>
-    api.post("/vocab/save", data).then((r) => r.data.data),
-  lookup: (word: string) =>
-    api.get(`/vocab/lookup?word=${encodeURIComponent(word)}`).then((r) => r.data.data),
-  generate: (category: string, count = 10) =>
-    api.post(`/vocab/generate?category=${encodeURIComponent(category)}&count=${count}`).then((r) => r.data.data),
-  importList: (category: string, text: string) =>
-    api.post("/vocab/import", { category, text }).then((r) => r.data.data),
-  update: (id: string, data: { term: string; meaning: string; example?: string; pronunciation?: string; category?: string }) =>
-    api.put(`/vocab/${id}`, data).then((r) => r.data.data),
-  remove: (id: string) => api.delete(`/vocab/${id}`).then((r) => r.data.data),
-  getSentenceChallenge: (id: string) =>
-    api.get(`/vocab/${id}/sentence-challenge`).then((r) => r.data.data),
-  checkSentence: (id: string, data: { challengePrompt: string; attempt: string }) =>
-    api.post(`/vocab/${id}/check-sentence`, data).then((r) => r.data.data),
-  getBestStreak: () =>
-    api.get("/vocab/best-streak").then((r) => r.data.data),
-  submitBestStreak: (streak: number) =>
-    api.post(`/vocab/best-streak?streak=${streak}`).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

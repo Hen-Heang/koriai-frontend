@@ -32,17 +32,20 @@ function normalizeWord(raw: unknown): VocabItem {
 interface VocabData {
   savedWords: VocabItem[]
   dueWords: VocabItem[]
+  dueCount: number
 }
 
 async function fetchWords(): Promise<VocabData> {
-  const [savedData, dueData] = await Promise.all([
+  const [savedData, dueData, dueCount] = await Promise.all([
     vocabApi.getSavedWords(),
     vocabApi.getDueWords(),
+    vocabApi.getDueCount(),
   ])
 
   return {
     savedWords: Array.isArray(savedData) ? savedData.map(normalizeWord) : [],
     dueWords: Array.isArray(dueData) ? dueData.map(normalizeWord) : [],
+    dueCount,
   }
 }
 
@@ -62,6 +65,7 @@ export function useVocab() {
 
   const words = data?.savedWords ?? []
   const dueToday = data?.dueWords ?? []
+  const dueCount = data?.dueCount ?? 0
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key })
 
@@ -85,16 +89,24 @@ export function useVocab() {
   }
 
   // Patch the cache from the response instead of refetching the whole deck, so
-  // grading mid-session is instant.
+  // grading mid-session is instant. When the batch empties but more cards are
+  // still due (dueCount spans the whole backlog, the batch is one slice),
+  // refetch to load the next batch.
   const rateWord = async (id: string, rating: ReviewRating) => {
     const updated = normalizeWord(await vocabApi.rate(id, rating))
+    let batchDone = false
     queryClient.setQueryData<VocabData>(key, (prev) => {
       if (!prev) return prev
       const savedWords = prev.savedWords.map((w) => (w.id === id ? updated : w))
+      const wasDue = prev.dueWords.some((w) => w.id === id)
       const without = prev.dueWords.filter((w) => w.id !== id)
-      const dueWords = isDue(updated.nextReview) ? [...without, updated] : without
-      return { savedWords, dueWords }
+      const stillDue = isDue(updated.nextReview)
+      const dueWords = stillDue ? [...without, updated] : without
+      const dueCount = Math.max(0, prev.dueCount - (wasDue && !stillDue ? 1 : 0))
+      batchDone = dueWords.length === 0 && dueCount > 0
+      return { savedWords, dueWords, dueCount }
     })
+    if (batchDone) await invalidate()
     void logActivity()
   }
 
@@ -125,6 +137,7 @@ export function useVocab() {
 
   return {
     dueToday,
+    dueCount,
     error: isError ? "Failed to load vocabulary data." : "",
     loading: isPending,
     addWord,

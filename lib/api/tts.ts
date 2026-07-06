@@ -18,14 +18,3 @@ export const ttsApi = {
     return URL.createObjectURL(await res.blob())
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const ttsApi = {
-  speak: async (text: string, voice = "nova"): Promise<string> => {
-    const response = await api.post("/tts", { text, voice }, { responseType: "blob" })
-    return URL.createObjectURL(response.data)
-  },
-}
-────────────────────────────────────────────────────────────────────────────── */

@@ -106,20 +106,3 @@ export const readingApi = {
   submitQuizResult: (unitId: string, score: number, total: number) =>
     saveProgress(unitId, { quizScore: score, quizTotal: total }),
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const readingApi = {
-  getUnits: () => api.get("/reading/units").then((r) => r.data.data),
-  getUnit: (id: string) => api.get(`/reading/units/${id}`).then((r) => r.data.data),
-  createUnit: (data: ReadingUnitPayload) => api.post("/reading/units", data).then((r) => r.data.data),
-  updateUnit: (id: string, data: ReadingUnitPayload) => api.put(`/reading/units/${id}`, data).then((r) => r.data.data),
-  deleteUnit: (id: string) => api.delete(`/reading/units/${id}`).then((r) => r.data.data),
-  getProgress: () => api.get("/reading/progress").then((r) => r.data.data),
-  startUnit: (unitId: string) => api.post(`/reading/progress/${unitId}/start`).then((r) => r.data.data),
-  completeUnit: (unitId: string) => api.post(`/reading/progress/${unitId}/complete`).then((r) => r.data.data),
-  submitQuizResult: (unitId: string, score: number, total: number) =>
-    api.post(`/reading/progress/${unitId}/quiz`, { score, total }).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

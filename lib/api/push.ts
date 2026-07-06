@@ -125,16 +125,3 @@ export const pushApi = {
     return data as { sent: number }
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const pushApi = {
-  telegramLink: () => api.post("/push/telegram/link").then((r) => r.data.data),
-  telegramStatus: () => api.get("/push/telegram/status").then((r) => r.data.data),
-  telegramUnlink: () => api.delete("/push/telegram").then((r) => r.data.data),
-  vapidPublicKey: () => api.get("/push/web/vapid-public-key").then((r) => r.data.data),
-  webSubscribe: (sub: WebPushSubscriptionJSON) => api.post("/push/web/subscribe", sub).then((r) => r.data.data),
-  webUnsubscribe: (endpoint: string) => api.post("/push/web/unsubscribe", { endpoint }).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

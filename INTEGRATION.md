@@ -1,5 +1,9 @@
 # Orbit → KoriAI Integration
 
+> **Update (July 2026):** the "Backend: Spring Boot, no Supabase" decision below was later
+> reversed — the whole app now runs on the shared Supabase project (see CLAUDE.md). This
+> document is kept as the historical feature-porting checklist only.
+
 Source-of-truth checklist for folding **Orbit / DailyGoalMap** (Vite + TanStack Router + Supabase
 goal-tracking PWA, source at `C:\Practice\Full-Stack\dailygoalmap`) into **KoriAI** (Next.js 16 App
 Router). The goal is a UI integration that loses **no feature or function** from either app.

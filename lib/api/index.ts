@@ -1,7 +1,7 @@
-// Barrel for the API service package. Re-exports the shared axios client and
-// every per-domain group so callers keep importing from "@/lib/api" unchanged
+// Barrel for the API service package. Re-exports every per-domain group so
+// callers keep importing from "@/lib/api" unchanged
 // (e.g. `import { vocabApi, getApiErrorMessage } from "@/lib/api"`).
-export * from "./client"
+export * from "./errors"
 export * from "./auth"
 export * from "./chat"
 export * from "./user"
@@ -15,5 +15,3 @@ export * from "./foundations"
 export * from "./tts"
 export * from "./push"
 export * from "./notes"
-
-export { default } from "./client"

@@ -121,15 +121,3 @@ export const notesApi = {
     if (error) throw error
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const notesApi = {
-  list: () => api.get("/notes").then((r) => r.data.data),
-  get: (slug: string) => api.get(`/notes/${encodeURIComponent(slug)}`).then((r) => r.data.data),
-  create: (data: NoteInput) => api.post("/notes", data).then((r) => r.data.data),
-  update: (slug: string, data: Partial<NoteInput>) => api.put(`/notes/${encodeURIComponent(slug)}`, data).then((r) => r.data.data),
-  remove: (slug: string) => api.delete(`/notes/${encodeURIComponent(slug)}`).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

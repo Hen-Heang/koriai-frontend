@@ -461,39 +461,3 @@ export const notificationsApi = {
     }
   },
 }
-
-/* ── Spring backend implementation (kept for later restore; full version incl.
-      the /goals/{id}/coach/stream SSE parser is in git history) ───────────────
-import { api, API_BASE_URL } from "./client"
-
-export const goalsApi = {
-  list: (status?: string) => api.get("/goals", { params: status ? { status } : undefined }).then((r) => r.data.data),
-  get: (id: string) => api.get(`/goals/${id}`).then((r) => r.data.data),
-  create: (data: CreateGoalPayload) => api.post("/goals", data).then((r) => r.data.data),
-  update: (id: string, data: UpdateGoalPayload) => api.put(`/goals/${id}`, data).then((r) => r.data.data),
-  remove: (id: string) => api.delete(`/goals/${id}`).then((r) => r.data.data),
-  previewByShareCode: (code: string) => api.get(`/goals/by-share-code/${code}`).then((r) => r.data.data),
-  joinByShareCode: (code: string) => api.post(`/goals/by-share-code/${code}/join`).then((r) => r.data.data),
-  regenerateShareCode: (id: string) => api.post(`/goals/${id}/share-code/regenerate`).then((r) => r.data.data),
-  getMembers: (id: string) => api.get(`/goals/${id}/members`).then((r) => r.data.data),
-  leaveGoal: (id: string) => api.delete(`/goals/${id}/members/me`).then((r) => r.data.data),
-  removeMember: (id: string, userId: number) => api.delete(`/goals/${id}/members/${userId}`).then((r) => r.data.data),
-  toggleStar: (id: string) => api.post(`/goals/${id}/star`).then((r) => r.data.data),
-  getTasks: (id: string) => api.get(`/goals/${id}/tasks`).then((r) => r.data.data),
-  generateTasks: (id: string, body?: { count?: number; note?: string }) => api.post(`/goals/${id}/generate-tasks`, body ?? {}).then((r) => r.data.data),
-  invite: (id: string, receiverId: number) => api.post("/goal-notifications/invite", { goalId: id, receiverUserId: receiverId }).then((r) => r.data.data),
-}
-
-export const tasksApi = {
-  range: (params) => api.get("/tasks", { params }).then((r) => r.data.data),
-  create: (data) => api.post("/tasks", data).then((r) => r.data.data),
-  update: (id, data) => api.put(`/tasks/${id}`, data).then((r) => r.data.data),
-  remove: (id) => api.delete(`/tasks/${id}`).then((r) => r.data.data),
-}
-
-export const notificationsApi = {
-  list: (onlyUnread = false) => api.get("/goal-notifications", { params: { onlyUnread } }).then((r) => r.data.data),
-  markRead: (id: string) => api.put(`/goal-notifications/${id}/read`).then((r) => r.data.data),
-  respond: (id: string, accept: boolean) => api.put(`/goal-notifications/${id}/respond`, null, { params: { accept } }).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

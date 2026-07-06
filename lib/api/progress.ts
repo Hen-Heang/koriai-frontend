@@ -233,20 +233,3 @@ export const progressApi = {
     if (error) throw error
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const achievementsApi = {
-  getSummary: () => api.get("/achievements").then((r) => r.data.data),
-  check: () => api.post("/achievements/check").then((r) => r.data.data),
-}
-
-export const progressApi = {
-  getDashboard: () => api.get("/dashboard/progress").then((r) => r.data.data),
-  getStreak: () => api.get("/dashboard/streak").then((r) => r.data.data),
-  getActivityDays: (month: string) => api.get(`/dashboard/activity?month=${month}`).then((r) => r.data.data),
-  logDuration: (feature: string, durationMs: number) =>
-    api.post("/activity/log", { feature, durationMs }).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

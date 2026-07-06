@@ -71,14 +71,3 @@ export const foundationsApi = {
     return toProgress(row as ProgressRow)
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const foundationsApi = {
-  getProgress: () =>
-    api.get("/foundations/progress").then((r) => r.data.data),
-  saveProgress: (lessonId: string, body: { track: LearnTrack; accuracy: number; completed: boolean }) =>
-    api.post(`/foundations/lessons/${encodeURIComponent(lessonId)}/complete`, body).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

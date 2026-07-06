@@ -34,7 +34,7 @@ const itemVariants = {
 } as const
 
 export default function VocabPage() {
-  const { dueToday, error, loading, rateWord, words, addWord, generate, importList, updateWord, deleteWord } = useVocab()
+  const { dueToday, dueCount, error, loading, rateWord, words, addWord, generate, importList, updateWord, deleteWord } = useVocab()
   const { logActivity } = useLogActivity("vocab")
   useSessionTimer("vocab")
   const [query, setQuery] = useState("")
@@ -61,7 +61,7 @@ export default function VocabPage() {
   }
 
   const heroStats = [
-    { label: "Due Today", value: loading ? "..." : `${dueToday.length}` },
+    { label: "Due Today", value: loading ? "..." : `${dueCount}` },
     { label: "Total Deck", value: loading ? "..." : `${words.length}` },
     { label: "Method", value: "Spaced Repetition" },
   ]
@@ -121,7 +121,7 @@ export default function VocabPage() {
 
           <motion.div variants={itemVariants}>
             <DeckBuilder
-              dueCount={dueToday.length}
+              dueCount={dueCount}
               totalCount={words.length}
               onGenerate={handleGenerate}
             />
@@ -137,7 +137,7 @@ export default function VocabPage() {
           <VocabDictionary
             words={words}
             loading={loading}
-            dueCount={dueToday.length}
+            dueCount={dueCount}
             query={query}
             onQueryChange={setQuery}
             onUpdate={updateWord}

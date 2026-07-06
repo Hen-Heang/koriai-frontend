@@ -162,26 +162,3 @@ export const chatApi = {
     })
   },
 }
-
-/* ── Spring backend implementation (kept for later restore; the original SSE
-      parser body is identical — only the URL and auth header changed) ─────────
-import { api, API_BASE_URL } from "./client"
-
-export const chatApi = {
-  createConversation: (title: string, conversationType: string) =>
-    api.post("/chat/conversations", { title, conversationType }).then((r) => r.data.data),
-  sendMessage: (conversationId: number, message: string) =>
-    api.post("/chat/send", { conversationId, message }).then((r) => r.data.data),
-  getMessages: (conversationId: number) =>
-    api.get(`/chat/conversations/${conversationId}/messages`).then((r) => r.data.data),
-  getConversation: (conversationId: number) =>
-    api.get(`/chat/conversations/${conversationId}`).then((r) => r.data.data),
-  listConversations: (limit = 20, offset = 0) =>
-    api.get("/chat/conversations", { params: { limit, offset } }).then((r) => r.data.data),
-  renameConversation: (conversationId: number, title: string) =>
-    api.put(`/chat/conversations/${conversationId}`, { title }).then((r) => r.data.data),
-  deleteConversation: (conversationId: number) =>
-    api.delete(`/chat/conversations/${conversationId}`).then((r) => r.data.data),
-  streamMessage: async (...) => { fetch(`${API_BASE_URL}/chat/stream`, ...) },
-}
-────────────────────────────────────────────────────────────────────────────── */

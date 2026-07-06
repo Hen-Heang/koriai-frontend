@@ -34,14 +34,3 @@ export const interviewApi = {
     return { topicId: data.topic_id, sections: data.sections, updatedAt: data.updated_at }
   },
 }
-
-/* ── Spring backend implementation (kept for later restore) ──────────────────
-import { api } from "./client"
-
-export const interviewApi = {
-  getScript: (topicId: string) =>
-    api.get(`/interview/scripts/${encodeURIComponent(topicId)}`).then((r) => r.data.data),
-  saveScript: (topicId: string, sections: Record<string, string>) =>
-    api.put(`/interview/scripts/${encodeURIComponent(topicId)}`, { sections }).then((r) => r.data.data),
-}
-────────────────────────────────────────────────────────────────────────────── */

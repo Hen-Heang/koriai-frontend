@@ -43,6 +43,13 @@ function Pronunciation({ text, className }: { text?: string | null; className?: 
   return <p className={cn("font-bold text-muted-foreground/70", className)}>[{text}]</p>
 }
 
+// Scale a card's headline down as the text gets longer, so long meanings and
+// phrases fit the card on a phone instead of overflowing the fixed-height face.
+function fitText(text: string | null | undefined, base: string, mid: string, small: string) {
+  const len = text?.length ?? 0
+  return len > 26 ? small : len > 14 ? mid : base
+}
+
 type Mode = "flashcard" | "choice" | "recall" | "listening" | "sentence"
 type Phase = "idle" | "quiz" | "done"
 
@@ -89,14 +96,14 @@ function GradeButtons({
           type="button"
           onClick={() => onGrade(rating)}
           className={cn(
-            "flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border-b-4 transition-all active:translate-y-[3px] active:border-b-0",
+            "flex h-16 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border-b-4 px-1 transition-all active:translate-y-[3px] active:border-b-0",
             GRADE_STYLES[rating].classes
           )}
         >
-          <span className="text-xs font-bold uppercase tracking-wider">
+          <span className="max-w-full truncate text-[11px] font-bold uppercase tracking-wider sm:text-xs">
             {GRADE_STYLES[rating].label}
           </span>
-          <span className="text-[12px] font-bold opacity-80">
+          <span className="max-w-full truncate text-[11px] font-bold opacity-80 sm:text-[12px]">
             {formatInterval(previewIntervalDays(card, rating))}
           </span>
         </button>
@@ -173,36 +180,48 @@ function FlashCard({
           <button
             type="button"
             onClick={() => setFlipped(true)}
-            className="absolute inset-0 backface-hidden flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-3xl sm:p-8"
+            className="absolute inset-0 backface-hidden flex flex-col overflow-y-auto rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
-            <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{reversed ? card.meaning : card.term}</p>
-            {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
-            <div className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
-              Tap to Reveal
-            </div>
+            {/* m-auto centers when the content fits and keeps it reachable via
+                scroll when a long meaning/example makes it taller than the card. */}
+            <span className="m-auto flex w-full flex-col items-center">
+              <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
+              <p className={cn(
+                "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+                fitText(reversed ? card.meaning : card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
+              )}>{reversed ? card.meaning : card.term}</p>
+              {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
+              <span className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
+                Tap to Reveal
+              </span>
+            </span>
           </button>
 
           {/* Back */}
           <div
-            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center rounded-3xl border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-3xl sm:p-8"
+            className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col overflow-y-auto rounded-3xl border-2 border-b-[6px] border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-6 text-center dark:bg-[#58cc02]/[0.08] sm:rounded-3xl sm:p-8"
           >
-            <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
-            <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{reversed ? card.term : card.meaning}</p>
-            <Pronunciation text={card.pronunciation} className="mt-2 text-base sm:text-2xl" />
-            {/* Always surface the other side too, so each card reinforces Korean + reading + meaning together. */}
-            <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/80 [overflow-wrap:anywhere] sm:text-2xl">
-              {reversed ? card.meaning : card.term}
-            </p>
+            <div className="m-auto flex w-full flex-col items-center">
+              <span className="mb-4 rounded-full bg-[#58cc02]/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-[#58a302] dark:text-[#89e219]">{reversed ? "Korean" : "Meaning"}</span>
+              <p className={cn(
+                "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+                fitText(reversed ? card.term : card.meaning, "text-3xl sm:text-5xl", "text-2xl sm:text-4xl", "text-xl sm:text-3xl")
+              )}>{reversed ? card.term : card.meaning}</p>
+              <Pronunciation text={card.pronunciation} className="mt-2 text-base sm:text-2xl" />
+              {/* Always surface the other side too, so each card reinforces Korean + reading + meaning together. */}
+              <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/80 [overflow-wrap:anywhere] sm:text-2xl">
+                {reversed ? card.meaning : card.term}
+              </p>
 
-            {card.example && (
-              <div className="mt-6 w-full max-w-sm rounded-2xl border-2 border-[#58cc02]/20 bg-card/80 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
-                {card.example}
+              {card.example && (
+                <div className="mt-6 w-full max-w-sm rounded-2xl border-2 border-[#58cc02]/20 bg-card/80 p-4 text-sm font-bold leading-relaxed text-muted-foreground">
+                  {card.example}
+                </div>
+              )}
+
+              <div className="mt-6 sm:mt-8">
+                <SpeakButton text={card.term} className="h-14 w-14 rounded-2xl border-b-4 border-[#1499e0] bg-[#1cb0f6] text-white transition-all active:translate-y-[3px] active:border-b-0" />
               </div>
-            )}
-
-            <div className="mt-8">
-              <SpeakButton text={card.term} className="h-14 w-14 rounded-2xl border-b-4 border-[#1499e0] bg-[#1cb0f6] text-white transition-all active:translate-y-[3px] active:border-b-0" />
             </div>
           </div>
         </motion.div>
@@ -325,7 +344,10 @@ function ChoiceCard({
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
         <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Select Meaning</span>
-        <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">{card.term}</p>
+        <p className={cn(
+          "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+          fitText(card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
+        )}>{card.term}</p>
         <Pronunciation text={card.pronunciation} className="mt-3 text-lg sm:text-2xl" />
         <div className="mt-6">
           <SpeakButton text={card.term} className="h-10 w-10 rounded-xl bg-background shadow-sm ring-1 ring-border/50" />
@@ -434,7 +456,10 @@ function RecallCard({
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
         <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Type in Korean</span>
-        <p className="w-full break-keep text-3xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">{card.meaning}</p>
+        <p className={cn(
+          "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+          fitText(card.meaning, "text-3xl sm:text-5xl", "text-2xl sm:text-4xl", "text-xl sm:text-3xl")
+        )}>{card.meaning}</p>
         {card.pronunciation && answered && (
           <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
         )}
@@ -690,7 +715,10 @@ function ListeningCard({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {/* Answer reveal */}
           <div className="rounded-2xl border-2 border-[#58cc02]/40 bg-[#58cc02]/[0.06] p-5 text-center dark:bg-[#58cc02]/[0.08]">
-            <p className="w-full break-keep text-4xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-6xl">
+            <p className={cn(
+              "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+              fitText(card.term, "text-4xl sm:text-6xl", "text-3xl sm:text-5xl", "text-2xl sm:text-4xl")
+            )}>
               {card.term}
             </p>
             <Pronunciation text={card.pronunciation} className="mt-2 text-lg sm:text-2xl" />
@@ -783,7 +811,10 @@ function SentenceCard({
       {/* Prompt card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:p-10">
         <span className="mb-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Write a Sentence</span>
-        <p className="w-full break-keep text-5xl font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-7xl">
+        <p className={cn(
+          "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
+          fitText(card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
+        )}>
           {card.term}
         </p>
         {card.pronunciation && (
@@ -1266,15 +1297,17 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
                     type="button"
                     onClick={() => setMode(m)}
                     className={cn(
-                      "flex flex-1 items-center justify-center gap-1 rounded-[0.9rem] py-3 text-xs font-bold uppercase tracking-wide transition-all",
+                      "flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.9rem] px-1 py-3 text-[11px] font-bold uppercase tracking-wide transition-all sm:text-xs",
                       mode === m
                         ? "bg-card text-emerald-600 shadow-sm shadow-emerald-500/10 ring-1 ring-border"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {m === "listening" && <Headphones size={13} strokeWidth={3} />}
-                    {m === "sentence" && <Sparkles size={13} strokeWidth={3} />}
-                    {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : m === "listening" ? "Listen" : "Write"}
+                    {m === "listening" && <Headphones size={13} strokeWidth={3} className="hidden shrink-0 sm:block" />}
+                    {m === "sentence" && <Sparkles size={13} strokeWidth={3} className="hidden shrink-0 sm:block" />}
+                    <span className="truncate">
+                      {m === "flashcard" ? "Cards" : m === "choice" ? "Quiz" : m === "recall" ? "Recall" : m === "listening" ? "Listen" : "Write"}
+                    </span>
                   </button>
                 ))}
               </div>

@@ -8,7 +8,7 @@ KoriAI — frontend for a Korean language-learning platform aimed at software de
 
 ## Commands
 
-Use **pnpm** (README convention; ignore the stray `package-lock.json`).
+Use **pnpm**.
 
 ```bash
 pnpm dev          # dev server at localhost:3000
@@ -20,33 +20,48 @@ npx vitest run lib/vocab-review.test.ts   # run a single test file
 
 Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no vitest config file; defaults apply.
 
+**Local dev on machines with corporate SSL inspection** (this repo is developed on one running Somansa): Node.js does not trust the interception CA, so every server-side fetch — Supabase auth in `requireUser`, OpenAI calls — fails with `SELF_SIGNED_CERT_IN_CHAIN` and all `app/api/ai/*` routes return 401 "Invalid session" even for valid logins. Run the dev server with `NODE_EXTRA_CA_CERTS` pointing at the exported root CA (here: `C:\Users\user\.certs\somansa-root-ca.pem`). Browser-side Supabase calls are unaffected, so the symptom is "everything works except AI".
+
 ## Architecture
 
-**This is effectively a client-side SPA over a separate Spring Boot backend.** Nearly every page/layout is `"use client"`. There are no Next.js API routes or server actions. All data comes from the backend at `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8080/api`); the backend repo is separate.
+**Client-side SPA over Supabase, plus a thin set of Next.js AI routes.** The former Spring Boot backend was replaced (July 2026): data now lives in Supabase and the AI features run in `app/api/ai/*` route handlers — the only server-side code in the app. The old Spring implementations were removed in this migration's cleanup; see git history if they're ever needed again.
+
+### Supabase — data + auth
+
+- `lib/supabase.ts` holds the single browser client. The Supabase project is **shared with Orbit/DailyGoalMap**: KoriAI-owned tables are prefixed `kori_`; the goals/tasks domain reuses Orbit's original tables (`goals`, `tasks`, …) and RPCs. All tables have RLS; queries rely on it rather than filtering by user id everywhere.
+- Auth is Supabase auth (email/password + Google via `signInWithIdToken`, see `lib/google-auth.ts`). Session persists under the fixed storage key `koriai-auth` so `lib/auth-store.ts` can read the user id synchronously. The route guard is client-side only: `app/(main)/layout.tsx` redirects to `/login`.
 
 ### API layer — `lib/api/` (the single integration point)
 
-- A per-domain service package. `lib/api/client.ts` holds the one axios instance + interceptors; each domain has its own file (`auth.ts`, `chat.ts`, `vocab.ts`, `goals.ts`, `interview.ts`, `reading.ts`, `progress.ts`, `learning.ts`, `tts.ts`, `push.ts`, `user.ts`); `lib/api/index.ts` is a barrel that re-exports everything. Import from `@/lib/api` as before (e.g. `import { vocabApi } from "@/lib/api"`). Add a new backend call to the matching domain file, not inline in components.
-- The backend wraps every payload in an envelope — responses are always unwrapped with `r.data.data`. Keep that pattern.
-- Request interceptor attaches `Authorization: Bearer <token>` from localStorage; the 401 response interceptor does a single-flight token refresh, retries once, and only hard-redirects to `/login` if the refresh itself fails.
-- `chatApi.streamMessage` (and `goalsApi.coachStream`) are the exceptions to axios: they use raw `fetch` to parse SSE events (`start` / `token` / `done` / `error`) from the backend stream endpoints.
+- Per-domain service package: each domain file (`auth.ts`, `chat.ts`, `vocab.ts`, `goals.ts`, `interview.ts`, `reading.ts`, `progress.ts`, `learning.ts`, `foundations.ts`, `tts.ts`, `push.ts`, `user.ts`, `notes.ts`) queries Supabase directly and maps snake_case rows to the app's camelCase types. `lib/api/index.ts` is a barrel — import from `@/lib/api` (e.g. `import { vocabApi, getApiErrorMessage } from "@/lib/api"`). Add a new backend call to the matching domain file, not inline in components.
+- `lib/api/errors.ts` — `getApiErrorMessage` formats supabase-js / fetch errors; used by most hooks and pages.
+- `lib/api/ai-client.ts` — `aiPost` / `authHeaders` attach the Supabase access token for calls to `app/api/ai/*`. `lib/api/sse.ts` parses the SSE streams.
 
-### Auth
+### AI routes — `app/api/ai/*`
 
-- JWT stored in localStorage via `lib/auth-store.ts` (`token`, `userId`, `userEmail` keys).
-- The route guard is client-side only: `app/(main)/layout.tsx` redirects to `/login` when `isAuthenticated()` is false.
-- `lib/auth.ts` (NextAuth config) is an unwired stub — real auth goes through `authApi` + `auth-store`.
+- `lib/server/ai.ts` is the shared plumbing: `requireUser` (verifies the caller's Supabase JWT and returns a per-request client so **RLS applies — no service key anywhere**), `jsonAiRoute` (zod schema + prompt → `generateObject` → JSON), and SSE helpers.
+- Models via `@ai-sdk/openai`; server-side `OPENAI_API_KEY`, default model `gpt-5-mini` (override with `AI_MODEL`). TTS (`app/api/ai/tts`) proxies OpenAI's audio API and returns MP3 bytes.
+- Streaming (`chat/stream`, `goals/coach`) keeps the same SSE event protocol the Spring backend used: `start` / `token` / `done` / `error`. `chat/stream` also persists both message rows in `kori_messages`.
 
 ### Routing & app shell
 
 - Route groups: `app/(auth)/` (login, register) and `app/(main)/` (everything else).
-- `app/(main)/layout.tsx` is the entire app shell: desktop sidebar, mobile top bar, mobile bottom tab bar, soft-keyboard detection via `visualViewport`. Nav links for hidden features (Correction, Diary) are commented out in place for easy restore — keep that convention.
+- `app/(main)/layout.tsx` is the entire app shell: desktop sidebar, mobile top bar, mobile bottom tab bar, soft-keyboard detection via `visualViewport`. Nav links for hidden features are commented out in place for easy restore — keep that convention (Listening is currently hidden this way).
+- `/mistakes` and `/daily-phrase` are deliberate redirect stubs (→ `/chat?mode=corrections` and `/practice`) kept so old bookmarks still work — don't delete them.
 - **Immersive chat:** on `/chat` routes the mobile header, bottom tabs, and content padding are all removed for a full-bleed experience. If you touch chat layout, check both the shell's `isChatRoute` branches and `components/chat/ChatWindow.tsx`.
 
 ### Data state
 
-- TanStack Query is provided globally (`components/providers/app-providers.tsx`, staleTime 60s, no refetch on focus), but several hooks (`useChat`, parts of others) manage state manually with `useState` + direct api calls. Some hooks/pages still use mock/demo data where the backend isn't wired — check before assuming an endpoint exists (README "Integration Status" table tracks this).
+- TanStack Query is provided globally (`components/providers/app-providers.tsx`, staleTime 60s, no refetch on focus), but several hooks (`useChat`, parts of others) manage state manually with `useState` + direct api calls.
 - `useChat` injects response-language and "Dev Mode" (technical Korean) instructions into the outgoing message text rather than via API parameters.
+
+## Environment (`.env.local`)
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — shared Orbit project.
+- `OPENAI_API_KEY` — server-side, required for every `app/api/ai/*` route (set it in Vercel too when deploying).
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` — must also be registered under Supabase Auth > Providers > Google.
+- `NEXT_PUBLIC_VAPID_KEY` — web push, paired with the `kori-send-push` Edge Function.
+- Optional: `AI_MODEL`, `TTS_MODEL`.
 
 ## Conventions
 
@@ -55,3 +70,4 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 - Animations use `motion/react` (the `motion` package), icons from `lucide-react`, toasts via `sonner`.
 - Path alias `@/*` maps to the repo root.
 - Mobile UI is tuned for iPhone 12 Pro Max: use `env(safe-area-inset-*)` padding and `100dvh`-style units as the existing layouts do.
+- `dev-learning-notes/` is an unrelated embedded side project (own README/CLAUDE.md) — not part of the app; don't wire it in.
