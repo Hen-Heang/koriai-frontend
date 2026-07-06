@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { vocabApi } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
 import { useLogActivity } from "@/hooks/useLogActivity"
-import type { ReviewRating } from "@/lib/srs"
+import { isDue, type ReviewRating } from "@/lib/srs"
 import type { VocabItem } from "@/lib/types"
 
 function normalizeWord(raw: unknown): VocabItem {
@@ -51,7 +51,7 @@ export const vocabQueryKey = (userId?: string | null) => ["vocab", userId] as co
 export function useVocab() {
   const userId = getUserId()
   const queryClient = useQueryClient()
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("vocab")
   const key = vocabQueryKey(userId)
 
   const { data, isPending, isError } = useQuery({
@@ -91,9 +91,8 @@ export function useVocab() {
     queryClient.setQueryData<VocabData>(key, (prev) => {
       if (!prev) return prev
       const savedWords = prev.savedWords.map((w) => (w.id === id ? updated : w))
-      const today = new Date().toISOString().slice(0, 10)
       const without = prev.dueWords.filter((w) => w.id !== id)
-      const dueWords = updated.nextReview <= today ? [...without, updated] : without
+      const dueWords = isDue(updated.nextReview) ? [...without, updated] : without
       return { savedWords, dueWords }
     })
     void logActivity()

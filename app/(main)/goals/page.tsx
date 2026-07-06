@@ -34,6 +34,7 @@ export default function GoalsPage() {
     confirmDelete,
     updateSort,
     toggleStar,
+    toggleComplete,
     fetchGoals,
   } = useGoals()
 
@@ -159,6 +160,7 @@ export default function GoalsPage() {
             onDeleteGoal={confirmDelete}
             onEditGoal={handleEditGoal}
             onToggleStar={toggleStar}
+            onToggleComplete={toggleComplete}
           />
 
           {filteredTotalPages > 1 && (

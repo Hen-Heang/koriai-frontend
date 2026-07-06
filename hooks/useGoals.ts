@@ -165,6 +165,38 @@ export const useGoals = () => {
     [userId, queryClient, key]
   )
 
+  // Optimistic complete/reopen toggle: flip cached status, persist, roll back
+  // on failure. Mirrors toggleStar — no refetch, filters are client-side.
+  const toggleComplete = useCallback(
+    async (goalId: string) => {
+      const current = queryClient.getQueryData<Goal[]>(key)
+      const goal = current?.find((g) => g.id === goalId)
+      if (!goal) return
+      const prevStatus = goal.status
+      const nextStatus = prevStatus === "completed" ? "active" : "completed"
+
+      const apply = (status: string) =>
+        queryClient.setQueryData<Goal[]>(key, (list) =>
+          (list || []).map((g) => (g.id === goalId ? { ...g, status } : g))
+        )
+
+      apply(nextStatus)
+      try {
+        await goalsApi.update(goalId, { status: nextStatus })
+        // Keep the goal-detail cache in sync if it was visited before.
+        void queryClient.invalidateQueries({ queryKey: ["goal", goalId] })
+        toast.success(nextStatus === "completed" ? "Goal completed! 🎉" : "Goal reopened")
+      } catch (err) {
+        apply(prevStatus) // roll back
+        console.error("Error updating goal status:", err)
+        toast.error("Couldn't update goal", {
+          description: getApiErrorMessage(err, "Please try again."),
+        })
+      }
+    },
+    [queryClient, key]
+  )
+
   return {
     goals,
     allGoals,
@@ -184,6 +216,7 @@ export const useGoals = () => {
     confirmDelete,
     updateSort,
     toggleStar,
+    toggleComplete,
     fetchGoals,
   }
 }

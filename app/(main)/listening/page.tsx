@@ -61,7 +61,7 @@ function ListeningPageContent() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [result, setResult] = useState<ListeningAttemptResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("listening")
   useSessionTimer("listening")
 
   // Audio playback

@@ -87,6 +87,15 @@ export function applyRating(card: SrsCardState, rating: ReviewRating): SrsResult
   return { easeFactor, intervalDays: interval, repetitions, lapses, mastery, nextReview: next.toISOString() }
 }
 
+/**
+ * Whether a card is due for review. Single source of the "due" predicate —
+ * vocabApi.getDueWords' server-side `.lte("next_review", now)` filter must
+ * mirror this (both compare full ISO timestamps, not date-only strings).
+ */
+export function isDue(nextReview: string, now: Date = new Date()): boolean {
+  return nextReview <= now.toISOString()
+}
+
 /** "Today", "3d", "2.5mo", "1y" — compact Anki-style interval labels. */
 export function formatInterval(days: number): string {
   if (days <= 0) return "Today"

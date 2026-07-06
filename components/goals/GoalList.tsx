@@ -7,12 +7,14 @@ import { motion, AnimatePresence, type Variants } from "motion/react"
 import { format } from "date-fns"
 import {
   CalendarDays,
+  CheckCircle2,
   ClipboardList,
   LayoutGrid,
   List,
   MoreHorizontal,
   Pencil,
   Plus,
+  RotateCcw,
   Star,
   Target,
   Trash2,
@@ -46,6 +48,7 @@ export interface GoalListProps {
   onDeleteGoal: (goal: Goal, event: React.MouseEvent) => void
   onEditGoal?: (goal: Goal, event: React.MouseEvent) => void
   onToggleStar?: (goalId: string) => void
+  onToggleComplete?: (goalId: string) => void
 }
 
 const cardVariants: Variants = {
@@ -83,12 +86,14 @@ type GoalActionHandlers = {
   onDeleteGoal: (goal: Goal, event: React.MouseEvent) => void
   onEditGoal?: (goal: Goal, event: React.MouseEvent) => void
   onToggleStar?: (goalId: string) => void
+  onToggleComplete?: (goalId: string) => void
 }
 
-// Star + edit/delete menu, shared by the grid card and the table row so the
-// owner controls stay identical across views. `size` tunes the touch target
-// (smaller for the compact row).
-function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar }: GoalActionHandlers & { size: string }) {
+// Star + complete/edit/delete menu, shared by the grid card and the table row
+// so the owner controls stay identical across views. `size` tunes the touch
+// target (smaller for the compact row).
+function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar, onToggleComplete }: GoalActionHandlers & { size: string }) {
+  const isCompleted = goal.status === "completed"
   return (
     <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <Button
@@ -112,6 +117,14 @@ function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar }: Goa
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44 rounded-2xl p-2 shadow-lg">
+          <DropdownMenuItem className="rounded-xl font-medium" onSelect={() => onToggleComplete?.(goal.id)}>
+            {isCompleted ? (
+              <RotateCcw className="mr-3 h-4 w-4 text-blue-500" />
+            ) : (
+              <CheckCircle2 className="mr-3 h-4 w-4 text-emerald-500" />
+            )}
+            {isCompleted ? "Reopen goal" : "Mark complete"}
+          </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl font-medium" onSelect={(e) => onEditGoal?.(goal, e as unknown as React.MouseEvent)}>
             <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit
           </DropdownMenuItem>
@@ -157,6 +170,7 @@ export function GoalList({
   onDeleteGoal,
   onEditGoal,
   onToggleStar,
+  onToggleComplete,
 }: GoalListProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -350,6 +364,7 @@ export function GoalList({
                         onDeleteGoal={onDeleteGoal}
                         onEditGoal={onEditGoal}
                         onToggleStar={onToggleStar}
+                        onToggleComplete={onToggleComplete}
                       />
                     )
                   )}
@@ -394,6 +409,7 @@ export function GoalList({
                           onDeleteGoal={onDeleteGoal}
                           onEditGoal={onEditGoal}
                           onToggleStar={onToggleStar}
+                          onToggleComplete={onToggleComplete}
                         />
                       )}
                     </div>

@@ -375,6 +375,13 @@ export default function GoalDetailPage() {
     : []
   const isCompleted = goal.status === "completed"
   const isArchived = goal.status === "archived"
+  // Single owner of the complete ↔ reopen transition (and its toast copy) —
+  // the hero button and the ⋯ menu item both go through here.
+  const toggleComplete = () =>
+    updateStatus(
+      isCompleted ? "active" : "completed",
+      isCompleted ? "Goal reopened" : "Goal completed! 🎉"
+    )
 
   return (
     <div className="space-y-8 pb-12" data-goal-id={id}>
@@ -420,6 +427,24 @@ export default function GoalDetailPage() {
             <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
               <Button
                 variant="ghost"
+                onClick={toggleComplete}
+                disabled={isMutatingStatus}
+                className={cn(
+                  "h-9 gap-1.5 rounded-xl px-3 text-xs font-semibold transition-all sm:h-10",
+                  isCompleted
+                    ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
+                    : "bg-background/50 text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600"
+                )}
+              >
+                {isMutatingStatus ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className={cn("h-4 w-4", isCompleted && "fill-emerald-500/20")} />
+                )}
+                <span className="hidden sm:inline">{isCompleted ? "Completed" : "Mark complete"}</span>
+              </Button>
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={toggleStar}
                 className={cn(
@@ -441,11 +466,14 @@ export default function GoalDetailPage() {
                   <DropdownMenuItem className="rounded-xl font-medium" onSelect={() => setShowEditPanel(true)}>
                     <Pencil className="mr-3 h-4 w-4 text-primary" /> Edit
                   </DropdownMenuItem>
-                  {!isCompleted && (
-                    <DropdownMenuItem className="rounded-xl font-medium" disabled={isMutatingStatus} onSelect={() => updateStatus("completed", "Goal completed!")}>
-                      <CheckCircle2 className="mr-3 h-4 w-4 text-blue-500" /> Mark complete
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem className="rounded-xl font-medium" disabled={isMutatingStatus} onSelect={toggleComplete}>
+                    {isCompleted ? (
+                      <RotateCcw className="mr-3 h-4 w-4 text-blue-500" />
+                    ) : (
+                      <CheckCircle2 className="mr-3 h-4 w-4 text-emerald-500" />
+                    )}
+                    {isCompleted ? "Reopen goal" : "Mark complete"}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem variant="destructive" className="rounded-xl font-medium" onSelect={() => setShowDeleteDialog(true)}>
                     <Trash2 className="mr-3 h-4 w-4" /> Delete

@@ -35,7 +35,7 @@ const itemVariants = {
 
 export default function VocabPage() {
   const { dueToday, error, loading, rateWord, words, addWord, generate, importList, updateWord, deleteWord } = useVocab()
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("vocab")
   useSessionTimer("vocab")
   const [query, setQuery] = useState("")
 

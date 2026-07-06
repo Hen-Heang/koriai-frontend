@@ -100,7 +100,7 @@ async function autoSpeak(text: string) {
 }
 
 export default function InterviewPage() {
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("interview")
   useSessionTimer("interview")
 
   const [phase, setPhase] = useState<"select" | "session" | "summary">("select")

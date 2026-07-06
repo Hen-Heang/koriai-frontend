@@ -726,20 +726,24 @@ function SentenceCard({
   const [attempt, setAttempt] = useState("")
   const [result, setResult] = useState<SentenceCheckResponse | null>(null)
   const [error, setError] = useState("")
+  const [retryToken, setRetryToken] = useState(0)
 
+  // No synchronous state resets here: the session remounts this component per
+  // attempt (card key includes the attempt counter), so mount state is fresh.
   useEffect(() => {
     let active = true
-    setPhase("loading")
-    setError("")
-    setAttempt("")
-    setResult(null)
-    setChallenge(null)
     vocabApi
       .getSentenceChallenge(card.id)
       .then((data) => { if (active) { setChallenge(data); setPhase("writing") } })
-      .catch(() => { if (active) { setError("Could not load challenge — tap Retry."); setPhase("writing") } })
+      .catch(() => { if (active) { setError("Could not load the challenge."); setPhase("writing") } })
     return () => { active = false }
-  }, [card.id])
+  }, [card.id, retryToken])
+
+  function retryChallenge() {
+    setError("")
+    setPhase("loading")
+    setRetryToken((t) => t + 1)
+  }
 
   async function handleCheck() {
     if (!challenge || !attempt.trim() || phase === "checking") return
@@ -801,6 +805,24 @@ function SentenceCard({
         <div className="flex items-center gap-2.5 rounded-2xl border border-violet-500/20 bg-violet-500/5 px-4 py-4">
           <Loader2 size={16} className="animate-spin text-violet-500" />
           <span className="text-xs font-bold text-muted-foreground">Building your challenge...</span>
+        </div>
+      )}
+
+      {/* Challenge failed to load — offer a retry, and let the learner still
+          self-grade the card so the session can't dead-end here. */}
+      {phase === "writing" && !challenge && (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={retryChallenge}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-violet-500/10 text-xs font-bold uppercase tracking-wide text-violet-600 transition-all hover:bg-violet-500/20 active:scale-95 dark:text-violet-400"
+          >
+            <RotateCcw size={14} strokeWidth={3} /> Retry challenge
+          </button>
+          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
+            Or rate this word yourself and continue
+          </p>
+          <GradeButtons card={card} onGrade={advanceCard} />
         </div>
       )}
 
@@ -1066,15 +1088,16 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
           easeFactor: Math.max(1.3, card.easeFactor - 0.2),
           lapses: card.lapses + 1,
         }
+        // Requeue at the end; queue length is unchanged so currentIndex stays
+        // valid — the next card slides into this slot, or (when this was the
+        // last card) the lapsed card itself comes right back. Never jump back
+        // to 0: earlier slots hold cards that were already graded this session.
         setQueue((q) => {
           const next = [...q]
           next.splice(currentIndex, 1)
           next.push(lapsed)
           return next
         })
-        if (currentIndex >= queue.length - 1) {
-          setCurrentIndex(0)
-        }
         return
       }
 
@@ -1475,7 +1498,10 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
         <div className="mx-auto w-full max-w-2xl">
         <AnimatePresence mode="wait">
           <motion.div
-            key={card.id + currentIndex}
+            // Keyed by attempt, not index: a lapsed card can return at the SAME
+            // id+index (last card graded "Again"), and without a key change the
+            // choice/recall cards keep their answered state and get stuck.
+            key={`${card.id}-${attemptsCount}`}
             initial={{ opacity: 0, scale: 0.98, x: 10 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.98, x: -10 }}

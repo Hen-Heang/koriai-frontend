@@ -98,6 +98,8 @@ export const vocabApi = {
   // Capped at DAILY_REVIEW_LIMIT so a big backlog doesn't dump dozens of cards
   // on the learner at once — the most overdue ones surface first, and the next
   // batch appears once these are reviewed (next_review moves past "now").
+  // The .lte() filter is the server-side twin of isDue() in lib/srs.ts — keep
+  // both comparing full ISO timestamps.
   getDueWords: async (): Promise<VocabItem[]> => {
     const { data, error } = await supabase
       .from("kori_vocab_cards")

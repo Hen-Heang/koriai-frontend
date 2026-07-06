@@ -79,7 +79,7 @@ export default function ReadingUnitPage() {
 
   const [unit, setUnit] = useState<ReadingUnit | null>(null)
   const [loadingUnit, setLoadingUnit] = useState(true)
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("reading")
   useSessionTimer("reading")
 
   useEffect(() => {

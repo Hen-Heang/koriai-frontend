@@ -114,7 +114,7 @@ export function useFoundationsLessons(track: LearnTrack) {
 export function useFoundationsLesson(id: string) {
   const userId = getUserId()
   const queryClient = useQueryClient()
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("foundations")
 
   const { data, isPending, isError } = useQuery({
     queryKey: foundationsLessonKey(id, userId),

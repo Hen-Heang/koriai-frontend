@@ -58,7 +58,7 @@ export function MessageAnalyzer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const { copied, copy } = useCopy(2000)
-  const { logActivity } = useLogActivity()
+  const { logActivity } = useLogActivity("chat")
 
   async function handleAnalyze() {
     if (!text.trim()) return
