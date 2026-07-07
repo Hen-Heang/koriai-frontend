@@ -20,6 +20,7 @@ import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
+import { CardGrid } from "@/components/ui/card-grid"
 import { TipCard } from "@/components/app/tip-card"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -113,11 +114,11 @@ export default function AchievementsPage() {
       {loading ? (
         <>
           <Skeleton className="h-28 w-full rounded-3xl" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <CardGrid minCardWidth={220}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} className="h-32 w-full rounded-2xl" />
             ))}
-          </div>
+          </CardGrid>
         </>
       ) : summary ? (
         <>
@@ -162,10 +163,8 @@ export default function AchievementsPage() {
           </motion.div>
 
           {/* Badge grid */}
-          <motion.div
-            variants={itemVariants}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <motion.div variants={itemVariants}>
+          <CardGrid minCardWidth={220}>
             {summary.achievements.map((a) => {
               const Icon = ICONS[a.icon] ?? Trophy
               return (
@@ -219,6 +218,7 @@ export default function AchievementsPage() {
                 </div>
               )
             })}
+          </CardGrid>
           </motion.div>
 
           <motion.div variants={itemVariants}>

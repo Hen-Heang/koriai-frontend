@@ -54,6 +54,25 @@ const models = [
   { value: "gpt-4o-mini", label: "GPT-4o mini", desc: "Fast & efficient" },
 ]
 
+const countries = [
+  "South Korea", "Cambodia", "Vietnam", "Thailand", "Philippines", "Indonesia",
+  "Malaysia", "Singapore", "China", "Japan", "India", "United States",
+  "United Kingdom", "Canada", "Australia", "Other",
+]
+
+function snapshotOf(fields: {
+  displayName: string
+  koreanLevel: string
+  country: string
+  nativeLanguage: string
+  occupation: string
+  yearsOfExperience: string
+  learningGoal: string
+  model: string
+}) {
+  return JSON.stringify(fields)
+}
+
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn("overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40", className)}>
@@ -134,7 +153,7 @@ function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
             <p className="text-[11px] font-medium text-muted-foreground/50">{description}</p>
           </div>
         </div>
-        <ChevronRight size={15} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight size={15} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
       </button>
     </SectionCard>
   )
@@ -180,6 +199,7 @@ export default function SettingsPage() {
   const [studyReminderHour, setStudyReminderHour] = useState(20)
   const [savingReminders, setSavingReminders] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const savedSnapshotRef = useRef<string | null>(null)
 
   useEffect(() => {
     const userId = getUserId()
@@ -203,6 +223,16 @@ export default function SettingsPage() {
         if (data.hasProfileImage) {
           userApi.getProfileImageUrl(userId).then(setAvatarUrl).catch(() => {})
         }
+        savedSnapshotRef.current = snapshotOf({
+          displayName: data.displayName ?? "",
+          koreanLevel: data.koreanLevel ?? "BEGINNER",
+          country: data.country ?? "",
+          nativeLanguage: data.nativeLanguage ?? "",
+          occupation: data.occupation ?? "",
+          yearsOfExperience: data.yearsOfExperience != null ? String(data.yearsOfExperience) : "",
+          learningGoal: data.learningGoal ?? "",
+          model,
+        })
       })
       .finally(() => setLoading(false))
   }, [])
@@ -256,6 +286,18 @@ export default function SettingsPage() {
 
   const activeModel = customModel || preferredModel
 
+  const currentSnapshot = snapshotOf({
+    displayName,
+    koreanLevel,
+    country,
+    nativeLanguage,
+    occupation,
+    yearsOfExperience,
+    learningGoal,
+    model: activeModel,
+  })
+  const isDirty = savedSnapshotRef.current !== null && savedSnapshotRef.current !== currentSnapshot
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const userId = getUserId()
@@ -274,6 +316,7 @@ export default function SettingsPage() {
         learningGoal: learningGoal || undefined,
       })
       await userApi.updatePreferredModel(userId, activeModel)
+      savedSnapshotRef.current = currentSnapshot
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
@@ -421,7 +464,7 @@ export default function SettingsPage() {
         <motion.div variants={itemVariants} className="space-y-2">
           <Button
             type="submit"
-            disabled={saving}
+            disabled={saving || !isDirty}
             className="h-12 w-full rounded-2xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
           >
             {saving ? (
@@ -630,7 +673,7 @@ export default function SettingsPage() {
                   <p className="text-[11px] font-medium text-muted-foreground/50">End your session</p>
                 </div>
               </div>
-              <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
             </button>
           </SectionCard>
         </motion.div>
@@ -681,7 +724,10 @@ export default function SettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <FieldLabel>Country</FieldLabel>
-                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Cambodia" className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all" />
+                  <select value={country} onChange={(e) => setCountry(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                    <option value="">Select country</option>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div>
                   <FieldLabel>Native language</FieldLabel>
@@ -770,7 +816,7 @@ export default function SettingsPage() {
                           <Check size={11} strokeWidth={3} />
                         </div>
                       ) : (
-                        <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/20 transition-transform group-hover:translate-x-0.5" />
+                        <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
                       )}
                     </button>
                   )
@@ -836,7 +882,7 @@ export default function SettingsPage() {
 
         {/* Mobile copyright */}
         <motion.div variants={itemVariants} className="pt-2 text-center xl:hidden">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/25">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
             © 2026 Hen Heang · FullStack Developer
           </p>
         </motion.div>

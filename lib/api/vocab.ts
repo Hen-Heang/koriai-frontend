@@ -1,3 +1,5 @@
+import { romanize } from "es-hangul"
+
 import type { VocabItem, SentenceChallengeResponse, SentenceCheckResponse } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { getUserId, requireUserId } from "@/lib/auth-store"
@@ -13,6 +15,18 @@ import { aiPost } from "./ai-client"
 // next one loads (useVocab invalidates once dueWords empties), so the learner
 // can keep going until the true due count (getDueCount) reaches zero.
 const REVIEW_SESSION_SIZE = 20
+
+// Revised-Romanization pronunciation for a Korean term (es-hangul applies the
+// standard sound-change rules). Returns null for non-Hangul terms so English
+// loanwords/abbreviations aren't given a pointless copy of themselves.
+function autoPronunciation(term: string): string | null {
+  if (!/[가-힣]/.test(term)) return null
+  try {
+    return romanize(term)
+  } catch {
+    return null
+  }
+}
 
 type VocabRow = {
   id: string
@@ -136,6 +150,7 @@ export const vocabApi = {
         term: data.term,
         meaning: data.meaning,
         example: data.example ?? null,
+        pronunciation: autoPronunciation(data.term),
       })
       .select()
       .single()
@@ -172,7 +187,7 @@ export const vocabApi = {
           category,
           term: w.term,
           meaning: w.meaning,
-          pronunciation: w.pronunciation ?? null,
+          pronunciation: w.pronunciation ?? autoPronunciation(w.term),
           example: w.example ?? null,
           example_translation: w.exampleTranslation ?? null,
           difficulty_level: w.difficultyLevel ?? null,
@@ -196,11 +211,13 @@ export const vocabApi = {
     const separator = /\s*(?:—|–|\s-\s|:|=|,|\t)\s*/
     const rows = prepared.entries.map((line) => {
       const [term, ...rest] = line.split(separator)
+      const cleanTerm = (term ?? line).trim() || line
       return {
         user_id: userId,
         category,
-        term: (term ?? line).trim() || line,
+        term: cleanTerm,
         meaning: rest.join(", ").trim(),
+        pronunciation: autoPronunciation(cleanTerm),
       }
     })
     const { data, error } = await supabase.from("kori_vocab_cards").insert(rows).select()

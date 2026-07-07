@@ -561,7 +561,7 @@ export function ChatWindow({
                   "h-10 w-10 shrink-0 rounded-full transition-all duration-300",
                   draft.trim() 
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-90"
-                    : "bg-muted text-muted-foreground/20"
+                    : "bg-muted text-muted-foreground/60"
                 )}
                 disabled={!draft.trim() || !conversationId || isStreaming || isLoadingMessages}
               >

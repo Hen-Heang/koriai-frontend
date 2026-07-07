@@ -133,7 +133,7 @@ export function VocabDictionary({
     <div id="vocab-dictionary" className="scroll-mt-20 space-y-6">
       <div className="px-4">
         <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground/60">Your Dictionary</h4>
-        <p className="mt-1 text-xs font-bold text-muted-foreground/30">
+        <p className="mt-1 text-xs font-bold text-muted-foreground/60">
           {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
         </p>
       </div>
@@ -159,7 +159,7 @@ export function VocabDictionary({
                 {label}
                 <span className={cn(
                   "tabular-nums",
-                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground/30"
+                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground/60"
                 )}>
                   {filterCount(value)}
                 </span>
@@ -249,7 +249,7 @@ export function VocabDictionary({
 
       {!loading && words.length > 0 && !filtered.length ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center">
-          <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/30" />
+          <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/60" />
           <p className="text-sm font-bold text-muted-foreground/60">
             No words match your search.
           </p>
@@ -258,7 +258,7 @@ export function VocabDictionary({
 
       {!loading && !words.length ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center sm:rounded-3xl sm:p-16">
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted/10 text-muted-foreground/20 mb-6">
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted/10 text-muted-foreground/60 mb-6">
             <Layers3 size={40} strokeWidth={1.5} />
           </div>
           <h3 className="text-xl font-bold text-foreground">Start Your Collection</h3>

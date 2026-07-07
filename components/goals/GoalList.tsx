@@ -100,19 +100,20 @@ function GoalActions({ goal, size, onDeleteGoal, onEditGoal, onToggleStar, onTog
         variant="ghost"
         size="icon"
         onClick={() => onToggleStar?.(goal.id)}
+        aria-label={goal.isStarred ? "Unstar goal" : "Star goal"}
         className={cn(
           size,
           "rounded-xl",
           goal.isStarred
             ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
-            : "text-muted-foreground/30 hover:bg-amber-500/10 hover:text-amber-500"
+            : "text-muted-foreground/60 hover:bg-amber-500/10 hover:text-amber-500"
         )}
       >
         <Star className={cn("h-4 w-4", goal.isStarred && "fill-current")} />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className={cn(size, "rounded-xl hover:bg-foreground/5")}>
+          <Button variant="ghost" size="icon" aria-label="Goal actions" className={cn(size, "rounded-xl hover:bg-foreground/5")}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -270,7 +271,7 @@ export function GoalList({
               aria-label={label}
               aria-pressed={viewMode === mode}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                "flex h-11 w-11 items-center justify-center rounded-lg transition-colors",
                 viewMode === mode
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground/50 hover:text-foreground"
@@ -335,7 +336,7 @@ export function GoalList({
                     className="h-11 w-11 rounded-xl text-lg"
                   />
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                    <h3 title={goal.title} className="truncate text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
                       {goal.title}
                     </h3>
                     <div className="mt-1.5 flex items-center gap-2">
@@ -360,7 +361,7 @@ export function GoalList({
                     isOwner && (
                       <GoalActions
                         goal={goal}
-                        size="h-8 w-8"
+                        size="h-11 w-11"
                         onDeleteGoal={onDeleteGoal}
                         onEditGoal={onEditGoal}
                         onToggleStar={onToggleStar}
@@ -405,7 +406,7 @@ export function GoalList({
                       {isOwner && (
                         <GoalActions
                           goal={goal}
-                          size="h-9 w-9"
+                          size="h-11 w-11"
                           onDeleteGoal={onDeleteGoal}
                           onEditGoal={onEditGoal}
                           onToggleStar={onToggleStar}
@@ -420,7 +421,7 @@ export function GoalList({
                       </Badge>
                       {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                     </div>
-                    <h3 className="mt-2 line-clamp-2 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
+                    <h3 title={goal.title} className="mt-2 line-clamp-2 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
                       {goal.title}
                     </h3>
 

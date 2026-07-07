@@ -116,6 +116,7 @@ export default function VocabPage() {
       <motion.div variants={itemVariants}>
         <ReviewSession
           dueToday={dueToday}
+          dueCount={dueCount}
           allWords={words}
           loading={loading}
           onRate={rateWord}

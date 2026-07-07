@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardGrid } from "@/components/ui/card-grid"
 import EmojiIconPicker from "@/components/ui/emoji-icon-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +17,6 @@ import { Switch } from "@/components/ui/switch"
 import { goalTemplates } from "@/lib/goal-templates"
 import type { GoalTemplate } from "@/lib/goal-templates/types"
 import { useCreateGoal } from "@/hooks/useGoalMutations"
-import { cn } from "@/lib/utils"
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -26,6 +26,8 @@ const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
   visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
 }
+
+const LIFE_GOAL_CATEGORIES = new Set(["financial", "career", "personal"])
 
 export default function CreateGoalPage() {
   const router = useRouter()
@@ -46,10 +48,67 @@ export default function CreateGoalPage() {
     const matchesCategory = activeCategory ? template.category === activeCategory : true
     return matchesSearch && matchesCategory
   })
+  // None of these templates are Korean-study-specific (the goals system is a
+  // general tracker shared with Orbit — see CLAUDE.md). Financial/career/
+  // personal-habit templates read as noise dropped into a language-learning
+  // app, so they get their own clearly labeled section below the
+  // education/fitness/creative templates instead of blending in.
+  const primaryTemplates = filteredTemplates.filter((t) => !LIFE_GOAL_CATEGORIES.has(t.category))
+  const lifeGoalTemplates = filteredTemplates.filter((t) => LIFE_GOAL_CATEGORIES.has(t.category))
 
   const handleSelectTemplate = (template: GoalTemplate) => {
     router.push(`/goals/create/template/${template.id}`)
   }
+
+  const renderTemplateCard = (template: GoalTemplate) => (
+    <motion.div key={template.id} variants={itemVariants}>
+      <Card
+        className="group relative flex h-full cursor-pointer flex-col rounded-2xl transition-colors hover:border-primary/30"
+        onClick={() => handleSelectTemplate(template)}
+      >
+        <CardHeader className="p-6 sm:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className="mb-1 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm ring-1 ring-white/20 dark:ring-white/5"
+              style={{ background: template.color }}
+            >
+              {template.icon}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 translate-x-4 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
+            >
+              <ArrowRight className="h-5 w-5 text-primary" />
+            </Button>
+          </div>
+          <CardTitle className="mt-4 text-xl font-semibold leading-tight tracking-tight transition-colors group-hover:text-primary">
+            {template.name}
+          </CardTitle>
+          <CardDescription className="mt-1 line-clamp-2 text-sm font-medium leading-relaxed">
+            {template.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="mt-auto p-6 pt-0 sm:p-7 sm:pt-0">
+          <div className="mb-4">
+            <span className="rounded-lg border border-primary/10 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+              {template.category}
+            </span>
+          </div>
+          <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-medium text-muted-foreground/60">
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={12} className="text-primary/60" />
+              {template.sections.length} sections
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Zap size={12} className="text-primary/60" />
+              {template.sections.reduce((acc, s) => acc + s.fields.length, 0)} fields
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
 
   const handleQuickCreate = async () => {
     if (!quickTitle.trim()) {
@@ -247,62 +306,34 @@ export default function CreateGoalPage() {
                 </Button>
               </motion.div>
             ) : (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 gap-5 md:grid-cols-2"
-              >
-                {filteredTemplates.map((template) => (
-                  <motion.div key={template.id} variants={itemVariants}>
-                    <Card
-                      className="group relative flex h-full cursor-pointer flex-col rounded-2xl transition-colors hover:border-primary/30"
-                      onClick={() => handleSelectTemplate(template)}
-                    >
-                      <CardHeader className="p-6 sm:p-7">
-                        <div className="flex items-start justify-between gap-4">
-                          <div
-                            className="mb-1 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm ring-1 ring-white/20 dark:ring-white/5"
-                            style={{ background: template.color }}
-                          >
-                            {template.icon}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0 translate-x-4 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
-                          >
-                            <ArrowRight className="h-5 w-5 text-primary" />
-                          </Button>
-                        </div>
-                        <CardTitle className="mt-4 text-xl font-semibold leading-tight tracking-tight transition-colors group-hover:text-primary">
-                          {template.name}
-                        </CardTitle>
-                        <CardDescription className="mt-1 line-clamp-2 text-sm font-medium leading-relaxed">
-                          {template.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="mt-auto p-6 pt-0 sm:p-7 sm:pt-0">
-                        <div className="mb-4">
-                          <span className="rounded-lg border border-primary/10 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
-                            {template.category}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-medium text-muted-foreground/60">
-                          <span className="flex items-center gap-1.5">
-                            <Sparkles size={12} className="text-primary/60" />
-                            {template.sections.length} sections
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Zap size={12} className="text-primary/60" />
-                            {template.sections.reduce((acc, s) => acc + s.fields.length, 0)} fields
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
+              <div className="space-y-10">
+                {primaryTemplates.length > 0 && (
+                  <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                    <CardGrid minCardWidth={280}>
+                      {primaryTemplates.map(renderTemplateCard)}
+                    </CardGrid>
                   </motion.div>
-                ))}
-              </motion.div>
+                )}
+
+                {lifeGoalTemplates.length > 0 && (
+                  <div>
+                    <div className="mb-4 flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-foreground">Life Goals</h2>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Beta
+                      </span>
+                    </div>
+                    <p className="mb-4 text-xs font-medium text-muted-foreground">
+                      General habit and life-goal templates — not Korean-study specific.
+                    </p>
+                    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                      <CardGrid minCardWidth={280}>
+                        {lifeGoalTemplates.map(renderTemplateCard)}
+                      </CardGrid>
+                    </motion.div>
+                  </div>
+                )}
+              </div>
             )}
           </AnimatePresence>
         </div>

@@ -451,7 +451,7 @@ export default function GoalDetailPage() {
                   "h-9 w-9 rounded-xl transition-all sm:h-10 sm:w-10",
                   goal.isStarred
                     ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
-                    : "bg-background/50 text-muted-foreground/30 hover:bg-background hover:text-amber-500"
+                    : "bg-background/50 text-muted-foreground/60 hover:bg-background hover:text-amber-500"
                 )}
               >
                 <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", goal.isStarred && "fill-current")} />
@@ -617,7 +617,7 @@ export default function GoalDetailPage() {
                 onClick={() => { setDescDraft(goal.description || ""); setEditingDesc(true) }}
                 className={cn(
                   "mt-4 cursor-text text-sm font-medium leading-relaxed transition-colors",
-                  goal.description ? "text-foreground/80" : "italic text-muted-foreground/30"
+                  goal.description ? "text-foreground/80" : "italic text-muted-foreground/60"
                 )}
               >
                 {goal.description || "No description yet — click to add one."}
@@ -809,7 +809,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
       </div>
       <div>
         <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
-        <p className="text-[10px] font-medium text-muted-foreground/40 sm:text-[11px]">{label}</p>
+        <p className="text-[10px] font-medium text-muted-foreground/60 sm:text-[11px]">{label}</p>
       </div>
     </div>
   )

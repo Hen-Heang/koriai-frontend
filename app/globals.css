@@ -153,6 +153,16 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Sitewide focus-visible baseline (WCAG 2.4.7). Components that manage their
+     own focus ring (button/input/textarea use a box-shadow ring instead) win
+     over this via the utilities layer — this exists to cover the plain <Link>
+     nav items, icon-only controls, and anything else with no explicit style. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
   body {
     @apply bg-background text-foreground;
     background-image:

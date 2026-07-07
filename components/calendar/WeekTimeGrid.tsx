@@ -173,6 +173,7 @@ function AllDayStrip({ days, getTasksForDate, onTaskClick, colWidth }: AllDayStr
                 key={task.id}
                 type="button"
                 onClick={() => onTaskClick(task)}
+                title={task.title || task.description || "Untitled"}
                 className={cn(
                   "w-full truncate rounded-md border-l-2 px-1.5 py-1 text-left text-xs font-medium text-foreground transition-colors",
                   task.completed && "line-through opacity-60"
@@ -254,6 +255,7 @@ function DayColumn({
               e.stopPropagation()
               onTaskClick(p.task)
             }}
+            title={p.task.title || p.task.description || "Untitled"}
             className={cn(
               "absolute z-10 overflow-hidden rounded-lg border border-l-[3px] px-1.5 py-1 text-left text-foreground shadow-sm transition-shadow duration-150 hover:z-30 hover:shadow-md",
               p.task.completed && "opacity-60"

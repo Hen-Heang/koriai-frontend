@@ -96,7 +96,7 @@ export function RoadmapTeaser({ className }: { className?: string }) {
 
       <ArrowRight
         size={16}
-        className="shrink-0 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-violet-500"
+        className="shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-violet-500"
       />
     </Link>
   )

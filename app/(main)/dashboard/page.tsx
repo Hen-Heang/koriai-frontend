@@ -175,7 +175,7 @@ function BestQuizStreakCard() {
         </p>
         <p className="text-xs font-medium text-muted-foreground/70">Best quiz streak</p>
       </div>
-      <ArrowRight size={16} className="text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-orange-500" />
+      <ArrowRight size={16} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-orange-500" />
     </Link>
   )
 }

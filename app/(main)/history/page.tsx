@@ -56,7 +56,7 @@ function StarRating({ rating }: { rating?: number | null }) {
           key={i}
           size={12}
           strokeWidth={2.5}
-          className={i < rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}
+          className={i < rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"}
         />
       ))}
     </div>
@@ -151,7 +151,7 @@ function GrammarTracker({
   if (patterns.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
-        <Brain size={36} className="text-muted-foreground/30" strokeWidth={1.5} />
+        <Brain size={36} className="text-muted-foreground/60" strokeWidth={1.5} />
         <p className="text-sm font-bold text-muted-foreground/50">No patterns yet — keep correcting!</p>
       </div>
     )
@@ -379,7 +379,7 @@ function FilterBar({
 
       {/* Chips row */}
       <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-        <Filter size={13} className="shrink-0 text-muted-foreground/30" strokeWidth={2.5} />
+        <Filter size={13} className="shrink-0 text-muted-foreground/60" strokeWidth={2.5} />
         {RATING_FILTERS.map((f) => (
           <button
             key={f.key}
@@ -398,7 +398,7 @@ function FilterBar({
 
         <div className="mx-1 h-4 w-px shrink-0 bg-border" />
 
-        <SortDesc size={13} className="shrink-0 text-muted-foreground/30" strokeWidth={2.5} />
+        <SortDesc size={13} className="shrink-0 text-muted-foreground/60" strokeWidth={2.5} />
         {SORT_OPTIONS.map((s) => (
           <button
             key={s.key}
@@ -667,13 +667,13 @@ export default function HistoryPage() {
                 </div>
               ) : corrections.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-10 text-center sm:rounded-3xl sm:py-12">
-                  <ScrollText size={36} className="text-muted-foreground/30" strokeWidth={1.5} />
+                  <ScrollText size={36} className="text-muted-foreground/60" strokeWidth={1.5} />
                   <p className="text-sm font-bold text-muted-foreground/50">No corrections yet</p>
                   <p className="text-xs text-muted-foreground/40">Go to AI Coach and ask it to correct your Korean — it'll show up here.</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-8 text-center sm:rounded-3xl">
-                  <Search size={28} className="text-muted-foreground/30" strokeWidth={1.5} />
+                  <Search size={28} className="text-muted-foreground/60" strokeWidth={1.5} />
                   <p className="text-sm font-bold text-muted-foreground/50">No matches</p>
                   <button
                     type="button"
@@ -724,7 +724,7 @@ export default function HistoryPage() {
                                 onClick={() => void handleDelete(entry.id)}
                                 disabled={deletingId === entry.id}
                                 aria-label="Delete correction"
-                                className="rounded-lg p-1.5 text-muted-foreground/30 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40"
+                                className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40"
                               >
                                 <Trash2 size={15} strokeWidth={2.5} />
                               </button>

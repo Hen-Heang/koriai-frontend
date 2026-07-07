@@ -70,7 +70,7 @@ export function CalendarViewSwitcher({
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <span className="ml-1 truncate text-sm font-semibold text-foreground sm:text-base">
+          <span title={rangeLabel(view, selectedDate)} className="ml-1 truncate text-sm font-semibold text-foreground sm:text-base">
             {rangeLabel(view, selectedDate)}
           </span>
         </div>

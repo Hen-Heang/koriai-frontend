@@ -367,7 +367,7 @@ function PhaseCard({
           </span>
         </div>
         <ChevronDown size={16} strokeWidth={2}
-          className={cn("shrink-0 text-muted-foreground/30 transition-transform", isOpen && "rotate-180")} />
+          className={cn("shrink-0 text-muted-foreground/60 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       <div className="mx-5 mb-1 h-1 overflow-hidden rounded-full bg-foreground/5 sm:mx-6">
@@ -378,7 +378,7 @@ function PhaseCard({
           className={cn("h-full rounded-full", isComplete ? "bg-emerald-500" : "bg-blue-500")}
         />
       </div>
-      <p className="px-5 pb-4 text-[10px] font-medium text-muted-foreground/30 sm:px-6">
+      <p className="px-5 pb-4 text-[10px] font-medium text-muted-foreground/60 sm:px-6">
         {done} / {total} topics completed
       </p>
 
@@ -529,13 +529,13 @@ function PhaseCard({
                       <div className="flex shrink-0 items-center gap-0.5">
                         <button type="button"
                           onClick={() => { setEditingTopicId(topic.id); setEditTopicText(topic.text) }}
-                          className="rounded-md p-1 text-muted-foreground/25 transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+                          className="rounded-md p-1 text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground active:scale-95"
                           title="Edit">
                           <Pencil size={11} />
                         </button>
                         <button type="button"
                           onClick={() => setConfirmDeleteTopic(topic.id)}
-                          className="rounded-md p-1 text-muted-foreground/25 transition-colors hover:bg-red-500/10 hover:text-red-500 active:scale-95"
+                          className="rounded-md p-1 text-muted-foreground/60 transition-colors hover:bg-red-500/10 hover:text-red-500 active:scale-95"
                           title="Delete">
                           <Trash2 size={11} />
                         </button>
@@ -836,7 +836,7 @@ export default function RoadmapPage() {
               )}
             </div>
             <Trophy size={28} strokeWidth={1.5}
-              className={cn("shrink-0 transition-colors", overallPct === 100 ? "text-amber-500" : "text-muted-foreground/10")} />
+              className={cn("shrink-0 transition-colors", overallPct === 100 ? "text-amber-500" : "text-muted-foreground/60")} />
           </div>
 
           <div className="mt-5 flex flex-wrap gap-1.5">
@@ -903,7 +903,7 @@ export default function RoadmapPage() {
       </div>
 
       <div className="flex flex-col items-center gap-2">
-        <p className="text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground/25">
+        <p className="text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
           Roadmap v2.0 · 2-Year Plan · Cambodia Bank Goal
         </p>
         {resetConfirm ? (
@@ -920,7 +920,7 @@ export default function RoadmapPage() {
           </div>
         ) : (
           <button type="button" onClick={() => setResetConfirm(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium text-muted-foreground/30 transition-colors hover:text-muted-foreground active:scale-95">
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground active:scale-95">
             <RotateCcw size={11} />
             Reset to defaults
           </button>

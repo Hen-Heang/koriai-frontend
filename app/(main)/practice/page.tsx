@@ -263,7 +263,7 @@ export default function PracticePage() {
                     {m.done ? (
                       <CheckCircle2 size={20} className="shrink-0 text-emerald-500" strokeWidth={2.5} />
                     ) : (
-                      <Circle size={20} className="shrink-0 text-muted-foreground/30" strokeWidth={2.5} />
+                      <Circle size={20} className="shrink-0 text-muted-foreground/60" strokeWidth={2.5} />
                     )}
                     <span
                       className={cn(

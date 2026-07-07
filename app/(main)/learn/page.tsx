@@ -84,7 +84,7 @@ export default function LearnPage() {
                 <p className={cn("text-base font-extrabold", active ? "text-blue-700 dark:text-blue-300" : "text-foreground")}>
                   {label}
                 </p>
-                <p className="truncate text-sm text-muted-foreground">{blurb}</p>
+                <p title={blurb} className="truncate text-sm text-muted-foreground">{blurb}</p>
               </div>
             </button>
           )

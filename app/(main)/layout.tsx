@@ -280,7 +280,7 @@ export default function MainLayout({
           <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
             {navSections.map((section) => (
               <div key={section.label} className="space-y-0.5">
-                <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
+                <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                   {section.label}
                 </p>
                 {section.links.map(({ href, label, icon: Icon, soon }) => {
@@ -290,7 +290,7 @@ export default function MainLayout({
                     return (
                       <div
                         key={href}
-                        className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/30"
+                        className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
                       >
                         <Icon size={16} strokeWidth={2} className="shrink-0" />
                         {label}
@@ -539,7 +539,7 @@ export default function MainLayout({
                           className={cn(
                             "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold transition-all active:scale-[0.98]",
                             soon
-                              ? "cursor-default border-border/40 bg-accent/5 text-muted-foreground/30"
+                              ? "cursor-default border-border/40 bg-accent/5 text-muted-foreground/60"
                               : active
                                 ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                                 : "border-border bg-accent/5 text-foreground hover:bg-accent/40"

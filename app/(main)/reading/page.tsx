@@ -16,6 +16,7 @@ import { motion } from "motion/react"
 import { toast } from "sonner"
 
 import { PageHero } from "@/components/app/page-hero"
+import { CardGrid } from "@/components/ui/card-grid"
 import { getApiErrorMessage } from "@/lib/api"
 import {
   READING_CATEGORIES,
@@ -207,7 +208,7 @@ export default function ReadingPage() {
               </span>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <CardGrid minCardWidth={260} className="gap-3">
               {categoryUnits.map((unit) => {
                 const entry = progress[unit.id] ?? { status: "not_started" as const }
                 const pinned = Boolean(entry.pinned)
@@ -290,7 +291,7 @@ export default function ReadingPage() {
                   </Link>
                 )
               })}
-            </div>
+            </CardGrid>
           </motion.section>
         )
       })}

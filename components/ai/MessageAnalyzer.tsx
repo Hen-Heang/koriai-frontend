@@ -155,7 +155,7 @@ export function MessageAnalyzer() {
                 </div>
 
                 <Textarea
-                  className="min-h-[200px] w-full resize-none rounded-none border-0 bg-transparent p-5 text-[15px] font-medium leading-7 text-foreground placeholder:text-muted-foreground/30 shadow-none focus-visible:ring-0 sm:min-h-[260px] sm:p-6 sm:text-lg"
+                  className="min-h-[200px] w-full resize-none rounded-none border-0 bg-transparent p-5 text-[15px] font-medium leading-7 text-foreground placeholder:text-muted-foreground/60 shadow-none focus-visible:ring-0 sm:min-h-[260px] sm:p-6 sm:text-lg"
                   placeholder="예: 담당자분께 전달드렸습니다. 확인 후 회신 부탁드립니다."
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -206,7 +206,7 @@ export function MessageAnalyzer() {
                   </div>
 
                   <div className="p-6 sm:p-8">
-                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/30">Original</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/60">Original</p>
                     <p className="mt-2 text-base font-bold leading-relaxed text-foreground sm:text-lg">
                       {result.originalText}
                     </p>
@@ -214,7 +214,7 @@ export function MessageAnalyzer() {
 
                   <div className="grid divide-y divide-border/60 border-t border-border/60 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
                     <div className="p-6 sm:p-8">
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/30">Literal Meaning</p>
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/60">Literal Meaning</p>
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground/80">
                         {result.literalMeaning}
                       </p>

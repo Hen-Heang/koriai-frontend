@@ -265,7 +265,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
               </span>
             ))
           ) : (
-            <span className="text-[12px] font-bold text-muted-foreground/30 italic">No tags</span>
+            <span className="text-[12px] font-bold text-muted-foreground/60 italic">No tags</span>
           )}
         </div>
         

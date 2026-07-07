@@ -97,7 +97,7 @@ export function ExamCountdownBanner() {
                       </span>
                     </div>
                     {i < UNITS.length - 1 && (
-                      <span className="-mt-2 text-lg font-bold text-muted-foreground/30 sm:text-2xl">
+                      <span className="-mt-2 text-lg font-bold text-muted-foreground/60 sm:text-2xl">
                         :
                       </span>
                     )}

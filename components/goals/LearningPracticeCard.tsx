@@ -50,7 +50,7 @@ export function LearningPracticeCard({
               aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
               className={cn(
                 "shrink-0 transition-transform active:scale-90",
-                task.completed ? "text-emerald-500" : "text-muted-foreground/30 hover:text-primary"
+                task.completed ? "text-emerald-500" : "text-muted-foreground/60 hover:text-primary"
               )}
             >
               {task.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}

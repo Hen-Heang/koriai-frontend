@@ -55,6 +55,9 @@ type Phase = "idle" | "quiz" | "done"
 
 type ReviewSessionProps = {
   dueToday: VocabItem[]
+  // True backlog size (uncapped) — dueToday is capped at REVIEW_SESSION_SIZE,
+  // so this is what tells the user "there's more waiting after this batch."
+  dueCount: number
   allWords: VocabItem[]
   loading?: boolean
   onRate: (id: string, rating: ReviewRating) => void | Promise<void>
@@ -487,7 +490,7 @@ function RecallCard({
           spellCheck={false}
           placeholder="한국어로 입력하세요..."
           className={cn(
-            "h-16 w-full rounded-2xl border bg-card px-5 text-center text-xl font-bold tracking-tight text-foreground placeholder:text-base placeholder:font-bold placeholder:text-muted-foreground/30 focus:outline-none transition-colors",
+            "h-16 w-full rounded-2xl border bg-card px-5 text-center text-xl font-bold tracking-tight text-foreground placeholder:text-base placeholder:font-bold placeholder:text-muted-foreground/60 focus:outline-none transition-colors",
             !answered
               ? "border-border focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
               : result === "correct"
@@ -943,7 +946,7 @@ function SentenceCard({
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSessionProps) {
+export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }: ReviewSessionProps) {
   // isOpen=false → compact launch card on the vocab page
   // isOpen=true  → fullscreen (idle setup → quiz → done)
   const [isOpen, setIsOpen] = useState(false)
@@ -1151,6 +1154,12 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   if (phase === "idle" && !isOpen) {
     const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
     const isDueSession = filteredDueToday.length > 0
+    // dueCount is the true, uncapped backlog; filteredDueToday is the next
+    // review batch (capped at REVIEW_SESSION_SIZE). They only line up once the
+    // backlog is small enough to fit in one batch and no category filter is
+    // narrowing the view — otherwise say so explicitly instead of showing two
+    // unexplained different numbers on the same page.
+    const hasMoreQueued = selectedCategories.size === 0 && dueCount > filteredDueToday.length
     return (
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
         <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
@@ -1163,7 +1172,9 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
               <h2 className="text-lg font-bold tracking-tight text-foreground">Memory Lab</h2>
               <p className="truncate text-sm font-medium text-muted-foreground/60">
                 {isDueSession
-                  ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
+                  ? hasMoreQueued
+                    ? `${filteredDueToday.length} of ${dueCount} due — next batch ready`
+                    : `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
                   : filteredAllWords.length > 0
                     ? "All caught up — practice anytime"
                     : "Add words to start your deck"}
@@ -1176,7 +1187,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-accent/5 px-4 py-2">
               <div className="text-center">
                 <p className="text-lg font-bold leading-none tabular-nums text-emerald-600">{filteredDueToday.length}</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">Due</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">{hasMoreQueued ? "In batch" : "Due"}</p>
               </div>
               <div className="h-7 w-px bg-border/60" />
               <div className="text-center">
@@ -1203,6 +1214,7 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   if (phase === "idle" && isOpen) {
     const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
     const isDueSession = filteredDueToday.length > 0
+    const hasMoreQueued = selectedCategories.size === 0 && dueCount > filteredDueToday.length
     return (
       <div className="fixed inset-0 z-[60] flex flex-col bg-background">
         {/* Header */}
@@ -1218,14 +1230,16 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
             <p className="text-[16px] font-bold tracking-tight text-foreground">Memory Lab</p>
             <p className="text-[12px] font-medium text-muted-foreground/50 leading-tight">
               {isDueSession
-                ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
+                ? hasMoreQueued
+                  ? `${filteredDueToday.length} of ${dueCount} due — next batch ready`
+                  : `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
                 : "Practice the full deck"}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-base font-bold text-emerald-600 leading-none">{filteredDueToday.length}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Due</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">{hasMoreQueued ? "In batch" : "Due"}</p>
             </div>
             <div className="h-5 w-px bg-border/60" />
             <div className="text-right">

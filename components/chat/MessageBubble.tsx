@@ -299,7 +299,7 @@ function MessageBubbleImpl({
              <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
                {isUser ? "You" : "Hengo Tutor"}
              </span>
-             <span className="text-[12px] font-bold text-muted-foreground/20">
+             <span className="text-[12px] font-bold text-muted-foreground/60">
                {new Date(message.createdAt).toLocaleTimeString([], {
                  hour: "2-digit",
                  minute: "2-digit",

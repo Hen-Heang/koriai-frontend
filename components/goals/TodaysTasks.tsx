@@ -226,7 +226,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           }}
           className={cn(
             "mt-0.5 shrink-0 transition-transform active:scale-90",
-            task.completed ? "text-emerald-500" : "text-muted-foreground/30 hover:text-primary"
+            task.completed ? "text-emerald-500" : "text-muted-foreground/60 hover:text-primary"
           )}
         >
           {task.completed ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
@@ -305,7 +305,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
       <span className={cn("text-[11px] font-semibold uppercase tracking-wide", accent || "text-muted-foreground/40")}>
         {label}
       </span>
-      <span className="text-[11px] font-medium tabular-nums text-muted-foreground/30">{count}</span>
+      <span className="text-[11px] font-medium tabular-nums text-muted-foreground/60">{count}</span>
       <div className="h-px flex-1 bg-foreground/5" />
     </div>
   )
@@ -381,9 +381,9 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                       className="flex w-full items-center gap-2 py-2"
                     >
                       <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600/60">Completed</span>
-                      <span className="text-[11px] font-medium text-muted-foreground/30">{groups.completed.length}</span>
+                      <span className="text-[11px] font-medium text-muted-foreground/60">{groups.completed.length}</span>
                       <div className="h-px flex-1 bg-foreground/5" />
-                      <ChevronDown className={cn("h-4 w-4 text-muted-foreground/20", showCompleted && "rotate-180")} />
+                      <ChevronDown className={cn("h-4 w-4 text-muted-foreground/60", showCompleted && "rotate-180")} />
                     </button>
                     {showCompleted && groups.completed.map(t => renderTaskItem(t))}
                   </>

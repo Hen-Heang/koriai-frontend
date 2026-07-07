@@ -302,7 +302,7 @@ export function Calendar({
   const sidebar = (
     <div className="flex h-full flex-col border-r border-border/60 bg-card/40">
       <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-        <span className="truncate text-sm font-semibold text-foreground">{scopeTitle}</span>
+        <span title={scopeTitle} className="truncate text-sm font-semibold text-foreground">{scopeTitle}</span>
         <Button size="sm" className="h-8 gap-1.5 rounded-lg px-2.5 text-xs" onClick={openAddDialog}>
           <Plus className="h-3.5 w-3.5" />
           Add
