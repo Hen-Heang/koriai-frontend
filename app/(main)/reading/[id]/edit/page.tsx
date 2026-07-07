@@ -11,20 +11,24 @@ import type { ReadingUnit } from "@/lib/reading"
 
 export default function EditReadingUnitPage() {
   const params = useParams<{ id: string }>()
+  // Same fix as the unit detail page: on a hard load useParams() returns the
+  // raw percent-encoded segment for non-ASCII (Korean) ids — decode it so the
+  // Supabase lookup matches the stored id.
+  const unitId = decodeURIComponent(params.id)
   const [unit, setUnit] = useState<ReadingUnit | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
     readingApi
-      .getUnit(params.id)
+      .getUnit(unitId)
       .then((u) => active && setUnit(u))
       .catch(() => active && setUnit(null))
       .finally(() => active && setLoading(false))
     return () => {
       active = false
     }
-  }, [params.id])
+  }, [unitId])
 
   if (loading) {
     return (

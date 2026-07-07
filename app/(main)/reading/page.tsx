@@ -9,9 +9,11 @@ import {
   CircleDashed,
   Clock3,
   Loader2,
+  Pin,
   Plus,
 } from "lucide-react"
 import { motion } from "motion/react"
+import { toast } from "sonner"
 
 import { PageHero } from "@/components/app/page-hero"
 import { getApiErrorMessage } from "@/lib/api"
@@ -24,6 +26,7 @@ import {
   getReadingProgress,
   getReadingProgressServerSnapshot,
   subscribeReadingProgress,
+  toggleUnitPinned,
 } from "@/lib/reading-progress-store"
 import {
   getAllReadingUnits,
@@ -95,6 +98,20 @@ export default function ReadingPage() {
   }, [])
 
   const completedCount = units.filter((u) => progress[u.id]?.status === "completed").length
+  const [pinningId, setPinningId] = useState<string | null>(null)
+
+  async function handleTogglePin(unitId: string) {
+    if (pinningId) return
+    setPinningId(unitId)
+    try {
+      const pinned = await toggleUnitPinned(unitId)
+      toast.success(pinned ? "Pinned to the top." : "Unpinned.")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not update the pin."))
+    } finally {
+      setPinningId(null)
+    }
+  }
 
   return (
     <motion.div
@@ -163,7 +180,14 @@ export default function ReadingPage() {
       )}
 
       {CATEGORY_ORDER.map((category) => {
-        const categoryUnits = units.filter((u) => u.category === category)
+        // Pinned units float to the top of their category; ties keep the
+        // original (created_at) order thanks to the stable sort.
+        const categoryUnits = units
+          .filter((u) => u.category === category)
+          .sort(
+            (a, b) =>
+              Number(Boolean(progress[b.id]?.pinned)) - Number(Boolean(progress[a.id]?.pinned))
+          )
         if (categoryUnits.length === 0) return null
         const done = categoryUnits.filter((u) => progress[u.id]?.status === "completed").length
 
@@ -186,6 +210,7 @@ export default function ReadingPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               {categoryUnits.map((unit) => {
                 const entry = progress[unit.id] ?? { status: "not_started" as const }
+                const pinned = Boolean(entry.pinned)
                 return (
                   <Link
                     key={unit.id}
@@ -203,6 +228,32 @@ export default function ReadingPage() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <StatusBadge entry={entry} />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            void handleTogglePin(unit.id)
+                          }}
+                          disabled={pinningId === unit.id}
+                          title={pinned ? "Unpin this unit" : "Pin this unit to the top"}
+                          className={cn(
+                            "flex h-7 w-7 items-center justify-center rounded-lg border transition-all active:scale-90",
+                            pinned
+                              ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                              : "border-border text-muted-foreground/50 hover:text-foreground"
+                          )}
+                        >
+                          {pinningId === unit.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <Pin
+                              size={12}
+                              strokeWidth={2.5}
+                              className={cn(pinned && "fill-current")}
+                            />
+                          )}
+                        </button>
                       </div>
                     </div>
 

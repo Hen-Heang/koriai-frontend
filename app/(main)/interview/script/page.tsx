@@ -18,6 +18,7 @@ import {
   CloudCheck,
   Download,
   FileText,
+  Languages,
   ListTree,
   MessagesSquare,
   Plus,
@@ -38,9 +39,6 @@ import { cn } from "@/lib/utils"
 
 const topic = INTERVIEW_TOPICS[0]
 const STORAGE_KEY = `koriai-interview-script:${topic.id}`
-// Guards the one-time seed below so it never re-applies after a deliberate
-// Clear All (which removes STORAGE_KEY but leaves this flag set).
-const SEEDED_FLAG_KEY = `${STORAGE_KEY}:seeded`
 // Custom (user-added) section definitions live separately from the section text
 // so the existing per-topic text payload keeps syncing to the backend unchanged.
 const CUSTOM_KEY = `koriai-interview-script-custom:${topic.id}`
@@ -83,6 +81,30 @@ const loadInitialCustom = (): CustomSection[] => loadJSON<CustomSection[]>(CUSTO
 function countWords(text: string) {
   const trimmed = text.trim()
   return trimmed ? trimmed.split(/\s+/).length : 0
+}
+
+// Fill any missing/empty outline section (and its English translation) from
+// the candidate's drafted script. The seed IS the candidate's own draft, so a
+// blank section always falls back to it — this replaces the old one-time seed
+// flag, which left the whole script blank whenever an account sync carried
+// only empty Q&A keys (they counted as "content", so seeding never ran).
+function withSeedDefaults(current: Record<string, string>): Record<string, string> {
+  const next = { ...current }
+  let changed = false
+  for (const [id, text] of Object.entries(topic.scriptSeed ?? {})) {
+    if (!(next[id] ?? "").trim()) {
+      next[id] = text
+      changed = true
+    }
+  }
+  for (const [id, text] of Object.entries(topic.scriptSeedEn ?? {})) {
+    const key = `en-${id}`
+    if (!(next[key] ?? "").trim()) {
+      next[key] = text
+      changed = true
+    }
+  }
+  return changed ? next : current
 }
 
 // Only a custom section's TEXT syncs to the account (under its `custom-*` key);
@@ -144,6 +166,8 @@ export default function InterviewScriptPage() {
   const [activeSection, setActiveSection] = useState<string>("")
   const [customSections, setCustomSections] = useState<CustomSection[]>(loadInitialCustom)
   const [mode, setMode] = useState<"script" | "qa">("script")
+  // Show/hide the editable English translation under each fixed section.
+  const [showEnglish, setShowEnglish] = useState(true)
   const seedQA = useMemo(() => getSeedQA(topic), [])
   const [customQA, setCustomQA] = useState<CustomQA[]>(loadInitialQA)
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -167,52 +191,40 @@ export default function InterviewScriptPage() {
     }
   }, [])
 
-  // First-ever visit, with nothing local and nothing in the account yet: seed
-  // the editor with the candidate's own drafted script so it isn't blank. Runs
-  // at most once per device (SEEDED_FLAG_KEY), so a deliberate Clear All is
-  // never silently undone.
-  function seedScriptOnce() {
-    try {
-      if (window.localStorage.getItem(SEEDED_FLAG_KEY)) return
-      window.localStorage.setItem(SEEDED_FLAG_KEY, "1")
-    } catch {
-      return
-    }
-    if (!topic.scriptSeed) return
-    setValues((prev) => {
-      if (Object.keys(prev).length > 0) return prev
-      const seeded = topic.scriptSeed!
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
-        setSavedAt(new Date())
-      } catch {
-        // ignore
-      }
-      scheduleSync(seeded)
-      return seeded
-    })
-  }
-
-  // Best-effort hydrate from the account. If the backend isn't reachable or has
-  // nothing yet, the local copy (already loaded) stands. Local edits win, so we
-  // only adopt the remote copy when nothing has been written on this device.
+  // Best-effort hydrate from the account, then fill any still-empty sections
+  // from the drafted script. Local edits win — the remote copy is adopted only
+  // when nothing meaningful (non-blank text, not just empty keys) has been
+  // written on this device.
   useEffect(() => {
     let active = true
+    const hasText = (map: Record<string, string>) =>
+      Object.values(map).some((v) => (v ?? "").trim().length > 0)
+
+    const hydrate = (remote: Record<string, string> | null) => {
+      if (!active) return
+      setValues((prev) => {
+        const base = !hasText(prev) && remote && hasText(remote) ? remote : prev
+        const next = withSeedDefaults(base)
+        if (next === prev) {
+          if (remote) setSynced(true)
+          return prev
+        }
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+          setSavedAt(new Date())
+        } catch {
+          // ignore
+        }
+        scheduleSync(next)
+        return next
+      })
+    }
+
     interviewApi
       .getScript(topic.id)
-      .then((remote) => {
-        if (!active) return
-        if (remote?.sections && Object.keys(remote.sections).length > 0) {
-          setValues((prev) => (Object.keys(prev).length > 0 ? prev : remote.sections))
-          setSynced(true)
-          return
-        }
-        seedScriptOnce()
-      })
-      .catch(() => {
-        // Offline or endpoint not live yet — the local copy is the source of truth.
-        seedScriptOnce()
-      })
+      .then((remote) => hydrate(remote?.sections ?? null))
+      // Offline or endpoint not live yet — the local copy (plus seed) stands.
+      .catch(() => hydrate(null))
     return () => {
       active = false
     }
@@ -410,7 +422,12 @@ export default function InterviewScriptPage() {
   }
 
   function clearAll() {
-    if (!window.confirm("Clear the whole script and Q&A? This cannot be undone.")) return
+    if (
+      !window.confirm(
+        "Clear the whole script and Q&A? Sections will reset to your original drafted script the next time the page loads."
+      )
+    )
+      return
     setValues({})
     persistCustom([])
     persistQA([])
@@ -562,7 +579,7 @@ export default function InterviewScriptPage() {
       <div className="min-h-[calc(100dvh-3.25rem)] bg-[#f9fbfd] px-2 py-6 dark:bg-black/40 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-[1180px]">
           {/* Script | Q&A tabs */}
-          <div className="mb-6 flex justify-center">
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
             <div className="inline-flex items-center gap-1 rounded-2xl border border-border/70 bg-background p-1 shadow-sm dark:bg-slate-900">
               <button
                 type="button"
@@ -585,6 +602,23 @@ export default function InterviewScriptPage() {
                 <MessagesSquare size={14} strokeWidth={2.6} /> Q&amp;A Prep
               </button>
             </div>
+
+            {mode === "script" && (
+              <button
+                type="button"
+                onClick={() => setShowEnglish((v) => !v)}
+                aria-pressed={showEnglish}
+                title="Show or hide the English translation under each section"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-2xl border border-border/70 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wide shadow-sm transition-all",
+                  showEnglish
+                    ? "bg-emerald-600 text-white"
+                    : "bg-background text-muted-foreground/70 hover:text-foreground dark:bg-slate-900"
+                )}
+              >
+                <Languages size={14} strokeWidth={2.6} /> English
+              </button>
+            )}
           </div>
 
           {mode === "script" ? (
@@ -759,6 +793,27 @@ export default function InterviewScriptPage() {
                         placeholder="여기에 한국어로 작성하세요…"
                       />
                     </div>
+                    {/* Editable English translation, defaulted from the topic's
+                        seed until the candidate writes their own. Reference
+                        only — excluded from counts and the Korean export. */}
+                    {!section.custom && showEnglish && (
+                      <div className="mt-3 rounded-xl bg-muted/30 p-3">
+                        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                          <Languages size={11} strokeWidth={2.5} /> English
+                        </p>
+                        <div className="mt-1.5">
+                          <DocTextarea
+                            value={
+                              view[`en-${section.id}`] ??
+                              topic.scriptSeedEn?.[section.id] ??
+                              ""
+                            }
+                            onChange={(text) => updateSection(`en-${section.id}`, text)}
+                            placeholder="Write the English translation here…"
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-2 border-b border-dashed border-border/50" />
                   </section>
                 )

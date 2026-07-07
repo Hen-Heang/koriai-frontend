@@ -5,6 +5,7 @@ import { Plus, PencilLine } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { getApiErrorMessage } from "@/lib/api"
 
 type AddWordCardProps = {
@@ -16,9 +17,11 @@ type AddWordCardProps = {
     meaning: string
     example?: string
   }) => Promise<unknown>
+  /** Renders without the card chrome/header, for use inside the Add Words dialog. */
+  embedded?: boolean
 }
 
-export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
+export function AddWordCard({ categories, onAdd, embedded = false }: AddWordCardProps) {
   const [term, setTerm] = useState("")
   const [meaning, setMeaning] = useState("")
   const [example, setExample] = useState("")
@@ -55,27 +58,29 @@ export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
     "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all placeholder:font-medium placeholder:text-muted-foreground/40 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <p className="text-[12px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-              Manual entry
+    <div className={cn(!embedded && "rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8")}>
+      {!embedded && (
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <p className="text-[12px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                Manual entry
+              </p>
+            </div>
+            <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Add a Word</h3>
+            <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[16px]">
+              Type your own term and meaning. Use the topic field to add it to an existing deck or
+              create a new one.
             </p>
           </div>
-          <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Add a Word</h3>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[16px]">
-            Type your own term and meaning. Use the topic field to add it to an existing deck or
-            create a new one.
-          </p>
+          <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 sm:flex">
+            <PencilLine size={24} strokeWidth={2.5} />
+          </div>
         </div>
-        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 sm:flex">
-          <PencilLine size={24} strokeWidth={2.5} />
-        </div>
-      </div>
+      )}
 
-      <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2">
+      <div className={cn("grid gap-3 sm:grid-cols-2", !embedded && "mt-6 sm:mt-8")}>
         <input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
@@ -115,7 +120,10 @@ export function AddWordCard({ categories, onAdd }: AddWordCardProps) {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 border-t border-border/60 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:pt-8">
+      <div className={cn(
+        "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        embedded ? "mt-4" : "mt-6 border-t border-border/60 pt-6 sm:mt-8 sm:pt-8"
+      )}>
         <Button
           onClick={handleSave}
           disabled={!canSave}

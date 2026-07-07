@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowDownUp, LayoutGrid, Layers3, List, Search, SearchX, X } from "lucide-react"
+import { ArrowDownUp, LayoutGrid, Layers3, List, Plus, SearchX } from "lucide-react"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -23,15 +23,23 @@ type VocabDictionaryProps = {
   words: VocabItem[]
   loading: boolean
   dueCount?: number
-  // Controlled from the page so a quick-search box near the top of /vocab
-  // can drive the same filtered list without duplicating state.
+  // Driven by the page-level search bar at the top of /vocab — the dictionary
+  // has no search input of its own.
   query: string
-  onQueryChange: (query: string) => void
   onUpdate: (
     id: string,
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => void | Promise<void>
   onDelete?: (id: string) => void | Promise<void>
+  /** Enables the per-deck inline "add word" form; the deck supplies its category. */
+  onAdd?: (data: {
+    category?: string
+    term: string
+    meaning: string
+    example?: string
+  }) => Promise<unknown>
+  /** Opens the Add Words dialog — shown as the CTA in the empty state. */
+  onStartAdd?: () => void
 }
 
 const itemVariants = {
@@ -101,9 +109,10 @@ export function VocabDictionary({
   loading,
   dueCount = 0,
   query,
-  onQueryChange,
   onUpdate,
   onDelete,
+  onAdd,
+  onStartAdd,
 }: VocabDictionaryProps) {
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
   const [sortOrder, setSortOrder] = useState<SortOrder>("alpha")
@@ -133,28 +142,7 @@ export function VocabDictionary({
 
       {words.length > 0 && (
         <div className="space-y-3">
-          {/* Search */}
-          <div className="relative">
-            <Search size={16} strokeWidth={2.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-            <input
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Search words, meanings, tags..."
-              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-10 text-base font-bold text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 transition-colors focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:bg-slate-900/40 sm:text-sm"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => onQueryChange("")}
-                aria-label="Clear search"
-                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
-              >
-                <X size={14} strokeWidth={3} />
-              </button>
-            )}
-          </div>
-
-          {/* Mastery filter chips + sort */}
+          {/* Mastery filter chips + sort — search lives at the top of the page */}
           <div className="flex flex-wrap items-center gap-1.5">
             {MASTERY_FILTERS.map(({ value, label }) => (
               <button
@@ -230,9 +218,21 @@ export function VocabDictionary({
 
       {loading && !words.length ? <DeckSkeleton /> : null}
 
-      <div className="space-y-3">
+      <div
+        className={cn(
+          viewMode === "grid"
+            ? "grid grid-cols-2 items-stretch gap-3 lg:grid-cols-3"
+            : "space-y-3"
+        )}
+      >
         {decks.map(([category, items], index) => (
-          <motion.div key={category} variants={itemVariants}>
+          <motion.div
+            key={category}
+            variants={itemVariants}
+            // An opened deck needs the full row to fit its word list, so it
+            // breaks out of the grid via the data-open flag VocabDeck sets.
+            className={cn(viewMode === "grid" && "has-[[data-open=true]]:col-span-full")}
+          >
             <VocabDeck
               name={category}
               items={items}
@@ -241,6 +241,7 @@ export function VocabDictionary({
               viewMode={viewMode}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              onAdd={onAdd}
             />
           </motion.div>
         ))}
@@ -264,6 +265,16 @@ export function VocabDictionary({
           <p className="mx-auto mt-3 max-w-xs text-[16px] font-medium leading-relaxed text-muted-foreground/60">
             Save words from chat sessions or use the AI Deck Builder to start mastering Korean vocabulary.
           </p>
+          {onStartAdd && (
+            <button
+              type="button"
+              onClick={onStartAdd}
+              className="mt-6 flex h-12 items-center gap-2 rounded-2xl bg-blue-600 px-6 text-sm font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              Add your first words
+            </button>
+          )}
         </div>
       ) : null}
     </div>

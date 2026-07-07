@@ -27,6 +27,7 @@ import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 
 import { PageHero } from "@/components/app/page-hero"
+import { SpeakingTipsCard } from "@/components/interview/SpeakingTipsCard"
 import { StudyPlanCard } from "@/components/interview/StudyPlanCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
@@ -295,6 +296,10 @@ export default function InterviewPage() {
 
         <motion.div variants={itemVariants}>
           <StudyPlanCard />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <SpeakingTipsCard />
         </motion.div>
 
         {topic.prep && (
@@ -606,7 +611,11 @@ export default function InterviewPage() {
         </Card>
       </motion.div>
 
-      {/* Quick-reference study pack during the session */}
+      {/* Quick references during the session — safety sentences live in the
+          strategy card, exactly when they're needed. */}
+      <motion.div variants={itemVariants}>
+        <SpeakingTipsCard />
+      </motion.div>
       {topic.prep && (
         <motion.div variants={itemVariants}>
           <StudyPack topic={topic} />

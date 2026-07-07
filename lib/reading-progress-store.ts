@@ -16,7 +16,7 @@ function emit() {
   listeners.forEach((listener) => listener())
 }
 
-function toMap(records: { unitId: string; status: ReadingProgressEntry["status"]; quizScore?: number; quizTotal?: number; completedAt?: string }[]) {
+function toMap(records: ({ unitId: string } & ReadingProgressEntry)[]) {
   const map: Record<string, ReadingProgressEntry> = {}
   for (const r of records) {
     map[r.unitId] = {
@@ -24,6 +24,7 @@ function toMap(records: { unitId: string; status: ReadingProgressEntry["status"]
       quizScore: r.quizScore,
       quizTotal: r.quizTotal,
       completedAt: r.completedAt,
+      pinned: r.pinned,
     }
   }
   return map
@@ -92,6 +93,15 @@ export async function markUnitQuizResult(unitId: string, score: number, total: n
   loadedOnce = true
   emit()
   return record.status === "completed"
+}
+
+export async function toggleUnitPinned(unitId: string) {
+  const pinned = !getUnitProgress(unitId).pinned
+  const record = await readingApi.setUnitPinned(unitId, pinned)
+  snapshot = { ...getReadingProgress(), [unitId]: record }
+  loadedOnce = true
+  emit()
+  return pinned
 }
 
 /** Drop the cached progress for a unit (used when the unit is deleted). */

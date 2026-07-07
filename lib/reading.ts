@@ -103,4 +103,6 @@ export interface ReadingProgressEntry {
   quizScore?: number
   quizTotal?: number
   completedAt?: string
+  /** Pinned units are sorted to the top of their category on the list page. */
+  pinned?: boolean
 }

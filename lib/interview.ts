@@ -54,10 +54,17 @@ export interface InterviewTopic {
   scriptOutline?: ScriptSection[]
   /**
    * The candidate's own drafted script, keyed by `scriptOutline` section id.
-   * Used to pre-fill the script editor once (first visit only) — after that,
-   * whatever the candidate has saved (locally or in their account) wins.
+   * Any section left empty in the editor falls back to this text on load;
+   * whatever the candidate has actually written (locally or in their account)
+   * always wins.
    */
   scriptSeed?: Record<string, string>
+  /**
+   * English translation of the script, keyed by section id. Shown in the
+   * editor as an editable reference under each Korean section; used as the
+   * default whenever the candidate hasn't saved their own English text.
+   */
+  scriptSeedEn?: Record<string, string>
 }
 
 // Section-by-section scaffold for the script the candidate writes and submits.
@@ -122,6 +129,24 @@ const WEATHER_SCRIPT_SEED: Record<string, string> = {
   reflection:
     "이번 여름은 한국에서 보내는 첫 여름이라 아직 익숙하지 않습니다. 날씨가 많이 덥고 습해서 가끔 잠을 잘 못 잘 때도 있습니다. 그래도 조금씩 적응하고 있습니다.\n나중에 기회가 된다면 여름에 바다나 산에도 한번 가보고 싶습니다.",
   conclusion: "이상으로 발표를 마치겠습니다. 들어 주셔서 감사합니다.",
+}
+
+// The candidate's own English translation of the script (from the same prep
+// doc), section by section, mirroring WEATHER_SCRIPT_SEED's paragraphing.
+const WEATHER_SCRIPT_SEED_EN: Record<string, string> = {
+  intro:
+    "Hello, I am Heang (Henry). Today's topic is the differences between Korean summer weather and Cambodian weather, and their impact on life and health.\nToday, I will talk about how summer in Korea and Cambodia are different, and how the weather affects our daily life and health, along with my own experience.",
+  "korea-summer":
+    "Summer in Korea is from June to August. The temperature is usually around 30°C, but on hot days it goes over 35°C. There is also a rainy period called \"jangma,\" when it rains continuously. The humidity is also high, so it feels hotter than the actual temperature.\nBecause of this, people always carry umbrellas, sometimes go to swimming pools or the beach, and sometimes eat samgyetang to regain energy.",
+  compare:
+    "Cambodia is a bit different. It is hot all year round and has only two seasons: the dry season and the rainy season. The hottest period is from March to May, when the temperature rises to nearly 40°C. So during the daytime, it is too hot and people do not go outside much. In the evening, it becomes cooler, so I used to go out with my friends at that time.\nKorea is similar in some ways — on hot days, everyone spends time in places with the air conditioner or fan on.",
+  "daily-life":
+    "Because the weather is different, our lifestyle has also changed a little. We end up changing the times we go out, and we reduce activities during the daytime.",
+  health:
+    "The weather also affects health a lot. When it is hot, people get tired easily, and in serious cases, they can even get heat sickness, so we have to be careful.\nThat is why I try to drink a lot of water to adapt to this weather.",
+  reflection:
+    "This is my first summer in Korea, so I am still not used to it. It is very hot and humid, so sometimes I cannot sleep well. But I am slowly getting used to it.\nIn the future, if I have the chance, I would like to visit the beach or the mountains in summer.",
+  conclusion: "That concludes my presentation. Thank you for listening.",
 }
 
 // Curated study material for the chosen exam topic. Drilled daily, this is the
@@ -273,6 +298,7 @@ export const INTERVIEW_TOPICS: InterviewTopic[] = [
     prep: WEATHER_PREP,
     scriptOutline: WEATHER_SCRIPT_OUTLINE,
     scriptSeed: WEATHER_SCRIPT_SEED,
+    scriptSeedEn: WEATHER_SCRIPT_SEED_EN,
   },
 ]
 

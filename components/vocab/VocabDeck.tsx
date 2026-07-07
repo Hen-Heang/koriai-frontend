@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { ChevronDown, FolderOpen } from "lucide-react"
+import { ChevronDown, FolderOpen, Plus, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
+import { getApiErrorMessage } from "@/lib/api"
 import type { VocabItem } from "@/lib/types"
 import { VocabCard } from "@/components/vocab/VocabCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
@@ -22,6 +24,116 @@ type VocabDeckProps = {
     data: { term: string; meaning: string; example?: string; pronunciation?: string }
   ) => void | Promise<void>
   onDelete?: (id: string) => void | Promise<void>
+  /** When provided, the open deck offers an inline form that saves into this category. */
+  onAdd?: (data: {
+    category?: string
+    term: string
+    meaning: string
+    example?: string
+  }) => Promise<unknown>
+}
+
+function DeckAddForm({ category, onAdd }: { category: string; onAdd: NonNullable<VocabDeckProps["onAdd"]> }) {
+  const [open, setOpen] = useState(false)
+  const [term, setTerm] = useState("")
+  const [meaning, setMeaning] = useState("")
+  const [example, setExample] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  const canSave = term.trim() && meaning.trim() && !saving
+
+  async function handleSave() {
+    if (!canSave) return
+    setSaving(true)
+    try {
+      await onAdd({
+        category,
+        term: term.trim(),
+        meaning: meaning.trim(),
+        example: example.trim() || undefined,
+      })
+      toast.success("Word added", { description: `Saved to “${category}”.` })
+      // Keep the form open so several words can be added in a row.
+      setTerm("")
+      setMeaning("")
+      setExample("")
+    } catch (e) {
+      toast.error("Could not add word", { description: getApiErrorMessage(e, "Please try again.") })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center justify-center gap-2 border-t border-border/60 px-4 py-3.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50 transition-colors hover:bg-accent/5 hover:text-foreground"
+      >
+        <Plus size={14} strokeWidth={3} />
+        Add word to this deck
+      </button>
+    )
+  }
+
+  const inputClass =
+    "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:font-medium placeholder:text-muted-foreground/40 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
+
+  return (
+    <div className="space-y-2 border-t border-border/60 bg-accent/[0.03] p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
+          New word in “{category}”
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close add form"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
+        >
+          <X size={14} strokeWidth={3} />
+        </button>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          placeholder="Term (한국어) *"
+          className={inputClass}
+          lang="ko"
+        />
+        <input
+          value={meaning}
+          onChange={(e) => setMeaning(e.target.value)}
+          placeholder="Meaning (English) *"
+          className={inputClass}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave()
+          }}
+        />
+        <input
+          value={example}
+          onChange={(e) => setExample(e.target.value)}
+          placeholder="Example sentence (optional)"
+          className={cn(inputClass, "sm:col-span-2")}
+          lang="ko"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave()
+          }}
+        />
+      </div>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={!canSave}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50"
+      >
+        <Plus size={16} strokeWidth={3} />
+        {saving ? "Saving…" : "Add word"}
+      </button>
+    </div>
+  )
 }
 
 function masteryColor(mastery: number) {
@@ -30,47 +142,105 @@ function masteryColor(mastery: number) {
   return "bg-red-500/10 text-red-500 dark:text-red-400"
 }
 
-export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, viewMode = "list", onUpdate, onDelete }: VocabDeckProps) {
+export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, viewMode = "list", onUpdate, onDelete, onAdd }: VocabDeckProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  // Snapshot of "now" for due-date checks — taken once on mount so render stays
+  // pure; due counts refresh with the next data change/navigation, which is fine.
+  const [now] = useState(() => Date.now())
   const isOpen = open || forceOpen
 
   const avgMastery = items.length
     ? Math.round(items.reduce((sum, w) => sum + w.mastery, 0) / items.length)
     : 0
+  const dueCount = items.filter(
+    (w) => w.nextReview && new Date(w.nextReview).getTime() <= now
+  ).length
+  // A taste of what's inside, so closed grid cards aren't just a name + number.
+  const preview = items.slice(0, 3).map((w) => w.term).join(" · ")
 
   return (
-    <div className="overflow-hidden rounded-[1.8rem] border border-border bg-card shadow-sm dark:bg-slate-900/40">
-      {/* Deck header */}
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
-      >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
-          <FolderOpen size={18} strokeWidth={2.5} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[16px] font-bold text-foreground">{name}</p>
-          <p className="text-xs font-bold text-muted-foreground/50">
-            {items.length} {items.length === 1 ? "word" : "words"} · {avgMastery}% mastered
-          </p>
-        </div>
-        <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-accent/20 sm:w-24">
-          <div
-            className="h-full rounded-full bg-teal-500"
-            style={{ width: `${avgMastery}%` }}
-          />
-        </div>
-        <ChevronDown
-          size={18}
-          strokeWidth={2.5}
-          className={cn(
-            "shrink-0 text-muted-foreground/40 transition-transform duration-200",
-            isOpen && "rotate-180"
+    <div
+      data-open={isOpen}
+      className="h-full overflow-hidden rounded-[1.8rem] border border-border bg-card shadow-sm dark:bg-slate-900/40"
+    >
+      {/* Deck header — compact vertical card when the deck sits in the grid, full row otherwise */}
+      {viewMode === "grid" && !isOpen ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex h-full w-full flex-col gap-3 p-4 text-left transition-colors hover:bg-accent/5"
+        >
+          <div className="flex w-full items-start justify-between gap-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
+              <FolderOpen size={18} strokeWidth={2.5} />
+            </div>
+            {dueCount > 0 && (
+              <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                {dueCount} due
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[15px] font-bold text-foreground">{name}</p>
+            <p className="text-xs font-bold text-muted-foreground/50">
+              {items.length} {items.length === 1 ? "word" : "words"}
+            </p>
+          </div>
+          {preview && (
+            <p className="line-clamp-1 w-full break-all text-xs font-medium text-muted-foreground/40" lang="ko">
+              {preview}
+            </p>
           )}
-        />
-      </button>
+          <div className="mt-auto w-full">
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span className="uppercase tracking-wide text-muted-foreground/40">Mastery</span>
+              <span className="tabular-nums text-teal-600">{avgMastery}%</span>
+            </div>
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-accent/20">
+              <div
+                className="h-full rounded-full bg-teal-500"
+                style={{ width: `${avgMastery}%` }}
+              />
+            </div>
+          </div>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
+            <FolderOpen size={18} strokeWidth={2.5} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[16px] font-bold text-foreground">{name}</p>
+            <p className="text-xs font-bold text-muted-foreground/50">
+              {items.length} {items.length === 1 ? "word" : "words"} · {avgMastery}% mastered
+            </p>
+          </div>
+          {dueCount > 0 && (
+            <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-bold tabular-nums text-amber-600 dark:text-amber-400">
+              {dueCount} due
+            </span>
+          )}
+          <div className="hidden h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-accent/20 sm:block sm:w-24">
+            <div
+              className="h-full rounded-full bg-teal-500"
+              style={{ width: `${avgMastery}%` }}
+            />
+          </div>
+          <ChevronDown
+            size={18}
+            strokeWidth={2.5}
+            className={cn(
+              "shrink-0 text-muted-foreground/40 transition-transform duration-200",
+              isOpen && "rotate-180"
+            )}
+          />
+        </button>
+      )}
 
       {/* Word rows */}
       <AnimatePresence>
@@ -82,21 +252,12 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="overflow-hidden"
           >
-            <div
-              className={cn(
-                viewMode === "grid"
-                  ? "grid grid-cols-1 gap-3 border-t border-border/60 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3"
-                  : "divide-y divide-border/40 border-t border-border/60"
-              )}
-            >
+            <div className="divide-y divide-border/40 border-t border-border/60">
               {items.map((item) => {
                 const isExpanded = expandedId === item.id
                 if (isExpanded) {
                   return (
-                    <div
-                      key={item.id}
-                      className={cn("bg-accent/[0.03] p-3 sm:p-4", viewMode === "grid" && "col-span-full rounded-2xl")}
-                    >
+                    <div key={item.id} className="bg-accent/[0.03] p-3 sm:p-4">
                       <VocabCard item={item} onUpdate={onUpdate} onDelete={onDelete} />
                       <button
                         type="button"
@@ -105,35 +266,6 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                       >
                         Collapse
                       </button>
-                    </div>
-                  )
-                }
-
-                if (viewMode === "grid") {
-                  return (
-                    <div
-                      key={item.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setExpandedId(item.id)}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpandedId(item.id) }}
-                      className="flex cursor-pointer flex-col gap-2 rounded-2xl border border-border/60 bg-background/40 p-4 text-left transition-colors hover:bg-accent/5 dark:bg-white/[0.02]"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="truncate text-lg font-bold text-foreground">{item.term}</span>
-                        <span onClick={(e) => e.stopPropagation()}>
-                          <SpeakButton text={item.term} className="h-8 w-8 shrink-0 rounded-lg bg-accent/30" />
-                        </span>
-                      </div>
-                      {item.pronunciation && (
-                        <span className="truncate text-xs font-medium italic text-muted-foreground/40">
-                          {item.pronunciation}
-                        </span>
-                      )}
-                      <p className="truncate text-sm font-medium text-muted-foreground/70">{item.meaning}</p>
-                      <span className={cn("mt-1 w-fit shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", masteryColor(item.mastery))}>
-                        {item.mastery}%
-                      </span>
                     </div>
                   )
                 }
@@ -171,6 +303,8 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                 )
               })}
             </div>
+
+            {onAdd && <DeckAddForm category={name} onAdd={onAdd} />}
           </motion.div>
         )}
       </AnimatePresence>

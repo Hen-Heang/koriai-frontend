@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Activity, ClipboardPaste, Pencil, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { prepareVocabImport } from "@/lib/vocab-import"
 
 type TextbookImportProps = {
@@ -11,9 +12,11 @@ type TextbookImportProps = {
   existingTerms: string[]
   /** Imports the cleaned word list and returns how many words were created. */
   onImport: (deckName: string, text: string) => Promise<number>
+  /** Renders without the card chrome/header, for use inside the Add Words dialog. */
+  embedded?: boolean
 }
 
-export function TextbookImport({ existingTerms, onImport }: TextbookImportProps) {
+export function TextbookImport({ existingTerms, onImport, embedded = false }: TextbookImportProps) {
   const [deckName, setDeckName] = useState("")
   const [text, setText] = useState("")
   const [importing, setImporting] = useState(false)
@@ -73,25 +76,27 @@ export function TextbookImport({ existingTerms, onImport }: TextbookImportProps)
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
-            <p className="text-[12px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Textbook Import</p>
+    <div className={cn(!embedded && "rounded-3xl border border-border bg-card p-5 shadow-xl dark:bg-slate-900/40 sm:rounded-3xl sm:p-8")}>
+      {!embedded && (
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+              <p className="text-[12px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Textbook Import</p>
+            </div>
+            <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Paste Your Lesson</h3>
+            <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[16px]">
+              Copy a word list from your textbook (사회통합프로그램, TOPIK, class notes) and paste it here.
+              AI turns it into flashcards — your translations are kept exactly as written.
+            </p>
           </div>
-          <h3 className="mt-3 text-xl font-bold text-foreground sm:mt-4 sm:text-2xl">Paste Your Lesson</h3>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground sm:text-[16px]">
-            Copy a word list from your textbook (사회통합프로그램, TOPIK, class notes) and paste it here.
-            AI turns it into flashcards — your translations are kept exactly as written.
-          </p>
+          <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 sm:flex">
+            <ClipboardPaste size={24} strokeWidth={2.5} />
+          </div>
         </div>
-        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 sm:flex">
-          <ClipboardPaste size={24} strokeWidth={2.5} />
-        </div>
-      </div>
+      )}
 
-      <div className="mt-6 space-y-3">
+      <div className={cn("space-y-3", !embedded && "mt-6")}>
         <input
           type="text"
           value={deckName}

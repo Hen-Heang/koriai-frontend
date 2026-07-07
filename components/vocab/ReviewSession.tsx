@@ -1146,50 +1146,54 @@ export function ReviewSession({ dueToday, allWords, loading, onRate }: ReviewSes
   // Stays fixed for the duration of the session — see sessionTotal above.
   const total = sessionTotal || queue.length
 
-  // ── idle (compact card on vocab page) ────────────────────────────────────
+  // ── idle (full-width launch banner on the vocab page; the session itself
+  //    opens as a fullscreen overlay) ─────────────────────────────────────────
   if (phase === "idle" && !isOpen) {
     const deckSize = filteredDueToday.length > 0 ? filteredDueToday.length : filteredAllWords.length
     const isDueSession = filteredDueToday.length > 0
     return (
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:bg-slate-900/40">
-        {/* Header */}
-        <div className="bg-emerald-500/[0.03] px-5 py-6 text-center border-b border-border/60 sm:px-8">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
-            <BrainCircuit size={28} strokeWidth={2.5} />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Memory Lab</h2>
-          <p className="mt-1 text-sm font-medium text-muted-foreground/60">
-            {isDueSession
-              ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
-              : filteredAllWords.length > 0
-                ? "All caught up — practice anytime"
-                : "Add words to start your deck"}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 p-5 sm:p-6">
-          {/* Deck stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{filteredDueToday.length}</p>
-              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Due Now</p>
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
+        <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+          {/* Identity */}
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20">
+              <BrainCircuit size={28} strokeWidth={2.5} />
             </div>
-            <div className="rounded-2xl border border-border bg-accent/5 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{filteredAllWords.length}</p>
-              <p className="mt-0.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Total Deck</p>
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold tracking-tight text-foreground">Memory Lab</h2>
+              <p className="truncate text-sm font-medium text-muted-foreground/60">
+                {isDueSession
+                  ? `${filteredDueToday.length} ${filteredDueToday.length === 1 ? "word" : "words"} due for review`
+                  : filteredAllWords.length > 0
+                    ? "All caught up — practice anytime"
+                    : "Add words to start your deck"}
+              </p>
             </div>
           </div>
 
-          {/* Open fullscreen */}
-          <button
-            type="button"
-            disabled={loading || deckSize === 0}
-            onClick={() => setIsOpen(true)}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
-          >
-            <Sparkles size={18} strokeWidth={2.5} />
-            {loading ? "Loading..." : deckSize === 0 ? "No words yet" : "Open Memory Lab"}
-          </button>
+          {/* Stats + launch */}
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-accent/5 px-4 py-2">
+              <div className="text-center">
+                <p className="text-lg font-bold leading-none tabular-nums text-emerald-600">{filteredDueToday.length}</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">Due</p>
+              </div>
+              <div className="h-7 w-px bg-border/60" />
+              <div className="text-center">
+                <p className="text-lg font-bold leading-none tabular-nums text-foreground">{filteredAllWords.length}</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">Total</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={loading || deckSize === 0}
+              onClick={() => setIsOpen(true)}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40 sm:flex-none sm:px-6"
+            >
+              <Sparkles size={18} strokeWidth={2.5} />
+              {loading ? "Loading..." : deckSize === 0 ? "No words yet" : "Start Review"}
+            </button>
+          </div>
         </div>
       </div>
     )

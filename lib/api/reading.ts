@@ -105,4 +105,6 @@ export const readingApi = {
 
   submitQuizResult: (unitId: string, score: number, total: number) =>
     saveProgress(unitId, { quizScore: score, quizTotal: total }),
+
+  setUnitPinned: (unitId: string, pinned: boolean) => saveProgress(unitId, { pinned }),
 }
