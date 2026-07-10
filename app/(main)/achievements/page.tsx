@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
-  ArrowLeft,
   Blocks,
   BookOpen,
   CheckCheck,
@@ -19,7 +17,6 @@ import {
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
-import { Button } from "@/components/ui/button"
 import { CardGrid } from "@/components/ui/card-grid"
 import { TipCard } from "@/components/app/tip-card"
 import { ErrorBanner } from "@/components/ui/error-banner"
@@ -45,7 +42,6 @@ const ICONS: Record<string, LucideIcon> = {
 }
 
 export default function AchievementsPage() {
-  const router = useRouter()
   const [summary, setSummary] = useState<AchievementSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -81,18 +77,6 @@ export default function AchievementsPage() {
       variants={containerVariants}
       className="space-y-8 pb-12"
     >
-      <motion.div variants={itemVariants}>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.push("/settings")}
-          className="h-9 rounded-xl px-3 font-bold text-muted-foreground hover:text-foreground active:scale-95"
-        >
-          <ArrowLeft size={16} strokeWidth={2.5} className="mr-1.5" />
-          Back to Settings
-        </Button>
-      </motion.div>
-
       <motion.div variants={itemVariants}>
         <PageHero
           eyebrow="Achievements"

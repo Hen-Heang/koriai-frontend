@@ -33,7 +33,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await authApi.login({ email, password })
-      router.push("/dashboard")
+      router.push("/home")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Invalid email or password.")
     } finally {
@@ -167,7 +167,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <GoogleSignInButton onError={setError} redirectTo="/dashboard" />
+            <GoogleSignInButton onError={setError} redirectTo="/home" />
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
               New to Hengo?{" "}

@@ -48,6 +48,20 @@ function ChatPageContent() {
       : "chat"
   )
 
+  // Keep the URL in sync with the active mode, so refreshing, sharing a link,
+  // or navigating via the sidebar's Chat/Analyze/Generate/Corrections links
+  // all land on the right tab (and the one-shot ?prompt=/?category= deep-link
+  // params get cleaned up once consumed above).
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (mode !== "chat") params.set("mode", mode)
+    const query = params.toString()
+    router.replace(query ? `/chat?${query}` : "/chat", { scroll: false })
+    // Intentionally mode-only: this reflects mode changes into the URL, it
+    // shouldn't re-run when router identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
   const { conversations, isLoading: conversationsLoading, rename, remove, refresh } =
     useConversations()
 
@@ -169,7 +183,7 @@ function ChatPageContent() {
       <div className="flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 sm:px-5">
         <button
           type="button"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/home")}
           aria-label="Back to home"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-95"
         >

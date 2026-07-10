@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import {
-  ArrowLeft,
   BookOpen,
   BrainCircuit,
   Check,
@@ -661,7 +659,6 @@ function AddPhaseForm({ onAdd, onCancel }: {
 }
 
 export default function RoadmapPage() {
-  const router = useRouter()
   const [phases,       setPhases]       = useState<Phase[]>(DEFAULT_PHASES)
   const [completed,    setCompleted]    = useState<Set<string>>(new Set())
   const [openPhase,    setOpenPhase]    = useState<string | null>("phase-1")
@@ -799,17 +796,11 @@ export default function RoadmapPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6 pb-16"
     >
-      <div className="flex items-center gap-3">
-        <button type="button" onClick={() => router.push("/settings")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95">
-          <ArrowLeft size={18} strokeWidth={2.5} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground">Learning Roadmap</h1>
-          <p className="text-[11px] font-medium text-muted-foreground/50">
-            Java → Spring Boot → Senior Backend Engineer
-          </p>
-        </div>
+      <div>
+        <h1 className="text-lg font-bold text-foreground">Learning Roadmap</h1>
+        <p className="text-[11px] font-medium text-muted-foreground/50">
+          Java → Spring Boot → Senior Backend Engineer
+        </p>
       </div>
 
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">

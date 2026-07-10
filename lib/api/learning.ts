@@ -6,6 +6,7 @@ import type {
   SentenceChallengeResponse,
   SentenceCheckResponse,
   GeneratedMessages,
+  ListeningAttemptRecord,
   ListeningAttemptResult,
   ListeningLesson,
   MessageAnalysis,
@@ -364,6 +365,32 @@ export const listeningApi = {
     })
     if (error) throw error
     return { lessonId, score, total, accuracy, results }
+  },
+
+  // Attempt history for the Learning workspace's listening-progress snapshot.
+  getAttempts: async (): Promise<ListeningAttemptRecord[]> => {
+    const { data, error } = await supabase
+      .from("kori_listening_attempts")
+      .select("id, lesson_id, score, total, accuracy, results, created_at")
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return (data as Array<{
+      id: string
+      lesson_id: string
+      score: number
+      total: number
+      accuracy: number
+      results: boolean[]
+      created_at: string
+    }>).map((row) => ({
+      id: row.id,
+      lessonId: row.lesson_id,
+      score: row.score,
+      total: row.total,
+      accuracy: row.accuracy,
+      results: row.results,
+      createdAt: row.created_at,
+    }))
   },
 }
 

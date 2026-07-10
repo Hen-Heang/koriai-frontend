@@ -1,4 +1,4 @@
-import type { Achievement, AchievementSummary, DashboardStats, LevelInfo, ProgressPoint } from "@/lib/types"
+import type { Achievement, AchievementSummary, DashboardStats, FeatureActivity, LevelInfo, ProgressPoint } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { getDailyGoalMinutes } from "@/lib/onboarding-store"
@@ -231,5 +231,31 @@ export const progressApi = {
       duration_ms: Math.round(durationMs),
     })
     if (error) throw error
+  },
+
+  // Per-feature time/session breakdown for the Progress workspace's
+  // Statistics page — same kori_activity_log rows useSessionTimer/
+  // useLogActivity already write, just grouped by feature instead of summed.
+  getFeatureBreakdown: async (days = 30): Promise<FeatureActivity[]> => {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+    const { data, error } = await supabase
+      .from("kori_activity_log")
+      .select("feature, duration_ms")
+      .gte("created_at", since)
+    if (error) throw error
+    const byFeature = new Map<string, { totalMs: number; count: number }>()
+    for (const row of data ?? []) {
+      const entry = byFeature.get(row.feature) ?? { totalMs: 0, count: 0 }
+      entry.totalMs += row.duration_ms ?? 0
+      entry.count += 1
+      byFeature.set(row.feature, entry)
+    }
+    return [...byFeature.entries()]
+      .map(([feature, { totalMs, count }]) => ({
+        feature,
+        totalMinutes: Math.round(totalMs / 60000),
+        sessionCount: count,
+      }))
+      .sort((a, b) => b.totalMinutes - a.totalMinutes)
   },
 }

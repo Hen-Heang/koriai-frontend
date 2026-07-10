@@ -27,7 +27,7 @@ import type { GoalNotification } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 // Ported from Orbit components/notifications/NotificationBell + NotificationItem,
-// adapted to KoriAI's Popover + the backend's camelCase GoalNotification shape.
+// adapted to Hengo's Popover + the backend's camelCase GoalNotification shape.
 // Sending invites is deferred sharing; receiving/responding is wired.
 
 const ICONS: Record<string, typeof Bell> = {

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
-  User,
   Mail,
   BrainCircuit,
   Cpu,
@@ -17,19 +16,15 @@ import {
   ShieldCheck,
   Sun,
   Globe,
-  Briefcase,
-  NotebookPen,
   Camera,
   Loader2,
   Bell,
   Send,
   AlarmClock,
-  Trophy,
   Check,
-  Map,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -83,7 +78,7 @@ function SectionCard({ children, className }: { children: React.ReactNode; class
 
 function SectionRow({ children, last }: { children: React.ReactNode; last?: boolean }) {
   return (
-    <div className={cn("px-5 py-4", !last && "border-b border-border/60")}>
+    <div className={cn("px-5 py-4 sm:px-6", !last && "border-b border-border/60")}>
       {children}
     </div>
   )
@@ -113,49 +108,6 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
     <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground/50 px-1">
       {children}
     </label>
-  )
-}
-
-function SettingsNavRow({ icon: Icon, title, description, color, onClick }: {
-  icon: React.ElementType
-  title: string
-  description: string
-  color: "violet" | "blue" | "amber" | "emerald"
-  onClick: () => void
-}) {
-  return (
-    <SectionCard>
-      <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "group flex w-full items-center justify-between px-5 py-4 text-left transition-all active:scale-[0.98]",
-          color === "violet" && "hover:bg-violet-500/5",
-          color === "blue" && "hover:bg-blue-500/5",
-          color === "amber" && "hover:bg-amber-500/5",
-          color === "emerald" && "hover:bg-emerald-500/5",
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-2xl transition-transform group-hover:scale-110",
-              color === "violet" && "bg-violet-500/10 text-violet-500",
-              color === "blue" && "bg-blue-500/10 text-blue-500",
-              color === "amber" && "bg-amber-500/10 text-amber-500",
-              color === "emerald" && "bg-emerald-500/10 text-emerald-500",
-            )}
-          >
-            <Icon size={17} strokeWidth={2} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{title}</p>
-            <p className="text-[11px] font-medium text-muted-foreground/50">{description}</p>
-          </div>
-        </div>
-        <ChevronRight size={15} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
-      </button>
-    </SectionCard>
   )
 }
 
@@ -331,7 +283,7 @@ export default function SettingsPage() {
       router.back()
       return
     }
-    router.push("/dashboard")
+    router.push("/home")
   }
 
   async function handleSignOut() {
@@ -349,36 +301,31 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-14 w-14 rounded-2xl" />
-              <div className="flex-1">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="mt-2 h-4 w-40" />
-              </div>
+      <div className="mx-auto max-w-3xl space-y-4 pb-12">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-14 w-14 rounded-2xl" />
+            <div className="flex-1">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="mt-2 h-4 w-40" />
             </div>
           </div>
-          <Skeleton className="h-12 w-full rounded-2xl" />
         </div>
-        <div className="space-y-4">
-          {[1, 2].map((item) => (
-            <div key={item} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-8 w-8 rounded-xl" />
-                <div>
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="mt-1.5 h-3 w-40" />
-                </div>
-              </div>
-              <div className="mt-5 space-y-3">
-                <Skeleton className="h-11 w-full rounded-2xl" />
-                <Skeleton className="h-11 w-full rounded-2xl" />
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-xl" />
+              <div>
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="mt-1.5 h-3 w-40" />
               </div>
             </div>
-          ))}
-        </div>
+            <div className="mt-5 space-y-3">
+              <Skeleton className="h-11 w-full rounded-2xl" />
+              <Skeleton className="h-11 w-full rounded-2xl" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
@@ -389,504 +336,451 @@ export default function SettingsPage() {
       animate="visible"
       variants={containerVariants}
       onSubmit={handleSave}
-      className="grid gap-5 pb-12 xl:grid-cols-[0.75fr_1.25fr]"
+      className="mx-auto max-w-3xl space-y-5 pb-28"
     >
-      {/* Left Sidebar */}
-      <div className="space-y-4 xl:sticky xl:top-8 xl:self-start">
-
-        {/* Header */}
-        <motion.div variants={itemVariants}>
-          <div className="flex items-center gap-3 px-1 py-1">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
-            >
-              <ArrowLeft size={18} strokeWidth={2.5} />
-            </button>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">Settings</h1>
-              <p className="text-[11px] font-medium text-muted-foreground/50">Profile, preferences & account</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Profile card */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow last>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingAvatar}
-                    title="Change profile photo"
-                    className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95"
-                  >
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      <span>{initials}</span>
-                    )}
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                      {uploadingAvatar ? (
-                        <Loader2 size={16} className="animate-spin text-white" />
-                      ) : (
-                        <Camera size={16} className="text-white" />
-                      )}
-                    </span>
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={handleAvatarChange}
-                  />
-                  <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
-                    <CheckCircle2 size={10} className="text-white" strokeWidth={4} />
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-base font-bold text-foreground">
-                    {displayName || "Your name"}
-                  </p>
-                  <p className="truncate text-xs font-medium text-muted-foreground/50">{email}</p>
-                </div>
-              </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
-
-        {/* Save button */}
-        <motion.div variants={itemVariants} className="space-y-2">
-          <Button
-            type="submit"
-            disabled={saving || !isDirty}
-            className="h-12 w-full rounded-2xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
+      {/* Header */}
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center gap-3 px-1 py-1">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
           >
-            {saving ? (
-              <><Loader2 size={16} className="mr-2 animate-spin" /> Saving…</>
-            ) : saved ? (
-              <><Check size={16} className="mr-2" strokeWidth={3} /> Saved</>
-            ) : (
-              "Save changes"
-            )}
-          </Button>
+            <ArrowLeft size={18} strokeWidth={2.5} />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Settings</h1>
+            <p className="text-[11px] font-medium text-muted-foreground/50">Profile, preferences & account</p>
+          </div>
+        </div>
+      </motion.div>
 
-          {error && (
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive text-center">
-              {error}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Nav rows */}
-        <motion.div variants={itemVariants}>
-          <SettingsNavRow
-            icon={Trophy}
-            title="Achievements"
-            description="Badges and milestones"
-            color="amber"
-            onClick={() => router.push("/achievements")}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <SettingsNavRow
-            icon={NotebookPen}
-            title="Notes"
-            description="Your study knowledge library"
-            color="blue"
-            onClick={() => router.push("/notes")}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <SettingsNavRow
-            icon={Map}
-            title="Learning Roadmap"
-            description="Java → Spring → Senior Engineer"
-            color="violet"
-            onClick={() => router.push("/roadmap")}
-          />
-        </motion.div>
-
-        {/* Appearance */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow last>
-              <SectionHeader icon={Palette} title="Appearance" color="text-pink-500" />
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {themeOptions.map(({ value, label, icon: Icon }) => {
-                  const active = theme === value
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setTheme(value)}
-                      className={cn(
-                        "flex flex-col items-center gap-1.5 rounded-2xl border py-3.5 text-[11px] font-semibold transition-all active:scale-[0.97]",
-                        active
-                          ? "border-pink-500/30 bg-pink-500/10 text-pink-600 dark:text-pink-400"
-                          : "border-border bg-accent/5 text-muted-foreground/50 hover:text-foreground"
-                      )}
-                    >
-                      <Icon size={16} strokeWidth={active ? 2.5 : 1.75} />
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
-
-        {/* Notifications */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader icon={Bell} title="Notifications" color="text-violet-500" />
-            </SectionRow>
-
-            {/* Browser push */}
-            <SectionRow>
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Browser</p>
-                  <p className="text-[11px] font-medium text-muted-foreground/50">
-                    {push.supported
-                      ? push.webState === "denied"
-                        ? "Blocked in browser settings."
-                        : "Alerts when KoriAI isn't open."
-                      : "Not supported in this browser."}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {push.webEnabled && (
-                    <Button type="button" variant="outline" size="sm" onClick={() => push.sendTest()}>
-                      Send test
-                    </Button>
+      {/* Profile identity + editable name/email */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  title="Change profile photo"
+                  className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95"
+                >
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{initials}</span>
                   )}
-                  <Switch
-                    checked={push.webEnabled}
-                    disabled={!push.supported || push.webBusy || push.webState === "denied"}
-                    onCheckedChange={(v) => (v ? push.enableWeb() : push.disableWeb())}
-                    aria-label="Toggle browser notifications"
-                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                    {uploadingAvatar ? (
+                      <Loader2 size={18} className="animate-spin text-white" />
+                    ) : (
+                      <Camera size={18} className="text-white" />
+                    )}
+                  </span>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-card bg-emerald-400">
+                  <CheckCircle2 size={10} className="text-white" strokeWidth={4} />
                 </div>
               </div>
-            </SectionRow>
-
-            {/* Telegram */}
-            <SectionRow>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
-                    <Send size={14} strokeWidth={2} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Telegram</p>
-                    <p className="text-[11px] font-medium text-muted-foreground/50">
-                      {push.telegramLinked ? "Connected" : "Get alerts in Telegram"}
-                    </p>
-                  </div>
-                </div>
-                {push.telegramLinked ? (
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => push.sendTelegramTest()}>
-                      Send test
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
-                      Disconnect
-                    </Button>
-                  </div>
-                ) : (
-                  <Button type="button" size="sm" onClick={() => push.linkTelegram()}>
-                    Connect
-                  </Button>
-                )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold text-foreground">
+                  {displayName || "Your name"}
+                </p>
+                <p className="truncate text-xs font-medium text-muted-foreground/50">{email}</p>
               </div>
-            </SectionRow>
-
-            {/* Study reminders */}
-            <SectionRow last>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-                    <AlarmClock size={14} strokeWidth={2} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Daily reminders</p>
-                    <p className="text-[11px] font-medium text-muted-foreground/50">
-                      Review nudge + streak saver
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={studyRemindersEnabled}
-                  disabled={savingReminders}
-                  onCheckedChange={(v) => saveStudyReminders(v, studyReminderHour)}
-                  aria-label="Toggle daily study reminders"
+            </div>
+          </SectionRow>
+          <SectionRow last>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Display name</FieldLabel>
+                <Input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all"
                 />
               </div>
-              {studyRemindersEnabled && (
-                <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
-                  <label htmlFor="study-hour" className="text-[11px] font-medium text-muted-foreground/50">
-                    Remind me at
-                  </label>
-                  <select
-                    id="study-hour"
-                    value={studyReminderHour}
-                    disabled={savingReminders}
-                    onChange={(e) => saveStudyReminders(studyRemindersEnabled, Number(e.target.value))}
-                    className="h-9 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition-all focus:ring-2 focus:ring-emerald-500/20"
+              <div>
+                <FieldLabel>Email address</FieldLabel>
+                <div className="flex h-11 items-center gap-2.5 rounded-2xl border border-border bg-accent/5 px-4 opacity-60">
+                  <Mail size={14} className="shrink-0 text-muted-foreground" strokeWidth={2} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{email}</span>
+                  <span className="hidden shrink-0 items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground sm:flex">
+                    <ShieldCheck size={10} strokeWidth={3} /> Verified
+                  </span>
+                </div>
+              </div>
+            </div>
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
+
+      {/* Korean Level + Learning goal */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow>
+            <SectionHeader
+              icon={BrainCircuit}
+              title="Korean Level"
+              description="Adjusts AI complexity to your fluency"
+              color="text-violet-500"
+            />
+          </SectionRow>
+          <SectionRow>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {levels.map((level) => {
+                const active = koreanLevel === level.value
+                return (
+                  <button
+                    key={level.value}
+                    type="button"
+                    onClick={() => setKoreanLevel(level.value)}
+                    className={cn(
+                      "group relative flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
+                      active
+                        ? "border-blue-500/30 bg-blue-500/5 ring-1 ring-blue-500/20"
+                        : "border-border bg-accent/5 hover:border-blue-500/20 hover:bg-background"
+                    )}
                   >
-                    {Array.from({ length: 24 }, (_, h) => (
-                      <option key={h} value={h}>
-                        {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
-
-        {/* Sign out */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="group flex w-full items-center justify-between px-5 py-4 text-left transition-all hover:bg-red-500/5 active:scale-[0.98]"
+                    <div className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110",
+                      active ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-background shadow-sm"
+                    )}>
+                      {level.emoji}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
+                        {level.label}
+                      </p>
+                      <p className="truncate text-[11px] font-medium text-muted-foreground/50">{level.desc}</p>
+                    </div>
+                    {active && (
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
+                        <Check size={11} strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </SectionRow>
+          <SectionRow last>
+            <FieldLabel>Learning goal</FieldLabel>
+            <select
+              value={learningGoal}
+              onChange={(e) => setLearningGoal(e.target.value)}
+              className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 transition-transform group-hover:scale-110">
-                  <LogOut size={16} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-red-600 dark:text-red-400">Sign out</p>
-                  <p className="text-[11px] font-medium text-muted-foreground/50">End your session</p>
-                </div>
+              <option value="">Select your main goal</option>
+              {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
+
+      {/* Background + Work */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow>
+            <SectionHeader icon={Globe} title="Background & Work" description="Helps the AI tailor examples to you" color="text-sky-500" />
+          </SectionRow>
+          <SectionRow last>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Country</FieldLabel>
+                <select value={country} onChange={(e) => setCountry(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <option value="">Select country</option>
+                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
-              <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
-            </button>
-          </SectionCard>
-        </motion.div>
-      </div>
-
-      {/* Right Content */}
-      <div className="space-y-4">
-
-        {/* Profile Details */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader icon={User} title="Profile" description="Name and public identity" color="text-blue-500" />
-            </SectionRow>
-            <SectionRow last>
-              <div className="space-y-4">
-                <div>
-                  <FieldLabel>Display name</FieldLabel>
-                  <Input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name"
-                    className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all"
-                  />
-                </div>
-                <div>
-                  <FieldLabel>Email address</FieldLabel>
-                  <div className="flex items-center gap-3 rounded-2xl border border-border bg-accent/5 px-4 py-3 opacity-60">
-                    <Mail size={14} className="text-muted-foreground" strokeWidth={2} />
-                    <span className="flex-1 truncate text-sm font-semibold text-foreground">{email}</span>
-                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                      <ShieldCheck size={10} strokeWidth={3} /> Verified
-                    </span>
-                  </div>
-                </div>
+              <div>
+                <FieldLabel>Native language</FieldLabel>
+                <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <option value="">Select language</option>
+                  {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
               </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
-
-        {/* Background */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader icon={Globe} title="Background" description="Country and native language" color="text-sky-500" />
-            </SectionRow>
-            <SectionRow last>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <FieldLabel>Country</FieldLabel>
-                  <select value={country} onChange={(e) => setCountry(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
-                    <option value="">Select country</option>
-                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Native language</FieldLabel>
-                  <select value={nativeLanguage} onChange={(e) => setNativeLanguage(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
-                    <option value="">Select language</option>
-                    {["Khmer", "English", "Chinese", "Japanese", "Vietnamese", "Thai", "Indonesian", "Filipino", "Malay", "Other"].map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
+              <div>
+                <FieldLabel>Occupation</FieldLabel>
+                <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
+                  <option value="">Select role</option>
+                  {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
               </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
-
-        {/* Work Details */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader icon={Briefcase} title="Work" description="Role and experience in tech" color="text-amber-500" />
-            </SectionRow>
-            <SectionRow last>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <FieldLabel>Occupation</FieldLabel>
-                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
-                    <option value="">Select role</option>
-                    {["Frontend Developer", "Backend Developer", "Full-Stack Developer", "QA Engineer", "DevOps Engineer", "Product Manager", "Data Scientist", "Other"].map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Years of experience</FieldLabel>
-                  <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all" />
-                </div>
-                <div className="sm:col-span-2">
-                  <FieldLabel>Learning goal</FieldLabel>
-                  <select value={learningGoal} onChange={(e) => setLearningGoal(e.target.value)} className="h-11 w-full rounded-2xl border border-border bg-accent/5 px-3 text-sm font-semibold text-foreground outline-none transition-all focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-white/5">
-                    <option value="">Select your main goal</option>
-                    {["Daily standup participation", "Team meeting communication", "Writing professional messages", "Technical discussion in Korean", "General workplace communication"].map((g) => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                </div>
+              <div>
+                <FieldLabel>Years of experience</FieldLabel>
+                <Input type="number" min={0} max={50} value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} placeholder="e.g. 3" className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-semibold focus:bg-background transition-all" />
               </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
+            </div>
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
 
-        {/* Learning Level */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader
-                icon={BrainCircuit}
-                title="Korean Level"
-                description="Adjusts AI complexity to your fluency"
-                color="text-violet-500"
-              />
-            </SectionRow>
-            <SectionRow last>
-              <div className="grid gap-2">
-                {levels.map((level) => {
-                  const active = koreanLevel === level.value
+      {/* AI Model */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow>
+            <SectionHeader
+              icon={Cpu}
+              title="AI Model"
+              description="Powers your conversations and feedback"
+              color="text-sky-500"
+            />
+          </SectionRow>
+          <SectionRow last>
+            <div className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-3">
+                {models.map((model) => {
+                  const active = preferredModel === model.value && !customModel
                   return (
                     <button
-                      key={level.value}
+                      key={model.value}
                       type="button"
-                      onClick={() => setKoreanLevel(level.value)}
+                      onClick={() => { setPreferredModel(model.value); setCustomModel("") }}
                       className={cn(
-                        "group relative flex w-full items-center gap-4 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
+                        "group relative flex flex-col gap-0.5 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
                         active
-                          ? "border-blue-500/30 bg-blue-500/5 ring-1 ring-blue-500/20"
-                          : "border-border bg-accent/5 hover:border-blue-500/20 hover:bg-background"
+                          ? "border-sky-500/30 bg-sky-500/5 ring-1 ring-sky-500/20"
+                          : "border-border bg-accent/5 hover:border-sky-500/20 hover:bg-background"
                       )}
                     >
-                      <div className={cn(
-                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110",
-                        active ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-background shadow-sm"
-                      )}>
-                        {level.emoji}
-                      </div>
-                      <div className="flex-1">
-                        <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
-                          {level.label}
-                        </p>
-                        <p className="text-[11px] font-medium text-muted-foreground/50">{level.desc}</p>
-                      </div>
-                      {active ? (
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white">
-                          <Check size={11} strokeWidth={3} />
-                        </div>
-                      ) : (
-                        <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+                      <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
+                        {model.label}
+                      </p>
+                      <p className="text-[11px] font-medium text-muted-foreground/50">{model.desc}</p>
+                      {active && (
+                        <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
                       )}
                     </button>
                   )
                 })}
               </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
 
-        {/* Model */}
-        <motion.div variants={itemVariants}>
-          <SectionCard>
-            <SectionRow>
-              <SectionHeader
-                icon={Cpu}
-                title="AI Model"
-                description="Powers your conversations and feedback"
-                color="text-sky-500"
-              />
-            </SectionRow>
-            <SectionRow last>
-              <div className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {models.map((model) => {
-                    const active = preferredModel === model.value && !customModel
-                    return (
-                      <button
-                        key={model.value}
-                        type="button"
-                        onClick={() => { setPreferredModel(model.value); setCustomModel("") }}
-                        className={cn(
-                          "group relative flex flex-col gap-0.5 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]",
-                          active
-                            ? "border-sky-500/30 bg-sky-500/5 ring-1 ring-sky-500/20"
-                            : "border-border bg-accent/5 hover:border-sky-500/20 hover:bg-background"
-                        )}
-                      >
-                        <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
-                          {model.label}
-                        </p>
-                        <p className="text-[11px] font-medium text-muted-foreground/50">{model.desc}</p>
-                        {active && (
-                          <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
-                        )}
-                      </button>
-                    )
-                  })}
+              <div>
+                <FieldLabel>Custom model</FieldLabel>
+                <Input
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                  placeholder="e.g. gpt-4-turbo"
+                  className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-mono text-xs focus:bg-background transition-all"
+                />
+              </div>
+            </div>
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
+
+      {/* Appearance */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow last>
+            <SectionHeader icon={Palette} title="Appearance" color="text-pink-500" />
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {themeOptions.map(({ value, label, icon: Icon }) => {
+                const active = theme === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setTheme(value)}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 rounded-2xl border py-3.5 text-[11px] font-semibold transition-all active:scale-[0.97]",
+                      active
+                        ? "border-pink-500/30 bg-pink-500/10 text-pink-600 dark:text-pink-400"
+                        : "border-border bg-accent/5 text-muted-foreground/50 hover:text-foreground"
+                    )}
+                  >
+                    <Icon size={16} strokeWidth={active ? 2.5 : 1.75} />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
+
+      {/* Notifications */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <SectionRow>
+            <SectionHeader icon={Bell} title="Notifications" color="text-violet-500" />
+          </SectionRow>
+
+          {/* Browser push */}
+          <SectionRow>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Browser</p>
+                <p className="text-[11px] font-medium text-muted-foreground/50">
+                  {push.supported
+                    ? push.webState === "denied"
+                      ? "Blocked in browser settings."
+                      : "Alerts when Hengo isn't open."
+                    : "Not supported in this browser."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {push.webEnabled && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => push.sendTest()}>
+                    Send test
+                  </Button>
+                )}
+                <Switch
+                  checked={push.webEnabled}
+                  disabled={!push.supported || push.webBusy || push.webState === "denied"}
+                  onCheckedChange={(v) => (v ? push.enableWeb() : push.disableWeb())}
+                  aria-label="Toggle browser notifications"
+                />
+              </div>
+            </div>
+          </SectionRow>
+
+          {/* Telegram */}
+          <SectionRow>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
+                  <Send size={14} strokeWidth={2} />
                 </div>
-
-                <div>
-                  <FieldLabel>Custom model</FieldLabel>
-                  <Input
-                    value={customModel}
-                    onChange={(e) => setCustomModel(e.target.value)}
-                    placeholder="e.g. gpt-4-turbo"
-                    className="h-11 rounded-2xl border-border bg-accent/5 px-4 font-mono text-xs focus:bg-background transition-all"
-                  />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Telegram</p>
+                  <p className="text-[11px] font-medium text-muted-foreground/50">
+                    {push.telegramLinked ? "Connected" : "Get alerts in Telegram"}
+                  </p>
                 </div>
               </div>
-            </SectionRow>
-          </SectionCard>
-        </motion.div>
+              {push.telegramLinked ? (
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => push.sendTelegramTest()}>
+                    Send test
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => push.unlinkTelegram()}>
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button type="button" size="sm" onClick={() => push.linkTelegram()}>
+                  Connect
+                </Button>
+              )}
+            </div>
+          </SectionRow>
 
-        {/* Mobile copyright */}
-        <motion.div variants={itemVariants} className="pt-2 text-center xl:hidden">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
-            © 2026 Hen Heang · FullStack Developer
-          </p>
-        </motion.div>
-      </div>
+          {/* Study reminders */}
+          <SectionRow last>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <AlarmClock size={14} strokeWidth={2} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Daily reminders</p>
+                  <p className="text-[11px] font-medium text-muted-foreground/50">
+                    Review nudge + streak saver
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={studyRemindersEnabled}
+                disabled={savingReminders}
+                onCheckedChange={(v) => saveStudyReminders(v, studyReminderHour)}
+                aria-label="Toggle daily study reminders"
+              />
+            </div>
+            {studyRemindersEnabled && (
+              <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
+                <label htmlFor="study-hour" className="text-[11px] font-medium text-muted-foreground/50">
+                  Remind me at
+                </label>
+                <select
+                  id="study-hour"
+                  value={studyReminderHour}
+                  disabled={savingReminders}
+                  onChange={(e) => saveStudyReminders(studyRemindersEnabled, Number(e.target.value))}
+                  className="h-9 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition-all focus:ring-2 focus:ring-emerald-500/20"
+                >
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <option key={h} value={h}>
+                      {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </SectionRow>
+        </SectionCard>
+      </motion.div>
+
+      {/* Account */}
+      <motion.div variants={itemVariants}>
+        <SectionCard>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="group flex w-full items-center justify-between px-5 py-4 text-left transition-all hover:bg-red-500/5 active:scale-[0.98] sm:px-6"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 transition-transform group-hover:scale-110">
+                <LogOut size={16} strokeWidth={2} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400">Sign out</p>
+                <p className="text-[11px] font-medium text-muted-foreground/50">End your session</p>
+              </div>
+            </div>
+            <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </SectionCard>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="pt-2 text-center">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+          © 2026 Hen Heang · FullStack Developer
+        </p>
+      </motion.div>
+
+      {/* Sticky save bar — only intrudes once there's something to save */}
+      <AnimatePresence>
+        {(isDirty || saving || saved) && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="sticky bottom-4 z-30 mx-auto flex w-full max-w-3xl items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 shadow-xl backdrop-blur-xl dark:bg-slate-900/90"
+          >
+            <p className={cn("flex-1 truncate px-2 text-xs font-medium", error ? "text-destructive" : "text-muted-foreground")}>
+              {error || "You have unsaved changes."}
+            </p>
+            <Button
+              type="submit"
+              disabled={saving || !isDirty}
+              className="h-11 shrink-0 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-95 disabled:opacity-60 transition-all"
+            >
+              {saving ? (
+                <><Loader2 size={16} className="mr-2 animate-spin" /> Saving…</>
+              ) : saved ? (
+                <><Check size={16} className="mr-2" strokeWidth={3} /> Saved</>
+              ) : (
+                "Save changes"
+              )}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.form>
   )
 }

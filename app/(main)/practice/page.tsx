@@ -21,7 +21,10 @@ import { PageHero } from "@/components/app/page-hero"
 import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BestQuizStreakCard } from "@/components/dashboard/BestQuizStreakCard"
 import { DailyPhraseCard } from "@/components/practice/DailyPhraseCard"
+import { LearningSnapshot } from "@/components/practice/LearningSnapshot"
+import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
 import { isScenarioDoneToday, markScenarioDoneToday } from "@/lib/daily-mission"
 import { levelApi, practiceApi, progressApi, getApiErrorMessage } from "@/lib/api"
 import { containerVariants, itemVariants } from "@/lib/motion"
@@ -163,6 +166,12 @@ export default function PracticePage() {
         />
       </motion.div>
 
+      {/* Exam countdown reminder — Learning-workspace specific, moved here from
+          the old Dashboard (now the Productivity workspace) */}
+      <motion.div variants={itemVariants}>
+        <ExamCountdownBanner />
+      </motion.div>
+
       {/* Streak banner — shown only when streak is active */}
       {streakDays > 0 && (
         <motion.div variants={itemVariants}>
@@ -296,6 +305,16 @@ export default function PracticePage() {
                 )
               })}
             </ul>
+          </motion.div>
+
+          {/* Learning workspace snapshot — reading/listening/exam-prep progress
+              and the latest achievement, so nothing requires a separate visit */}
+          <motion.div variants={itemVariants} className="space-y-3">
+            <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
+              Learning Snapshot
+            </h2>
+            <LearningSnapshot />
+            <BestQuizStreakCard />
           </motion.div>
 
           {/* Daily phrase — merged in full from the old standalone page */}

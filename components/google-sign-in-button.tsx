@@ -23,7 +23,7 @@ const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
 export function GoogleSignInButton({
   onError,
-  redirectTo = "/dashboard",
+  redirectTo = "/home",
 }: {
   onError?: (message: string) => void
   redirectTo?: string

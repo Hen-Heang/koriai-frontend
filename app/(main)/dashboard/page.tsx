@@ -1,47 +1,25 @@
 "use client"
 
 import Link from "next/link"
-import { useSyncExternalStore } from "react"
 import {
   ArrowRight,
-  Flame,
-  GraduationCap,
-  Sparkles,
-  SpellCheck2,
+  CalendarDays,
+  ClipboardList,
+  Map as MapIcon,
+  NotebookPen,
+  Plus,
   Target,
-  Cpu,
 } from "lucide-react"
 import { motion } from "motion/react"
-import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 
-import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
-import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
 import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
-import { ProgressIntelligence } from "@/components/dashboard/ProgressIntelligence"
 import { RoadmapTeaser } from "@/components/dashboard/RoadmapTeaser"
-import { StreakCard } from "@/components/dashboard/StreakCard"
-import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
-import { Button as UIButton } from "@/components/ui/button"
+import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines"
+import { TodaysTasks } from "@/components/goals/TodaysTasks"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useProgress } from "@/hooks/useProgress"
-import { getStudyFocus } from "@/lib/study-focus"
-import {
-  getBestStreak,
-  getBestStreakServerSnapshot,
-  subscribeBestStreak,
-} from "@/lib/vocab-best-streak-store"
-
-// recharts is heavy; defer it so the dashboard shell + above-the-fold cards
-// paint first, then the chart streams in.
-const ProgressChart = dynamic(
-  () => import("@/components/dashboard/ProgressChart").then((m) => m.ProgressChart),
-  {
-    ssr: false,
-    loading: () => <div className="h-72 w-full animate-pulse rounded-2xl bg-muted/20 sm:h-80" />,
-  }
-)
+import { useGoals } from "@/hooks/useGoals"
 
 function DashboardLoadingState() {
   return (
@@ -155,38 +133,6 @@ function DashboardLoadingState() {
     </div>
   )
 }
-// Personal-best vocab quiz streak, server-backed so it syncs across devices.
-// Written by the vocab ReviewSession.
-function BestQuizStreakCard() {
-  const best = useSyncExternalStore(subscribeBestStreak, getBestStreak, getBestStreakServerSnapshot)
-
-  return (
-    <Link
-      href="/vocab"
-      className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-orange-500/40 dark:bg-slate-900/40"
-    >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400">
-        <Flame size={20} strokeWidth={2} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xl font-bold tabular-nums text-foreground">
-          {best ?? "—"}
-          {best ? <span className="ml-1.5 text-sm font-medium text-muted-foreground">in a row</span> : null}
-        </p>
-        <p className="text-xs font-medium text-muted-foreground/70">Best quiz streak</p>
-      </div>
-      <ArrowRight size={16} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-orange-500" />
-    </Link>
-  )
-}
-
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return "Good morning"
-  if (hour < 17) return "Good afternoon"
-  return "Good evening"
-}
-
 function getToday() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -195,40 +141,30 @@ function getToday() {
   })
 }
 
-const CORRECTION_PROMPT =
-  "/chat?prompt=" +
-  encodeURIComponent("Please correct my Korean writing and explain each change in English.\n\nMy text:\n")
-
 const quickActions = [
   {
-    href: "/vocab",
-    label: "Vocabulary",
-    description: "Build your deck and clear due words with spaced repetition.",
-    icon: Cpu,
+    href: "/goals/create",
+    label: "New goal",
+    description: "Plan a goal, set a deadline, and break it into tasks.",
+    icon: Plus,
   },
   {
-    href: "/practice",
-    label: "Today",
-    description: "Today's phrase, due reviews, and your daily mission in one place.",
-    icon: Sparkles,
+    href: "/goals/calendar",
+    label: "Calendar",
+    description: "See every task and deadline laid out by day.",
+    icon: CalendarDays,
   },
   {
-    href: CORRECTION_PROMPT,
-    label: "Correction",
-    description: "Write Korean sentences and get AI corrections from your coach.",
-    icon: SpellCheck2,
+    href: "/roadmap",
+    label: "Roadmap",
+    description: "Track your developer-skills learning roadmap.",
+    icon: MapIcon,
   },
   {
-    href: "/goals",
-    label: "Goals & Tasks",
-    description: "Set goals, plan tasks, and track every deadline.",
-    icon: Target,
-  },
-  {
-    href: "/interview",
-    label: "Exam Prep",
-    description: "Practice interview questions and build your Korean for the workplace.",
-    icon: GraduationCap,
+    href: "/notes",
+    label: "Notes",
+    description: "Your personal knowledge library.",
+    icon: NotebookPen,
   },
 ]
 
@@ -252,15 +188,17 @@ const itemVariants = {
 } as const
 
 export default function DashboardPage() {
-  const { chartData, error, loading, stats } = useProgress()
-  const studyFocus = getStudyFocus(stats)
+  const { sortedGoals, isLoading: goalsLoading } = useGoals()
 
-  if (loading) {
+  if (goalsLoading) {
     return <DashboardLoadingState />
   }
 
+  const activeGoals = sortedGoals.filter((g) => g.status !== "completed" && g.status !== "archived")
+  const completedGoals = sortedGoals.filter((g) => g.status === "completed")
+
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -269,85 +207,45 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            {getToday()}
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">{getToday()}</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {getGreeting()} 👋
+            Your goals &amp; tasks
           </h1>
         </div>
-        <div className="flex items-center gap-1.5 self-start rounded-full border border-border bg-card px-3 py-1.5 sm:self-auto">
-          <Flame size={14} className="text-orange-500" />
-          <span className="text-sm font-medium text-foreground">{stats.streakDays} day streak</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5">
+            <Target size={14} className="text-blue-500" />
+            <span className="text-sm font-medium text-foreground">{activeGoals.length} active</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5">
+            <ClipboardList size={14} className="text-emerald-500" />
+            <span className="text-sm font-medium text-foreground">{completedGoals.length} completed</span>
+          </div>
         </div>
       </motion.div>
 
-      {/* First-run onboarding — shown once to users with no activity yet */}
-      {stats.wordsSaved === 0 && stats.streakDays === 0 && (
-        <motion.div variants={itemVariants}>
-          <FirstRunBanner />
-        </motion.div>
-      )}
-
-      {/* ── Exam countdown reminder ── */}
-      <motion.div variants={itemVariants}>
-        <ExamCountdownBanner />
-      </motion.div>
-
-      {/* ── Bento Grid ── */}
+      {/* ── Bento grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-12 sm:gap-6">
-        
-        {/* Main Hero Card (8 cols) */}
-        <motion.div
-          variants={itemVariants}
-          className="relative col-span-1 overflow-hidden rounded-2xl border border-border bg-slate-950 p-6 text-white shadow-sm md:col-span-8 lg:p-9"
-        >
-          {/* Single subtle accent — the hero is the page's only focal point */}
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-500/15 blur-[90px]" />
 
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-blue-300">
-              <Sparkles size={12} />
-              Personal plan
-            </div>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
-              {studyFocus.title}
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
-              {studyFocus.description}
-            </p>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <UIButton asChild size="lg" className="h-11 rounded-xl bg-blue-600 px-6 font-semibold hover:bg-blue-500 sm:h-12">
-                <Link href={studyFocus.ctaHref}>{studyFocus.ctaLabel}</Link>
-              </UIButton>
-              <UIButton asChild variant="outline" size="lg" className="h-11 rounded-xl border-white/10 bg-white/5 px-6 font-semibold hover:bg-white/10 sm:h-12">
-                <Link href="/chat">Ask the coach</Link>
-              </UIButton>
-            </div>
-          </div>
+        {/* Today's tasks (7 cols) */}
+        <motion.div variants={itemVariants} className="col-span-1 md:col-span-7 lg:col-span-8">
+          <TodaysTasks />
         </motion.div>
 
-        {/* Daily Goal Bento (4 cols) */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-4">
-          <DailyGoalRing
-            progress={stats.dailyGoalProgress}
-            reviewsToday={stats.reviewsToday}
-            correctionsToday={stats.correctionsToday}
-            className="h-full"
-          />
+        {/* Upcoming deadlines (5 cols) */}
+        <motion.div variants={itemVariants} className="col-span-1 md:col-span-5 lg:col-span-4">
+          <UpcomingDeadlines />
         </motion.div>
 
-        {/* Quick Actions (Full width grid) */}
+        {/* Quick actions (full width) */}
         <motion.div variants={itemVariants} className="col-span-1 md:col-span-12">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
-            {quickActions.map((action, i) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {quickActions.map((action) => (
               <Link
                 key={action.label}
                 href={action.href}
                 className={cn(
-                  "group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40",
-                  i === quickActions.length - 1 && "col-span-2 sm:col-span-1"
+                  "group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40"
                 )}
               >
                 <div className="inline-flex rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
@@ -364,31 +262,17 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Progress Chart (7 cols) */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-7 lg:col-span-8">
-          <ProgressChart data={chartData} />
+        {/* Roadmap teaser (career/dev growth) */}
+        <motion.div variants={itemVariants} className="col-span-1 md:col-span-6">
+          <RoadmapTeaser className="h-full" />
         </motion.div>
 
-        {/* Streak & Stats Bento (5 cols) */}
-        <motion.div variants={itemVariants} className="col-span-1 space-y-6 md:col-span-5 lg:col-span-4">
-          <StreakCard days={stats.streakDays} wordsSaved={stats.wordsSaved} />
-          <BestQuizStreakCard />
-          <RoadmapTeaser />
-          <ProgressIntelligence />
-        </motion.div>
-
-        {/* Goals overview — full width, analytics only */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-12">
-          <GoalsOverview />
+        {/* Goals overview */}
+        <motion.div variants={itemVariants} className="col-span-1 md:col-span-6">
+          <GoalsOverview className="h-full" />
         </motion.div>
 
       </div>
-
-      {error ? (
-        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-sm font-bold text-destructive text-center">
-          {error}
-        </p>
-      ) : null}
     </motion.div>
   )
 }

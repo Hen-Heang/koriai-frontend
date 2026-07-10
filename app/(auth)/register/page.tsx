@@ -93,7 +93,7 @@ export default function RegisterPage() {
         setError("Check your inbox and confirm your email, then sign in.")
         return
       }
-      router.push("/dashboard")
+      router.push("/home")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed. Email may already be in use.")
     } finally {

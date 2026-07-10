@@ -4,22 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore } from "react"
-import {
-  BookOpen,
-  BookOpenText,
-  Drama,
-  Gauge,
-  GraduationCap,
-  Headphones,
-  History,
-  Languages,
-  Menu,
-  MessageCircle,
-  Settings,
-  Sparkles,
-  Target,
-  Trophy,
-} from "lucide-react"
+import { ChevronDown, Menu, MessageCircle, Settings } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { NotificationBell } from "@/components/notifications/NotificationBell"
@@ -36,95 +21,39 @@ import { userApi } from "@/lib/api"
 import { isAuthenticated, getUserId } from "@/lib/auth-store"
 import { hasCompletedOnboarding, markOnboardingComplete } from "@/lib/onboarding-store"
 import { cn } from "@/lib/utils"
+import {
+  allLinks,
+  bottomTabs,
+  homeLink,
+  isLinkActive,
+  moreWorkspaces,
+  settingsLink,
+  workspaceRoutePrefixes,
+  workspaces,
+} from "@/lib/navigation"
+import { recordLastVisited } from "@/lib/last-visited"
 
-// ─── Nav data ─────────────────────────────────────────────────────────────────
+// ─── Collapsible workspace sections (desktop sidebar) ────────────────────────
 
-type NavLink = {
-  href: string
-  label: string
-  icon: React.ElementType
-  soon?: boolean
+const COLLAPSED_STORAGE_KEY = "hengo-sidebar-collapsed-sections"
+
+function readCollapsedSections(): Set<string> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_STORAGE_KEY)
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
+  } catch {
+    return new Set()
+  }
 }
 
-// Desktop sidebar sections
-const navSections: Array<{ label: string; links: NavLink[] }> = [
-  {
-    label: "Practice",
-    links: [
-      { href: "/practice", label: "Today", icon: Sparkles },
-      { href: "/goals", label: "Goals", icon: Target },
-      { href: "/dashboard", label: "Dashboard", icon: Gauge },
-    ],
-  },
-  {
-    label: "Study",
-    links: [
-      { href: "/learn", label: "Foundations", icon: Languages },
-      { href: "/vocab", label: "Vocabulary", icon: BookOpen },
-      { href: "/interview", label: "Exam Prep", icon: GraduationCap },
-      { href: "/scenarios", label: "Scenarios", icon: Drama },
-      { href: "/reading", label: "Reading", icon: BookOpenText },
-      // { href: "/listening", label: "Listening", icon: Headphones, soon: true },
-    ],
-  },
-  {
-    label: "Track",
-    links: [
-      { href: "/history", label: "History", icon: History },
-      { href: "/achievements", label: "Achievements", icon: Trophy },
-    ],
-  },
-]
-
-// Primary five bottom tabs — most-used daily surfaces
-const bottomTabs: NavLink[] = [
-  { href: "/dashboard", label: "Home", icon: Gauge },
-  { href: "/practice", label: "Today", icon: Sparkles },
-  { href: "/vocab", label: "Vocab", icon: BookOpen },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/chat", label: "AI", icon: MessageCircle },
-]
-
-// All navigable links (for page-title lookup)
-const allLinks: NavLink[] = [
-  ...navSections.flatMap((s) => s.links),
-  { href: "/chat", label: "AI Coach", icon: MessageCircle },
-  { href: "/account", label: "Account", icon: Settings },
-  { href: "/settings", label: "Settings", icon: Settings },
-]
-
-// More-sheet groups — everything not already a bottom tab
-const moreGroups: Array<{ label: string; links: NavLink[] }> = [
-  {
-    label: "Study",
-    links: allLinks.filter(
-      (l) =>
-        !bottomTabs.some((t) => t.href === l.href) &&
-        ["/learn", "/interview", "/scenarios", "/reading"].includes(l.href)
-    ),
-  },
-  {
-    label: "Track",
-    links: allLinks.filter(
-      (l) =>
-        !bottomTabs.some((t) => t.href === l.href) &&
-        ["/history", "/achievements"].includes(l.href)
-    ),
-  },
-  {
-    label: "App",
-    links: allLinks.filter(
-      (l) =>
-        !bottomTabs.some((t) => t.href === l.href) &&
-        ["/account", "/settings"].includes(l.href)
-    ),
-  },
-]
-
-// Flat list used for the "onMoreRoute" check
-const moreLinks = allLinks.filter(
-  (link) => !bottomTabs.some((tab) => tab.href === link.href)
-)
+function writeCollapsedSections(ids: Set<string>) {
+  try {
+    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...ids]))
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
@@ -136,14 +65,23 @@ export default function MainLayout({
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(readCollapsedSections)
+
+  function toggleSection(id: string) {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      writeCollapsedSections(next)
+      return next
+    })
+  }
 
   const slotCount = bottomTabs.length + 1
-  const primaryTabIndex = bottomTabs.findIndex(
-    (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
-  )
-  const onMoreRoute = moreLinks.some(
-    (link) => pathname === link.href || pathname.startsWith(`${link.href}/`)
-  )
+  const primaryTabIndex = bottomTabs.findIndex((tab) => isLinkActive(pathname, tab.href))
+  const onMoreRoute = moreWorkspaces
+    .flatMap((w) => w.links)
+    .some((link) => isLinkActive(pathname, link.href))
   const activeTabIndex =
     primaryTabIndex !== -1 ? primaryTabIndex : onMoreRoute ? bottomTabs.length : -1
 
@@ -207,6 +145,16 @@ export default function MainLayout({
     }
   }, [mounted, router])
 
+  // Record the current route against its workspace so Home's "Continue"
+  // cards can deep-link back into whatever the user was actually doing.
+  useEffect(() => {
+    if (workspaceRoutePrefixes.learning.some((prefix) => pathname.startsWith(prefix))) {
+      recordLastVisited("learning", pathname)
+    } else if (workspaceRoutePrefixes.productivity.some((prefix) => pathname.startsWith(prefix))) {
+      recordLastVisited("productivity", pathname)
+    }
+  }, [pathname])
+
   useEffect(() => {
     if (!mounted || !isAuthenticated()) return
     const userId = getUserId()
@@ -248,9 +196,26 @@ export default function MainLayout({
                 <Image src="/hengo-icon.svg" alt="Hengo Logo" width={36} height={36} className="h-full w-full" />
               </div>
               <div>
-                <p className="text-[12px] font-bold tracking-tight text-foreground">Hengo Lab</p>
-                <p className="text-[10px] font-medium text-muted-foreground/50">Korean for Devs</p>
+                <p className="text-[12px] font-bold tracking-tight text-foreground">Hengo</p>
+                <p className="text-[10px] font-medium text-muted-foreground/50">AI Growth Platform</p>
               </div>
+            </Link>
+          </div>
+
+          {/* Home */}
+          <div className="px-4 pb-3">
+            <Link
+              href={homeLink.href}
+              aria-current={isLinkActive(pathname, homeLink.href) ? "page" : undefined}
+              className={cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                isLinkActive(pathname, homeLink.href)
+                  ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
+                  : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
+              )}
+            >
+              <homeLink.icon size={16} strokeWidth={2} className="shrink-0 transition-transform group-hover:scale-110" />
+              {homeLink.label}
             </Link>
           </div>
 
@@ -259,7 +224,7 @@ export default function MainLayout({
             <Link
               href="/chat"
               className={cn(
-                "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all",
+                "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70",
                 isChatRoute
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                   : "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
@@ -276,70 +241,87 @@ export default function MainLayout({
 
           <div className="mx-4 h-px bg-border/60" />
 
-          {/* Nav sections */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-            {navSections.map((section) => (
-              <div key={section.label} className="space-y-0.5">
-                <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                  {section.label}
-                </p>
-                {section.links.map(({ href, label, icon: Icon, soon }) => {
-                  const active = !soon && (pathname === href || pathname.startsWith(`${href}/`))
+          {/* Workspace sections */}
+          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+            {workspaces.map((workspace) => {
+              const collapsed = collapsedSections.has(workspace.id)
+              return (
+                <div key={workspace.id} className="space-y-0.5 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(workspace.id)}
+                    aria-expanded={!collapsed}
+                    className="flex w-full items-center justify-between rounded-lg px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 outline-none transition-colors hover:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/70"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <workspace.icon size={11} strokeWidth={2.5} />
+                      {workspace.label}
+                    </span>
+                    <ChevronDown
+                      size={12}
+                      strokeWidth={2.5}
+                      className={cn("transition-transform", collapsed && "-rotate-90")}
+                    />
+                  </button>
+                  {!collapsed &&
+                    workspace.links.map(({ href, label, icon: Icon, soon }) => {
+                      const active = !soon && isLinkActive(pathname, href)
 
-                  if (soon) {
-                    return (
-                      <div
-                        key={href}
-                        className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
-                      >
-                        <Icon size={16} strokeWidth={2} className="shrink-0" />
-                        {label}
-                        <span className="ml-auto rounded-full bg-muted/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">
-                          Soon
-                        </span>
-                      </div>
-                    )
-                  }
+                      if (soon) {
+                        return (
+                          <div
+                            key={href}
+                            className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
+                          >
+                            <Icon size={16} strokeWidth={2} className="shrink-0" />
+                            {label}
+                            <span className="ml-auto rounded-full bg-muted/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                              Soon
+                            </span>
+                          </div>
+                        )
+                      }
 
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors",
-                        active
-                          ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
-                          : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
-                      )}
-                    >
-                      {active && (
-                        <motion.span
-                          layoutId="sidebar-active-bar"
-                          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-foreground/40"
-                          transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                        />
-                      )}
-                      <Icon
-                        size={16}
-                        strokeWidth={active ? 2.5 : 2}
-                        className="shrink-0 transition-transform group-hover:scale-110"
-                      />
-                      {label}
-                    </Link>
-                  )
-                })}
-              </div>
-            ))}
+                      return (
+                        <Link
+                          key={href}
+                          href={href}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                            active
+                              ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
+                              : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
+                          )}
+                        >
+                          {active && (
+                            <motion.span
+                              layoutId="sidebar-active-bar"
+                              className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-foreground/40"
+                              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                            />
+                          )}
+                          <Icon
+                            size={16}
+                            strokeWidth={active ? 2.5 : 2}
+                            className="shrink-0 transition-transform group-hover:scale-110"
+                          />
+                          {label}
+                        </Link>
+                      )
+                    })}
+                </div>
+              )
+            })}
           </nav>
 
           {/* Settings pinned at bottom */}
           <div className="border-t border-border/60 px-4 py-4">
             <Link
-              href="/settings"
+              href={settingsLink.href}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors",
-                pathname === "/settings"
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                pathname === settingsLink.href
                   ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
                   : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
               )}
@@ -382,13 +364,13 @@ export default function MainLayout({
           {/* Desktop top bar */}
           <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-4 backdrop-blur-xl lg:flex">
             <h2 className="text-sm font-bold text-foreground">
-              {allLinks.find((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))?.label ?? "Hengo"}
+              {allLinks.find((l) => isLinkActive(pathname, l.href))?.label ?? "Hengo"}
             </h2>
             <div className="flex items-center gap-3">
               <Link
                 href="/chat"
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-bold transition-all hover:scale-[1.02] active:scale-95",
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-bold outline-none transition-all hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-95",
                   isChatRoute
                     ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                     : "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
@@ -453,14 +435,14 @@ export default function MainLayout({
               </AnimatePresence>
 
               {bottomTabs.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href || pathname.startsWith(`${href}/`)
+                const active = isLinkActive(pathname, href)
                 return (
                   <Link
                     key={href}
                     href={href}
                     aria-label={label}
                     className={cn(
-                      "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 transition-all duration-300 active:scale-90",
+                      "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-90",
                       active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground/50 hover:text-muted-foreground"
                     )}
                   >
@@ -490,7 +472,7 @@ export default function MainLayout({
                 aria-label="More"
                 aria-haspopup="dialog"
                 className={cn(
-                  "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 transition-all duration-300 active:scale-90",
+                  "relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-90",
                   onMoreRoute ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground/50 hover:text-muted-foreground"
                 )}
               >
@@ -515,29 +497,30 @@ export default function MainLayout({
         </nav>
       )}
 
-      {/* ── More sheet — grouped feature list ── */}
+      {/* ── More sheet — grouped by workspace ── */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-[2rem] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:hidden">
           <SheetHeader className="pb-2">
             <SheetTitle>More</SheetTitle>
           </SheetHeader>
-          <div className="space-y-4 px-4 pb-2">
-            {moreGroups.map((group) => (
-              group.links.length > 0 && (
-                <div key={group.label}>
-                  <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground/50">
-                    {group.label}
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto px-4 pb-2">
+            {moreWorkspaces.map((workspace) => (
+              workspace.links.length > 0 && (
+                <div key={workspace.id}>
+                  <p className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground/50">
+                    <workspace.icon size={12} strokeWidth={2.5} />
+                    {workspace.label}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {group.links.map(({ href, label, icon: Icon, soon }) => {
-                      const active = !soon && (pathname === href || pathname.startsWith(`${href}/`))
+                    {workspace.links.map(({ href, label, icon: Icon, soon }) => {
+                      const active = !soon && isLinkActive(pathname, href)
                       return (
                         <Link
                           key={href}
                           href={soon ? "#" : href}
                           onClick={() => { if (!soon) setMoreOpen(false) }}
                           className={cn(
-                            "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold transition-all active:scale-[0.98]",
+                            "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-[0.98]",
                             soon
                               ? "cursor-default border-border/40 bg-accent/5 text-muted-foreground/60"
                               : active
@@ -559,6 +542,26 @@ export default function MainLayout({
                 </div>
               )
             ))}
+            <div>
+              <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground/50">
+                App
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/settings"
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-[0.98]",
+                    pathname === "/settings"
+                      ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                      : "border-border bg-accent/5 text-foreground hover:bg-accent/40"
+                  )}
+                >
+                  <Settings size={20} strokeWidth={2.5} className="shrink-0" />
+                  <span className="flex-1">Settings</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

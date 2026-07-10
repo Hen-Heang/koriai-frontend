@@ -250,7 +250,7 @@ export function ChatWindow({
               variant="ghost"
               size="icon"
               className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/home")}
               title="Back to home"
             >
               <ChevronLeft size={24} strokeWidth={2.5} />

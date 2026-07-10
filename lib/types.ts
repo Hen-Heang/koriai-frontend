@@ -108,6 +108,11 @@ export interface ListeningAttemptResult {
   results: boolean[]
 }
 
+export interface ListeningAttemptRecord extends ListeningAttemptResult {
+  id: string
+  createdAt: string
+}
+
 export interface Achievement {
   code: string
   title: string
@@ -144,6 +149,12 @@ export interface DashboardStats {
   reviewsToday: number
   correctionsToday: number
   dueReviews: number
+}
+
+export interface FeatureActivity {
+  feature: string
+  totalMinutes: number
+  sessionCount: number
 }
 
 export interface Conversation {
