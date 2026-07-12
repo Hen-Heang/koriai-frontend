@@ -1,6 +1,6 @@
 // Shared page-entrance animation variants (motion/react).
 
-export function staggerContainer(staggerChildren = 0.08) {
+export function staggerContainer(staggerChildren = 0.03) {
   return {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren } },
@@ -10,6 +10,6 @@ export function staggerContainer(staggerChildren = 0.08) {
 export const containerVariants = staggerContainer()
 
 export const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
 } as const

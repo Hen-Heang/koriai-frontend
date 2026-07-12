@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type Topic = { id: string; text: string }
 type Phase = {
@@ -658,6 +659,52 @@ function AddPhaseForm({ onAdd, onCancel }: {
   )
 }
 
+function RoadmapSkeleton() {
+  return (
+    <div className="space-y-6 pb-16">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-40 rounded-full" />
+        <Skeleton className="h-3 w-56 rounded-full" />
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
+        <div className="p-5 sm:p-6">
+          <div className="flex items-center gap-5">
+            <Skeleton className="h-[72px] w-[72px] shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-32 rounded-full" />
+              <Skeleton className="h-3 w-44 rounded-full" />
+              <Skeleton className="h-3 w-52 rounded-full" />
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-14 rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <Skeleton className="h-1.5 w-full rounded-none" />
+      </div>
+
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-3xl border border-border bg-card p-5 shadow-sm dark:bg-slate-900/40">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/3 rounded-full" />
+                <Skeleton className="h-3 w-1/2 rounded-full" />
+              </div>
+              <Skeleton className="h-5 w-5 shrink-0 rounded-full" />
+            </div>
+            <Skeleton className="mt-4 h-1.5 w-full rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function RoadmapPage() {
   const [phases,       setPhases]       = useState<Phase[]>(DEFAULT_PHASES)
   const [completed,    setCompleted]    = useState<Set<string>>(new Set())
@@ -787,7 +834,7 @@ export default function RoadmapPage() {
   })()
   const currentPhase = phases[currentPhaseIndex]
 
-  if (!mounted) return null
+  if (!mounted) return <RoadmapSkeleton />
 
   return (
     <motion.div

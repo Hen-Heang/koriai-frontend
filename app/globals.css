@@ -199,6 +199,14 @@
     line-height: 1.2;
   }
 
+  /* Default type ramp — a real jump between levels so hierarchy reads at a
+     glance even before a page applies its own text-* overrides. */
+  h1 { font-size: clamp(1.75rem, 1.1rem + 2.2vw, 2.75rem); }
+  h2 { font-size: clamp(1.375rem, 1rem + 1.2vw, 1.875rem); }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.0625rem; }
+  h5, h6 { font-size: 1rem; }
+
   ::selection {
     background: color-mix(in oklab, var(--primary) 28%, transparent);
   }

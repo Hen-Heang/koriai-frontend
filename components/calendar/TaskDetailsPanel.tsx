@@ -237,7 +237,7 @@ export function TaskDetailsPanel({
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-shrink-0 items-center justify-between border-t border-border/60 px-6 py-5">
+      <div className="flex flex-shrink-0 items-center justify-between border-t border-border/60 px-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           onClick={() => onToggleTaskCompletion(selectedTask.id)}
           className={cn(

@@ -258,7 +258,7 @@ export function EditGoalSlidePanel({
             </div>
 
             {/* Footer */}
-            <div className="flex-shrink-0 border-t border-border/60 px-4 py-4 sm:px-6">
+            <div className="flex-shrink-0 border-t border-border/60 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
               <div className="flex gap-3">
                 <Button variant="outline" onClick={handleCancel} disabled={isLoading} className="flex-1">
                   Cancel

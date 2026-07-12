@@ -194,6 +194,26 @@ export function GoalList({
     return goal.metadata?.icon ?? null
   }
 
+  const handleMarkComplete = async (goal: Goal, event: React.MouseEvent) => {
+    event.stopPropagation()
+    try {
+      const updated = await goalsApi.update(goal.id, {
+        title: goal.title,
+        description: goal.description ?? "",
+        target_date: goal.target_date ?? null,
+        no_duration: goal.no_duration ?? Boolean(goal.metadata?.no_duration),
+        metadata: goal.metadata,
+        status: "completed",
+      })
+      queryClient.setQueryData<Goal[]>(goalsQueryKey(currentUser), (prev) =>
+        prev?.map((g) => (g.id === goal.id ? { ...g, ...updated } : g))
+      )
+      toast.success("Goal marked as complete")
+    } catch {
+      toast.error("Could not mark goal as complete")
+    }
+  }
+
   const handleIconChange = async (goal: Goal, emoji: string | null) => {
     setIconOverrides((prev) => ({ ...prev, [goal.id]: emoji }))
     try {
@@ -303,6 +323,7 @@ export function GoalList({
             const total = goal.taskCounts?.total ?? 0
             const done = goal.taskCounts?.completed ?? 0
             const progress = total > 0 ? Math.round((done / total) * 100) : 0
+            const readyToComplete = progress === 100 && goal.status !== "completed"
             const goalIcon = getGoalIcon(goal)
             const isOpening = openingGoalId === goal.id
             const isOwner = currentUser != null && String(currentUser) === String(goal.user_id)
@@ -326,6 +347,7 @@ export function GoalList({
                   className={cn(
                     "group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-3 py-3 transition-all hover:border-primary/30 hover:shadow-lg dark:bg-slate-900/40",
                     isOpening && "ring-2 ring-primary",
+                    readyToComplete && "border-emerald-500/40 bg-emerald-500/[0.03]",
                     deadlineStyling?.borderColor
                   )}
                 >
@@ -354,7 +376,17 @@ export function GoalList({
                       </span>
                     </div>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums text-primary">{progress}%</span>
+                  {readyToComplete ? (
+                    <button
+                      type="button"
+                      onClick={(e) => handleMarkComplete(goal, e)}
+                      className="shrink-0 animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/30 hover:animate-none hover:bg-emerald-500/25 dark:text-emerald-400"
+                    >
+                      Mark complete
+                    </button>
+                  ) : (
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-primary">{progress}%</span>
+                  )}
                   {isOpening ? (
                     <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   ) : (
@@ -391,6 +423,7 @@ export function GoalList({
                   className={cn(
                     "h-full overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 dark:bg-slate-900/40",
                     isOpening && "ring-2 ring-primary",
+                    readyToComplete && "border-emerald-500/40 bg-emerald-500/[0.03]",
                     deadlineStyling?.borderColor
                   )}
                   onClick={open}
@@ -427,8 +460,18 @@ export function GoalList({
 
                     <div className="mt-auto space-y-3 pt-5">
                       <div className="space-y-2">
-                        <div className="flex items-center justify-end">
-                          <span className="text-sm font-semibold tabular-nums text-primary">{progress}%</span>
+                        <div className="flex items-center justify-end gap-2">
+                          {readyToComplete ? (
+                            <button
+                              type="button"
+                              onClick={(e) => handleMarkComplete(goal, e)}
+                              className="animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/30 hover:animate-none hover:bg-emerald-500/25 dark:text-emerald-400"
+                            >
+                              Mark complete
+                            </button>
+                          ) : (
+                            <span className="text-sm font-semibold tabular-nums text-primary">{progress}%</span>
+                          )}
                         </div>
                         <div className="h-2.5 w-full overflow-hidden rounded-full bg-foreground/5">
                           <motion.div
@@ -449,12 +492,12 @@ export function GoalList({
                         <span className="flex items-center gap-1.5">
                           {isOpening ? (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                          ) : (
+                          ) : goal.target_date ? (
                             <>
                               <CalendarDays size={14} className="text-primary/60" />
-                              {goal.target_date ? format(new Date(goal.target_date), "MMM d") : "TBD"}
+                              {format(new Date(goal.target_date), "MMM d")}
                             </>
-                          )}
+                          ) : null}
                         </span>
                       </div>
                     </div>

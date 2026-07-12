@@ -293,7 +293,7 @@ export function AddTaskDialog({
           />
         </div>
 
-        <div className="flex-shrink-0 px-5 py-4 border-t border-border/60">
+        <div className="flex-shrink-0 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/60">
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={handleClose} className="flex-1 h-11">
               Cancel

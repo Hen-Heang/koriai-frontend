@@ -282,6 +282,7 @@ function ChatPageContent() {
                 initialDraft={initialDraft}
                 onNewChat={startNewChat}
                 isStartingNewChat={isStartingNewChat}
+                onConversationTitled={refresh}
                 embedded
               />
             </div>

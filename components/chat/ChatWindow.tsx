@@ -289,6 +289,9 @@ type ChatWindowProps = {
   initialDraft?: string
   onNewChat?: () => void
   isStartingNewChat?: boolean
+  // Fired once the conversation is auto-titled from its first message, so the
+  // sidebar list can refetch and show the new title instead of the placeholder.
+  onConversationTitled?: () => void
   // When rendered inside the AI workspace tabs, the surrounding mode bar already
   // provides the back button and safe-area top padding — so we drop ours here.
   embedded?: boolean
@@ -302,6 +305,7 @@ export function ChatWindow({
   initialDraft,
   onNewChat,
   isStartingNewChat,
+  onConversationTitled,
   embedded = false,
 }: ChatWindowProps) {
   const {
@@ -315,7 +319,7 @@ export function ChatWindow({
     setIsTechnicalMode,
     voiceMode,
     setVoiceMode,
-  } = useChat({ conversationId, initialMessages })
+  } = useChat({ conversationId, initialMessages, onConversationTitled })
 
   const router = useRouter()
   const canInteract = Boolean(conversationId) && !isStreaming && !isLoadingMessages

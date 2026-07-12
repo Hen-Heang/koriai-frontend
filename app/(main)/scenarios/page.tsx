@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Drama, MessageCircle, Sparkles, Target } from "lucide-react"
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
@@ -31,6 +31,7 @@ export default function ScenariosPage() {
   const [category, setCategory] = useState("All")
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [customTopic, setCustomTopic] = useState("")
+  const customTopicInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let active = true
@@ -68,6 +69,11 @@ export default function ScenariosPage() {
     router.push(`/chat?prompt=${encodeURIComponent(`Let's practice this in Korean: ${topic}`)}`)
   }
 
+  function focusCustomTopic() {
+    customTopicInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    customTopicInputRef.current?.focus()
+  }
+
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-8 pb-12">
       <motion.div variants={itemVariants}>
@@ -102,6 +108,7 @@ export default function ScenariosPage() {
         </label>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
           <Input
+            ref={customTopicInputRef}
             value={customTopic}
             onChange={(e) => setCustomTopic(e.target.value)}
             onKeyDown={(e) => {
@@ -206,8 +213,35 @@ export default function ScenariosPage() {
           className="rounded-3xl border border-dashed border-border bg-card/40 p-10 text-center"
         >
           <Drama size={32} className="mx-auto text-muted-foreground/50" strokeWidth={2} />
-          <p className="mt-3 text-sm font-bold text-foreground">No scenarios in this category</p>
-          <p className="mt-1 text-sm text-muted-foreground">Try a different category filter.</p>
+          {scenarios.length === 0 ? (
+            <>
+              <p className="mt-3 text-sm font-bold text-foreground">You haven&apos;t created any scenarios yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Practice your own topic instead — describe a situation and jump straight into a guided AI conversation.
+              </p>
+              <Button
+                type="button"
+                onClick={focusCustomTopic}
+                className="mt-5 h-10 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white hover:bg-blue-500 active:scale-95"
+              >
+                <Sparkles size={14} className="mr-2" />
+                Practice your own topic
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="mt-3 text-sm font-bold text-foreground">No scenarios in this category</p>
+              <p className="mt-1 text-sm text-muted-foreground">Try a different category filter.</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCategory("All")}
+                className="mt-5 h-10 rounded-xl px-5 text-xs font-bold"
+              >
+                Show all scenarios
+              </Button>
+            </>
+          )}
         </motion.div>
       )}
     </motion.div>

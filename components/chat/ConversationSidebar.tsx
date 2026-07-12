@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { formatDistanceToNowStrict } from "date-fns"
 import { Check, MessageSquare, PanelLeftClose, Pencil, Plus, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -152,13 +153,27 @@ export function ConversationSidebar({
                       active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground/40"
                     )}
                   />
-                  <span
-                    className={cn(
-                      "truncate text-sm font-semibold",
-                      active ? "text-foreground" : "text-foreground/70"
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={cn(
+                        "block truncate text-sm font-semibold",
+                        active ? "text-foreground" : "text-foreground/70"
+                      )}
+                    >
+                      {c.title || "Untitled chat"}
+                    </span>
+                    {(c.updatedAt || c.createdAt || c.messageCount != null) && (
+                      <span className="block truncate text-[11px] font-medium text-muted-foreground/50">
+                        {c.messageCount != null
+                          ? c.messageCount > 0
+                            ? `${c.messageCount} message${c.messageCount === 1 ? "" : "s"}`
+                            : "New"
+                          : null}
+                        {c.messageCount != null && (c.updatedAt || c.createdAt) ? " · " : null}
+                        {(c.updatedAt || c.createdAt) &&
+                          formatDistanceToNowStrict(new Date(c.updatedAt || c.createdAt!), { addSuffix: true })}
+                      </span>
                     )}
-                  >
-                    {c.title || "Untitled chat"}
                   </span>
                 </button>
 

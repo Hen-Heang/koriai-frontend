@@ -233,7 +233,7 @@ export function EditTaskDialog({
             </div>
           </div>
 
-          <div className="flex-shrink-0 p-4 sm:p-5 border-t border-border/60 space-y-2.5">
+          <div className="flex-shrink-0 p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 border-t border-border/60 space-y-2.5">
             <Button
               type="submit"
               form="edit-task-form"

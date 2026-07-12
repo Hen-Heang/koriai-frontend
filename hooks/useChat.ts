@@ -8,6 +8,16 @@ import type { ChatMessage, MessageRole } from "@/lib/types"
 type UseChatOptions = {
   conversationId?: string
   initialMessages?: ChatMessage[]
+  // Fired after the conversation is auto-titled from its first message, so the
+  // caller can refresh whatever list is showing the (previously generic) title.
+  onConversationTitled?: () => void
+}
+
+// ChatGPT-style auto title: a short snippet of the first user message.
+function titleFromMessage(content: string): string {
+  const normalized = content.replace(/\s+/g, " ").trim()
+  const MAX_LENGTH = 48
+  return normalized.length > MAX_LENGTH ? `${normalized.slice(0, MAX_LENGTH).trimEnd()}…` : normalized
 }
 
 type ResponseLanguage = "auto" | "english" | "korean"
@@ -74,7 +84,7 @@ function buildMessageForApi(
   return `${content}\n\n[Response preference: ${instructions.join(" ")}]`
 }
 
-export function useChat({ conversationId, initialMessages = [] }: UseChatOptions) {
+export function useChat({ conversationId, initialMessages = [], onConversationTitled }: UseChatOptions) {
   const [messages, setMessages] = useState(conversationId ? [] : initialMessages)
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
@@ -156,6 +166,8 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
       return
     }
 
+    const isFirstMessage = messages.length === 0
+
     const detectedLanguage = detectLanguagePreference(nextContent)
     const nextLanguage = detectedLanguage ?? responseLanguage
     if (detectedLanguage) {
@@ -175,6 +187,17 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     if (!conversationId) {
       setError("Conversation is not available.")
       return
+    }
+
+    // Give the conversation a real name the first time it's used, like ChatGPT
+    // does — otherwise every session sits in the sidebar as "General Practice".
+    if (isFirstMessage) {
+      chatApi
+        .renameConversation(conversationId, titleFromMessage(nextContent))
+        .then(() => onConversationTitled?.())
+        .catch(() => {
+          /* best-effort — the conversation still works under its old title */
+        })
     }
 
     const streamingId = crypto.randomUUID()

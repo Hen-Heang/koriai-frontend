@@ -20,7 +20,7 @@ import { useCreateGoal } from "@/hooks/useGoalMutations"
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.03, delayChildren: 0.05 } },
 }
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },

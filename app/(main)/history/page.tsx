@@ -431,7 +431,7 @@ const LOAD_PAGE = 15
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
 } as const
 
 export default function HistoryPage() {
@@ -570,7 +570,7 @@ export default function HistoryPage() {
     <motion.div
       initial="hidden"
       animate="visible"
-      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } }}
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.03 } } }}
       className="space-y-6 pb-12 sm:space-y-8 sm:pb-16"
     >
       <motion.div variants={itemVariants}>
