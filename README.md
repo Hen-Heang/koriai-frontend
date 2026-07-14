@@ -162,14 +162,14 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 | Surface | Route | Notes |
 |---|---|---|
 | Landing page | `/` | Marketing/intro page — feature highlights, links to Login/Register. GSAP + Lenis scroll animations |
-| Home (workspace gate) | `/home` | Immersive "pick a lane" screen — two poster cards (**Korean Learning** and **Goal Setting**) with live stats; rendered with no sidebar, top bar, or tabs. Each card deep-links to the last route you visited in that workspace (`lib/last-visited.ts`) |
+| Home (workspace gate) | `/home` | Immersive "pick a lane" screen — three poster cards (**Korean Learning**, **Goal Setting**, and **Your Progress**) with live stats; rendered with no sidebar, top bar, or tabs. Each card deep-links to the last route you visited in that workspace (`lib/last-visited.ts`) |
 | Login / Register | `/login`, `/register` | Supabase auth — email/password + Google sign-in (route group `(auth)`) |
 | Settings | `/settings` | Profile, Korean level, work context, model preference, avatar. `/account` is an alias for the same page |
 
 ### Navigation
 
 - **One nav source.** `lib/navigation.ts` defines four **workspaces** — `Learning` (Today · Vocabulary · Foundations · Reading · Listening · Scenarios · Exam Prep), `Productivity` (Dashboard · Goals · Roadmap · Notes), `AI` (Chat · Analyze · Generate · Corrections), `Progress` (Achievements · Statistics · History). The sidebar, mobile bottom bar, and "More" sheet all render from it — adding a module later means adding one workspace entry, not touching the shell. A `soon` flag on a link renders it as a disabled "Soon" entry.
-- **Home gate.** `/home` is the workspace gate: it renders without any app chrome (no sidebar, top bars, or tabs), and its two poster cards deep-link into Learning or Productivity at the last route you visited there (`lib/last-visited.ts`).
+- **Home gate.** `/home` is the workspace gate: it renders without any app chrome (no sidebar, top bars, or tabs), and its three poster cards deep-link into Learning, Productivity, or Progress at the last route you visited there (`lib/last-visited.ts`).
 - **Desktop:** a contextual sidebar in `app/(main)/layout.tsx` — an icon-only workspace-switcher row on top, then only the active workspace's links below it (`getWorkspaceForPath`), so the sidebar shows one workspace at a time.
 - **Header:** a compact level/XP badge sits in both the desktop and mobile top bars, linking to `/achievements`.
 - **Mobile:** a bottom tab bar — Home · Learn (Today) · Plan (Goals) · AI (Chat) — with a "More" sheet exposing the remaining links grouped by workspace so nothing is unreachable on a phone.
@@ -622,7 +622,7 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 - Vocabulary SRS with AI deck generation, import, dictionary lookup, sentence challenges
 - K-Specialist Exam Prep: mock interviews (Practice + Exam modes), script writer, study pack, 11-week study plan, score trends, unexpected-question sampling
 - Goals ↔ learning integration: "Practice →" deep links, AI Goal Coach, and learning-metric goals that auto-track real activity (vocab saved, corrections, lessons, sessions)
-- Workspace-based IA (July 2026): `/home` gate with Learning/Productivity poster cards, contextual sidebar with a workspace switcher, single nav source in `lib/navigation.ts`
+- Workspace-based IA (July 2026): `/home` gate with Learning/Productivity/Progress poster cards, contextual sidebar with a workspace switcher, single nav source in `lib/navigation.ts`
 - Statistics page (platform-wide streaks, weekly chart, per-feature breakdown), XP/achievements
 - Foundations, Reading, Listening, Scenarios, Daily Practice hub, Dev Notes, web push
 
