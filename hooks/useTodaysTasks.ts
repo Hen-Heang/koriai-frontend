@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
-import { goalsApi, tasksApi, getApiErrorMessage } from "@/lib/api"
+import { goalsApi, tasksApi, getApiErrorMessage, type CreateTaskPayload } from "@/lib/api"
 import { getUserId } from "@/lib/auth-store"
 import { goalsQueryKey } from "@/hooks/useGoals"
 import type { Task } from "@/lib/tasks"
@@ -56,7 +56,7 @@ export function useTodaysTasks() {
 
   const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>([])
   const [newTaskTitle, setNewTaskTitle] = useState("")
-  const [isAdding, setIsAdding] = useState(false)
+  const [newTaskGoalId, setNewTaskGoalId] = useState<string | null>(null)
   const [isMarkingAll, setIsMarkingAll] = useState(false)
   // Ids changed by the last "mark all" — undo reverts exactly these.
   const [undoneIds, setUndoneIds] = useState<string[]>([])
@@ -151,30 +151,29 @@ export function useTodaysTasks() {
     persistSelection(next)
   }, [availableGoals, selectedGoalIds, persistSelection])
 
-  const handleQuickAdd = useCallback(async () => {
-    const title = newTaskTitle.trim()
-    if (!title || isAdding) return
-    setIsAdding(true)
-    const start = startOfToday()
-    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
-    try {
-      const created = await tasksApi.create({
-        title,
-        description: title,
-        goal_id: null,
-        start_date: start.toISOString(),
-        end_date: end.toISOString(),
-        is_anytime: true,
-        completed: false,
-      })
-      patchTasks((prev) => [...prev, created])
-      setNewTaskTitle("")
-    } catch (e) {
-      toast.error("Could not add task", { description: getApiErrorMessage(e, "Please try again.") })
-    } finally {
-      setIsAdding(false)
-    }
-  }, [newTaskTitle, isAdding, patchTasks])
+  // Single create path for the Today's Tasks composer — quick title-only adds
+  // and the expanded (description/time/color) form both funnel through this,
+  // so there's exactly one way a task gets created rather than two competing
+  // ones. Handles cache patching and the goal-filter safety net below.
+  const createTask = useCallback(
+    async (payload: CreateTaskPayload) => {
+      try {
+        const created = await tasksApi.create(payload)
+        patchTasks((prev) => [...prev, created])
+        // Keep the task visible even if its goal is currently filtered out.
+        if (payload.goal_id && !selectedGoalIds.includes(payload.goal_id)) {
+          const next = [...selectedGoalIds, payload.goal_id]
+          setSelectedGoalIds(next)
+          persistSelection(next)
+        }
+        return created
+      } catch (e) {
+        toast.error("Could not add task", { description: getApiErrorMessage(e, "Please try again.") })
+        throw e
+      }
+    },
+    [patchTasks, selectedGoalIds, persistSelection]
+  )
 
   const handleToggleTaskCompletion = useCallback(
     async (taskId: string, currentStatus: boolean) => {
@@ -318,7 +317,8 @@ export function useTodaysTasks() {
     selectedGoalIds,
     newTaskTitle,
     setNewTaskTitle,
-    isAdding,
+    newTaskGoalId,
+    setNewTaskGoalId,
     isMarkingAll,
     canUndo: undoneIds.length > 0,
     completedCount,
@@ -328,7 +328,7 @@ export function useTodaysTasks() {
     goalTitleById,
     toggleGoal,
     toggleAll,
-    handleQuickAdd,
+    createTask,
     handleToggleTaskCompletion,
     handleMarkAllCompleted,
     handleUndoMarkAllCompleted,

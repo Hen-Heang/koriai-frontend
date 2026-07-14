@@ -1,4 +1,5 @@
 import type { Achievement, AchievementSummary, DashboardStats, FeatureActivity, LevelInfo, ProgressPoint } from "@/lib/types"
+import type { LearningMetric } from "@/lib/goals"
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { getDailyGoalMinutes } from "@/lib/onboarding-store"
@@ -257,5 +258,37 @@ export const progressApi = {
         sessionCount: count,
       }))
       .sort((a, b) => b.totalMinutes - a.totalMinutes)
+  },
+
+  // Live count backing a goal's optional `metadata.learning_metric` — lets a
+  // goal auto-track real learning activity instead of a manual checklist.
+  getMetricCount: async (metric: LearningMetric): Promise<number> => {
+    const since =
+      metric.window === "weekly"
+        ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        : metric.window === "daily"
+          ? (() => {
+              const n = new Date()
+              return new Date(n.getFullYear(), n.getMonth(), n.getDate()).toISOString()
+            })()
+          : null
+
+    const table =
+      metric.source === "vocab_cards"
+        ? "kori_vocab_cards"
+        : metric.source === "corrections"
+          ? "kori_corrections"
+          : metric.source === "foundation_lessons"
+            ? "kori_foundation_progress"
+            : "kori_activity_log"
+
+    let query = supabase.from(table).select("id", { count: "exact", head: true })
+    if (metric.source === "foundation_lessons") query = query.eq("completed", true)
+    if (metric.source === "activity_sessions" && metric.feature) query = query.eq("feature", metric.feature)
+    if (since) query = query.gte("created_at", since)
+
+    const { count, error } = await query
+    if (error) throw error
+    return count ?? 0
   },
 }

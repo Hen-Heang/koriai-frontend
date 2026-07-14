@@ -137,8 +137,6 @@ export const vocabApi = {
     return count ?? 0
   },
 
-  markReviewed: (id: string, correct = true) => rateCard(id, correct ? "GOOD" : "AGAIN"),
-
   rate: (id: string, rating: ReviewRating) => rateCard(id, rating),
 
   save: async (data: { category?: string; term: string; meaning: string; example?: string }) => {

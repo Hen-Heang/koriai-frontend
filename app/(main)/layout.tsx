@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore } from "react"
-import { ChevronDown, Menu, MessageCircle, Settings } from "lucide-react"
+import { Menu, MessageCircle, Settings } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
 import { NotificationBell } from "@/components/notifications/NotificationBell"
@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils"
 import {
   allLinks,
   bottomTabs,
+  getWorkspaceForPath,
   homeLink,
   isLinkActive,
   moreWorkspaces,
@@ -32,28 +33,6 @@ import {
   workspaces,
 } from "@/lib/navigation"
 import { recordLastVisited } from "@/lib/last-visited"
-
-// ─── Collapsible workspace sections (desktop sidebar) ────────────────────────
-
-const COLLAPSED_STORAGE_KEY = "hengo-sidebar-collapsed-sections"
-
-function readCollapsedSections(): Set<string> {
-  if (typeof window === "undefined") return new Set()
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_STORAGE_KEY)
-    return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-function writeCollapsedSections(ids: Set<string>) {
-  try {
-    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...ids]))
-  } catch {
-    /* storage unavailable */
-  }
-}
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
@@ -65,17 +44,6 @@ export default function MainLayout({
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(readCollapsedSections)
-
-  function toggleSection(id: string) {
-    setCollapsedSections((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      writeCollapsedSections(next)
-      return next
-    })
-  }
 
   const slotCount = bottomTabs.length + 1
   const primaryTabIndex = bottomTabs.findIndex((tab) => isLinkActive(pathname, tab.href))
@@ -152,6 +120,8 @@ export default function MainLayout({
       recordLastVisited("learning", pathname)
     } else if (workspaceRoutePrefixes.productivity.some((prefix) => pathname.startsWith(prefix))) {
       recordLastVisited("productivity", pathname)
+    } else if (workspaceRoutePrefixes.progress.some((prefix) => pathname.startsWith(prefix))) {
+      recordLastVisited("progress", pathname)
     }
   }, [pathname])
 
@@ -182,16 +152,29 @@ export default function MainLayout({
   if (!isAuthenticated()) return null
 
   const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/")
+  // Home is the immersive "pick a lane" gate — no sidebar, no top bar, no
+  // bottom tabs on desktop or mobile. Nav comes back once the user has picked
+  // Learning or Productivity and is inside that workspace.
+  const isHomeRoute = pathname === "/home"
+  // Drives the desktop sidebar's contextual view — only the current
+  // workspace's links are shown, switched via the icon row above them.
+  const activeWorkspace = getWorkspaceForPath(pathname)
 
   return (
     <div className="min-h-[100dvh] bg-background">
-      <div className="mx-auto flex w-full max-w-[92rem] lg:grid lg:grid-cols-[280px_1fr]">
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-[92rem]",
+          !isHomeRoute && "lg:grid lg:grid-cols-[280px_1fr]"
+        )}
+      >
 
-        {/* ── Desktop sidebar ── */}
+        {/* ── Desktop sidebar — hidden on the Home gate ── */}
+        {!isHomeRoute && (
         <aside className="sticky top-0 hidden h-screen flex-col border-r border-border/60 bg-card/50 backdrop-blur-2xl dark:border-white/[0.07] dark:bg-[#08111f]/80 lg:flex">
           {/* Brand */}
           <div className="px-5 pt-7 pb-5">
-            <Link href="/" className="group flex items-center gap-3">
+            <Link href="/home" className="group flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-border/50 transition-transform group-hover:scale-105">
                 <Image src="/hengo-icon.svg" alt="Hengo Logo" width={36} height={36} className="h-full w-full" />
               </div>
@@ -219,98 +202,82 @@ export default function MainLayout({
             </Link>
           </div>
 
-          {/* AI Coach — primary CTA */}
-          <div className="px-4 pb-4">
-            <Link
-              href="/chat"
-              className={cn(
-                "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70",
-                isChatRoute
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                  : "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
-              )}
-            >
-              <MessageCircle size={18} strokeWidth={2.5} className="shrink-0" />
-              AI Coach
-              <span className="relative ml-auto flex h-2 w-2 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-            </Link>
+          {/* Workspace switcher — jump between the 4 workspaces; AI is just
+              one of them here instead of a bespoke hero button. Icons only
+              (no labels) so it stays a compact row regardless of how long a
+              workspace's name is — hover/focus reveals the name via title. */}
+          <div className="flex items-center justify-center gap-2 px-4 pb-4">
+            {workspaces.map((workspace) => {
+              const active = workspace.id === activeWorkspace?.id
+              return (
+                <Link
+                  key={workspace.id}
+                  href={workspace.links[0].href}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={workspace.label}
+                  title={workspace.label}
+                  className={cn(
+                    "group flex h-11 w-11 items-center justify-center rounded-xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70",
+                    active
+                      ? "bg-primary/15 text-primary shadow-sm dark:bg-primary/20"
+                      : "text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
+                  )}
+                >
+                  <workspace.icon size={20} strokeWidth={active ? 2.5 : 2} className="shrink-0 transition-transform group-hover:scale-110" />
+                </Link>
+              )
+            })}
           </div>
 
           <div className="mx-4 h-px bg-border/60" />
 
-          {/* Workspace sections */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-            {workspaces.map((workspace) => {
-              const collapsed = collapsedSections.has(workspace.id)
-              return (
-                <div key={workspace.id} className="space-y-0.5 pb-3">
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(workspace.id)}
-                    aria-expanded={!collapsed}
-                    className="flex w-full items-center justify-between rounded-lg px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 outline-none transition-colors hover:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/70"
+          {/* Active workspace's links only — contextual to whichever
+              workspace the current route belongs to */}
+          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-0.5">
+            {activeWorkspace?.links.map(({ href, label, icon: Icon, soon }) => {
+              const active = !soon && isLinkActive(pathname, href)
+
+              if (soon) {
+                return (
+                  <div
+                    key={href}
+                    className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <workspace.icon size={11} strokeWidth={2.5} />
-                      {workspace.label}
+                    <Icon size={16} strokeWidth={2} className="shrink-0" />
+                    {label}
+                    <span className="ml-auto rounded-full bg-muted/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                      Soon
                     </span>
-                    <ChevronDown
-                      size={12}
-                      strokeWidth={2.5}
-                      className={cn("transition-transform", collapsed && "-rotate-90")}
+                  </div>
+                )
+              }
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                    active
+                      ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
+                      : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="sidebar-active-bar"
+                      className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-foreground/40"
+                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
-                  </button>
-                  {!collapsed &&
-                    workspace.links.map(({ href, label, icon: Icon, soon }) => {
-                      const active = !soon && isLinkActive(pathname, href)
-
-                      if (soon) {
-                        return (
-                          <div
-                            key={href}
-                            className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
-                          >
-                            <Icon size={16} strokeWidth={2} className="shrink-0" />
-                            {label}
-                            <span className="ml-auto rounded-full bg-muted/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">
-                              Soon
-                            </span>
-                          </div>
-                        )
-                      }
-
-                      return (
-                        <Link
-                          key={href}
-                          href={href}
-                          aria-current={active ? "page" : undefined}
-                          className={cn(
-                            "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
-                            active
-                              ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
-                              : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
-                          )}
-                        >
-                          {active && (
-                            <motion.span
-                              layoutId="sidebar-active-bar"
-                              className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-foreground/40"
-                              transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                            />
-                          )}
-                          <Icon
-                            size={16}
-                            strokeWidth={active ? 2.5 : 2}
-                            className="shrink-0 transition-transform group-hover:scale-110"
-                          />
-                          {label}
-                        </Link>
-                      )
-                    })}
-                </div>
+                  )}
+                  <Icon
+                    size={16}
+                    strokeWidth={active ? 2.5 : 2}
+                    className="shrink-0 transition-transform group-hover:scale-110"
+                  />
+                  {label}
+                </Link>
               )
             })}
           </nav>
@@ -331,15 +298,16 @@ export default function MainLayout({
             </Link>
           </div>
         </aside>
+        )}
 
         {/* ── Main column ── */}
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
 
-          {/* Mobile top bar — hidden on chat for full-bleed experience */}
-          {!isChatRoute && (
+          {/* Mobile top bar — hidden on chat and Home for a full-bleed/gate experience */}
+          {!isChatRoute && !isHomeRoute && (
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
               <div className="flex items-center gap-3">
-                <Link href="/" className="group flex items-center gap-2.5">
+                <Link href="/home" className="group flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl shadow-md">
                     <Image src="/hengo-icon.svg" alt="" width={32} height={32} className="h-full w-full" />
                   </div>
@@ -361,7 +329,8 @@ export default function MainLayout({
             </header>
           )}
 
-          {/* Desktop top bar */}
+          {/* Desktop top bar — hidden on the Home gate */}
+          {!isHomeRoute && (
           <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-4 backdrop-blur-xl lg:flex">
             <h2 className="text-sm font-bold text-foreground">
               {allLinks.find((l) => isLinkActive(pathname, l.href))?.label ?? "Hengo"}
@@ -384,6 +353,7 @@ export default function MainLayout({
               <UserAvatar href="/settings" title="Profile & settings" />
             </div>
           </div>
+          )}
 
           {/* Page content */}
           <main
@@ -394,7 +364,7 @@ export default function MainLayout({
                 : "px-4 pt-4 sm:px-6 lg:px-8 lg:pt-8",
               isKeyboardOpen
                 ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-10"
-                : isChatRoute
+                : isChatRoute || isHomeRoute
                   ? "pb-0"
                   : "pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-10"
             )}
@@ -406,8 +376,8 @@ export default function MainLayout({
         </div>
       </div>
 
-      {/* ── Mobile bottom tab bar ── */}
-      {!isChatRoute && (
+      {/* ── Mobile bottom tab bar — hidden on chat and the Home gate ── */}
+      {!isChatRoute && !isHomeRoute && (
         <nav
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out lg:hidden",

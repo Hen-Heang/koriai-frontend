@@ -173,7 +173,7 @@ function FlashCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Flip card — Duolingo-style chunky rounded card */}
-      <div className="perspective-[1000px] h-[min(20rem,48dvh)] sm:h-96">
+      <div className="perspective-[1000px] h-[min(26rem,58dvh)] sm:h-96">
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -664,7 +664,7 @@ function ListeningCard({
   return (
     <div className="flex flex-col gap-6">
       {/* Audio stage */}
-      <div className="flex h-[min(20rem,48dvh)] flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
+      <div className="flex h-[min(26rem,58dvh)] flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
         <span className="rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
           Listen &amp; Recall
         </span>
@@ -1277,7 +1277,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
                 >
                   All Categories
                 </button>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {categories.map((cat) => {
                     const selected = selectedCategories.has(cat)
                     return (

@@ -2,6 +2,20 @@ import { differenceInDays, isToday, isPast, parseISO } from "date-fns"
 
 // ── Types (ported from Orbit src/types/goal.ts) ──────────────────────────────
 
+// Which already-tracked learning data source a goal can auto-track progress
+// against, and over what window. "activity_sessions" counts rows in
+// kori_activity_log for a given `feature` (see lib/api/progress.ts); the other
+// sources map 1:1 to a kori_* table's row count.
+export type LearningMetricSource = "vocab_cards" | "corrections" | "foundation_lessons" | "activity_sessions"
+export type LearningMetricWindow = "total" | "weekly" | "daily"
+
+export interface LearningMetric {
+  source: LearningMetricSource
+  feature?: string
+  window: LearningMetricWindow
+  targetCount: number
+}
+
 export interface GoalMetadata {
   version?: number
   goal_type: "general" | "financial" | "travel" | "finance" | "education"
@@ -28,6 +42,7 @@ export interface GoalMetadata {
     monthlySavingsTarget?: number
     currency?: string
   }
+  learning_metric?: LearningMetric
   [key: string]: unknown
 }
 

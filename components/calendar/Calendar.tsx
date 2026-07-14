@@ -390,7 +390,7 @@ export function Calendar({
 
   return (
     <motion.div
-      className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-background/50"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-background/50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
@@ -404,7 +404,7 @@ export function Calendar({
           {viewBody}
           <button
             onClick={openAddDialog}
-            className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
+            className="absolute bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
             aria-label="Add task"
           >
             <Plus className="h-6 w-6" />
@@ -492,6 +492,7 @@ export function Calendar({
         }}
         onConfirm={handleConfirmDelete}
         goalTitle={taskToDelete?.title || "this task"}
+        itemType="task"
       />
 
       <CompletionCelebration show={celebrate} onDone={() => setCelebrate(false)} />

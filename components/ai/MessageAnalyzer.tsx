@@ -26,6 +26,7 @@ import { SpeakButton } from "@/components/ui/SpeakButton"
 import { useCopy } from "@/hooks/useCopy"
 import { useLogActivity } from "@/hooks/useLogActivity"
 import { analyzerApi, getApiErrorMessage } from "@/lib/api"
+import type { PartialAnalyzerResult } from "@/lib/api/learning"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import type { MessageAnalysis } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -60,13 +61,44 @@ export function MessageAnalyzer() {
   const { copied, copy } = useCopy(2000)
   const { logActivity } = useLogActivity("chat")
 
+  function mergePartial(partial: PartialAnalyzerResult) {
+    setResult((prev) => ({
+      id: prev?.id ?? "",
+      source: source ?? null,
+      createdAt: prev?.createdAt ?? "",
+      originalText: partial.originalText ?? prev?.originalText ?? "",
+      literalMeaning: partial.literalMeaning ?? prev?.literalMeaning ?? "",
+      naturalMeaning: partial.naturalMeaning ?? prev?.naturalMeaning ?? "",
+      businessContext: partial.businessContext ?? prev?.businessContext ?? "",
+      politenessLevel: partial.politenessLevel ?? prev?.politenessLevel ?? "",
+      tone: partial.tone ?? prev?.tone ?? "",
+      breakdown:
+        partial.breakdown?.map((item) => ({
+          fragment: item?.fragment ?? "",
+          meaning: item?.meaning ?? "",
+          note: item?.note ?? "",
+        })) ??
+        prev?.breakdown ??
+        [],
+      suggestedReplies:
+        partial.suggestedReplies?.map((reply) => ({
+          korean: reply?.korean ?? "",
+          english: reply?.english ?? "",
+          formality: reply?.formality ?? "",
+        })) ??
+        prev?.suggestedReplies ??
+        [],
+      modelUsed: partial.modelUsed ?? prev?.modelUsed ?? "",
+    }))
+  }
+
   async function handleAnalyze() {
     if (!text.trim()) return
     setLoading(true)
     setError("")
     setResult(null)
     try {
-      const data = await analyzerApi.analyze(text, source ?? undefined)
+      const data = await analyzerApi.analyze(text, source ?? undefined, mergePartial)
       setResult(data)
       void logActivity()
     } catch (err) {

@@ -1,10 +1,10 @@
-// Tracks the last route visited inside the Learning and Productivity
-// workspaces so Home's "Continue where you left off" cards can deep-link
-// back into whatever the user was actually doing, not just a fixed page.
+// Tracks the last route visited inside each workspace so Home's "Continue
+// where you left off" cards can deep-link back into whatever the user was
+// actually doing, not just a fixed page.
 
 const STORAGE_KEY = "hengo-last-visited"
 
-export type WorkspaceId = "learning" | "productivity"
+export type WorkspaceId = "learning" | "productivity" | "progress"
 
 type LastVisited = Partial<Record<WorkspaceId, string>>
 

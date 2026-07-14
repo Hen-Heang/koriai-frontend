@@ -15,6 +15,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Target,
   Trash2,
 } from "lucide-react"
 
@@ -24,12 +25,14 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useTodaysTasks } from "@/hooks/useTodaysTasks"
-import type { Task } from "@/lib/tasks"
+import { bumpEndAfterStart } from "@/lib/calendar"
+import { DEFAULT_TASK_COLOR, TASK_COLORS, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
 // Ported from Orbit dashboard/TodaysTasks.tsx. Goal multi-select filter, quick
@@ -47,6 +50,18 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState("")
 
+  // Composer: a single inline "Google Tasks"-style entry that expands on
+  // focus to reveal goal/time/description/color instead of a separate modal
+  // duplicating the same choices.
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [description, setDescription] = useState("")
+  const [isAnytime, setIsAnytime] = useState(true)
+  const [dailyStart, setDailyStart] = useState("09:00")
+  const [dailyEnd, setDailyEnd] = useState("10:00")
+  const [color, setColor] = useState<string>(DEFAULT_TASK_COLOR)
+  const [timeError, setTimeError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
   const {
     tasks,
     loading,
@@ -54,7 +69,8 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     selectedGoalIds,
     newTaskTitle,
     setNewTaskTitle,
-    isAdding,
+    newTaskGoalId,
+    setNewTaskGoalId,
     isMarkingAll,
     canUndo,
     completedCount,
@@ -64,13 +80,66 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     goalTitleById,
     toggleGoal,
     toggleAll,
-    handleQuickAdd,
+    createTask,
     handleToggleTaskCompletion,
     handleMarkAllCompleted,
     handleUndoMarkAllCompleted,
     editTask,
     deleteTask,
   } = useTodaysTasks()
+
+  const resetComposer = () => {
+    setNewTaskTitle("")
+    setDescription("")
+    setIsAnytime(true)
+    setDailyStart("09:00")
+    setDailyEnd("10:00")
+    setColor(DEFAULT_TASK_COLOR)
+    setTimeError(null)
+    setComposerOpen(false)
+  }
+
+  const handleStartTimeChange = (value: string) => {
+    const v = value || "09:00"
+    setDailyStart(v)
+    setTimeError(null)
+    setDailyEnd((prev) => bumpEndAfterStart(v, prev))
+  }
+
+  // Single submit path for both the collapsed fast-add (title only, Anytime
+  // today) and the expanded form — whatever fields are currently set apply,
+  // so there's exactly one way a task gets created.
+  const submitTask = async () => {
+    const title = newTaskTitle.trim()
+    if (!title || submitting) return
+    if (!isAnytime && dailyEnd <= dailyStart) {
+      setTimeError("End time must be after start time.")
+      return
+    }
+    setSubmitting(true)
+    const start = new Date()
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
+    try {
+      await createTask({
+        title,
+        description: description.trim() || title,
+        goal_id: newTaskGoalId,
+        start_date: start.toISOString(),
+        end_date: end.toISOString(),
+        daily_start_time: isAnytime ? null : dailyStart,
+        daily_end_time: isAnytime ? null : dailyEnd,
+        is_anytime: isAnytime,
+        color,
+        completed: false,
+      })
+      resetComposer()
+    } catch {
+      /* toast already shown by createTask */
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const startEditing = (task: Task) => {
     setEditingId(task.id)
@@ -116,26 +185,188 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     )
   }
 
+  const newTaskGoalTitle = newTaskGoalId ? goalTitleById[newTaskGoalId] : null
+
   const renderQuickAdd = () => (
-    <div className="flex items-center gap-2 rounded-2xl border border-border bg-background/40 px-3.5 py-2.5 transition-all focus-within:border-primary/50 focus-within:bg-background">
-      <Plus className="h-4 w-4 shrink-0 text-muted-foreground/40" />
-      <input
-        value={newTaskTitle}
-        onChange={(e) => setNewTaskTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") void handleQuickAdd()
-        }}
-        placeholder="Add a task for today…"
-        className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground/40"
-      />
-      <Button
-        size="sm"
-        onClick={() => void handleQuickAdd()}
-        disabled={!newTaskTitle.trim() || isAdding}
-        className="h-8 shrink-0 rounded-xl bg-primary px-3 text-xs font-medium text-white shadow-sm"
-      >
-        {isAdding ? "…" : "Add"}
-      </Button>
+    <div
+      className={cn(
+        "rounded-2xl border transition-all",
+        composerOpen ? "border-primary/40 bg-background shadow-sm" : "border-border bg-background/40"
+      )}
+    >
+      <div className="flex items-center gap-2 px-3.5 py-2.5">
+        <Plus className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+        <input
+          value={newTaskTitle}
+          onChange={(e) => setNewTaskTitle(e.target.value)}
+          onFocus={() => setComposerOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              void submitTask()
+            }
+            if (e.key === "Escape") resetComposer()
+          }}
+          placeholder="Add a task for today…"
+          className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground/40"
+        />
+        {!composerOpen && (
+          <Button
+            size="sm"
+            onClick={() => void submitTask()}
+            disabled={!newTaskTitle.trim() || submitting}
+            className="h-8 shrink-0 rounded-xl bg-primary px-3 text-xs font-medium text-white shadow-sm"
+          >
+            Add
+          </Button>
+        )}
+      </div>
+
+      {composerOpen && (
+        <div className="space-y-3 border-t border-border/60 px-3.5 pb-3.5 pt-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {availableGoals.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors",
+                      newTaskGoalId ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                    )}
+                  >
+                    <Target className="h-3.5 w-3.5" />
+                    {newTaskGoalTitle ? (
+                      <span className="max-w-[160px] truncate">{newTaskGoalTitle}</span>
+                    ) : (
+                      "No goal"
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-60 rounded-2xl p-2 shadow-lg">
+                  <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground/60">
+                    Assign to
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem
+                    onSelect={() => setNewTaskGoalId(null)}
+                    className={cn("rounded-xl font-medium", !newTaskGoalId && "bg-primary/10 text-primary")}
+                  >
+                    No goal (standalone)
+                  </DropdownMenuItem>
+                  <div className="max-h-56 overflow-y-auto">
+                    {availableGoals.map((g) => (
+                      <DropdownMenuItem
+                        key={g.id}
+                        onSelect={() => setNewTaskGoalId(g.id)}
+                        className={cn("rounded-xl font-medium", newTaskGoalId === g.id && "bg-primary/10 text-primary")}
+                      >
+                        <span className="truncate">{g.title || "Untitled"}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsAnytime((v) => !v)
+                setTimeError(null)
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors",
+                !isAnytime ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:text-foreground"
+              )}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {isAnytime ? "Anytime" : `${dailyStart}–${dailyEnd}`}
+            </button>
+          </div>
+
+          {!isAnytime && (
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                aria-label="Start time"
+                value={dailyStart}
+                onChange={(e) => handleStartTimeChange(e.target.value || "09:00")}
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+              <span className="text-xs text-muted-foreground/50">to</span>
+              <input
+                type="time"
+                aria-label="End time"
+                value={dailyEnd}
+                onChange={(e) => {
+                  setDailyEnd(e.target.value || "10:00")
+                  setTimeError(null)
+                }}
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+          )}
+          {timeError && (
+            <p className="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              {timeError}
+            </p>
+          )}
+
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add details…"
+            rows={2}
+            className="w-full resize-none rounded-lg border border-border bg-background/60 px-3 py-2 text-xs outline-none placeholder:text-muted-foreground/40 focus-visible:border-primary/50"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              {TASK_COLORS.map((c) => {
+                const selected = color.toLowerCase() === c.value.toLowerCase()
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    title={c.name}
+                    aria-label={c.name}
+                    aria-pressed={selected}
+                    onClick={() => setColor(c.value)}
+                    className="h-5 w-5 shrink-0 rounded-full transition-transform hover:scale-110"
+                    style={{
+                      backgroundColor: c.value,
+                      boxShadow: selected
+                        ? `0 0 0 2px var(--background, #fff), 0 0 0 3.5px ${c.value}`
+                        : "inset 0 0 0 1px rgba(0,0,0,0.12)",
+                    }}
+                  />
+                )
+              })}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={resetComposer} className="h-8 rounded-xl px-3 text-xs font-medium">
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => void submitTask()}
+                disabled={!newTaskTitle.trim() || submitting}
+                className="h-8 rounded-xl bg-primary px-4 text-xs font-medium text-white shadow-sm"
+              >
+                {submitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "Add task"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
@@ -357,26 +588,27 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
             ) : (
               <AnimatePresence initial={false}>
                 {groups.overdue.length > 0 && (
-                  <>
+                  <React.Fragment key="overdue-group">
                     {sectionHeader("Overdue", groups.overdue.length, "text-red-500/80")}
                     {groups.overdue.map(t => renderTaskItem(t))}
-                  </>
+                  </React.Fragment>
                 )}
                 {groups.scheduled.length > 0 && (
-                  <>
+                  <React.Fragment key="scheduled-group">
                     {sectionHeader("Scheduled", groups.scheduled.length)}
                     {groups.scheduled.map(t => renderTaskItem(t))}
-                  </>
+                  </React.Fragment>
                 )}
                 {groups.anytime.length > 0 && (
-                  <>
+                  <React.Fragment key="anytime-group">
                     {sectionHeader("Anytime", groups.anytime.length)}
                     {groups.anytime.map(t => renderTaskItem(t))}
-                  </>
+                  </React.Fragment>
                 )}
                 {groups.completed.length > 0 && (
-                  <>
+                  <React.Fragment key="completed-group">
                     <button
+                      key="completed-toggle"
                       onClick={() => setShowCompleted(!showCompleted)}
                       className="flex w-full items-center gap-2 py-2"
                     >
@@ -386,7 +618,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                       <ChevronDown className={cn("h-4 w-4 text-muted-foreground/60", showCompleted && "rotate-180")} />
                     </button>
                     {showCompleted && groups.completed.map(t => renderTaskItem(t))}
-                  </>
+                  </React.Fragment>
                 )}
               </AnimatePresence>
             )}

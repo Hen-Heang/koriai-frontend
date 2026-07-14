@@ -4,8 +4,8 @@
   "description": "Set goals, track to-dos, and learn — your AI companion for daily growth.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#030712",
+  "background_color": "#10131A",
+  "theme_color": "#10131A",
   "icons": [
     {
       "src": "/icon-192.png",

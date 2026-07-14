@@ -18,6 +18,7 @@ interface DeleteConfirmDialogProps {
   onCancel: () => void
   onConfirm: () => void | Promise<void>
   goalTitle: string
+  itemType?: "goal" | "task"
 }
 
 export function DeleteConfirmDialog({
@@ -26,15 +27,17 @@ export function DeleteConfirmDialog({
   onCancel,
   onConfirm,
   goalTitle,
+  itemType = "goal",
 }: DeleteConfirmDialogProps) {
+  const isTask = itemType === "task"
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete goal</AlertDialogTitle>
+          <AlertDialogTitle>{isTask ? "Delete task" : "Delete goal"}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{goalTitle}</strong>? This also removes its
-            tasks and cannot be undone.
+            Are you sure you want to delete <strong>{goalTitle}</strong>?
+            {isTask ? " This cannot be undone." : " This also removes its tasks and cannot be undone."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

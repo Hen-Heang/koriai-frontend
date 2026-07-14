@@ -145,7 +145,7 @@ export default function ReadingPage() {
       {loadError && (
         <motion.div
           variants={itemVariants}
-          className="rounded-[1.8rem] border border-destructive/20 bg-destructive/5 p-5 text-sm font-bold text-destructive"
+          className="rounded-3xl border border-destructive/20 bg-destructive/5 p-5 text-sm font-bold text-destructive"
         >
           {loadError}
         </motion.div>
@@ -164,7 +164,7 @@ export default function ReadingPage() {
       {!loadError && loaded && units.length === 0 && (
         <motion.div
           variants={itemVariants}
-          className="flex flex-col items-center gap-3 rounded-[1.8rem] border border-dashed border-border bg-card/50 py-16 text-center"
+          className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-border bg-card/50 py-16 text-center"
         >
           <BookOpenText size={28} className="text-muted-foreground/50" strokeWidth={2} />
           <p className="text-sm font-bold text-foreground">No reading units yet.</p>
@@ -217,7 +217,7 @@ export default function ReadingPage() {
                     key={unit.id}
                     href={`/reading/${unit.id}`}
                     className={cn(
-                      "group relative flex flex-col rounded-[1.8rem] border bg-card p-5 shadow-sm transition-all hover:shadow-lg active:scale-[0.99] dark:bg-slate-900/40",
+                      "group relative flex flex-col rounded-3xl border bg-card p-5 shadow-sm transition-all hover:shadow-lg active:scale-[0.99] dark:bg-slate-900/40",
                       entry.status === "completed"
                         ? "border-blue-500/30"
                         : "border-border hover:border-blue-500/30"

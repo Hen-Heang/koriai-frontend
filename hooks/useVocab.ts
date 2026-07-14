@@ -82,12 +82,6 @@ export function useVocab() {
     return saved
   }
 
-  const markReviewed = async (id: string) => {
-    await vocabApi.markReviewed(id)
-    await invalidate()
-    void logActivity()
-  }
-
   // Patch the cache from the response instead of refetching the whole deck, so
   // grading mid-session is instant. When the batch empties but more cards are
   // still due (dueCount spans the whole backlog, the batch is one slice),
@@ -141,7 +135,6 @@ export function useVocab() {
     error: isError ? "Failed to load vocabulary data." : "",
     loading: isPending,
     addWord,
-    markReviewed,
     rateWord,
     generate,
     importList,

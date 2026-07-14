@@ -284,7 +284,7 @@ export default function ReadingUnitPage() {
           </div>
 
           <div className="mt-4 flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="min-w-0 break-words text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
               {unit.episode ? `${unit.episode} · ` : ""}
               {unit.title}
             </h1>
@@ -355,7 +355,7 @@ export default function ReadingUnitPage() {
                   >
                     {i + 1}
                   </span>
-                  <p className="flex-1 text-[15px] font-medium leading-8 text-foreground sm:text-base sm:leading-9">
+                  <p className="min-w-0 flex-1 break-words text-[15px] font-medium leading-8 text-foreground sm:text-base sm:leading-9">
                     <PeekableText text={p.korean} />
                   </p>
                   <button
@@ -395,7 +395,7 @@ export default function ReadingUnitPage() {
                     {showTranslation ? "Hide translation" : "Show translation"}
                   </button>
                   {showTranslation && (
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                    <p className="mt-2 break-words text-sm font-medium leading-relaxed text-muted-foreground">
                       {p.english}
                     </p>
                   )}

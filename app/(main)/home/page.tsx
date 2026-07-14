@@ -1,30 +1,19 @@
 "use client"
 
-import { Flame } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { Flame, Sparkles, Target, Trophy } from "lucide-react"
 import { motion } from "motion/react"
-import dynamic from "next/dynamic"
 
-import { AiSuggestionCard } from "@/components/home/AiSuggestionCard"
-import { ContinueCards } from "@/components/home/ContinueCards"
-import { MissionCard } from "@/components/home/MissionCard"
-import { QuickActions } from "@/components/home/QuickActions"
-import { DailyGoalRing } from "@/components/dashboard/DailyGoalRing"
 import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
-import { GoalsOverview } from "@/components/dashboard/GoalsOverview"
-import { ProgressIntelligence } from "@/components/dashboard/ProgressIntelligence"
+import { WorkspacePosterCard } from "@/components/home/WorkspacePosterCard"
 import { Skeleton } from "@/components/ui/skeleton"
+import { achievementsApi } from "@/lib/api"
+import { useGoals } from "@/hooks/useGoals"
 import { useProgress } from "@/hooks/useProgress"
+import { getUserId } from "@/lib/auth-store"
+import { calculateGoalDeadlineInfo } from "@/lib/goals"
 import { containerVariants, itemVariants } from "@/lib/motion"
-
-// recharts is heavy; defer it so the Home shell + above-the-fold cards paint
-// first, then the weekly graph streams in — same pattern as /dashboard.
-const ProgressChart = dynamic(
-  () => import("@/components/dashboard/ProgressChart").then((m) => m.ProgressChart),
-  {
-    ssr: false,
-    loading: () => <div className="h-64 w-full animate-pulse rounded-2xl bg-muted/20" />,
-  }
-)
+import { getLastVisited } from "@/lib/last-visited"
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -37,19 +26,33 @@ function HomeLoadingState() {
   return (
     <div className="space-y-6 pb-12 sm:space-y-8">
       <Skeleton className="h-24 w-full rounded-2xl" />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <Skeleton className="h-24 w-full rounded-2xl" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Skeleton className="h-72 w-full rounded-3xl" />
+        <Skeleton className="h-72 w-full rounded-3xl" />
+        <Skeleton className="h-72 w-full rounded-3xl sm:col-span-2 xl:col-span-1" />
       </div>
-      <Skeleton className="h-64 w-full rounded-2xl" />
     </div>
   )
 }
 
 export default function HomePage() {
-  const { chartData, error, loading, stats } = useProgress()
+  const { loading, stats } = useProgress()
+  const { sortedGoals, isLoading: goalsLoading } = useGoals()
+  const userId = getUserId()
+  const { data: achievementsSummary, isPending: achievementsLoading } = useQuery({
+    queryKey: ["achievements-summary", userId],
+    queryFn: () => achievementsApi.getSummary(),
+    enabled: userId != null,
+  })
 
-  if (loading) return <HomeLoadingState />
+  if (loading || goalsLoading || achievementsLoading) return <HomeLoadingState />
+
+  const activeGoals = sortedGoals.filter((g) => g.status !== "completed" && g.status !== "archived")
+  const overdueGoals = activeGoals.filter((g) => calculateGoalDeadlineInfo(g).status === "overdue")
+  const completedGoals = sortedGoals.filter((g) => g.status === "completed")
+  const level = achievementsSummary?.level
+  const unlockedCount = achievementsSummary?.unlockedCount ?? 0
+  const totalCount = achievementsSummary?.totalCount ?? 0
 
   return (
     <motion.div
@@ -82,49 +85,53 @@ export default function HomePage() {
         </motion.div>
       )}
 
-      {/* ── Continue where you left off ── */}
-      <motion.div variants={itemVariants}>
-        <ContinueCards />
-      </motion.div>
-
-      {/* ── Mission + AI suggestion ── */}
-      <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <MissionCard />
-        <AiSuggestionCard stats={stats} />
-      </motion.div>
-
-      {/* ── Learning summary + Productivity summary ── */}
-      <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <DailyGoalRing
-          progress={stats.dailyGoalProgress}
-          reviewsToday={stats.reviewsToday}
-          correctionsToday={stats.correctionsToday}
-          className="h-full"
+      {/* ── Three big entry points ── */}
+      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
+        <WorkspacePosterCard
+          href={getLastVisited("learning", "/practice")}
+          eyebrow="Learning"
+          title="Korean Learning"
+          description="Vocab, grammar corrections, listening, reading, and exam prep — pick up today's practice."
+          icon={Sparkles}
+          accentColor="blue"
+          stats={[
+            { label: "Day streak", value: String(stats.streakDays) },
+            { label: "Due today", value: String(stats.dueReviews) },
+            { label: "Words saved", value: String(stats.wordsSaved) },
+          ]}
+          cta="Continue learning"
         />
-        <GoalsOverview />
+        <WorkspacePosterCard
+          href={getLastVisited("productivity", "/dashboard")}
+          eyebrow="Productivity"
+          title="Goal Setting"
+          description="Plan goals, break them into tasks, and track deadlines — see what needs you today."
+          icon={Target}
+          accentColor="emerald"
+          stats={[
+            { label: "Active goals", value: String(activeGoals.length) },
+            {
+              label: overdueGoals.length > 0 ? "Overdue" : "Completed",
+              value: overdueGoals.length > 0 ? String(overdueGoals.length) : String(completedGoals.length),
+            },
+          ]}
+          cta="Continue planning"
+        />
+        <WorkspacePosterCard
+          href={getLastVisited("progress", "/achievements")}
+          eyebrow="Progress"
+          title="Your Progress"
+          description="Level, XP, and badges earned across every module — see how far you've come."
+          icon={Trophy}
+          accentColor="amber"
+          stats={[
+            { label: "Level", value: level ? String(level.level) : "1" },
+            { label: "XP", value: level ? String(level.totalXp) : "0" },
+            { label: "Badges", value: `${unlockedCount}/${totalCount}` },
+          ]}
+          cta="View achievements"
+        />
       </motion.div>
-
-      {/* ── Weekly progress ── */}
-      <motion.div variants={itemVariants}>
-        <ProgressChart data={chartData} />
-      </motion.div>
-
-      {/* ── Needs attention ── */}
-      <motion.div variants={itemVariants}>
-        <ProgressIntelligence />
-      </motion.div>
-
-      {/* ── Quick actions ── */}
-      <motion.div variants={itemVariants} className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground/70">Quick actions</h2>
-        <QuickActions />
-      </motion.div>
-
-      {error ? (
-        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-center text-sm font-bold text-destructive">
-          {error}
-        </p>
-      ) : null}
     </motion.div>
   )
 }

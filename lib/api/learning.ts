@@ -17,7 +17,8 @@ import type {
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { applyRating, type ReviewRating } from "@/lib/srs"
-import { aiPost } from "./ai-client"
+import { aiPost, authHeaders } from "./ai-client"
+import { readSseStream } from "./sse"
 import { vocabApi } from "./vocab"
 
 // ── Correction ──────────────────────────────────────────────────────────────
@@ -457,12 +458,58 @@ function toAnalysis(row: AnalyzerRow): MessageAnalysis {
   }
 }
 
+type AnalyzerResult = Omit<MessageAnalysis, "id" | "source" | "createdAt">
+export type PartialAnalyzerResult = Partial<AnalyzerResult>
+
+// SSE stream from the Next.js route (start → partial* → done → error) — lets
+// the UI render each field/breakdown item as it's generated instead of
+// waiting for the whole structured object.
+async function streamAnalysis(
+  text: string,
+  source: string | undefined,
+  onPartial?: (partial: PartialAnalyzerResult) => void,
+): Promise<AnalyzerResult> {
+  const response = await fetch("/api/ai/analyzer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ text, source }),
+  })
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null
+    throw new Error(payload?.error ?? `AI request failed (${response.status})`)
+  }
+
+  let final: AnalyzerResult | null = null
+  await readSseStream(response, (event, raw) => {
+    if (event === "partial") {
+      try {
+        onPartial?.(JSON.parse(raw) as PartialAnalyzerResult)
+      } catch {
+        /* ignore malformed chunk */
+      }
+    } else if (event === "done") {
+      final = JSON.parse(raw) as AnalyzerResult
+    } else if (event === "error") {
+      let msg = "Failed to analyze the message."
+      try {
+        msg = JSON.parse(raw).message || msg
+      } catch {
+        /* ignore */
+      }
+      throw new Error(msg)
+    }
+  })
+  if (!final) throw new Error("Analysis stream ended unexpectedly")
+  return final
+}
+
 export const analyzerApi = {
-  analyze: async (text: string, source?: string): Promise<MessageAnalysis> => {
-    const analysis = await aiPost<Omit<MessageAnalysis, "id" | "source" | "createdAt">>(
-      "/analyzer",
-      { text, source },
-    )
+  analyze: async (
+    text: string,
+    source?: string,
+    onPartial?: (partial: PartialAnalyzerResult) => void,
+  ): Promise<MessageAnalysis> => {
+    const analysis = await streamAnalysis(text, source, onPartial)
     const { originalText: _o, modelUsed, ...rest } = analysis
     const { data, error } = await supabase
       .from("kori_analyzer_history")

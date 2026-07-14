@@ -192,7 +192,7 @@ export default function GoalsPage() {
           )}
         </div>
 
-        <aside className="xl:sticky xl:top-8 xl:self-start">
+        <aside className="order-first xl:order-none xl:sticky xl:top-8 xl:self-start">
           <TodaysTasks />
         </aside>
       </div>

@@ -118,6 +118,13 @@ export function isLinkActive(pathname: string, href: string): boolean {
   return pathname === path || pathname.startsWith(`${path}/`)
 }
 
+// Which workspace (if any) the current route belongs to — drives the
+// desktop sidebar's contextual view. A route outside all workspaces
+// (e.g. /settings, /account) returns undefined.
+export function getWorkspaceForPath(pathname: string): Workspace | undefined {
+  return workspaces.find((w) => w.links.some((l) => isLinkActive(pathname, l.href)))
+}
+
 // Flat list of links not already pinned to a bottom tab, grouped by
 // workspace — feeds the mobile "More" sheet.
 export const moreWorkspaces: Workspace[] = workspaces.map((w) => ({
@@ -132,4 +139,5 @@ export const moreWorkspaces: Workspace[] = workspaces.map((w) => ({
 export const workspaceRoutePrefixes: Record<string, string[]> = {
   learning: workspaces.find((w) => w.id === "learning")!.links.map((l) => linkPath(l.href)),
   productivity: workspaces.find((w) => w.id === "productivity")!.links.map((l) => linkPath(l.href)),
+  progress: workspaces.find((w) => w.id === "progress")!.links.map((l) => linkPath(l.href)),
 }

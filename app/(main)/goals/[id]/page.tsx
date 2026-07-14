@@ -50,6 +50,7 @@ import { InviteMembers } from "@/components/goals/InviteMembers"
 import { ShareGoalCard } from "@/components/goals/ShareGoalCard"
 import { GoalMilestones, type Milestone } from "@/components/goals/GoalMilestones"
 import { LearningPracticeCard } from "@/components/goals/LearningPracticeCard"
+import { LearningMetricCard } from "@/components/goals/LearningMetricCard"
 import { GoalCoach } from "@/components/goals/GoalCoach"
 import { GoalCoachChat } from "@/components/goals/GoalCoachChat"
 import dynamic from "next/dynamic"
@@ -655,6 +656,15 @@ export default function GoalDetailPage() {
               </div>
             </Card>
           )}
+
+          <LearningMetricCard
+            goal={goal}
+            onGoalUpdated={(updated) =>
+              queryClient.setQueryData<Goal>(goalKey, (prev) =>
+                prev ? { ...prev, ...updated } : updated
+              )
+            }
+          />
 
           <LearningPracticeCard tasks={tasks} onToggle={toggleTaskCompletion} />
 

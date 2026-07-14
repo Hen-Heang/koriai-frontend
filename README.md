@@ -127,7 +127,7 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 | **Foundations** | `/learn`, `/learn/[lessonId]` | Absolute-beginner Korean: Survival / Alphabet / Grammar tracks | Structured on-ramp before the AI-driven features | Per-lesson runner, Supabase-backed progress |
 | **Vocabulary** | `/vocab` | Spaced-repetition decks with AI generation, import, and challenges | AI builds decks for your level; dictionary lookup; sentence challenges force production, not just recognition | SRS (`lib/srs.ts`, `lib/vocab-review.ts`), `vocab/{generate,lookup,check-sentence,sentence-challenge}` routes, `es-hangul` |
 | **Reading** | `/reading` | Multi-unit reading practice | Tap-to-translate, audio playback, comprehension quizzes | `lib/reading.ts`, TTS route |
-| **Listening** | `/listening` | AI-generated listening passages | Slow/normal playback, transcript, quiz. Currently **hidden from the nav** (link commented out in the shell) but the page still works | `listening/generate` route, TTS |
+| **Listening** | `/listening` | AI-generated listening passages | Slow/normal playback, transcript, quiz — part of the Learning workspace nav | `listening/generate` route, TTS |
 | **Daily Practice / Today** | `/practice` | The home surface: "Today's Mission" checklist | One place showing vocab due, daily phrase, mistakes due, and scenario practice, mixed for your level | `daily-phrase/{generate,practice,check-practice}` routes |
 
 > `/daily-phrase` redirects to `/practice` and `/mistakes` redirects to the Corrections tab in AI Coach — both were merged into larger surfaces, and the redirect stubs are kept deliberately so old bookmarks still work.
@@ -144,8 +144,8 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 
 | Feature | Route | Purpose | Benefits | Main technologies |
 |---|---|---|---|---|
-| **Goals** | `/goals` | Plan goals, track deadlines, manage tasks, calendar view | Tasks that name a learning feature get a "Practice →" deep link (`lib/learning-task-link.ts`) — productivity and learning are one system | Reuses Orbit's `goals`/`tasks` tables and RPCs, AI Goal Coach streaming |
-| **Dashboard** | `/dashboard` | Daily goal ring, streak, progress chart | "Needs Attention" panel ranks real due-counts (vocab due, mistakes due, overdue goals, unlearned daily phrase) into a prioritized list with direct links | TanStack Query, Recharts |
+| **Goals** | `/goals` | Plan goals, track deadlines, manage tasks, calendar view | Tasks that name a learning feature get a "Practice →" deep link (`lib/learning-task-link.ts`), and a goal can **auto-track a live learning metric** (vocab saved, corrections logged, foundation lessons, feature sessions — daily/weekly/all-time) via `metadata.learning_metric` (`components/goals/LearningMetricCard.tsx`) instead of a manual checklist — productivity and learning are one system | Reuses Orbit's `goals`/`tasks` tables and RPCs, `progressApi.getMetricCount`, AI Goal Coach streaming |
+| **Dashboard** | `/dashboard` | Productivity command center | Goals overview, today's tasks, upcoming deadlines, and a roadmap teaser — one place to see what needs you today | TanStack Query |
 | **Dev Notes** | `/notes`, `/notes/new`, `/notes/[slug]` | Personal knowledge library (Java/Spring/SQL/etc.) | Search + markdown editor; reachable from Settings, not the main nav | `marked`, Supabase |
 | **Roadmap** | `/roadmap` | Learning roadmap with study sections/milestones | Customizable sections persisted locally | Local persistence |
 
@@ -155,22 +155,25 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 |---|---|---|---|---|
 | **History (Progress Lab)** | `/history` | Past study sessions and attempts across features | See what you actually did, not what you planned | Supabase, `lib/api/progress.ts` |
 | **Achievements** | `/achievements` | XP, levels, skill badges | A compact level/XP badge (`components/achievements/LevelBadge.tsx`) sits in the desktop and mobile top bars on every page | Supabase-backed XP model |
-| **Analytics** | `/dashboard` | Charts and trend lines | Interview score trends, streaks, and due-work ranking drive what to practice next | Recharts, `lib/interview-history.ts` |
+| **Statistics** | `/statistics` | One analytics view for the whole platform | Streak, weekly minutes, XP, weekly progress chart, and a per-feature time breakdown across Learning and Productivity | Recharts, `lib/api/progress.ts` |
 
 ### App surfaces
 
 | Surface | Route | Notes |
 |---|---|---|
 | Landing page | `/` | Marketing/intro page — feature highlights, links to Login/Register. GSAP + Lenis scroll animations |
+| Home (workspace gate) | `/home` | Immersive "pick a lane" screen — two poster cards (**Korean Learning** and **Goal Setting**) with live stats; rendered with no sidebar, top bar, or tabs. Each card deep-links to the last route you visited in that workspace (`lib/last-visited.ts`) |
 | Login / Register | `/login`, `/register` | Supabase auth — email/password + Google sign-in (route group `(auth)`) |
 | Settings | `/settings` | Profile, Korean level, work context, model preference, avatar. `/account` is an alias for the same page |
 
 ### Navigation
 
-- **Desktop:** a grouped sidebar in `app/(main)/layout.tsx` — `Practice` (Today · Goals · Dashboard), `Study` (Foundations · Vocabulary · Exam Prep · Scenarios · Reading; Listening commented out), `Track` (History · Achievements), plus AI Coach and Account/Settings entries. Hidden features keep their nav links commented out in place for easy restore — keep that convention.
+- **One nav source.** `lib/navigation.ts` defines four **workspaces** — `Learning` (Today · Vocabulary · Foundations · Reading · Listening · Scenarios · Exam Prep), `Productivity` (Dashboard · Goals · Roadmap · Notes), `AI` (Chat · Analyze · Generate · Corrections), `Progress` (Achievements · Statistics · History). The sidebar, mobile bottom bar, and "More" sheet all render from it — adding a module later means adding one workspace entry, not touching the shell. A `soon` flag on a link renders it as a disabled "Soon" entry.
+- **Home gate.** `/home` is the workspace gate: it renders without any app chrome (no sidebar, top bars, or tabs), and its two poster cards deep-link into Learning or Productivity at the last route you visited there (`lib/last-visited.ts`).
+- **Desktop:** a contextual sidebar in `app/(main)/layout.tsx` — an icon-only workspace-switcher row on top, then only the active workspace's links below it (`getWorkspaceForPath`), so the sidebar shows one workspace at a time.
 - **Header:** a compact level/XP badge sits in both the desktop and mobile top bars, linking to `/achievements`.
-- **Mobile:** a bottom tab bar — Home (Dashboard) · Today · Vocab · Goals · AI — with a "More" sheet exposing the remaining Study / Track / App links so nothing is unreachable on a phone.
-- **Immersive chat:** on `/chat` routes the mobile header, bottom tabs, and content padding are removed for a full-bleed experience. If you touch chat layout, check both the shell's `isChatRoute` branches and `components/chat/ChatWindow.tsx`.
+- **Mobile:** a bottom tab bar — Home · Learn (Today) · Plan (Goals) · AI (Chat) — with a "More" sheet exposing the remaining links grouped by workspace so nothing is unreachable on a phone.
+- **Immersive routes:** on `/chat` and `/home` the mobile header, bottom tabs, and content padding are removed for a full-bleed experience. If you touch chat layout, check the shell's `isChatRoute` / `isHomeRoute` branches and `components/chat/ChatWindow.tsx`.
 
 ---
 
@@ -207,7 +210,7 @@ flowchart TD
     O -->|"JSON / SSE tokens / MP3"| A
     A -->|Response| N
     N -->|"progress, XP, SRS state,<br/>messages, sessions"| S
-    S -->|due counts, trends| D[Dashboard<br/>Needs Attention · streaks · charts]
+    S -->|due counts, trends| D[Statistics & dashboards<br/>streaks · charts · feature breakdown]
 ```
 
 ### Layer responsibilities
@@ -219,7 +222,7 @@ flowchart TD
 | **Supabase** | Postgres data, auth (email/password + Google), Row Level Security on every table, and the `kori-send-push` Edge Function for web push. Shared project with Orbit/DailyGoalMap: Hengo-owned tables are prefixed `kori_`; the goals/tasks domain reuses Orbit's original tables (`goals`, `tasks`, …) and RPCs. |
 | **AI Routes** | Thin server handlers: verify the caller's Supabase JWT, build the prompt, call OpenAI via the Vercel AI SDK, return JSON or an SSE stream. No service key anywhere — each request gets a per-request Supabase client so **RLS applies on the server too**. |
 | **OpenAI** | Chat/structured generation (default `gpt-5-mini`, override with `AI_MODEL`) and audio TTS (proxied, returns MP3 bytes). |
-| **Progress → Dashboard** | Every activity writes progress rows back to Supabase; the dashboard aggregates them into due counts, streaks, and the prioritized "Needs Attention" list. |
+| **Progress → Statistics** | Every activity writes progress rows back to Supabase; `/statistics` and the workspace dashboards aggregate them into streaks, weekly charts, due counts, and a per-feature time breakdown. |
 
 ---
 
@@ -237,7 +240,7 @@ flowchart TD
     AI --> FB["Feedback<br/>corrections · scores · structured analysis"]
     FB --> PR["Progress written to Supabase<br/>(kori_ tables: messages, mistakes, XP, sessions)"]
     PR --> H["History<br/>Progress Lab · score trends"]
-    H --> RC["Recommendations<br/>Needs Attention panel · due SRS reviews ·<br/>weak-skill focus"]
+    H --> RC["Recommendations<br/>Today's Mission · due SRS reviews ·<br/>weak-skill focus"]
     RC -.->|next session| U
 ```
 
@@ -249,7 +252,7 @@ flowchart TD
 4. **AI route** — `requireUser` verifies the JWT; `jsonAiRoute` pairs a Zod schema with the prompt and calls `generateObject` for structured JSON. Streaming routes (`chat/stream`, `goals/coach`) keep the same SSE event protocol the Spring backend used: `start` / `token` / `done` / `error`.
 5. **Feedback** — corrections, tone analysis, examiner feedback, or graded answers come back typed (Zod-validated).
 6. **Progress** — results persist: `chat/stream` writes both message rows to `kori_messages`; mistakes enter the SRS queue; interview sessions record scores.
-7. **History → Recommendations** — accumulated history feeds the score trends, streaks, and the Dashboard's "Needs Attention" ranking that decides what you should do next.
+7. **History → Recommendations** — accumulated history feeds the score trends, streaks, and the Statistics breakdown; due SRS reviews and the Today's Mission checklist decide what you should do next.
 
 ### AI endpoints
 
@@ -268,7 +271,7 @@ flowchart TD
     L["Learn<br/>Foundations · Vocabulary · Reading"] --> P["Practice<br/>Today's Mission · Daily Phrase ·<br/>SRS reviews · Scenarios"]
     P --> SP["Speak<br/>AI Chat voice mode ·<br/>Interview answers"]
     SP --> F["AI Feedback<br/>corrections · tone analysis ·<br/>examiner scoring"]
-    F --> W["Weak Skill Detection<br/>mistake SRS queue · score trends ·<br/>Needs Attention ranking"]
+    F --> W["Weak Skill Detection<br/>mistake SRS queue · score trends ·<br/>due-review counts"]
     W --> PP["Personalized Practice<br/>due reviews · targeted drills ·<br/>study plan tasks"]
     PP --> IS["Interview Simulation<br/>timed Exam mode ·<br/>unexpected questions"]
     IS --> C["Career Growth<br/>K-Specialist exam · workplace fluency ·<br/>Goals integration"]
@@ -280,7 +283,7 @@ How users move through it:
 - **Learn → Practice.** Foundations and vocabulary decks feed the daily practice surface (`/practice`), which assembles "Today's Mission" from what is actually due.
 - **Practice → Speak.** Scenarios and the AI Coach push learners from recognition into production — typing and then speaking Korean.
 - **Speak → Feedback → Weakness.** Every production attempt gets AI feedback, and every mistake becomes an SRS card. The system detects weakness from evidence (due counts, score trends), not self-assessment.
-- **Weakness → Personalized practice.** The Dashboard's "Needs Attention" panel and the interview study plan convert detected weaknesses into concrete next actions with deep links.
+- **Weakness → Personalized practice.** The Today's Mission checklist, learning-metric goals, and the interview study plan convert detected weaknesses into concrete next actions with deep links.
 - **Simulation → Career.** The K-Specialist exam simulation is the current capstone; the Goals system ties language milestones to real career outcomes, and completing them starts the loop again at a higher level.
 
 ---
@@ -356,10 +359,11 @@ The Exam Prep module (`/interview`) is Hengo's flagship feature, designed around
 app/
   (auth)/          login, register
   (main)/          app shell + every feature page
-    layout.tsx     sidebar, mobile tabs, immersive-chat handling
+    layout.tsx     contextual sidebar, mobile tabs, immersive chat/home handling
+    home/          workspace gate — Learning / Productivity poster cards
     chat/          AI Coach (Chat / Analyze / Generate / Corrections tabs)
     practice/      Today — Daily Practice Hub
-    goals/  dashboard/  achievements/  vocab/  reading/  listening/
+    goals/  dashboard/  achievements/  statistics/  vocab/  reading/  listening/
     interview/     Exam Prep (+ interview/script — script writer)
     learn/         Foundations (Survival / Alphabet / Grammar lessons)
     scenarios/     Roleplay Scenarios
@@ -379,6 +383,8 @@ lib/
   server/ai.ts     shared plumbing for app/api/ai/* (requireUser, jsonAiRoute, SSE)
   supabase.ts      single browser Supabase client
   auth-store.ts    reads the persisted session (storage key "koriai-auth")
+  navigation.ts    single source of truth for the four nav workspaces
+  last-visited.ts  per-workspace "continue where you left off" tracking
   goals.ts  reading.ts  vocab-review.ts  srs.ts  study-plan.ts
   interview.ts  interview-modes.ts  interview-unexpected.ts
   interview-history.ts  exam-strategy.ts  ...
@@ -615,13 +621,13 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 - Unified AI Coach workspace (Chat / Analyze / Generate / Corrections)
 - Vocabulary SRS with AI deck generation, import, dictionary lookup, sentence challenges
 - K-Specialist Exam Prep: mock interviews (Practice + Exam modes), script writer, study pack, 11-week study plan, score trends, unexpected-question sampling
-- Goals ↔ learning integration ("Practice →" deep links), AI Goal Coach
-- Dashboard with "Needs Attention" ranking, streaks, XP/achievements
-- Foundations, Reading, Scenarios, Daily Practice hub, Dev Notes, web push
+- Goals ↔ learning integration: "Practice →" deep links, AI Goal Coach, and learning-metric goals that auto-track real activity (vocab saved, corrections, lessons, sessions)
+- Workspace-based IA (July 2026): `/home` gate with Learning/Productivity poster cards, contextual sidebar with a workspace switcher, single nav source in `lib/navigation.ts`
+- Statistics page (platform-wide streaks, weekly chart, per-feature breakdown), XP/achievements
+- Foundations, Reading, Listening, Scenarios, Daily Practice hub, Dev Notes, web push
 
 ### In progress
 
-- Listening (built and functional, currently hidden from the nav)
 - Deeper weak-skill detection across features (beyond interview score trends)
 
 ### Planned
@@ -650,7 +656,7 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 2. **All AI routes go through `lib/server/ai.ts`.** Use `requireUser` and `jsonAiRoute`; never introduce a service key — RLS is the security model.
 3. **`components/ui/*` stays generic.** Feature-specific components belong in `components/<feature>/`.
 4. **Keep pure logic in `lib/` and test it.** SRS math, prompt builders, and plan logic are framework-free and covered by colocated Vitest tests.
-5. **Preserve the redirect stubs** (`/mistakes`, `/daily-phrase`) and the commented-out-nav convention for hidden features (e.g. Listening) — links are commented out in place in the shell for easy restore.
+5. **Preserve the redirect stubs** (`/mistakes`, `/daily-phrase`), and keep the nav data-driven: every nav surface renders from `lib/navigation.ts` — add, move, or hide features there (use the `soon` flag for not-yet-ready entries) instead of editing the shell.
 6. **Stay on the design system** ([section 14](#14-design-system)) — one accent color, one radius scale, calm elevation.
 
 ### Folder & naming conventions

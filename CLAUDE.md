@@ -46,9 +46,11 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 ### Routing & app shell
 
 - Route groups: `app/(auth)/` (login, register) and `app/(main)/` (everything else).
-- `app/(main)/layout.tsx` is the entire app shell: desktop sidebar, mobile top bar, mobile bottom tab bar, soft-keyboard detection via `visualViewport`. Nav links for hidden features are commented out in place for easy restore — keep that convention (Listening is currently hidden this way).
+- `app/(main)/layout.tsx` is the entire app shell: contextual desktop sidebar, mobile top bar, mobile bottom tab bar, soft-keyboard detection via `visualViewport`.
+- **Nav is data-driven:** `lib/navigation.ts` is the single source of truth — four workspaces (`Learning`, `Productivity`, `AI`, `Progress`) that the sidebar, bottom tabs, and mobile "More" sheet all render from. Add, move, or hide features there (a `soon` flag renders a disabled entry), not in the shell. The desktop sidebar shows only the active workspace's links (`getWorkspaceForPath`) below an icon-only workspace-switcher row.
+- `/home` is the workspace gate: two poster cards (Learning / Productivity) that deep-link to the last route visited in each workspace (`lib/last-visited.ts`).
 - `/mistakes` and `/daily-phrase` are deliberate redirect stubs (→ `/chat?mode=corrections` and `/practice`) kept so old bookmarks still work — don't delete them.
-- **Immersive chat:** on `/chat` routes the mobile header, bottom tabs, and content padding are all removed for a full-bleed experience. If you touch chat layout, check both the shell's `isChatRoute` branches and `components/chat/ChatWindow.tsx`.
+- **Immersive routes:** on `/chat` and `/home` the mobile header, bottom tabs, and content padding are all removed for a full-bleed experience (`/home` also drops the desktop sidebar and top bar). If you touch chat layout, check the shell's `isChatRoute` / `isHomeRoute` branches and `components/chat/ChatWindow.tsx`.
 
 ### Data state
 
