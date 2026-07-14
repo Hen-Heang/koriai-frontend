@@ -12,6 +12,18 @@ export function aiModel(name?: string | null) {
   return openai(name || DEFAULT_MODEL)
 }
 
+// gpt-5-mini is a reasoning model that defaults to "medium" reasoning effort
+// and "medium" verbosity when neither is specified — noticeable latency for
+// tasks as small as grading one sentence or looking up a word. Every route's
+// generateObject/streamText call should pass this so the model only "thinks"
+// as much as a short-form tutoring task actually needs.
+export const AI_PROVIDER_OPTIONS = {
+  openai: {
+    reasoningEffort: "low",
+    textVerbosity: "low",
+  },
+} as const
+
 export interface AuthedRequest {
   user: User
   // Per-request client carrying the caller's JWT → RLS applies, no service key.
@@ -48,6 +60,7 @@ export function jsonAiRoute<S extends z.ZodType>(
       const prompt = await buildPrompt(body, auth)
       const { object } = await generateObject({
         model: aiModel(),
+        providerOptions: AI_PROVIDER_OPTIONS,
         schema,
         system,
         prompt,

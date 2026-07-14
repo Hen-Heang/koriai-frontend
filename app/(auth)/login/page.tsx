@@ -99,7 +99,7 @@ export default function LoginPage() {
                 <Field>
                   <div className="flex items-center justify-between">
                     <FieldLabel className="text-sm font-medium text-foreground/80">Password</FieldLabel>
-                    <Link href="#" className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                    <Link href="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
                       Forgot password?
                     </Link>
                   </div>
@@ -180,8 +180,8 @@ export default function LoginPage() {
 
         <p className="text-center text-xs leading-relaxed text-muted-foreground/80">
           By signing in, you agree to our{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
         </p>
       </div>
     </main>

@@ -9,7 +9,10 @@ import {
   INTERVIEW_TOPICS,
   parseEvaluation,
   parseExaminerTurn,
+  toEvaluationScores,
 } from "./interview"
+import { INTERVIEW_MODES } from "./interview-modes"
+import { sampleUnexpectedQuestions } from "./interview-unexpected"
 
 describe("getInterviewTopic", () => {
   it("returns the matching topic", () => {
@@ -76,12 +79,49 @@ describe("buildScriptDocument", () => {
 })
 
 describe("buildInterviewSystemPrompt", () => {
-  it("embeds the topic and the response-format tags", () => {
+  it("embeds the topic and the response-format tags (practice default)", () => {
     const prompt = buildInterviewSystemPrompt(getInterviewTopic("weather"))
     expect(prompt).toContain("한국 여름 날씨")
     expect(prompt).toContain("[QUESTION_KO]")
     expect(prompt).toContain("[QUESTION_EN]")
     expect(prompt).toContain("[FEEDBACK]")
+  })
+
+  it("always demands follow-up probing before advancing", () => {
+    const prompt = buildInterviewSystemPrompt(getInterviewTopic("weather"))
+    expect(prompt).toContain("NEVER move to a new sub-topic after only one question")
+    expect(prompt).toContain("왜 그렇게 생각합니까?")
+    expect(prompt).toContain("예를 들어 설명해 주세요")
+  })
+
+  it("exam mode is Korean-only: no feedback or English tags requested", () => {
+    const prompt = buildInterviewSystemPrompt(
+      getInterviewTopic("weather"),
+      INTERVIEW_MODES.exam
+    )
+    expect(prompt).toContain("[QUESTION_KO]")
+    expect(prompt).not.toContain("[QUESTION_EN]")
+    expect(prompt).not.toContain("[FEEDBACK]")
+    expect(prompt).toContain("Do NOT include feedback, English, or translations")
+    expect(prompt).toContain("Give no feedback during the interview")
+  })
+
+  it("lists sampled unexpected questions when provided", () => {
+    const sampled = sampleUnexpectedQuestions(3, () => 0.42)
+    const prompt = buildInterviewSystemPrompt(
+      getInterviewTopic("weather"),
+      INTERVIEW_MODES.exam,
+      sampled
+    )
+    expect(prompt).toContain("unexpected everyday interview question")
+    for (const q of sampled) {
+      expect(prompt).toContain(q.ko)
+    }
+  })
+
+  it("omits the unexpected block when no questions are passed", () => {
+    const prompt = buildInterviewSystemPrompt(getInterviewTopic("weather"))
+    expect(prompt).not.toContain("unexpected everyday interview question")
   })
 })
 
@@ -125,6 +165,53 @@ describe("buildAnswerMessage", () => {
     const message = buildAnswerMessage("  저는 더위를 안 좋아해요  ")
     expect(message).toContain("저는 더위를 안 좋아해요")
     expect(message).toContain("required format")
+  })
+
+  it("exam mode reminds the examiner: no feedback, no English", () => {
+    const message = buildAnswerMessage("네, 좋아요", INTERVIEW_MODES.exam)
+    expect(message).toContain("No feedback, no English")
+    expect(message).not.toContain("Give brief feedback")
+  })
+})
+
+describe("parseExaminerTurn (exam-mode replies)", () => {
+  it("parses a KO-only reply with empty feedback and English", () => {
+    const turn = parseExaminerTurn("[QUESTION_KO]\n한국 생활은 어떻습니까?")
+    expect(turn.questionKo).toBe("한국 생활은 어떻습니까?")
+    expect(turn.feedback).toBe("")
+    expect(turn.questionEn).toBe("")
+  })
+})
+
+describe("toEvaluationScores", () => {
+  it("maps keyed scores into the official criteria order", () => {
+    const scores = toEvaluationScores({
+      speaking: 4,
+      pronunciation: 3,
+      vocabulary: 5,
+      confidence: 2,
+    })
+    expect(scores.map((s) => s.label)).toEqual([
+      "Speaking",
+      "Pronunciation",
+      "Vocabulary",
+      "Confidence",
+    ])
+    expect(scores[0]).toEqual({ label: "Speaking", score: 4, max: 5 })
+    expect(scores[3]).toEqual({ label: "Confidence", score: 2, max: 5 })
+  })
+
+  it("clamps and rounds out-of-range values", () => {
+    const scores = toEvaluationScores({
+      speaking: 7,
+      pronunciation: 0,
+      vocabulary: 3.6,
+      confidence: -1,
+    })
+    expect(scores[0].score).toBe(5)
+    expect(scores[1].score).toBe(1)
+    expect(scores[2].score).toBe(4)
+    expect(scores[3].score).toBe(1)
   })
 })
 

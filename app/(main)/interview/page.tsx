@@ -1,23 +1,17 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   AlertCircle,
   Award,
-  BookOpen,
-  CheckCircle2,
-  ChevronDown,
   Eye,
   EyeOff,
   FileText,
   GraduationCap,
-  Lightbulb,
   Loader2,
-  MessageCircleQuestion,
   Mic,
   PencilLine,
-  Quote,
   RotateCcw,
   Send,
   Sparkles,
@@ -27,7 +21,12 @@ import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 
 import { PageHero } from "@/components/app/page-hero"
+import { DrillEntryCards } from "@/components/interview/DrillEntryCards"
+import { EvaluationSummary } from "@/components/interview/EvaluationSummary"
+import { ExamTimer } from "@/components/interview/ExamTimer"
+import { ModePicker } from "@/components/interview/ModePicker"
 import { SpeakingTipsCard } from "@/components/interview/SpeakingTipsCard"
+import { StudyPack } from "@/components/interview/StudyPack"
 import { StudyPlanCard } from "@/components/interview/StudyPlanCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
@@ -37,7 +36,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { useLogActivity } from "@/hooks/useLogActivity"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
-import { chatApi, getApiErrorMessage, ttsApi } from "@/lib/api"
+import { chatApi, getApiErrorMessage, interviewApi, ttsApi } from "@/lib/api"
+import type { TranscriptEntry } from "@/lib/api/interview"
 import {
   buildAnswerMessage,
   buildEvaluationPrompt,
@@ -45,14 +45,18 @@ import {
   INTERVIEW_TOPICS,
   parseEvaluation,
   parseExaminerTurn,
+  toEvaluationScores,
   type ExaminerTurn,
+  type InterviewAnalytics,
   type InterviewEvaluation,
-  type InterviewTopic,
-  type PhraseEntry,
 } from "@/lib/interview"
+import { INTERVIEW_MODES, type InterviewMode } from "@/lib/interview-modes"
+import { sampleUnexpectedQuestions } from "@/lib/interview-unexpected"
 import {
   loadScorecards,
+  mergeScorecards,
   saveScorecard,
+  toScorecardRecord,
   type ScorecardRecord,
 } from "@/lib/interview-history"
 import { cn } from "@/lib/utils"
@@ -105,6 +109,7 @@ export default function InterviewPage() {
   useSessionTimer("interview")
 
   const [phase, setPhase] = useState<"select" | "session" | "summary">("select")
+  const [mode, setMode] = useState<InterviewMode>("practice")
   const [entries, setEntries] = useState<SessionEntry[]>([])
   const [current, setCurrent] = useState<ExaminerTurn | null>(null)
   const [streamingText, setStreamingText] = useState("")
@@ -115,13 +120,35 @@ export default function InterviewPage() {
   const [error, setError] = useState("")
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [evaluation, setEvaluation] = useState<InterviewEvaluation | null>(null)
-  // Past scorecards (localStorage) — lazy-loaded so the trend survives reloads.
+  const [analytics, setAnalytics] = useState<InterviewAnalytics | null>(null)
+  // Exam-mode countdown target (epoch ms); null when untimed.
+  const [endsAt, setEndsAt] = useState<number | null>(null)
+  // Past scorecards — localStorage first (instant), merged with the Supabase
+  // attempts once they arrive so history syncs across devices.
   const [history, setHistory] = useState<ScorecardRecord[]>(loadScorecards)
 
   const speech = useSpeechRecognition({ lang: "ko-KR" })
   const conversationRef = useRef<string | null>(null)
+  const sessionStartRef = useRef<number | null>(null)
 
   const topic = INTERVIEW_TOPICS[0]
+  const cfg = INTERVIEW_MODES[mode]
+
+  // Merge remote attempt history into the local trend. Best-effort: offline or
+  // pre-migration accounts just keep the local copy.
+  useEffect(() => {
+    let active = true
+    interviewApi
+      .listAttempts()
+      .then((attempts) => {
+        if (!active || attempts.length === 0) return
+        setHistory(mergeScorecards(loadScorecards(), attempts.map(toScorecardRecord)))
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Streams one examiner turn, then parses it into question + feedback and
   // speaks the Korean question aloud.
@@ -170,17 +197,21 @@ export default function InterviewPage() {
     setIsExaminerThinking(true)
     try {
       const data = await chatApi.createConversation(
-        `Mock Interview · ${topic.label}`,
+        `Mock Interview (${cfg.label}) · ${topic.label}`,
         "FREE_CHAT"
       )
       conversationRef.current = data.id
+      sessionStartRef.current = Date.now()
       setEntries([])
       setCurrent(null)
       setQuestionCount(0)
       setEvaluation(null)
+      setAnalytics(null)
+      setEndsAt(cfg.durationSeconds ? Date.now() + cfg.durationSeconds * 1000 : null)
       speech.reset()
       setPhase("session")
-      await runExaminerTurn(buildInterviewSystemPrompt(topic))
+      const unexpected = sampleUnexpectedQuestions(cfg.unexpectedQuestionCount)
+      await runExaminerTurn(buildInterviewSystemPrompt(topic, cfg, unexpected))
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not start the interview. Is the backend running?"))
       setIsExaminerThinking(false)
@@ -198,12 +229,14 @@ export default function InterviewPage() {
     ])
     speech.reset()
     setIsEditingAnswer(false)
-    void runExaminerTurn(buildAnswerMessage(answer))
+    void runExaminerTurn(buildAnswerMessage(answer, cfg))
   }
 
-  // Ends the Q&A and asks the examiner for a final scorecard against the four
-  // exam criteria, judged on the full transcript it already holds. Lands on the
-  // "summary" phase; the conversation stays open so the candidate can retry.
+  // Ends the Q&A and asks for a final scorecard against the four exam criteria.
+  // Primary path: the structured evaluate route (richer analytics). Fallback:
+  // the original chat-stream scorecard, so an AI-route outage never eats a
+  // finished interview. The result is saved locally AND to Supabase under one
+  // shared id so merged reads dedupe.
   async function finishInterview() {
     const convId = conversationRef.current
     if (!convId || isEvaluating || isExaminerThinking) return
@@ -212,38 +245,96 @@ export default function InterviewPage() {
     setIsEvaluating(true)
     speech.stop()
 
-    let buffer = ""
+    const transcript: TranscriptEntry[] = entries.map((entry) =>
+      entry.kind === "examiner"
+        ? { role: "examiner", text: entry.turn.questionKo }
+        : { role: "candidate", text: entry.text }
+    )
+    const answeredCount = transcript.filter((t) => t.role === "candidate").length
+    const durationSeconds = sessionStartRef.current
+      ? Math.round((Date.now() - sessionStartRef.current) / 1000)
+      : 0
+
+    let parsed: InterviewEvaluation | null = null
+    let parsedAnalytics: InterviewAnalytics | null = null
     try {
-      await chatApi.streamMessage(
-        convId,
-        buildEvaluationPrompt(),
-        (token) => {
-          buffer += token
-        },
-        () => {},
-        () => {}
-      )
-      const parsed = parseEvaluation(buffer)
+      const result = await interviewApi.evaluate({
+        topicId: topic.id,
+        mode: cfg.id,
+        transcript,
+        questionCount: answeredCount,
+        durationSeconds,
+      })
+      parsed = {
+        scores: toEvaluationScores(result.scores),
+        summary: result.summary,
+        advice: result.advice,
+      }
+      parsedAnalytics = result.analytics
+    } catch {
+      // Structured route unavailable — fall back to the original chat-stream
+      // scorecard (no analytics). Errors here surface to the candidate below.
+      try {
+        let buffer = ""
+        await chatApi.streamMessage(
+          convId,
+          buildEvaluationPrompt(),
+          (token) => {
+            buffer += token
+          },
+          () => {},
+          () => {}
+        )
+        parsed = parseEvaluation(buffer)
+      } catch (err) {
+        setError(getApiErrorMessage(err, "Could not generate your evaluation. Try again."))
+      }
+    }
+
+    if (parsed) {
       setEvaluation(parsed)
-      // Persist this scorecard so the progress trend builds over time.
-      setHistory(saveScorecard(parsed))
+      setAnalytics(parsedAnalytics)
+      // Dual-write under one id: localStorage keeps the instant/offline trend,
+      // Supabase makes it durable and cross-device. Remote failure is silent —
+      // the local copy already has it.
+      const attemptId = crypto.randomUUID()
+      setHistory(saveScorecard(parsed, new Date(), attemptId, cfg.id))
+      if (parsed.scores.length > 0) {
+        interviewApi
+          .saveAttempt({
+            id: attemptId,
+            mode: cfg.id,
+            topicId: topic.id,
+            scores: parsed.scores,
+            overall:
+              parsed.scores.reduce((sum, s) => sum + (s.score / s.max) * 5, 0) /
+              parsed.scores.length,
+            summary: parsed.summary,
+            advice: parsed.advice,
+            analytics: parsedAnalytics,
+            questionCount: answeredCount,
+            durationSeconds,
+          })
+          .catch((err) => console.warn("Could not sync interview attempt:", err))
+      }
+      setEndsAt(null)
       setPhase("summary")
       void logActivity()
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Could not generate your evaluation. Try again."))
-    } finally {
-      setIsEvaluating(false)
     }
+    setIsEvaluating(false)
   }
 
   function endSession() {
     speech.reset()
     conversationRef.current = null
+    sessionStartRef.current = null
     setEntries([])
     setCurrent(null)
     setStreamingText("")
     setQuestionCount(0)
     setEvaluation(null)
+    setAnalytics(null)
+    setEndsAt(null)
     setPhase("select")
   }
 
@@ -260,7 +351,7 @@ export default function InterviewPage() {
           <PageHero
             eyebrow="Exam Prep · 면접 연습"
             title="Mock Interview"
-            description="Practice the K-Specialist spoken Q&A. The AI examiner asks one question at a time — listen, answer out loud, and get instant feedback on vocabulary, grammar, and confidence."
+            description="Practice the K-Specialist spoken Q&A. The AI examiner asks one question at a time and keeps probing with follow-ups — train in Practice mode, then prove it under real exam conditions."
             stats={[
               { label: "Exam", value: "Aug 29" },
               { label: "Format", value: "Q&A only" },
@@ -290,6 +381,16 @@ export default function InterviewPage() {
           </Card>
         </motion.div>
 
+        {/* Practice vs Exam Simulation */}
+        <motion.div variants={itemVariants}>
+          <ModePicker value={mode} onChange={setMode} />
+        </motion.div>
+
+        {/* Daily drills — quick reps between full mocks */}
+        <motion.div variants={itemVariants}>
+          <DrillEntryCards />
+        </motion.div>
+
         {/* Renders itself only after mount + when scorecards exist, so it's safe
             to leave ungated here (no SSR/CSR conditional mismatch). */}
         <ScoreTrend records={history} />
@@ -317,7 +418,12 @@ export default function InterviewPage() {
           <Button
             onClick={startSession}
             disabled={isExaminerThinking}
-            className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-60 sm:w-auto"
+            className={cn(
+              "h-14 w-full rounded-2xl px-10 text-base font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-60 sm:w-auto",
+              mode === "exam"
+                ? "bg-rose-600 shadow-rose-600/20 hover:bg-rose-700"
+                : "bg-blue-600 shadow-blue-600/20 hover:bg-blue-700"
+            )}
           >
             {isExaminerThinking ? (
               <>
@@ -325,7 +431,8 @@ export default function InterviewPage() {
               </>
             ) : (
               <>
-                <GraduationCap size={20} className="mr-2" /> Start Interview
+                <GraduationCap size={20} className="mr-2" />
+                {mode === "exam" ? "Start Exam Simulation" : "Start Interview"}
               </>
             )}
           </Button>
@@ -347,8 +454,9 @@ export default function InterviewPage() {
   if (phase === "summary" && evaluation) {
     return (
       <EvaluationSummary
-        topic={topic}
+        mode={cfg}
         evaluation={evaluation}
+        analytics={analytics}
         history={history}
         onPracticeAgain={startSession}
         onBackToTopics={endSession}
@@ -369,22 +477,29 @@ export default function InterviewPage() {
     >
       <motion.div variants={itemVariants}>
         <PageHero
-          eyebrow="Mock Interview · In Progress"
+          eyebrow={`Mock Interview · ${cfg.label} · In Progress`}
           title={topic.label}
-          description="Listen to each question, then tap the mic and answer out loud in Korean. Reveal the English only if you need it — train your listening first."
+          description={
+            cfg.showEnglish
+              ? "Listen to each question, then tap the mic and answer out loud in Korean. Reveal the English only if you need it — train your listening first."
+              : "Real exam conditions: Korean only, no feedback until the end. Listen, think, answer — the examiner keeps going until time runs out."
+          }
           stats={[
             { label: "Question", value: String(Math.max(questionCount, 1)) },
-            { label: "Topic", value: topic.difficulty },
-            { label: "Mode", value: speech.supported ? "Voice" : "Manual" },
+            { label: "Mode", value: cfg.label },
+            { label: "Input", value: speech.supported ? "Voice" : "Manual" },
           ]}
           actions={
-            <Button
-              variant="outline"
-              onClick={endSession}
-              className="h-10 rounded-xl border-border bg-background px-4 font-bold hover:bg-accent"
-            >
-              <RotateCcw size={16} className="mr-2" /> End & change topic
-            </Button>
+            <div className="flex items-center gap-2">
+              {endsAt !== null && <ExamTimer endsAt={endsAt} onExpire={finishInterview} />}
+              <Button
+                variant="outline"
+                onClick={endSession}
+                className="h-10 rounded-xl border-border bg-background px-4 font-bold hover:bg-accent"
+              >
+                <RotateCcw size={16} className="mr-2" /> End session
+              </Button>
+            </div>
           }
         />
       </motion.div>
@@ -406,8 +521,8 @@ export default function InterviewPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5 pt-5 sm:pt-6">
-            {/* Feedback on the previous answer */}
-            {current?.feedback && (
+            {/* Feedback on the previous answer (practice mode only) */}
+            {cfg.showFeedback && current?.feedback && (
               <div className="flex items-start gap-3 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
                 <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600">
                   <Sparkles size={14} strokeWidth={3} />
@@ -442,20 +557,24 @@ export default function InterviewPage() {
                             Normal
                           </span>
                         </div>
-                        <div className="mx-1 h-4 w-px bg-border" />
-                        <div className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-accent">
-                          <SpeakButton
-                            text={current.questionKo}
-                            className="p-0"
-                            playbackRate={0.75}
-                          />
-                          <span className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">
-                            Slow
-                          </span>
-                        </div>
+                        {cfg.allowSlowReplay && (
+                          <>
+                            <div className="mx-1 h-4 w-px bg-border" />
+                            <div className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-accent">
+                              <SpeakButton
+                                text={current.questionKo}
+                                className="p-0"
+                                playbackRate={0.75}
+                              />
+                              <span className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">
+                                Slow
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
 
-                      {current.questionEn && (
+                      {cfg.showEnglish && current.questionEn && (
                         <Button
                           variant="outline"
                           onClick={() => setShowEnglish((v) => !v)}
@@ -476,7 +595,7 @@ export default function InterviewPage() {
                   )}
 
                   <AnimatePresence>
-                    {showEnglish && current?.questionEn && (
+                    {cfg.showEnglish && showEnglish && current?.questionEn && (
                       <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -587,9 +706,9 @@ export default function InterviewPage() {
               <Send size={18} className="mr-2" /> Submit Answer & Next Question
             </Button>
 
-            {/* Wrap up the session and get a scorecard. Needs at least one
-                answered question so the examiner has something to judge. */}
-            {answeredCount >= 1 && (
+            {/* Wrap up the session and get a scorecard. Practice allows an early
+                finish; exam mode wants a real conversation first. */}
+            {answeredCount >= cfg.minAnswersBeforeFinish && (
               <Button
                 variant="outline"
                 onClick={finishInterview}
@@ -611,15 +730,19 @@ export default function InterviewPage() {
         </Card>
       </motion.div>
 
-      {/* Quick references during the session — safety sentences live in the
-          strategy card, exactly when they're needed. */}
-      <motion.div variants={itemVariants}>
-        <SpeakingTipsCard />
-      </motion.div>
-      {topic.prep && (
-        <motion.div variants={itemVariants}>
-          <StudyPack topic={topic} />
-        </motion.div>
+      {/* Quick references during the session — practice mode only. Exam mode is
+          closed-book, like the real interview. */}
+      {cfg.showStudyPackInSession && (
+        <>
+          <motion.div variants={itemVariants}>
+            <SpeakingTipsCard />
+          </motion.div>
+          {topic.prep && (
+            <motion.div variants={itemVariants}>
+              <StudyPack topic={topic} />
+            </motion.div>
+          )}
+        </>
       )}
 
       {/* Session history */}
@@ -642,7 +765,7 @@ export default function InterviewPage() {
                     <p className="mt-1.5 font-bold text-foreground">
                       {entry.turn.questionKo}
                     </p>
-                    {entry.turn.questionEn && (
+                    {cfg.showEnglish && entry.turn.questionEn && (
                       <p className="mt-1 text-sm italic text-muted-foreground">
                         {entry.turn.questionEn}
                       </p>
@@ -664,318 +787,6 @@ export default function InterviewPage() {
           </Card>
         </motion.div>
       )}
-    </motion.div>
-  )
-}
-
-// Curated, audio-enabled study material for the selected topic. Collapsible so
-// it doubles as a quick reference during a live session.
-function StudyPack({
-  topic,
-  defaultOpen = false,
-}: {
-  topic: InterviewTopic
-  defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  const prep = topic.prep
-  if (!prep) return null
-
-  return (
-    <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-5 py-5 text-left sm:px-6"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
-            <BookOpen size={20} strokeWidth={2.5} />
-          </div>
-          <div>
-            <CardTitle className="text-xl font-bold">Study Pack</CardTitle>
-            <p className="text-xs font-medium text-muted-foreground">
-              Vocabulary, phrases & likely questions — tap 🔊 to hear each one.
-            </p>
-          </div>
-        </div>
-        <ChevronDown
-          size={20}
-          className={cn("shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
-        />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <CardContent className="space-y-7 border-t border-border/80 pt-6">
-              {/* Vocabulary */}
-              <section>
-                <SectionLabel icon={<BookOpen size={13} strokeWidth={3} />} color="amber">
-                  Vocabulary · {prep.vocabulary.length} words
-                </SectionLabel>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {prep.vocabulary.map((item) => (
-                    <div
-                      key={item.term}
-                      className="flex items-center justify-between gap-2 rounded-2xl border border-border bg-accent/5 px-3 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-bold text-foreground">{item.term}</p>
-                        <p className="truncate text-xs font-medium text-muted-foreground">
-                          {item.meaning}
-                        </p>
-                      </div>
-                      <SpeakButton text={item.term} className="shrink-0 p-1.5" />
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Key phrases */}
-              <section>
-                <SectionLabel icon={<Quote size={13} strokeWidth={3} />} color="emerald">
-                  Key phrases
-                </SectionLabel>
-                <div className="mt-3 space-y-2">
-                  {prep.keyPhrases.map((entry) => (
-                    <PhraseRow key={entry.ko} entry={entry} />
-                  ))}
-                </div>
-              </section>
-
-              {/* Likely questions */}
-              <section>
-                <SectionLabel
-                  icon={<MessageCircleQuestion size={13} strokeWidth={3} />}
-                  color="sky"
-                >
-                  Likely questions
-                </SectionLabel>
-                <div className="mt-3 space-y-2">
-                  {prep.sampleQuestions.map((entry) => (
-                    <PhraseRow key={entry.ko} entry={entry} />
-                  ))}
-                </div>
-              </section>
-            </CardContent>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
-  )
-}
-
-function SectionLabel({
-  icon,
-  color,
-  children,
-}: {
-  icon: React.ReactNode
-  color: "amber" | "emerald" | "sky"
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className={cn(
-          "flex h-5 w-5 items-center justify-center rounded-md",
-          color === "amber" && "bg-amber-500/10 text-amber-600",
-          color === "emerald" && "bg-blue-500/10 text-blue-600",
-          color === "sky" && "bg-sky-500/10 text-sky-600"
-        )}
-      >
-        {icon}
-      </span>
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        {children}
-      </p>
-    </div>
-  )
-}
-
-function PhraseRow({ entry }: { entry: PhraseEntry }) {
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-2xl border border-border bg-accent/5 px-3 py-3">
-      <div className="min-w-0">
-        <p className="font-bold leading-snug text-foreground">{entry.ko}</p>
-        <p className="mt-1 text-sm font-medium leading-relaxed text-muted-foreground">
-          {entry.en}
-        </p>
-      </div>
-      <SpeakButton text={entry.ko} className="mt-0.5 shrink-0 p-1.5" />
-    </div>
-  )
-}
-
-// End-of-session scorecard: the four exam criteria as scored bars, an overall
-// summary, and concrete next-step advice. Ends with retry / change-topic.
-function EvaluationSummary({
-  topic,
-  evaluation,
-  history,
-  onPracticeAgain,
-  onBackToTopics,
-}: {
-  topic: InterviewTopic
-  evaluation: InterviewEvaluation
-  history: ScorecardRecord[]
-  onPracticeAgain: () => void
-  onBackToTopics: () => void
-}) {
-  const { scores, summary, advice } = evaluation
-  const overall =
-    scores.length > 0
-      ? scores.reduce((sum, s) => sum + (s.score / s.max) * 5, 0) / scores.length
-      : 0
-
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="space-y-5 pb-12 sm:space-y-6"
-    >
-      <motion.div variants={itemVariants}>
-        <PageHero
-          eyebrow="Mock Interview · Result"
-          title="Your Evaluation"
-          description="An overall read on this session across the four official exam criteria — speaking, pronunciation, vocabulary, and confidence. Practice again to push each score up."
-          stats={[
-            { label: "Overall", value: overall ? `${overall.toFixed(1)} / 5` : "—" },
-            { label: "Topic", value: topic.difficulty },
-            { label: "Criteria", value: String(scores.length || 4) },
-          ]}
-        />
-      </motion.div>
-
-      {/* Scorecard */}
-      <motion.div variants={itemVariants}>
-        <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
-          <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
-                <Award size={20} strokeWidth={2.5} />
-              </div>
-              <div>
-                <CardTitle className="text-xl font-bold">Scorecard</CardTitle>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Judged on the exam&apos;s four criteria
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-5 sm:pt-6">
-            {scores.length > 0 ? (
-              scores.map((s) => (
-                <div key={s.label} className="space-y-1.5">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-bold text-foreground">{s.label}</span>
-                    <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
-                      {s.score}
-                      <span className="text-muted-foreground/50"> / {s.max}</span>
-                    </span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-accent/40">
-                    <motion.div
-                      className="h-full rounded-full bg-blue-500"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(s.score / s.max) * 100}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm font-medium text-muted-foreground">
-                No scores were returned — see the summary below.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Overall summary */}
-      {summary && (
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-[1.8rem] border-sky-500/20 bg-sky-500/5 shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
-            <CardContent className="flex items-start gap-3 p-5 sm:p-6">
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
-                <CheckCircle2 size={18} strokeWidth={2.5} />
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
-                  Overall
-                </p>
-                <p className="mt-1.5 text-sm font-medium leading-relaxed text-foreground/90">
-                  {summary}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Actionable advice */}
-      {advice.length > 0 && (
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-[1.8rem] border-border bg-card shadow-xl dark:bg-slate-900/40 sm:rounded-[2.2rem]">
-            <CardHeader className="border-b border-border/80 px-5 pb-4 pt-5 sm:px-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
-                  <Lightbulb size={20} strokeWidth={2.5} />
-                </div>
-                <CardTitle className="text-base font-bold">What to work on next</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2.5 pt-5">
-              {advice.map((tip, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 rounded-2xl border border-border bg-accent/5 p-4"
-                >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm font-medium leading-relaxed text-foreground/90">{tip}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Trajectory across past mocks — shown once there's more than one. */}
-      {history.length > 1 && (
-        <motion.div variants={itemVariants}>
-          <ScoreTrend records={history} />
-        </motion.div>
-      )}
-
-      <motion.div
-        variants={itemVariants}
-        className="flex flex-col gap-3 sm:flex-row sm:justify-center"
-      >
-        <Button
-          onClick={onPracticeAgain}
-          className="h-14 w-full rounded-2xl bg-blue-600 px-10 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto"
-        >
-          <RotateCcw size={20} className="mr-2" /> Practice Again
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onBackToTopics}
-          className="h-14 w-full rounded-2xl border-border bg-background px-8 text-base font-bold hover:bg-accent active:scale-95 sm:w-auto"
-        >
-          <GraduationCap size={20} className="mr-2" /> Back to Topic
-        </Button>
-      </motion.div>
     </motion.div>
   )
 }

@@ -90,4 +90,20 @@ export const authApi = {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   },
+
+  // Sends a reset-password email; the link lands on /reset-password, where
+  // Supabase's detectSessionInUrl picks up the recovery token automatically.
+  requestPasswordReset: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw error
+  },
+
+  // Called from /reset-password once Supabase has exchanged the recovery
+  // link for a session; sets the new password on that session.
+  updatePassword: async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  },
 }

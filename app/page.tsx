@@ -557,9 +557,8 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
-                <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
-                <Link href="#" className="hover:text-foreground transition-colors">Contact</Link>
+                <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+                <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
                 <ThemeToggle />
               </div>
             </div>

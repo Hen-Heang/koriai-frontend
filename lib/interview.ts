@@ -7,6 +7,9 @@
 // (chatApi), so no new endpoint is required. We inject the instructions into
 // the message text, the same approach useChat uses for language/dev-mode.
 
+import { INTERVIEW_MODES, type InterviewModeConfig } from "./interview-modes"
+import type { UnexpectedQuestion } from "./interview-unexpected"
+
 export type InterviewTopicId = "weather"
 
 export interface VocabEntry {
@@ -392,33 +395,64 @@ const FEEDBACK_TAG = "[FEEDBACK]"
 const QUESTION_KO_TAG = "[QUESTION_KO]"
 const QUESTION_EN_TAG = "[QUESTION_EN]"
 
-const RESPONSE_FORMAT_RULES = [
-  "Reply ONLY in this exact format, nothing before or after:",
-  FEEDBACK_TAG,
-  "<one or two short sentences of English feedback on the candidate's PREVIOUS answer — comment on vocabulary, grammar, and confidence, and when useful give a more natural way to say it. For the very first turn, write: Let's begin — relax and answer naturally.>",
-  QUESTION_KO_TAG,
-  "<exactly ONE interview question in natural spoken Korean>",
-  QUESTION_EN_TAG,
-  "<a plain English translation of that question>",
-].join("\n")
+// Per-mode response contract. Practice keeps the full three-tag turn; exam is
+// Korean-only — no feedback, no translation — like the real interviewer.
+function responseFormatRules(mode: InterviewModeConfig): string {
+  if (!mode.showFeedback && !mode.showEnglish) {
+    return [
+      "Reply ONLY in this exact format, nothing before or after:",
+      QUESTION_KO_TAG,
+      "<exactly ONE interview question in natural spoken Korean>",
+      "Do NOT include feedback, English, or translations of any kind.",
+    ].join("\n")
+  }
+  return [
+    "Reply ONLY in this exact format, nothing before or after:",
+    FEEDBACK_TAG,
+    "<one or two short sentences of English feedback on the candidate's PREVIOUS answer — comment on vocabulary, grammar, and confidence, and when useful give a more natural way to say it. For the very first turn, write: Let's begin — relax and answer naturally.>",
+    QUESTION_KO_TAG,
+    "<exactly ONE interview question in natural spoken Korean>",
+    QUESTION_EN_TAG,
+    "<a plain English translation of that question>",
+  ].join("\n")
+}
 
 /**
  * The kickoff message sent as the first turn of the conversation. It sets up
- * the examiner persona and asks for the first question.
+ * the examiner persona and asks for the first question. Defaults keep the old
+ * one-argument call (and its tests) behaving exactly as before.
  */
-export function buildInterviewSystemPrompt(topic: InterviewTopic): string {
+export function buildInterviewSystemPrompt(
+  topic: InterviewTopic,
+  mode: InterviewModeConfig = INTERVIEW_MODES.practice,
+  unexpected: UnexpectedQuestion[] = []
+): string {
+  const unexpectedBlock =
+    unexpected.length > 0
+      ? [
+          "- Roughly every 2-3 questions, break from the topic and ask ONE unexpected everyday interview question, adapted naturally in your own words (do not read verbatim):",
+          ...unexpected.map((q) => `  · ${q.ko}`),
+          "  Return to the topic arc afterwards.",
+        ]
+      : []
+
   return [
     "You are a Korean-language interviewer for the K-Specialist (케이 스페셜리스트) Korean speaking exam.",
     "This is a spoken Q&A interview — there is no presentation. You ask one question at a time and the candidate answers out loud.",
     `Interview topic: ${topic.labelKo} (${topic.label}).`,
     topic.examinerBrief,
     "Rules:",
-    "- Ask ONE question per turn. Start easy, then go a little deeper with natural follow-up questions based on the candidate's previous answer.",
+    "- Ask ONE question per turn, but NEVER move to a new sub-topic after only one question.",
+    "- After every answer, probe it at least once with a natural follow-up before advancing the arc. Use probes like: 왜 그렇게 생각합니까? / 예를 들어 설명해 주세요 / 조금 더 자세히 말해 주세요 / 그때 기분이 어땠습니까?",
+    "- If the answer is short or vague, dig into it; if it is detailed, challenge one detail.",
+    ...unexpectedBlock,
     "- Keep questions short and clearly spoken, suitable for an intermediate learner.",
     "- The candidate is evaluated on speaking ability, pronunciation, vocabulary, and confidence.",
-    "- Be encouraging but honest in your feedback.",
+    mode.showFeedback
+      ? "- Be encouraging but honest in your feedback."
+      : "- Stay formal and neutral, like a real examiner. Give no feedback during the interview.",
     "",
-    RESPONSE_FORMAT_RULES,
+    responseFormatRules(mode),
     "",
     "Begin the interview now with your first question.",
   ].join("\n")
@@ -428,8 +462,14 @@ export function buildInterviewSystemPrompt(topic: InterviewTopic): string {
  * Wraps the candidate's spoken answer for the next turn, with a light reminder
  * to keep the examiner on-format (models drift over long chats).
  */
-export function buildAnswerMessage(answer: string): string {
-  return `${answer.trim()}\n\n[Give brief feedback on that answer, then ask the next question. Use the required format.]`
+export function buildAnswerMessage(
+  answer: string,
+  mode: InterviewModeConfig = INTERVIEW_MODES.practice
+): string {
+  const reminder = mode.showFeedback
+    ? "[Give brief feedback on that answer, then ask the next question. Use the required format.]"
+    : "[Ask the next question in the required format. No feedback, no English.]"
+  return `${answer.trim()}\n\n${reminder}`
 }
 
 export interface ExaminerTurn {
@@ -492,6 +532,50 @@ export interface InterviewEvaluation {
   scores: EvaluationScore[]
   summary: string
   advice: string[]
+}
+
+// Richer end-of-session analysis from the structured evaluate route
+// (app/api/ai/interview/evaluate). All values are ESTIMATED from the
+// speech-recognition transcript — there is no audio analysis.
+
+export interface InterviewGrammarIssue {
+  issue: string
+  example: string
+  fix: string
+}
+
+export interface InterviewAnalytics {
+  fillerNotes: string
+  avgSentenceLengthWords: number
+  vocabRangeNotes: string
+  grammarIssues: InterviewGrammarIssue[]
+  wordsToPractice: string[]
+}
+
+/** The evaluate route's per-criterion scores, keyed by criterion. */
+export interface CriterionScores {
+  speaking: number
+  pronunciation: number
+  vocabulary: number
+  confidence: number
+}
+
+/**
+ * Maps the evaluate route's keyed scores into the ordered EvaluationScore list
+ * the scorecard UI and history already consume, clamped to 1–5.
+ */
+export function toEvaluationScores(scores: CriterionScores): EvaluationScore[] {
+  const byLabel: Record<(typeof EVALUATION_CRITERIA)[number], number> = {
+    Speaking: scores.speaking,
+    Pronunciation: scores.pronunciation,
+    Vocabulary: scores.vocabulary,
+    Confidence: scores.confidence,
+  }
+  return EVALUATION_CRITERIA.map((label) => ({
+    label,
+    score: Math.max(1, Math.min(5, Math.round(byLabel[label]))),
+    max: 5,
+  }))
 }
 
 /**

@@ -377,8 +377,8 @@ export default function RegisterPage() {
 
         <p className="text-center text-xs leading-relaxed text-muted-foreground/80">
           By creating an account, you agree to our{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">Terms</Link> and{" "}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
         </p>
       </div>
     </main>

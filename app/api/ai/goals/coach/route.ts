@@ -1,8 +1,8 @@
 import { streamText } from "ai"
-import { aiModel, requireUser, sseChunk, sseResponse } from "@/lib/server/ai"
+import { AI_PROVIDER_OPTIONS, aiModel, requireUser, sseChunk, sseResponse } from "@/lib/server/ai"
 
-// Per-goal AI coach — ephemeral SSE chat (token* → done), history passed by the
-// client each turn, nothing persisted. Mirrors the Spring coach/stream protocol.
+// Per-goal AI coach — ephemeral SSE chat (start → token* → done), history passed
+// by the client each turn, nothing persisted. Same event protocol as chat/stream.
 export async function POST(req: Request): Promise<Response> {
   const auth = await requireUser(req)
   if (auth instanceof Response) return auth
@@ -32,9 +32,11 @@ export async function POST(req: Request): Promise<Response> {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      controller.enqueue(sseChunk("start", {}))
       try {
         const result = streamText({
           model: aiModel(),
+          providerOptions: AI_PROVIDER_OPTIONS,
           system,
           messages: [...(history ?? []).slice(-20), { role: "user" as const, content: message }],
         })

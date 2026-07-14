@@ -85,11 +85,12 @@ export const goalsApi = {
       .single()
     if (error) throw error
     // Creator membership row (used by the members list / shared goals).
-    try {
-      await supabase.rpc("join_goal", { p_goal_id: row.id, p_user_id: userId, p_role: "creator" })
-    } catch {
-      /* best-effort — the goal is still usable without a membership row */
-    }
+    const { error: joinError } = await supabase.rpc("join_goal", {
+      p_goal_id: row.id,
+      p_user_id: userId,
+      p_role: "creator",
+    })
+    if (joinError) throw joinError
     return goalsApi.get(row.id)
   },
 

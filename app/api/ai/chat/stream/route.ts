@@ -1,5 +1,5 @@
 import { streamText } from "ai"
-import { aiModel, requireUser, sseChunk, sseResponse, TUTOR_SYSTEM } from "@/lib/server/ai"
+import { AI_PROVIDER_OPTIONS, aiModel, requireUser, sseChunk, sseResponse, TUTOR_SYSTEM } from "@/lib/server/ai"
 
 // Streaming chat reply. Persists both message rows (RLS via the caller's JWT)
 // and emits the same SSE events the Spring /chat/stream endpoint used:
@@ -55,6 +55,7 @@ export async function POST(req: Request): Promise<Response> {
       try {
         const result = streamText({
           model: aiModel(profile?.preferred_model),
+          providerOptions: AI_PROVIDER_OPTIONS,
           system,
           messages: history.map((m) => ({
             role: m.role as "user" | "assistant",
