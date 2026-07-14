@@ -188,6 +188,15 @@ const WEATHER_PREP: InterviewPrep = {
     { term: "차이", meaning: "a difference" },
     // From TalkToMeInKorean "1100 Short & Useful Korean Phrases" (Pattern 009 example).
     { term: "미세먼지", meaning: "fine dust / particulate pollution" },
+    { term: "불쾌지수", meaning: "discomfort index" },
+    { term: "차이점", meaning: "point of difference" },
+    { term: "반면에", meaning: "on the other hand" },
+    { term: "식중독", meaning: "food poisoning" },
+    { term: "탈수 증상", meaning: "dehydration symptoms" },
+    { term: "수분 섭취", meaning: "water intake" },
+    { term: "실내 활동", meaning: "indoor activities" },
+    { term: "체력 관리", meaning: "physical strength management" },
+    { term: "비슷하다", meaning: "to be similar" },
   ],
   keyPhrases: [
     { ko: "한국 여름은 정말 덥고 습해요.", en: "Korean summer is really hot and humid." },
@@ -273,6 +282,11 @@ const WEATHER_PREP: InterviewPrep = {
     },
     // From TalkToMeInKorean "1100 Short & Useful Korean Phrases" (Pattern 024 example).
     { ko: "날씨 어떤 것 같아요?", en: "What do you think about the weather?" },
+    { ko: "냉방병을 예방하기 위해 어떤 노력을 하고 있어요?", en: "What efforts are you making to prevent air-conditioning sickness?" },
+    { ko: "한국과 캄보디아 중 어느 쪽이 건강에 더 나쁘다고 생각해요?", en: "Which do you think is worse for health — Korean or Cambodian weather?" },
+    { ko: "한국 여름에 가장 힘들었던 건강 문제는 무엇이었어요?", en: "What was the most difficult health issue you faced during Korean summer?" },
+    { ko: "캄보디아에서는 더운 날씨에 어떻게 대처했어요?", en: "How did you cope with the hot weather in Cambodia?" },
+    { ko: "습도가 높을 때 일상생활에 어떤 변화가 생겼어요?", en: "What changes happened in your daily life when humidity was high?" },
   ],
 }
 
