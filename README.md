@@ -232,7 +232,7 @@ flowchart TD
 |---|---|
 | **User / Browser** | All UI state, routing, and most business logic run client-side. The route guard is client-side only: `app/(main)/layout.tsx` redirects unauthenticated users to `/login`. |
 | **Next.js SPA** | App shell, feature pages, hooks. Talks to exactly two backends: Supabase directly (data) and `app/api/ai/*` (AI). |
-| **Supabase** | Postgres data, auth (email/password + Google), Row Level Security on every table, and the `kori-send-push` Edge Function for web push. Shared project with Orbit/DailyGoalMap: Hengo-owned tables are prefixed `kori_`; the goals/tasks domain reuses Orbit's original tables (`goals`, `tasks`, …) and RPCs. |
+| **Supabase** | Postgres data, auth (email/password + Google), Row Level Security on every table, the `kori-send-push` Edge Function for web push, and `pg_cron`-scheduled Postgres functions that fan out daily study reminders through both web push and Telegram. Shared project with Orbit/DailyGoalMap: Hengo-owned tables are prefixed `kori_`; the goals/tasks domain reuses Orbit's original tables (`goals`, `tasks`, …) and RPCs. |
 | **AI Routes** | Thin server handlers: verify the caller's Supabase JWT, build the prompt, call OpenAI via the Vercel AI SDK, return JSON or an SSE stream. No service key anywhere — each request gets a per-request Supabase client so **RLS applies on the server too**. |
 | **OpenAI** | Chat/structured generation (default `gpt-5-mini`, override with `AI_MODEL`) and audio TTS (proxied, returns MP3 bytes). |
 | **Progress → Statistics** | Every activity writes progress rows back to Supabase; `/statistics` and the workspace dashboards aggregate them into streaks, weekly charts, due counts, and a per-feature time breakdown. |
@@ -406,7 +406,8 @@ lib/
   recovery.ts  habits.ts   pure logic for the Growth workspace (framework-free, tested)
   interview.ts  interview-modes.ts  interview-unexpected.ts
   interview-history.ts  exam-strategy.ts  ...
-public/            hengo-icon.svg, sw.js (web push service worker), static assets
+public/            hengo-icon.svg (mark), new-app-logo.png (full lockup — source of
+                   the app icons), sw.js (web push service worker), static assets
 ```
 
 ### Responsibilities and design principles
@@ -469,7 +470,7 @@ sequenceDiagram
 - **Caching.** TanStack Query with staleTime 60 s and no refetch on focus (`components/providers/app-providers.tsx`).
 - **Streaming.** SSE with the `start` / `token` / `done` / `error` protocol (kept compatible with the old Spring backend); parsed by `lib/api/sse.ts`.
 - **Error handling.** `lib/api/errors.ts` → `getApiErrorMessage` normalizes supabase-js and fetch errors for hooks and pages; `sonner` surfaces them as toasts. `@sentry/nextjs` is a dependency but is not currently configured or wired up.
-- **Push.** Web push via `NEXT_PUBLIC_VAPID_KEY`, `public/sw.js`, `lib/api/push.ts`, and the `kori-send-push` Supabase Edge Function.
+- **Push.** Two delivery channels, both driven from `lib/api/push.ts` and the Settings page: **web push** (`NEXT_PUBLIC_VAPID_KEY`, `public/sw.js`, the `kori-send-push` Edge Function) and **Telegram** (deep-link account linking, `kori_telegram_links`, the `kori-send-telegram` Edge Function). Automated reminders are scheduled server-side in Postgres — `pg_cron` jobs call `kori_send_reviews_due_reminders`, `kori_send_streak_saver_reminders`, and `kori_send_exam_countdown_reminders` every minute, each gated by its own once-per-day dedupe stamp on `kori_profiles`; a shared `kori_dispatch_push` function fans each reminder out to both channels (best-effort per channel, so one failing never blocks the other). This is a from-scratch Postgres port of the old Spring backend's `StudyReminderScheduler` — the migration to Supabase had carried over the data model but dropped the actual scheduling logic.
 
 ---
 
@@ -643,6 +644,7 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 - Workspace-based IA (July 2026): `/home` gate with Learning/Productivity/Progress poster cards, contextual sidebar with a workspace switcher, single nav source in `lib/navigation.ts`
 - Statistics page (platform-wide streaks, weekly chart, per-feature breakdown), XP/achievements
 - Foundations, Reading, Listening, Scenarios, Daily Practice hub, Dev Notes, web push
+- Automated study reminders (July 2026): `pg_cron`-scheduled Postgres functions send reviews-due, streak-saver, and exam-countdown nudges through both web push and Telegram — a Postgres port of the old Spring backend's `StudyReminderScheduler`, which the earlier Supabase migration had left unported
 - Growth workspace: generic **Habits** tracking (streaks, consistency %) and **Recovery** (urge logging, guided pause, post-slip debrief, spaced-repetition if-then plans) — both wired into the platform-wide activity log, streak, and Statistics feature-breakdown; Recovery is deliberately domain-neutral (no specific behavior named anywhere in code/copy, by design — see [§4 Growth](#4-key-features))
 
 ### In progress

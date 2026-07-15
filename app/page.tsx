@@ -93,6 +93,41 @@ const features = [
   },
 ]
 
+const processSteps = [
+  {
+    step: "1",
+    title: "Do real work",
+    description: "Chat with the AI coach, run workplace scenarios, and decode real messages from your Korean team.",
+    icon: MessageSquareText,
+    iconColor: "text-sky-600 dark:text-sky-400",
+    iconBg: "bg-sky-100 dark:bg-sky-500/15",
+  },
+  {
+    step: "2",
+    title: "Get AI feedback",
+    description: "Instant corrections, tone guidance, and natural alternatives for everything you write and say.",
+    icon: Sparkles,
+    iconColor: "text-violet-600 dark:text-violet-400",
+    iconBg: "bg-violet-100 dark:bg-violet-500/15",
+  },
+  {
+    step: "3",
+    title: "Everything syncs",
+    description: "One cloud for your data and AI — scripting, goals, and progress stay in sync between phone and PC.",
+    icon: Zap,
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
+  },
+  {
+    step: "4",
+    title: "Personalized practice",
+    description: "Your mistakes become targeted drills and spaced-repetition reviews, so weak spots get fixed fast.",
+    icon: Target,
+    iconColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-100 dark:bg-amber-500/15",
+  },
+]
+
 const chatMessages = [
   { role: "you", text: "How do I say \"I finished the deployment\" in Korean?" },
   {
@@ -458,6 +493,88 @@ export default function Home() {
                   </motion.div>
                 )
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="relative px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-16 text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                How it works
+              </p>
+              <h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+                One loop, from <span className="text-muted-foreground italic font-medium">real work</span> to fluency.
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+                Do real work in Korean, get AI feedback, and let everything sync between your phone and PC — Hengo turns your mistakes into personalized practice.
+              </p>
+            </motion.div>
+
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+              {/* Diagram */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="relative"
+              >
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-emerald-500/15 blur-3xl" />
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-slate-950 shadow-2xl">
+                  <Image
+                    src="/app-process.png"
+                    alt="Diagram of the Hengo learning loop: do real work, get AI feedback, sync through the cloud, and practice with personalized drills across phone and desktop"
+                    width={1024}
+                    height={1024}
+                    className="h-auto w-full"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Steps */}
+              <div className="space-y-8">
+                {processSteps.map((step, i) => {
+                  const Icon = step.icon
+                  return (
+                    <motion.div
+                      key={step.title}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: i * 0.1 }}
+                      className="flex gap-5"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${step.iconBg} shadow-sm ring-1 ring-border/50`}>
+                          <Icon size={22} strokeWidth={2} className={step.iconColor} />
+                        </div>
+                        {i < processSteps.length - 1 && (
+                          <div className="mt-2 w-px flex-1 bg-border/60" />
+                        )}
+                      </div>
+                      <div className="pb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                            Step {step.step}
+                          </span>
+                        </div>
+                        <h3 className="mt-1.5 text-xl font-bold text-foreground">{step.title}</h3>
+                        <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                          {step.description}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </section>
