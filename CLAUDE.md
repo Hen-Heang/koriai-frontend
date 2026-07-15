@@ -14,13 +14,13 @@ Use **pnpm**.
 pnpm dev          # dev server at localhost:3000
 pnpm build        # production build
 pnpm lint         # eslint
-npx vitest run    # run all tests (no "test" script in package.json)
+pnpm test         # run all tests (vitest run)
 npx vitest run lib/vocab-review.test.ts   # run a single test file
 ```
 
 Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no vitest config file; defaults apply.
 
-**Local dev on machines with corporate SSL inspection** (this repo is developed on one running Somansa): Node.js does not trust the interception CA, so every server-side fetch — Supabase auth in `requireUser`, OpenAI calls — fails with `SELF_SIGNED_CERT_IN_CHAIN` and all `app/api/ai/*` routes return 401 "Invalid session" even for valid logins. Run the dev server with `NODE_EXTRA_CA_CERTS` pointing at the exported root CA (here: `C:\Users\user\.certs\somansa-root-ca.pem`). Browser-side Supabase calls are unaffected, so the symptom is "everything works except AI".
+**Local dev on machines with corporate SSL inspection**: Node.js does not trust the interception CA, so every server-side fetch — Supabase auth in `requireUser`, OpenAI calls — fails with `SELF_SIGNED_CERT_IN_CHAIN` and all `app/api/ai/*` routes return 401 "Invalid session" even for valid logins. Run the dev server with `NODE_EXTRA_CA_CERTS` pointing at your exported corporate TLS-inspection root CA. Browser-side Supabase calls are unaffected, so the symptom is "everything works except AI".
 
 ## Architecture
 

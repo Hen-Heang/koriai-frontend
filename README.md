@@ -346,7 +346,7 @@ The Exam Prep module (`/interview`) is Hengo's flagship feature, designed around
 | | [GSAP](https://gsap.com) + [Lenis](https://lenis.darkroom.engineering) | Scroll-driven animation and smooth scrolling — landing page only. |
 | **UI utilities** | `lucide-react` (icons) · `sonner` (toasts) · `next-themes` (dark mode) · `class-variance-authority` + `clsx` + `tailwind-merge` (variants) · `tw-animate-css` | The standard shadcn/ui ecosystem. |
 | **Domain utilities** | `es-hangul` (Korean text handling) · `date-fns` (dates) · `marked` (notes markdown) | Small, focused libraries over frameworks. |
-| **Monitoring** | [Sentry](https://sentry.io) (`@sentry/nextjs`) | Error reporting for both client and route handlers. |
+| **Monitoring** | [Sentry](https://sentry.io) (`@sentry/nextjs`) | Installed as a dependency but not yet wired up (no config, no `instrumentation.ts`, no imports). |
 | **Testing** | [Vitest](https://vitest.dev) + Testing Library + jsdom | Fast unit tests colocated with the logic they test (`lib/*.test.ts`). `@playwright/test` is installed for future end-to-end coverage. |
 | **Developer tools** | ESLint 9 (`eslint-config-next`, `@tanstack/eslint-plugin-query`) · pnpm | Linting includes TanStack Query correctness rules. |
 | **Deployment** | [Vercel](https://vercel.com) | One deployment hosts the SPA and the AI routes; Supabase is the only external service. |
@@ -450,7 +450,7 @@ sequenceDiagram
 - **Authentication.** Supabase auth with email/password and Google (`signInWithIdToken`). `lib/auth-store.ts` reads the user id synchronously from the persisted session.
 - **Caching.** TanStack Query with staleTime 60 s and no refetch on focus (`components/providers/app-providers.tsx`).
 - **Streaming.** SSE with the `start` / `token` / `done` / `error` protocol (kept compatible with the old Spring backend); parsed by `lib/api/sse.ts`.
-- **Error handling.** `lib/api/errors.ts` → `getApiErrorMessage` normalizes supabase-js and fetch errors for hooks and pages; `sonner` surfaces them as toasts; `@sentry/nextjs` reports them.
+- **Error handling.** `lib/api/errors.ts` → `getApiErrorMessage` normalizes supabase-js and fetch errors for hooks and pages; `sonner` surfaces them as toasts. `@sentry/nextjs` is a dependency but is not currently configured or wired up.
 - **Push.** Web push via `NEXT_PUBLIC_VAPID_KEY`, `public/sw.js`, `lib/api/push.ts`, and the `kori-send-push` Supabase Edge Function.
 
 ---
