@@ -49,7 +49,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
           </div>
           <div>
             <h3 className="text-base font-semibold tracking-tight text-foreground">Your goals</h3>
-            <p className="text-xs font-medium text-muted-foreground/60">
+            <p className="text-xs font-medium text-muted-foreground">
               {activeGoals.length} active
             </p>
           </div>
@@ -113,7 +113,7 @@ export function GoalsOverview({ className, limit = 3 }: { className?: string; li
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />
-                    <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground/60">
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
                       <ClipboardList className="h-3 w-3" />
                       {goal.taskCounts?.completed}/{goal.taskCounts?.total}
                     </span>

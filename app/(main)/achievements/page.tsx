@@ -125,7 +125,7 @@ export default function AchievementsPage() {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-foreground">{level?.totalXp}</p>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                   Total XP
                 </p>
               </div>
@@ -196,7 +196,7 @@ export default function AchievementsPage() {
                     {a.title}
                   </h4>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">{a.description}</p>
-                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50">
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                     {a.category}
                   </p>
                 </div>

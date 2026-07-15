@@ -51,7 +51,7 @@ export function ConversationSidebar({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between px-3 py-3">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Chats
         </h2>
         <div className="flex items-center gap-1">
@@ -87,7 +87,7 @@ export function ConversationSidebar({
             <Skeleton className="h-10 w-full rounded-xl" />
           </div>
         ) : conversations.length === 0 ? (
-          <p className="px-3 py-6 text-center text-xs font-medium text-muted-foreground/50">
+          <p className="px-3 py-6 text-center text-xs font-medium text-muted-foreground">
             No chats yet. Start a new one.
           </p>
         ) : (

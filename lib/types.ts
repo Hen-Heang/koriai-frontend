@@ -312,3 +312,85 @@ export interface MessageAnalysis {
   modelUsed: string
   createdAt: string
 }
+
+// ── Recovery (urge/trigger tracking) ────────────────────────────────────────
+// App-facing names are "Recovery*"; the underlying Supabase tables are still
+// kori_focus_* (pre-dates the Growth-workspace rename, holds live user data —
+// not worth a data migration for a naming change). See lib/api/recovery.ts.
+export interface RecoveryHabit {
+  id: string
+  label: string
+  replacementBehavior?: string
+  startedAt: string
+  active: boolean
+  createdAt: string
+}
+
+export interface RecoveryTrigger {
+  id: string
+  label: string
+  createdAt: string
+}
+
+export type RecoveryEventKind = "moment" | "slip" | "win"
+
+export interface RecoveryEvent {
+  id: string
+  habitId: string
+  occurredAt: string
+  kind: RecoveryEventKind
+  intensity?: number
+  triggerId?: string
+  emotion?: string
+  actionTaken?: string
+  rodeOut?: boolean
+  note?: string
+  createdAt: string
+}
+
+export interface RecoveryPlan {
+  id: string
+  habitId: string
+  ifText: string
+  thenText: string
+  sourceEventId?: string
+  mastery: number
+  nextReview: string
+  easeFactor: number
+  intervalDays: number
+  repetitions: number
+  lapses: number
+  createdAt: string
+}
+
+// ── Habits (generic identity-based habit tracking) ──────────────────────────
+export type HabitCategory =
+  | "exercise"
+  | "reading"
+  | "meditation"
+  | "sleep"
+  | "water"
+  | "study"
+  | "coding"
+  | "deep_work"
+  | "walking"
+  | "custom"
+
+export interface Habit {
+  id: string
+  label: string
+  category: HabitCategory
+  identityStatement?: string
+  active: boolean
+  startedAt: string
+  createdAt: string
+}
+
+export interface HabitCheckIn {
+  id: string
+  habitId: string
+  date: string
+  completed: boolean
+  note?: string
+  createdAt: string
+}

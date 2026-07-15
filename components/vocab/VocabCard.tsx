@@ -59,19 +59,19 @@ function EditForm({
   return (
     <div className="space-y-2.5 pt-2">
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Korean</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Korean</label>
         <input value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} className={cn(inputClass, "mt-1 text-lg font-bold")} />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Meaning</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Meaning</label>
         <input value={meaning} onChange={(e) => setMeaning(e.target.value)} className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Pronunciation</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Pronunciation</label>
         <input value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className={cn(inputClass, "mt-1")} />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">Example sentence</label>
+        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Example sentence</label>
         <textarea value={example} onChange={(e) => setExample(e.target.value)} rows={2} className={cn(inputClass, "mt-1 resize-none")} />
       </div>
       {error && <p className="text-xs font-bold text-destructive">{error}</p>}
@@ -173,7 +173,7 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
                 />
               </div>
               {item.pronunciation && (
-                <p className="mt-0.5 text-xs font-bold text-muted-foreground/50 italic">[{item.pronunciation}]</p>
+                <p className="mt-0.5 text-xs font-bold text-muted-foreground italic">[{item.pronunciation}]</p>
               )}
               <p className="mt-2 text-lg font-bold text-muted-foreground leading-tight [overflow-wrap:anywhere] sm:text-xl">
                 {item.meaning}
@@ -236,13 +236,13 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             <div className="mt-6 rounded-2xl border border-border bg-accent/5 p-4 dark:bg-white/5">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={12} className="text-muted-foreground/40" />
-                <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Usage Context</span>
+                <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Usage Context</span>
               </div>
               <p className="text-sm font-bold leading-relaxed text-foreground/80 [overflow-wrap:anywhere] sm:text-[16px]">
                 {item.example}
               </p>
               {item.exampleTranslation && (
-                <p className="mt-2 text-xs font-medium italic text-muted-foreground/60 leading-relaxed [overflow-wrap:anywhere]">
+                <p className="mt-2 text-xs font-medium italic text-muted-foreground leading-relaxed [overflow-wrap:anywhere]">
                   {item.exampleTranslation}
                 </p>
               )}
@@ -265,11 +265,11 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
               </span>
             ))
           ) : (
-            <span className="text-[12px] font-bold text-muted-foreground/60 italic">No tags</span>
+            <span className="text-[12px] font-bold text-muted-foreground italic">No tags</span>
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
+        <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
           <Calendar size={12} strokeWidth={3} />
           <span>Next: {item.nextReview}</span>
         </div>

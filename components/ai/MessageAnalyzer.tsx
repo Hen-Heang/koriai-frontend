@@ -147,7 +147,7 @@ export function MessageAnalyzer() {
                     </div>
                     <div>
                       <CardTitle className="text-xl font-bold">Message to Analyze</CardTitle>
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         Paste what your coworker wrote
                       </p>
                     </div>
@@ -194,7 +194,7 @@ export function MessageAnalyzer() {
                 />
 
                 <div className="flex flex-col items-start gap-3 border-t border-border/60 bg-accent/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                     {text.trim().length} characters
                   </span>
                   <Button
@@ -238,7 +238,7 @@ export function MessageAnalyzer() {
                   </div>
 
                   <div className="p-6 sm:p-8">
-                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/60">Original</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Original</p>
                     <p className="mt-2 text-base font-bold leading-relaxed text-foreground sm:text-lg">
                       {result.originalText}
                     </p>
@@ -246,7 +246,7 @@ export function MessageAnalyzer() {
 
                   <div className="grid divide-y divide-border/60 border-t border-border/60 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
                     <div className="p-6 sm:p-8">
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/60">Literal Meaning</p>
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Literal Meaning</p>
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground/80">
                         {result.literalMeaning}
                       </p>
@@ -266,7 +266,7 @@ export function MessageAnalyzer() {
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Building2 size={14} className="text-sky-500" strokeWidth={2.5} />
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Business Context</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Business Context</p>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -278,16 +278,16 @@ export function MessageAnalyzer() {
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Languages size={14} className="text-violet-500" strokeWidth={2.5} />
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Politeness & Tone</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Politeness & Tone</p>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">Politeness</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Politeness</p>
                         <p className="mt-1 text-[13px] font-bold text-foreground/80">{result.politenessLevel}</p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">Tone</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Tone</p>
                         <p className="mt-1 text-[13px] font-bold text-foreground/80">{result.tone}</p>
                       </div>
                     </CardContent>
@@ -297,7 +297,7 @@ export function MessageAnalyzer() {
                 {/* Phrase breakdown */}
                 {result.breakdown && result.breakdown.length > 0 && (
                   <div className="space-y-4">
-                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       <ListTree size={14} className="text-muted-foreground/40" /> Phrase Breakdown
                     </h4>
                     <div className="grid gap-3">
@@ -327,7 +327,7 @@ export function MessageAnalyzer() {
                 {/* Suggested replies */}
                 {result.suggestedReplies && result.suggestedReplies.length > 0 && (
                   <div className="space-y-4">
-                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                    <h4 className="flex items-center gap-2 px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       <MessageSquareReply size={14} className="text-muted-foreground/40" /> Suggested Replies
                     </h4>
                     <div className="grid gap-3">
@@ -410,7 +410,7 @@ export function MessageAnalyzer() {
             <div className="px-2">
               <div className="mb-4 flex items-center gap-2">
                 <ScanText size={14} className="text-muted-foreground/40" />
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">Try a sample</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Try a sample</h4>
               </div>
               <div className="grid gap-2">
                 {starterPrompts.map((prompt, i) => (

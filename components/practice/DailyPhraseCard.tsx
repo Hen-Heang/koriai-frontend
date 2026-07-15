@@ -135,7 +135,7 @@ export function DailyPhraseCard({
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">Write it yourself</h4>
-            <p className="text-xs font-medium text-muted-foreground/60">Use today&apos;s phrase in your own sentence</p>
+            <p className="text-xs font-medium text-muted-foreground">Use today&apos;s phrase in your own sentence</p>
           </div>
         </div>
         <SentenceChallenge

@@ -3,21 +3,26 @@ import {
   BookOpen,
   BookOpenText,
   ClipboardList,
+  Compass,
   Drama,
   Gauge,
   GraduationCap,
   Headphones,
   History,
   Languages,
+  ListChecks,
   Map,
   MessageCircle,
   NotebookPen,
   RotateCcw,
   ScanText,
+  Smile,
   Sparkles,
   Target,
+  TreeDeciduous,
   Trophy,
   Wand2,
+  Zap,
 } from "lucide-react"
 
 // Single source of truth for the whole nav surface — sidebar, mobile bottom
@@ -86,6 +91,19 @@ export const workspaces: Workspace[] = [
       { href: "/history", label: "History", icon: History },
     ],
   },
+  {
+    id: "growth",
+    label: "Growth",
+    icon: TreeDeciduous,
+    links: [
+      { href: "/growth/habits", label: "Habits", icon: ListChecks },
+      { href: "/growth/recovery", label: "Recovery", icon: Compass },
+      { href: "/growth/focus", label: "Deep Work", icon: Zap, soon: true },
+      { href: "/growth/mood", label: "Mood", icon: Smile, soon: true },
+      { href: "/growth/journal", label: "Journal", icon: NotebookPen, soon: true },
+      { href: "/growth/rewards", label: "Rewards", icon: Trophy, soon: true },
+    ],
+  },
 ]
 
 export const homeLink: NavLink = { href: "/home", label: "Home", icon: Gauge }
@@ -115,7 +133,14 @@ export function linkPath(href: string): string {
 
 export function isLinkActive(pathname: string, href: string): boolean {
   const path = linkPath(href)
-  return pathname === path || pathname.startsWith(`${path}/`)
+  if (pathname === path) return true
+  if (!pathname.startsWith(`${path}/`)) return false
+  // Prefix match — but if pathname is exactly another link's own path (e.g.
+  // "/growth/recovery/log" vs. the "/growth/recovery" Overview link), that
+  // more specific sibling wins instead of both showing active. Sub-pages
+  // that aren't themselves a
+  // nav link (e.g. "/goals/create") are unaffected and still match "Goals".
+  return !allLinks.some((l) => linkPath(l.href) === pathname)
 }
 
 // Which workspace (if any) the current route belongs to — drives the
@@ -140,4 +165,9 @@ export const workspaceRoutePrefixes: Record<string, string[]> = {
   learning: workspaces.find((w) => w.id === "learning")!.links.map((l) => linkPath(l.href)),
   productivity: workspaces.find((w) => w.id === "productivity")!.links.map((l) => linkPath(l.href)),
   progress: workspaces.find((w) => w.id === "progress")!.links.map((l) => linkPath(l.href)),
+  growth: workspaces.find((w) => w.id === "growth")!.links.map((l) => linkPath(l.href)),
+  // "ai" is omitted here too (pre-existing) — app/(main)/layout.tsx's
+  // last-visited useEffect only branches on learning/productivity/progress,
+  // so neither ai nor growth get "continue where you left off" tracking
+  // until that's addressed (out of scope for this step).
 }

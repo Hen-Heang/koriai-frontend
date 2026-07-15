@@ -40,11 +40,11 @@ export function StreakCard({ days, wordsSaved, className }: StreakCardProps) {
 
       <div className="mt-8 grid grid-cols-2 gap-3">
         <div className="rounded-2xl border border-border bg-accent/5 p-3 dark:bg-white/5">
-          <p className="text-xs font-medium text-muted-foreground/60">Level</p>
+          <p className="text-xs font-medium text-muted-foreground">Level</p>
           <p className="mt-1 text-sm font-semibold text-foreground">{days >= 7 ? "Master" : "Rising"}</p>
         </div>
         <div className="rounded-2xl border border-border bg-accent/5 p-3 dark:bg-white/5">
-          <p className="text-xs font-medium text-muted-foreground/60">Next milestone</p>
+          <p className="text-xs font-medium text-muted-foreground">Next milestone</p>
           <p className="mt-1 text-sm font-semibold text-foreground">{days + (7 - (days % 7))} days</p>
         </div>
       </div>

@@ -157,7 +157,7 @@ export function OnboardingFlow({ userId, onDone }: OnboardingFlowProps) {
           <button
             type="button"
             onClick={onDone}
-            className="text-xs font-bold text-muted-foreground/60 transition-colors hover:text-foreground"
+            className="text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
           >
             Skip for now
           </button>

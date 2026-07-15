@@ -72,7 +72,7 @@ export function GoalCoach({ goalId, goalType, onGenerated }: GoalCoachProps) {
 
         <div className="mt-6 space-y-4">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               How many tasks?
             </p>
             <div className="flex gap-2">
@@ -95,7 +95,7 @@ export function GoalCoach({ goalId, goalType, onGenerated }: GoalCoachProps) {
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Anything specific? (optional)
             </p>
             <Input
@@ -129,7 +129,7 @@ export function GoalCoach({ goalId, goalType, onGenerated }: GoalCoachProps) {
 
       {generated && generated.length > 0 && (
         <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:p-8">
-          <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+          <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Just added
           </h4>
           <ul className="space-y-2">

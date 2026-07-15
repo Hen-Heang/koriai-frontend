@@ -55,7 +55,7 @@ export function ScoreTrend({ records }: { records: ScorecardRecord[] }) {
         <div className="text-right">
           <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
             {latest.toFixed(1)}
-            <span className="text-sm text-muted-foreground/50"> / 5</span>
+            <span className="text-sm text-muted-foreground"> / 5</span>
           </p>
           {delta !== null && (
             <p
@@ -65,7 +65,7 @@ export function ScoreTrend({ records }: { records: ScorecardRecord[] }) {
                   ? "text-emerald-600 dark:text-emerald-400"
                   : delta < 0
                     ? "text-rose-600 dark:text-rose-400"
-                    : "text-muted-foreground/50"
+                    : "text-muted-foreground"
               )}
             >
               {delta > 0 ? (

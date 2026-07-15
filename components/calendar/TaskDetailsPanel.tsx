@@ -67,6 +67,7 @@ export function TaskDetailsPanel({
             size="icon"
             className="h-10 w-10 shrink-0 rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary"
             onClick={onClose}
+            aria-label="Close task details"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -84,6 +85,7 @@ export function TaskDetailsPanel({
             className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary"
             onClick={() => onEditTask(selectedTask)}
             title="Edit task"
+            aria-label="Edit task"
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -93,6 +95,7 @@ export function TaskDetailsPanel({
             className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onDeleteTask(selectedTask.id)}
             title="Delete task"
+            aria-label="Delete task"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

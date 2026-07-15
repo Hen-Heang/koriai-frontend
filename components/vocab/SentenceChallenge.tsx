@@ -108,7 +108,7 @@ export function SentenceChallenge({ cardId, term, onGetChallenge, onCheckSentenc
           <PenLine size={14} strokeWidth={2.5} className={open ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground/50"} />
           <span className={cn(
             "text-xs font-bold uppercase tracking-[0.18em]",
-            open ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground/50"
+            open ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground"
           )}>
             Practice Sentence
           </span>

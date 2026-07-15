@@ -152,6 +152,9 @@ export default function MainLayout({
   if (!isAuthenticated()) return null
 
   const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/")
+  // Immersive breathing-timer screen — same full-bleed treatment as chat:
+  // no mobile top bar, no bottom tab bar, no content padding.
+  const isPauseRoute = pathname === "/growth/recovery/pause"
   // Home is the immersive "pick a lane" gate — no sidebar, no top bar, no
   // bottom tabs on desktop or mobile. Nav comes back once the user has picked
   // Learning or Productivity and is inside that workspace.
@@ -303,8 +306,8 @@ export default function MainLayout({
         {/* ── Main column ── */}
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
 
-          {/* Mobile top bar — hidden on chat and Home for a full-bleed/gate experience */}
-          {!isChatRoute && !isHomeRoute && (
+          {/* Mobile top bar — hidden on chat, pause, and Home for a full-bleed/gate experience */}
+          {!isChatRoute && !isPauseRoute && !isHomeRoute && (
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
               <div className="flex items-center gap-3">
                 <Link href="/home" className="group flex items-center gap-2.5">
@@ -359,25 +362,25 @@ export default function MainLayout({
           <main
             className={cn(
               "flex-1 overflow-x-hidden",
-              isChatRoute
+              isChatRoute || isPauseRoute
                 ? "px-0 pt-0"
                 : "px-4 pt-4 sm:px-6 lg:px-8 lg:pt-8",
               isKeyboardOpen
                 ? "pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-10"
-                : isChatRoute || isHomeRoute
+                : isChatRoute || isPauseRoute || isHomeRoute
                   ? "pb-0"
                   : "pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-10"
             )}
           >
-            <div className={cn("mx-auto w-full", isChatRoute ? "h-full max-w-none" : "max-w-6xl")}>
+            <div className={cn("mx-auto w-full", isChatRoute || isPauseRoute ? "h-full max-w-none" : "max-w-6xl")}>
               {children}
             </div>
           </main>
         </div>
       </div>
 
-      {/* ── Mobile bottom tab bar — hidden on chat and the Home gate ── */}
-      {!isChatRoute && !isHomeRoute && (
+      {/* ── Mobile bottom tab bar — hidden on chat, pause, and the Home gate ── */}
+      {!isChatRoute && !isPauseRoute && !isHomeRoute && (
         <nav
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out lg:hidden",

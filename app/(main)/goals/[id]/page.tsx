@@ -388,7 +388,7 @@ export default function GoalDetailPage() {
     <div className="space-y-8 pb-12" data-goal-id={id}>
       <Link
         href="/goals"
-        className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground/60 transition-colors hover:text-foreground"
+        className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft size={16} strokeWidth={2} className="transition-transform group-hover:-translate-x-1" />
         Back to Goals
@@ -485,7 +485,7 @@ export default function GoalDetailPage() {
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground/60 sm:text-xs">
+            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground sm:text-xs">
               <span>Progress</span>
               <span className="text-xs font-semibold text-primary sm:text-sm">{taskProgress}%</span>
             </div>
@@ -572,7 +572,7 @@ export default function GoalDetailPage() {
                 <button
                   type="button"
                   onClick={() => { setDescDraft(goal.description || ""); setEditingDesc(true) }}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground/50 transition-colors hover:bg-accent hover:text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   <Pencil size={12} strokeWidth={2.5} /> Edit
                 </button>
@@ -610,7 +610,7 @@ export default function GoalDetailPage() {
                   >
                     Cancel
                   </button>
-                  <span className="ml-auto hidden text-[10px] font-medium text-muted-foreground/40 sm:inline">⌘ Enter to save</span>
+                  <span className="ml-auto hidden text-[10px] font-medium text-muted-foreground sm:inline">⌘ Enter to save</span>
                 </div>
               </div>
             ) : (
@@ -618,7 +618,7 @@ export default function GoalDetailPage() {
                 onClick={() => { setDescDraft(goal.description || ""); setEditingDesc(true) }}
                 className={cn(
                   "mt-4 cursor-text text-sm font-medium leading-relaxed transition-colors",
-                  goal.description ? "text-foreground/80" : "italic text-muted-foreground/60"
+                  goal.description ? "text-foreground/80" : "italic text-muted-foreground"
                 )}
               >
                 {goal.description || "No description yet — click to add one."}
@@ -643,7 +643,7 @@ export default function GoalDetailPage() {
               <h3 className="text-sm font-semibold text-foreground">Timeline</h3>
               <div className="mt-5 space-y-3">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-muted-foreground/50">Time elapsed</span>
+                  <span className="text-muted-foreground">Time elapsed</span>
                   <span className="tabular-nums text-foreground">{deadlineInfo.daysElapsed} / {deadlineInfo.totalDays} days</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5">
@@ -717,9 +717,9 @@ export default function GoalDetailPage() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-foreground">
                             {name}
-                            {isSelf && <span className="ml-1 text-muted-foreground/60">(you)</span>}
+                            {isSelf && <span className="ml-1 text-muted-foreground">(you)</span>}
                           </p>
-                          <p className="text-[11px] font-medium capitalize text-muted-foreground/50">
+                          <p className="text-[11px] font-medium capitalize text-muted-foreground">
                             {m.role}
                           </p>
                         </div>
@@ -819,7 +819,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
       </div>
       <div>
         <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
-        <p className="text-[10px] font-medium text-muted-foreground/60 sm:text-[11px]">{label}</p>
+        <p className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">{label}</p>
       </div>
     </div>
   )

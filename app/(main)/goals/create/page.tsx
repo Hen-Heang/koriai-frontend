@@ -95,7 +95,7 @@ export default function CreateGoalPage() {
               {template.category}
             </span>
           </div>
-          <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-medium text-muted-foreground/60">
+          <div className="flex items-center gap-4 border-t border-foreground/[0.05] pt-4 text-xs font-medium text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Sparkles size={12} className="text-primary/60" />
               {template.sections.length} sections

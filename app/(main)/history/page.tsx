@@ -152,7 +152,7 @@ function GrammarTracker({
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
         <Brain size={36} className="text-muted-foreground/60" strokeWidth={1.5} />
-        <p className="text-sm font-bold text-muted-foreground/50">No patterns yet — keep correcting!</p>
+        <p className="text-sm font-bold text-muted-foreground">No patterns yet — keep correcting!</p>
       </div>
     )
   }
@@ -216,7 +216,7 @@ function GrammarTracker({
           </motion.button>
         )
       })}
-      <p className="px-2 text-[11px] font-bold text-muted-foreground/40">
+      <p className="px-2 text-[11px] font-bold text-muted-foreground">
         Tap a pattern to filter corrections
       </p>
     </div>
@@ -280,7 +280,7 @@ function PracticeCalendar({
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1">
         {weekdays.map((d) => (
-          <div key={d} className="py-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+          <div key={d} className="py-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             {d}
           </div>
         ))}
@@ -303,7 +303,7 @@ function PracticeCalendar({
                   ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
                   : isToday
                     ? "ring-2 ring-blue-500/40 text-blue-600 font-bold"
-                    : "text-muted-foreground/50"
+                    : "text-muted-foreground"
               )}
             >
               {day}
@@ -312,7 +312,7 @@ function PracticeCalendar({
         })}
       </div>
 
-      <p className="text-center text-xs font-bold text-muted-foreground/50">
+      <p className="text-center text-xs font-bold text-muted-foreground">
         {activeDays.size} {activeDays.size === 1 ? "practice day" : "practice days"} this month
       </p>
     </div>
@@ -417,7 +417,7 @@ function FilterBar({
       </div>
 
       {(search || ratingFilter !== "all") && (
-        <p className="text-[11px] font-bold text-muted-foreground/50">
+        <p className="text-[11px] font-bold text-muted-foreground">
           Showing {totalVisible} of {totalAll} corrections
         </p>
       )}
@@ -600,7 +600,7 @@ export default function HistoryPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold">Recurring Mistakes</h2>
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       Grammar patterns · tap to filter
                     </p>
                   </div>
@@ -633,7 +633,7 @@ export default function HistoryPage() {
           {/* Correction History */}
           <motion.div variants={itemVariants}>
             <div className="space-y-4">
-              <h3 className="px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+              <h3 className="px-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                 Correction History
               </h3>
 
@@ -668,13 +668,13 @@ export default function HistoryPage() {
               ) : corrections.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-10 text-center sm:rounded-3xl sm:py-12">
                   <ScrollText size={36} className="text-muted-foreground/60" strokeWidth={1.5} />
-                  <p className="text-sm font-bold text-muted-foreground/50">No corrections yet</p>
-                  <p className="text-xs text-muted-foreground/40">Go to AI Coach and ask it to correct your Korean — it'll show up here.</p>
+                  <p className="text-sm font-bold text-muted-foreground">No corrections yet</p>
+                  <p className="text-xs text-muted-foreground">Go to AI Coach and ask it to correct your Korean — it'll show up here.</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-8 text-center sm:rounded-3xl">
                   <Search size={28} className="text-muted-foreground/60" strokeWidth={1.5} />
-                  <p className="text-sm font-bold text-muted-foreground/50">No matches</p>
+                  <p className="text-sm font-bold text-muted-foreground">No matches</p>
                   <button
                     type="button"
                     onClick={() => { setSearch(""); setRatingFilter("all"); setActiveTag(null) }}
@@ -706,12 +706,12 @@ export default function HistoryPage() {
                               onClick={() => setExpandedId(isExpanded ? null : entry.id)}
                             >
                               <div className="flex items-center gap-2">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                                   {formatDate(entry.createdAt)}
                                 </p>
                                 <StarRating rating={entry.rating} />
                               </div>
-                              <p className="line-clamp-1 text-sm font-bold text-muted-foreground/60">
+                              <p className="line-clamp-1 text-sm font-bold text-muted-foreground">
                                 {entry.originalText}
                               </p>
                               <p className="line-clamp-1 text-sm font-bold text-foreground">
@@ -756,7 +756,7 @@ export default function HistoryPage() {
                                   {/* Rating */}
                                   {entry.rating != null && (
                                     <div className="flex items-center gap-2">
-                                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground/50">
+                                      <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                                         Sentence Quality
                                       </p>
                                       <StarRating rating={entry.rating} />
@@ -857,7 +857,7 @@ export default function HistoryPage() {
                   </div>
                   <div>
                     <h2 className="text-base font-bold">Practice Calendar</h2>
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       Days you practiced
                     </p>
                   </div>

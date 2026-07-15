@@ -69,7 +69,7 @@ function DeckAddForm({ category, onAdd }: { category: string; onAdd: NonNullable
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 border-t border-border/60 px-4 py-3.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50 transition-colors hover:bg-accent/5 hover:text-foreground"
+        className="flex w-full items-center justify-center gap-2 border-t border-border/60 px-4 py-3.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-accent/5 hover:text-foreground"
       >
         <Plus size={14} strokeWidth={3} />
         Add word to this deck
@@ -83,7 +83,7 @@ function DeckAddForm({ category, onAdd }: { category: string; onAdd: NonNullable
   return (
     <div className="space-y-2 border-t border-border/60 bg-accent/[0.03] p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
+        <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
           New word in “{category}”
         </p>
         <button
@@ -183,18 +183,18 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
           </div>
           <div className="min-w-0">
             <p className="truncate text-[15px] font-bold text-foreground">{name}</p>
-            <p className="text-xs font-bold text-muted-foreground/50">
+            <p className="text-xs font-bold text-muted-foreground">
               {items.length} {items.length === 1 ? "word" : "words"}
             </p>
           </div>
           {preview && (
-            <p className="line-clamp-1 w-full break-all text-xs font-medium text-muted-foreground/40" lang="ko">
+            <p className="line-clamp-1 w-full break-all text-xs font-medium text-muted-foreground" lang="ko">
               {preview}
             </p>
           )}
           <div className="mt-auto w-full">
             <div className="flex items-center justify-between text-[11px] font-bold">
-              <span className="uppercase tracking-wide text-muted-foreground/40">Mastery</span>
+              <span className="uppercase tracking-wide text-muted-foreground">Mastery</span>
               <span className="tabular-nums text-teal-600">{avgMastery}%</span>
             </div>
             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-accent/20">
@@ -216,7 +216,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[16px] font-bold text-foreground">{name}</p>
-            <p className="text-xs font-bold text-muted-foreground/50">
+            <p className="text-xs font-bold text-muted-foreground">
               {items.length} {items.length === 1 ? "word" : "words"} · {avgMastery}% mastered
             </p>
           </div>
@@ -262,7 +262,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                       <button
                         type="button"
                         onClick={() => setExpandedId(null)}
-                        className="mt-2 w-full rounded-xl py-2 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50 transition-colors hover:bg-accent/30 hover:text-foreground"
+                        className="mt-2 w-full rounded-xl py-2 text-[12px] font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground"
                       >
                         Collapse
                       </button>
@@ -283,7 +283,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                       <div className="flex items-baseline gap-2">
                         <span className="truncate text-xl font-bold text-foreground sm:text-2xl">{item.term}</span>
                         {item.pronunciation && (
-                          <span className="hidden truncate text-[14px] font-medium italic text-muted-foreground/40 sm:inline">
+                          <span className="hidden truncate text-[14px] font-medium italic text-muted-foreground sm:inline">
                             {item.pronunciation}
                           </span>
                         )}

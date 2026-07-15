@@ -10,7 +10,7 @@
 import { INTERVIEW_MODES, type InterviewModeConfig } from "./interview-modes"
 import type { UnexpectedQuestion } from "./interview-unexpected"
 
-export type InterviewTopicId = "weather"
+export type InterviewTopicId = "weather" | "workplace-qa"
 
 export interface VocabEntry {
   term: string
@@ -293,6 +293,69 @@ const WEATHER_PREP: InterviewPrep = {
   ],
 }
 
+// Curated study material for common workplace status-check Q&A: daily
+// stand-up style questions about current work, deadlines, difficulties,
+// and meeting/report follow-ups. Source: team-shared prep docs
+// ("회의에서 자주 사용하는 표현" / "자주 묻는 질문과 답변").
+const WORKPLACE_QA_PREP: InterviewPrep = {
+  vocabulary: [
+    { term: "작업", meaning: "task, work" },
+    { term: "진행하다", meaning: "to proceed, to carry out" },
+    { term: "완료하다", meaning: "to complete" },
+    { term: "마감일", meaning: "deadline" },
+    { term: "끝내다", meaning: "to finish" },
+    { term: "어려운 점", meaning: "difficulty, hard part" },
+    { term: "도와주다", meaning: "to help" },
+    { term: "담당하다", meaning: "to be in charge of" },
+    { term: "맡다", meaning: "to take on, to be responsible for" },
+    { term: "보고서", meaning: "report" },
+    { term: "작성하다", meaning: "to write, to draft" },
+    { term: "일정", meaning: "schedule" },
+    { term: "회의", meaning: "meeting" },
+    { term: "정보", meaning: "information" },
+    { term: "확인하다", meaning: "to check, to confirm" },
+    { term: "피드백", meaning: "feedback" },
+    { term: "검토하다", meaning: "to review" },
+    { term: "버그를 수정하다", meaning: "to fix a bug" },
+    { term: "업무", meaning: "work, duties" },
+    { term: "집중하다", meaning: "to focus" },
+  ],
+  keyPhrases: [
+    { ko: "현재 API 개발을 진행하고 있습니다.", en: "I am currently developing the API." },
+    { ko: "지금은 버그를 수정하고 있습니다.", en: "I am fixing a bug." },
+    { ko: "오늘 안에 완료하겠습니다.", en: "I will complete it by today." },
+    { ko: "내일까지 완료할 예정입니다.", en: "I plan to complete it by tomorrow." },
+    { ko: "네, 조금 어려운 부분이 있습니다.", en: "Yes, there are some difficult parts." },
+    { ko: "아니요, 현재는 없습니다.", en: "No, there aren't any at the moment." },
+    { ko: "네, 조금 도와주시면 감사하겠습니다.", en: "Yes, I would appreciate your help." },
+    { ko: "괜찮습니다. 혼자 해보겠습니다.", en: "It's okay. I'll try to do it myself." },
+    { ko: "제가 담당하고 있습니다.", en: "I am responsible for it." },
+    { ko: "마감일은 이번 주 금요일이에요.", en: "The deadline is this Friday." },
+    { ko: "네, 방금 완료했습니다.", en: "I just finished it a moment ago." },
+    {
+      ko: "오전에는 회의가 있고 오후에는 개발 업무를 할 예정입니다.",
+      en: "I have a meeting in the morning, and in the afternoon I will work on development tasks.",
+    },
+    {
+      ko: "네, 필요한 정보는 모두 확인했습니다.",
+      en: "I have checked all the necessary information.",
+    },
+    { ko: "네, 확인 후 피드백 드리겠습니다.", en: "Sure. I'll review it and give you feedback." },
+  ],
+  sampleQuestions: [
+    { ko: "현재 어떤 작업을 하고 계신가요?", en: "What are you currently working on?" },
+    { ko: "언제까지 완료할 수 있을까요?", en: "When can it be completed?" },
+    { ko: "어려운 점이 있나요?", en: "Are there any difficulties?" },
+    { ko: "도움이 필요하신가요?", en: "Do you need any help?" },
+    { ko: "이 작업은 누가 담당하나요?", en: "Who is responsible for this task?" },
+    { ko: "마감일이 언제예요?", en: "When is the deadline?" },
+    { ko: "보고서 다 작성하셨어요?", en: "Have you finished your report?" },
+    { ko: "오늘 일정이 어떻게 되세요?", en: "What is your schedule for today?" },
+    { ko: "필요한 정보는 다 받으셨나요?", en: "Have you received all the necessary information?" },
+    { ko: "피드백 주실 수 있을까요?", en: "Could you give me some feedback?" },
+  ],
+}
+
 export const INTERVIEW_TOPICS: InterviewTopic[] = [
   {
     id: "weather",
@@ -316,6 +379,25 @@ export const INTERVIEW_TOPICS: InterviewTopic[] = [
     scriptOutline: WEATHER_SCRIPT_OUTLINE,
     scriptSeed: WEATHER_SCRIPT_SEED,
     scriptSeedEn: WEATHER_SCRIPT_SEED_EN,
+  },
+  {
+    id: "workplace-qa",
+    label: "Workplace status Q&A & meeting expressions",
+    labelKo: "업무 현황 질문과 답변 및 회의 표현",
+    description:
+      "Practice the everyday questions a manager or teammate asks in Korean: current task, deadlines, difficulties, and report/meeting follow-ups.",
+    difficulty: "Easy–Medium",
+    examinerBrief: [
+      "The candidate is a software developer in a Korean workplace. Play the role of a manager or teammate doing a quick daily check-in, one question per turn.",
+      "Draw questions from this natural arc, going a little deeper each time:",
+      "1) What are they currently working on (작업, 진행하다, 개발, 버그 수정).",
+      "2) When can it be completed (마감일, 완료하다, 끝내다, 일정).",
+      "3) Any difficulties or blockers (어려운 점, 도와주다, 도움이 필요하다).",
+      "4) Who owns/is responsible for a task (담당하다, 맡다).",
+      "5) Follow-ups on reports, meetings, and feedback (보고서, 작성하다, 회의, 피드백, 검토하다, 정보를 확인하다).",
+      "Keep questions short, natural, and workplace-appropriate; encourage concise status-update style answers.",
+    ].join("\n"),
+    prep: WORKPLACE_QA_PREP,
   },
 ]
 

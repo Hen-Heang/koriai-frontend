@@ -11,6 +11,8 @@ import { getAllDayTasks, layoutDayTasks, MINUTES_IN_DAY, formatTaskTimeRange } f
 const HOUR_HEIGHT = 52 // px per hour row
 const TOTAL_HEIGHT = HOUR_HEIGHT * 24
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
+const SLOT_MINUTES = 30
+const SLOTS = Array.from({ length: (24 * 60) / SLOT_MINUTES }, (_, i) => i * SLOT_MINUTES)
 
 interface WeekTimeGridProps {
   mode: "week" | "day"
@@ -211,26 +213,30 @@ function DayColumn({
 }: DayColumnProps) {
   const positioned = useMemo(() => layoutDayTasks(tasks), [tasks])
 
-  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!onSlotClick) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const offsetY = e.clientY - rect.top
-    const minutes = Math.max(0, Math.min(MINUTES_IN_DAY - 30, (offsetY / HOUR_HEIGHT) * 60))
-    const snapped = Math.round(minutes / 30) * 30
-    const hh = String(Math.floor(snapped / 60)).padStart(2, "0")
-    const mm = String(snapped % 60).padStart(2, "0")
-    onSlotClick(day, `${hh}:${mm}`)
-  }
-
   return (
     <div
       className="relative flex-1 border-l border-border/40"
       style={{ width: colWidth }}
-      onClick={handleBackgroundClick}
     >
-      {HOURS.map((hour) => (
-        <div key={hour} className="border-b border-border/40" style={{ height: HOUR_HEIGHT }} />
-      ))}
+      {SLOTS.map((minutes) => {
+        const hh = String(Math.floor(minutes / 60)).padStart(2, "0")
+        const mm = String(minutes % 60).padStart(2, "0")
+        return (
+          <button
+            key={minutes}
+            type="button"
+            disabled={!onSlotClick}
+            onClick={() => onSlotClick?.(day, `${hh}:${mm}`)}
+            aria-label={`Add task at ${hh}:${mm} on ${format(day, "EEEE, MMMM d")}`}
+            className={cn(
+              "absolute inset-x-0 z-0 text-left focus-visible:z-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
+              onSlotClick && "hover:bg-accent/10",
+              minutes % 60 === 0 && "border-b border-border/40"
+            )}
+            style={{ top: (minutes / 60) * HOUR_HEIGHT, height: HOUR_HEIGHT / 2 }}
+          />
+        )
+      })}
 
       {showNowLine && (
         <div

@@ -116,7 +116,7 @@ export function FirstRunBanner() {
           <button
             type="button"
             onClick={dismiss}
-            className="mt-4 text-xs font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            className="mt-4 text-xs font-bold text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             I already know what I'm doing — dismiss
           </button>

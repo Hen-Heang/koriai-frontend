@@ -320,13 +320,25 @@ export function Calendar({
       </div>
       {currentDateTasks.length > 0 && (
         <div className="flex items-center justify-center gap-6 border-t border-border/60 py-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => handleNavigateTask("prev")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-xl"
+            onClick={() => handleNavigateTask("prev")}
+            aria-label="Previous task"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-xs font-semibold tabular-nums text-muted-foreground">
             {String(selectedTaskIndex + 1).padStart(2, "0")} / {String(currentDateTasks.length).padStart(2, "0")}
           </span>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => handleNavigateTask("next")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-xl"
+            onClick={() => handleNavigateTask("next")}
+            aria-label="Next task"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

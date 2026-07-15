@@ -698,7 +698,7 @@ export default function InterviewScriptPage() {
               <p className="mt-2 text-sm font-medium text-muted-foreground">
                 {topic.label} · Interview script · Submit by Aug 21
               </p>
-              <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
+              <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {completedSections}/{allSections.length} sections · {totalWords} words · {totalChars}자
               </p>
             </header>
@@ -740,7 +740,7 @@ export default function InterviewScriptPage() {
                       )}
                       <div className="flex shrink-0 items-center gap-2">
                         {sectionWords > 0 && (
-                          <span className="text-xs font-bold tabular-nums text-muted-foreground/50">
+                          <span className="text-xs font-bold tabular-nums text-muted-foreground">
                             {sectionWords}w
                           </span>
                         )}
@@ -798,7 +798,7 @@ export default function InterviewScriptPage() {
                         only — excluded from counts and the Korean export. */}
                     {!section.custom && showEnglish && (
                       <div className="mt-3 rounded-xl bg-muted/30 p-3">
-                        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/60">
+                        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                           <Languages size={11} strokeWidth={2.5} /> English
                         </p>
                         <div className="mt-1.5">
@@ -839,7 +839,7 @@ export default function InterviewScriptPage() {
                 <p className="mt-2 text-sm font-medium text-muted-foreground">
                   Draft an answer to each likely question. Answers autosave and export together with your script.
                 </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
+                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   {answeredQA}/{allQA.length} answered · {totalWords} words · {totalChars}자
                 </p>
               </header>

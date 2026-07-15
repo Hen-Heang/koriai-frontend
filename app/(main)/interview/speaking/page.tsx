@@ -293,7 +293,7 @@ export default function SpeakingDrillPage() {
                         )}
                       >
                         {score}
-                        <span className="text-xs font-medium text-muted-foreground/50"> / 5</span>
+                        <span className="text-xs font-medium text-muted-foreground"> / 5</span>
                       </p>
                     </div>
                   )

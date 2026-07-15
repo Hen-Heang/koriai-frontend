@@ -30,11 +30,11 @@ export function LearningPracticeCard({
   return (
     <Card className="rounded-3xl border-border bg-card/50 p-6 shadow-sm sm:rounded-3xl sm:p-8">
       <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
           <GraduationCap size={14} strokeWidth={2.5} />
           Learning Practice
         </h3>
-        <span className="text-[11px] font-bold text-muted-foreground/50">
+        <span className="text-[11px] font-bold text-muted-foreground">
           {completedCount}/{matches.length}
         </span>
       </div>
@@ -58,7 +58,7 @@ export function LearningPracticeCard({
             <span
               className={cn(
                 "min-w-0 flex-1 truncate text-sm font-bold",
-                task.completed ? "text-muted-foreground/50 line-through" : "text-foreground"
+                task.completed ? "text-muted-foreground line-through" : "text-foreground"
               )}
             >
               {task.title || task.description}

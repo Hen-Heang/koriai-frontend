@@ -210,7 +210,7 @@ function renderBlocks(content: string, isUserBubble = false, peek = true) {
           <ol key={idx} className="mt-3 space-y-2 text-[16px]">
             {block.items.map((item, i) => (
               <li key={i} className="flex gap-3">
-                <span className="mt-px w-4 shrink-0 text-right text-[14px] font-semibold tabular-nums text-muted-foreground/60">
+                <span className="mt-px w-4 shrink-0 text-right text-[14px] font-semibold tabular-nums text-muted-foreground">
                   {i + 1}.
                 </span>
                 <span className="leading-7">{renderInline(item, isUserBubble, peek)}</span>
@@ -296,10 +296,10 @@ function MessageBubbleImpl({
         {/* Content Section */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center justify-between">
-             <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+             <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                {isUser ? "You" : "Hengo Tutor"}
              </span>
-             <span className="text-[12px] font-bold text-muted-foreground/60">
+             <span className="text-[12px] font-bold text-muted-foreground">
                {new Date(message.createdAt).toLocaleTimeString([], {
                  hour: "2-digit",
                  minute: "2-digit",

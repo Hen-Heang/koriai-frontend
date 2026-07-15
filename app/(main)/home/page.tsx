@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { Flame, Sparkles, Target, Trophy } from "lucide-react"
+import { Flame, Sparkles, Target, TreeDeciduous, Trophy } from "lucide-react"
 import { motion } from "motion/react"
 
 import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
@@ -9,9 +9,12 @@ import { WorkspacePosterCard } from "@/components/home/WorkspacePosterCard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { achievementsApi } from "@/lib/api"
 import { useGoals } from "@/hooks/useGoals"
+import { useHabits } from "@/hooks/useHabits"
 import { useProgress } from "@/hooks/useProgress"
+import { useRecoveryEvents, useRecoveryHabits } from "@/hooks/useRecovery"
 import { getUserId } from "@/lib/auth-store"
 import { calculateGoalDeadlineInfo } from "@/lib/goals"
+import { daysSince } from "@/lib/recovery"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { getLastVisited } from "@/lib/last-visited"
 
@@ -26,10 +29,11 @@ function HomeLoadingState() {
   return (
     <div className="space-y-6 pb-12 sm:space-y-8">
       <Skeleton className="h-24 w-full rounded-2xl" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Skeleton className="h-72 w-full rounded-3xl" />
         <Skeleton className="h-72 w-full rounded-3xl" />
-        <Skeleton className="h-72 w-full rounded-3xl sm:col-span-2 xl:col-span-1" />
+        <Skeleton className="h-72 w-full rounded-3xl" />
+        <Skeleton className="h-72 w-full rounded-3xl" />
       </div>
     </div>
   )
@@ -38,6 +42,9 @@ function HomeLoadingState() {
 export default function HomePage() {
   const { loading, stats } = useProgress()
   const { sortedGoals, isLoading: goalsLoading } = useGoals()
+  const { activeHabits, loading: habitsLoading } = useHabits()
+  const { activeHabit: recoveryHabit, loading: recoveryHabitsLoading } = useRecoveryHabits()
+  const { lastSlipAt, loading: recoveryEventsLoading } = useRecoveryEvents(recoveryHabit?.id ?? null)
   const userId = getUserId()
   const { data: achievementsSummary, isPending: achievementsLoading } = useQuery({
     queryKey: ["achievements-summary", userId],
@@ -45,7 +52,16 @@ export default function HomePage() {
     enabled: userId != null,
   })
 
-  if (loading || goalsLoading || achievementsLoading) return <HomeLoadingState />
+  if (
+    loading ||
+    goalsLoading ||
+    achievementsLoading ||
+    habitsLoading ||
+    recoveryHabitsLoading ||
+    (recoveryHabit && recoveryEventsLoading)
+  ) {
+    return <HomeLoadingState />
+  }
 
   const activeGoals = sortedGoals.filter((g) => g.status !== "completed" && g.status !== "archived")
   const overdueGoals = activeGoals.filter((g) => calculateGoalDeadlineInfo(g).status === "overdue")
@@ -53,6 +69,7 @@ export default function HomePage() {
   const level = achievementsSummary?.level
   const unlockedCount = achievementsSummary?.unlockedCount ?? 0
   const totalCount = achievementsSummary?.totalCount ?? 0
+  const recoveryStreakDays = recoveryHabit ? daysSince(recoveryHabit.startedAt, lastSlipAt) : null
 
   return (
     <motion.div
@@ -85,8 +102,8 @@ export default function HomePage() {
         </motion.div>
       )}
 
-      {/* ── Three big entry points ── */}
-      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
+      {/* ── Big entry points ── */}
+      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
         <WorkspacePosterCard
           href={getLastVisited("learning", "/practice")}
           eyebrow="Learning"
@@ -130,6 +147,19 @@ export default function HomePage() {
             { label: "Badges", value: `${unlockedCount}/${totalCount}` },
           ]}
           cta="View achievements"
+        />
+        <WorkspacePosterCard
+          href="/growth/habits"
+          eyebrow="Growth"
+          title="Habits & Recovery"
+          description="Build identity-based habits and track recovery, one calm check-in at a time."
+          icon={TreeDeciduous}
+          accentColor="violet"
+          stats={[
+            { label: "Active habits", value: String(activeHabits.length) },
+            ...(recoveryStreakDays !== null ? [{ label: "Recovery streak", value: `${recoveryStreakDays}d` }] : []),
+          ]}
+          cta="Open Growth"
         />
       </motion.div>
     </motion.div>

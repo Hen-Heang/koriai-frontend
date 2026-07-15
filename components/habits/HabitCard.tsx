@@ -1,0 +1,44 @@
+"use client"
+
+import Link from "next/link"
+import { motion } from "motion/react"
+import { Flame } from "lucide-react"
+
+import { itemVariants } from "@/lib/motion"
+import { useHabitCheckins } from "@/hooks/useHabits"
+import type { Habit } from "@/lib/types"
+import { CATEGORY_ICONS, CATEGORY_LABELS } from "./categoryMeta"
+import { MilestoneBadge } from "./MilestoneBadge"
+
+export function HabitCard({ habit }: { habit: Habit }) {
+  const { currentStreak, milestone, loading } = useHabitCheckins(habit.id, habit.startedAt)
+  const Icon = CATEGORY_ICONS[habit.category]
+
+  return (
+    <motion.div variants={itemVariants}>
+      <Link
+        href={`/growth/habits/${habit.id}`}
+        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50 sm:p-5"
+      >
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+          <Icon size={20} strokeWidth={2} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">{habit.label}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{CATEGORY_LABELS[habit.category]}</p>
+        </div>
+
+        {!loading && (
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <div className="flex items-center gap-1 text-sm font-bold text-foreground">
+              <Flame size={14} strokeWidth={2} className="text-orange-500" />
+              {currentStreak}
+            </div>
+            <MilestoneBadge phase={milestone} />
+          </div>
+        )}
+      </Link>
+    </motion.div>
+  )
+}

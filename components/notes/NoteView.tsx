@@ -115,14 +115,14 @@ export function NoteView({ slug, note, html, onEdit, onDelete }: NoteViewProps) 
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border/60 pt-5 text-sm text-muted-foreground">
               <div className="flex min-w-[120px] items-center gap-2">
-                <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground/60">Category</span>
+                <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">Category</span>
                 <span className="flex items-center gap-1.5 font-medium capitalize text-foreground/80">
                   <Hash size={12} className="text-muted-foreground" />
                   {note.icon}
                 </span>
               </div>
               <div className="flex min-w-[120px] items-center gap-2">
-                <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground/60">Module</span>
+                <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">Module</span>
                 <span className="rounded border border-border bg-card px-2 py-0.5 font-mono text-xs font-medium text-foreground/80">
                   {slug}
                 </span>
@@ -166,7 +166,7 @@ export function NoteView({ slug, note, html, onEdit, onDelete }: NoteViewProps) 
               <ChevronLeft size={15} />
               Back to all notes
             </Link>
-            <span className="font-mono text-xs text-muted-foreground/40">{slug}</span>
+            <span className="font-mono text-xs text-muted-foreground">{slug}</span>
           </div>
         </div>
 

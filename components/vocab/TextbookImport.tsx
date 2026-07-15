@@ -121,17 +121,17 @@ export function TextbookImport({ existingTerms, onImport, embedded = false }: Te
                 : "No vocabulary entries detected"}
             </span>
             {prepared.duplicatesRemoved > 0 && (
-              <span className="text-muted-foreground/60">
+              <span className="text-muted-foreground">
                 {prepared.duplicatesRemoved} duplicate{prepared.duplicatesRemoved === 1 ? "" : "s"} merged
               </span>
             )}
             {prepared.alreadySaved > 0 && (
-              <span className="text-muted-foreground/60">
+              <span className="text-muted-foreground">
                 {prepared.alreadySaved} already in your dictionary
               </span>
             )}
             {entries.length > 100 && (
-              <span className="text-muted-foreground/60">Large list — import may take a moment</span>
+              <span className="text-muted-foreground">Large list — import may take a moment</span>
             )}
           </div>
         )}

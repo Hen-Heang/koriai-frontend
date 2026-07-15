@@ -126,7 +126,7 @@ export function LearningMetricCard({
         <div className="flex items-center gap-2">
           <BarChart3 size={15} strokeWidth={2.5} className="text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Learning progress</h3>
-          <span className="rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground/50">
+          <span className="rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             auto-tracked
           </span>
           {saving && <Loader2 size={13} className="animate-spin text-muted-foreground/40" />}
@@ -155,14 +155,14 @@ export function LearningMetricCard({
 
       {metric && !editing ? (
         <>
-          <p className="mt-3 text-xs font-medium text-muted-foreground/60">
+          <p className="mt-3 text-xs font-medium text-muted-foreground">
             {sourceLabel(metric.source)}
             {metric.source === "activity_sessions" && metric.feature ? ` · ${featureLabel(metric.feature)}` : ""}
             {" · "}
             {windowLabel(metric.window)}
           </p>
           <div className="mt-4 flex items-center justify-between text-xs font-medium">
-            <span className="text-muted-foreground/50">Progress</span>
+            <span className="text-muted-foreground">Progress</span>
             <span className="tabular-nums text-foreground">
               {countLoading ? <Loader2 size={12} className="inline animate-spin" /> : count ?? 0} / {metric.targetCount}
             </span>
@@ -250,7 +250,7 @@ export function LearningMetricCard({
         </div>
       ) : (
         <div className="mt-4 flex flex-col items-start gap-3 rounded-2xl border border-dashed border-border bg-background/30 p-4">
-          <p className="text-sm font-medium text-muted-foreground/60">
+          <p className="text-sm font-medium text-muted-foreground">
             Link this goal to a real learning metric so progress reflects what you actually practiced, not just checked-off tasks.
           </p>
           <button

@@ -210,7 +210,7 @@ export default function TemplateFormPage() {
               className={cn(error && "border-destructive/50 bg-destructive/5")}
             />
             {field.helperText && !error && (
-              <p className="ml-1 text-[11px] font-medium text-muted-foreground/60">
+              <p className="ml-1 text-[11px] font-medium text-muted-foreground">
                 {field.helperText}
               </p>
             )}
@@ -230,7 +230,7 @@ export default function TemplateFormPage() {
               className={cn("min-h-[120px]", error && "border-destructive/50 bg-destructive/5")}
             />
             {field.helperText && !error && (
-              <p className="ml-1 text-[11px] font-medium text-muted-foreground/60">
+              <p className="ml-1 text-[11px] font-medium text-muted-foreground">
                 {field.helperText}
               </p>
             )}
@@ -381,7 +381,7 @@ export default function TemplateFormPage() {
           </div>
         </div>
         <div className="hidden flex-col items-end sm:flex">
-          <span className="text-[11px] font-medium text-muted-foreground/60">
+          <span className="text-[11px] font-medium text-muted-foreground">
             Section {currentSection + 1} of {template.sections.length}
           </span>
           <span className="text-xs font-semibold text-primary">{Math.round(progress)}% complete</span>
@@ -402,7 +402,7 @@ export default function TemplateFormPage() {
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : idx < currentSection
                     ? "border border-blue-500/20 bg-blue-500/10 text-blue-500"
-                    : "cursor-not-allowed border border-border bg-muted text-muted-foreground/40 opacity-50"
+                    : "cursor-not-allowed border border-border bg-muted text-muted-foreground opacity-50"
               )}
             >
               {idx < currentSection ? <Check className="h-4 w-4" /> : <span>{idx + 1}</span>}

@@ -349,7 +349,7 @@ export function GoalList({
                           style={{ background: progressGradient(progress) }}
                         />
                       </div>
-                      <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/60">
+                      <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground">
                         {done}/{total}
                       </span>
                     </div>
@@ -441,7 +441,7 @@ export function GoalList({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-[11px] font-medium text-muted-foreground/60">
+                      <div className="flex items-center justify-between border-t border-border/40 pt-3 text-[11px] font-medium text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <ClipboardList size={14} className="text-primary/60" />
                           {done}/{total}

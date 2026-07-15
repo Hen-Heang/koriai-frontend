@@ -64,7 +64,7 @@ export function NoteSearch({ notes }: { notes: NoteMeta[] }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col items-center justify-center py-20 text-muted-foreground/60"
+            className="flex flex-col items-center justify-center py-20 text-muted-foreground"
           >
             <Search size={40} className="mb-4 opacity-20" />
             <p className="text-sm">

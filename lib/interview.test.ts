@@ -23,8 +23,8 @@ describe("getInterviewTopic", () => {
     expect(getInterviewTopic("nope").id).toBe(INTERVIEW_TOPICS[0].id)
   })
 
-  it("offers only the chosen weather topic", () => {
-    expect(INTERVIEW_TOPICS).toHaveLength(1)
+  it("offers the weather topic first, as the default/recommended one", () => {
+    expect(INTERVIEW_TOPICS.length).toBeGreaterThanOrEqual(1)
     expect(INTERVIEW_TOPICS[0].id).toBe("weather")
   })
 })

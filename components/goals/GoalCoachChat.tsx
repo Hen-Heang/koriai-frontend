@@ -136,7 +136,13 @@ export function GoalCoachChat({ goalId, goalTitle }: { goalId: string; goalTitle
           disabled={streaming}
           className="h-11 flex-1 rounded-xl"
         />
-        <Button type="submit" size="icon" disabled={streaming || !input.trim()} className="h-11 w-11 shrink-0 rounded-xl">
+        <Button
+          type="submit"
+          size="icon"
+          disabled={streaming || !input.trim()}
+          className="h-11 w-11 shrink-0 rounded-xl"
+          aria-label="Send message"
+        >
           {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>

@@ -97,7 +97,7 @@ export const ModernTaskItem = memo(function ModernTaskItem({
               className={cn(
                 "h-4.5 px-1.5 text-[11px] font-medium",
                 task.completed
-                  ? "border-muted-foreground/20 text-muted-foreground/60 bg-transparent"
+                  ? "border-muted-foreground/20 text-muted-foreground bg-transparent"
                   : "border-primary/20 text-primary bg-primary/5"
               )}
             >
@@ -119,6 +119,7 @@ export const ModernTaskItem = memo(function ModernTaskItem({
                 e.stopPropagation()
                 onEdit(task)
               }}
+              aria-label="Edit task"
             >
               <Pencil className="h-3 w-3" />
             </Button>
@@ -132,6 +133,7 @@ export const ModernTaskItem = memo(function ModernTaskItem({
                 e.stopPropagation()
                 onDelete(task.id)
               }}
+              aria-label="Delete task"
             >
               <Trash2 className="h-3 w-3" />
             </Button>

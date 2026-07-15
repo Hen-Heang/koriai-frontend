@@ -33,7 +33,7 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 
 ### API layer — `lib/api/` (the single integration point)
 
-- Per-domain service package: each domain file (`auth.ts`, `chat.ts`, `vocab.ts`, `goals.ts`, `interview.ts`, `reading.ts`, `progress.ts`, `learning.ts`, `foundations.ts`, `tts.ts`, `push.ts`, `user.ts`, `notes.ts`) queries Supabase directly and maps snake_case rows to the app's camelCase types. `lib/api/index.ts` is a barrel — import from `@/lib/api` (e.g. `import { vocabApi, getApiErrorMessage } from "@/lib/api"`). Add a new backend call to the matching domain file, not inline in components.
+- Per-domain service package: each domain file (`auth.ts`, `chat.ts`, `vocab.ts`, `goals.ts`, `interview.ts`, `reading.ts`, `progress.ts`, `learning.ts`, `foundations.ts`, `tts.ts`, `push.ts`, `user.ts`, `notes.ts`, `recovery.ts`, `habits.ts`) queries Supabase directly and maps snake_case rows to the app's camelCase types. `lib/api/index.ts` is a barrel — import from `@/lib/api` (e.g. `import { vocabApi, getApiErrorMessage } from "@/lib/api"`). Add a new backend call to the matching domain file, not inline in components.
 - `lib/api/errors.ts` — `getApiErrorMessage` formats supabase-js / fetch errors; used by most hooks and pages.
 - `lib/api/ai-client.ts` — `aiPost` / `authHeaders` attach the Supabase access token for calls to `app/api/ai/*`. `lib/api/sse.ts` parses the SSE streams.
 
@@ -47,10 +47,17 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 
 - Route groups: `app/(auth)/` (login, register) and `app/(main)/` (everything else).
 - `app/(main)/layout.tsx` is the entire app shell: contextual desktop sidebar, mobile top bar, mobile bottom tab bar, soft-keyboard detection via `visualViewport`.
-- **Nav is data-driven:** `lib/navigation.ts` is the single source of truth — four workspaces (`Learning`, `Productivity`, `AI`, `Progress`) that the sidebar, bottom tabs, and mobile "More" sheet all render from. Add, move, or hide features there (a `soon` flag renders a disabled entry), not in the shell. The desktop sidebar shows only the active workspace's links (`getWorkspaceForPath`) below an icon-only workspace-switcher row.
-- `/home` is the workspace gate: two poster cards (Learning / Productivity) that deep-link to the last route visited in each workspace (`lib/last-visited.ts`).
-- `/mistakes` and `/daily-phrase` are deliberate redirect stubs (→ `/chat?mode=corrections` and `/practice`) kept so old bookmarks still work — don't delete them.
+- **Nav is data-driven:** `lib/navigation.ts` is the single source of truth — five workspaces (`Learning`, `Productivity`, `AI`, `Progress`, `Growth`) that the sidebar, bottom tabs, and mobile "More" sheet all render from. Add, move, or hide features there (a `soon` flag renders a disabled entry), not in the shell. The desktop sidebar shows only the active workspace's links (`getWorkspaceForPath`) below an icon-only workspace-switcher row.
+- `/home` is the workspace gate: four poster cards (Learning / Productivity / Progress / Growth). The first three deep-link to the last route visited in that workspace (`lib/last-visited.ts`); Growth's card links to a fixed `/growth/habits` since `WorkspaceId` there only covers `learning`/`productivity`/`progress` (same pre-existing gap as `ai` — not yet addressed).
+- `/mistakes` and `/daily-phrase` are deliberate redirect stubs (→ `/chat?mode=corrections` and `/practice`) kept so old bookmarks still work — don't delete them. Same for `/focus/*` (→ `/growth/recovery/*`, from before the Growth-workspace rename).
 - **Immersive routes:** on `/chat` and `/home` the mobile header, bottom tabs, and content padding are all removed for a full-bleed experience (`/home` also drops the desktop sidebar and top bar). If you touch chat layout, check the shell's `isChatRoute` / `isHomeRoute` branches and `components/chat/ChatWindow.tsx`.
+
+### Growth workspace (`/growth/*`)
+
+- Two shipped features: **Habits** (`/growth/habits`, generic daily check-off habit tracking — `lib/habits.ts`, `lib/api/habits.ts`) and **Recovery** (`/growth/recovery`, urge/trigger tracking with a guided pause, post-slip debrief, and spaced-repetition if-then plans — `lib/recovery.ts`, `lib/api/recovery.ts`). Four more (`Deep Work`, `Mood`, `Journal`, `Rewards`) are `soon` nav placeholders with no code yet.
+- **Recovery must stay domain-neutral — never name a specific compulsive behavior anywhere** (code, comments, copy, seed data, tests, commit messages). This repo is public under the maintainer's real name and used as a job-hunting portfolio; habit labels are user-entered free text only, and UI copy uses generic terms (moment / slip / pause / plan), never anything behavior-specific.
+- Recovery's Supabase tables are still `kori_focus_*` (pre-date the Growth rename, hold live user data — not worth a migration for a naming-only change). `lib/api/recovery.ts` maps `kori_focus_*` rows to `Recovery*` app types (`lib/types.ts`); don't rename the tables without a real reason.
+- Recovery's plan rehearsal reuses `lib/srs.ts` (the same SM-2 scheduler vocab uses) via a `PlanOutcome → ReviewRating` adapter in `lib/recovery.ts`, since "was this if-then plan EASY?" isn't a meaningful rating on its own.
 
 ### Data state
 

@@ -76,7 +76,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate, embedded = false
             <span className="text-lg sm:text-xl">{cat.emoji}</span>
             <span className={cn(
               "text-[12px] font-bold uppercase tracking-tight sm:text-xs",
-              selectedCategory === cat.id ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground/60"
+              selectedCategory === cat.id ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"
             )}>
               {cat.label}
             </span>
@@ -104,7 +104,7 @@ export function DeckBuilder({ dueCount, totalCount, onGenerate, embedded = false
             </>
           )}
         </Button>
-        <div className="flex items-center justify-center gap-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:justify-end">
+        <div className="flex items-center justify-center gap-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground sm:justify-end">
           <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-0">
             <span>{dueCount} REVIEWS DUE</span>
             <span className="sm:mt-0.5">{totalCount} TOTAL CARDS</span>

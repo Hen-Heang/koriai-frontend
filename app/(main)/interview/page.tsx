@@ -675,7 +675,7 @@ export default function InterviewPage() {
 
             {/* Transcript */}
             <div className="rounded-[1.5rem] border border-border bg-background p-4 shadow-sm sm:rounded-3xl sm:p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                 Transcript
               </p>
               {isEditingAnswer || !speech.supported ? (
@@ -690,7 +690,7 @@ export default function InterviewPage() {
                   {speech.transcript}
                 </p>
               ) : (
-                <p className="mt-3 py-6 text-center text-sm font-medium italic text-muted-foreground/40">
+                <p className="mt-3 py-6 text-center text-sm font-medium italic text-muted-foreground">
                   Your spoken answer will appear here.
                 </p>
               )}

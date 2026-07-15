@@ -68,7 +68,7 @@ export function MonthView({
               key={day}
               className={cn(
                 "py-3 text-[11px] font-bold uppercase tracking-wide",
-                i === 0 || i === 6 ? "text-muted-foreground/60" : "text-muted-foreground"
+                i === 0 || i === 6 ? "text-muted-foreground" : "text-muted-foreground"
               )}
             >
               <span className="hidden sm:inline">{day}</span>
@@ -91,8 +91,18 @@ export function MonthView({
               <div
                 key={index}
                 onClick={() => isCurrentMonth && onDateChange(date)}
+                onKeyDown={(e) => {
+                  if (isCurrentMonth && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault()
+                    onDateChange(date)
+                  }
+                }}
+                role={isCurrentMonth ? "button" : undefined}
+                tabIndex={isCurrentMonth ? 0 : undefined}
+                aria-pressed={isCurrentMonth ? isSelected : undefined}
+                aria-label={isCurrentMonth ? date.toLocaleDateString(undefined, { month: "long", day: "numeric" }) : undefined}
                 className={cn(
-                  "relative flex min-h-[80px] flex-col gap-1 border-b border-r border-border/50 p-1.5 transition-colors sm:min-h-[100px]",
+                  "relative flex min-h-[80px] flex-col gap-1 border-b border-r border-border/50 p-1.5 transition-colors sm:min-h-[100px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
                   index % 7 === 0 && "border-l",
                   Math.floor(index / 7) === 0 && "border-t",
                   !isCurrentMonth && "cursor-default bg-muted/10 opacity-30",
@@ -138,8 +148,18 @@ export function MonthView({
                             e.stopPropagation()
                             onTaskClick?.(task)
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              onTaskClick?.(task)
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={task.title || task.description}
                           className={cn(
-                            "mx-0.5 flex cursor-pointer items-center gap-1 truncate rounded-md border border-l-2 px-2 py-1 text-[9px] font-bold transition-all",
+                            "mx-0.5 flex cursor-pointer items-center gap-1 truncate rounded-md border border-l-2 px-2 py-1 text-[9px] font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
                             task.completed
                               ? "bg-muted/40 text-muted-foreground line-through opacity-60"
                               : "bg-muted/30 text-foreground/80 hover:bg-muted/60"

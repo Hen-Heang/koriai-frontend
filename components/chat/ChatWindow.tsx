@@ -267,7 +267,7 @@ export function ChatWindow({
             <h3 className="truncate text-[16px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
             <div className="mt-1.5 flex items-center gap-1.5">
               <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
-              <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground/60">{subtitle}</p>
+              <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{subtitle}</p>
             </div>
           </div>
         </div>
@@ -282,7 +282,7 @@ export function ChatWindow({
               "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
               isTechnicalMode
                 ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "border-border/60 bg-background/50 text-muted-foreground/60"
+                : "border-border/60 bg-background/50 text-muted-foreground"
             )}
           >
             {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
@@ -298,7 +298,7 @@ export function ChatWindow({
               "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
               voiceMode
                 ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "border-border/60 bg-background/50 text-muted-foreground/60"
+                : "border-border/60 bg-background/50 text-muted-foreground"
             )}
           >
             <Headphones size={14} />
@@ -366,7 +366,7 @@ export function ChatWindow({
                   <Sparkles size={24} className="animate-pulse" />
                 </div>
               </div>
-              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Syncing History</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Syncing History</p>
             </div>
           ) : isEmpty ? (
             /* ── Native-Style Empty State ── */
@@ -382,15 +382,15 @@ export function ChatWindow({
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
                   {isTechnicalMode ? "Dev Tutor" : "Hengo"}
                 </h2>
-                <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground/60">
-                  {isTechnicalMode 
+                <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground">
+                  {isTechnicalMode
                     ? "Master technical Korean for your career."
                     : "How can I help you practice today?"}
                 </p>
               </div>
 
               <div className="w-full max-w-2xl space-y-2.5 px-4">
-                <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
                   Practice a scenario
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -409,7 +409,7 @@ export function ChatWindow({
                       <span className="text-[13px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                         {preset.label}
                       </span>
-                      <span className="text-[12px] font-medium leading-snug text-muted-foreground/60">
+                      <span className="text-[12px] font-medium leading-snug text-muted-foreground">
                         {preset.description}
                       </span>
                     </motion.button>
@@ -511,11 +511,12 @@ export function ChatWindow({
             onSubmit={handleSubmit}
             className="group relative flex items-center gap-1 rounded-3xl border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
-            <Button 
-              type="button" 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
               className="h-10 w-10 shrink-0 rounded-full text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
+              aria-label="Add attachment"
             >
               <Plus size={22} />
             </Button>
@@ -574,7 +575,7 @@ export function ChatWindow({
             </div>
           </form>
           
-          <p className="mt-3 text-center text-[12px] font-medium text-muted-foreground/40 sm:text-xs">
+          <p className="mt-3 text-center text-[12px] font-medium text-muted-foreground sm:text-xs">
             Hengo can make mistakes. Consider checking important information.
           </p>
         </div>

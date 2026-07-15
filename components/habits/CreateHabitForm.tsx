@@ -1,0 +1,109 @@
+"use client"
+
+import { useState } from "react"
+import { motion } from "motion/react"
+import { Sparkles, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ChipSelect } from "@/components/ui/chip-select"
+import { itemVariants } from "@/lib/motion"
+import type { HabitCategory } from "@/lib/types"
+import { CATEGORY_LABELS, CATEGORY_ORDER } from "./categoryMeta"
+
+export function CreateHabitForm({
+  onCreate,
+  onClose,
+}: {
+  onCreate: (input: { label: string; category: HabitCategory; identityStatement?: string }) => Promise<unknown>
+  onClose?: () => void
+}) {
+  const [label, setLabel] = useState("")
+  const [category, setCategory] = useState<HabitCategory>("custom")
+  const [identityStatement, setIdentityStatement] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!label.trim() || submitting) return
+    setSubmitting(true)
+    try {
+      await onCreate({ label: label.trim(), category, identityStatement: identityStatement.trim() || undefined })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <motion.form
+      variants={itemVariants}
+      onSubmit={handleSubmit}
+      className="mx-auto max-w-md space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="inline-flex rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+          <Sparkles size={20} strokeWidth={2} />
+        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+        )}
+      </div>
+      <div>
+        <h1 className="text-xl font-bold text-foreground">Start a new habit</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Small and specific beats big and vague — pick something you can do today.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="habit-label" className="text-sm font-semibold text-foreground">
+          What are you building?
+        </label>
+        <Input
+          id="habit-label"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="e.g. 20 minutes of reading"
+          maxLength={80}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-sm font-semibold text-foreground">Category</span>
+        <ChipSelect
+          options={CATEGORY_ORDER.map((c) => CATEGORY_LABELS[c])}
+          value={CATEGORY_LABELS[category]}
+          onChange={(label) => {
+            const next = CATEGORY_ORDER.find((c) => CATEGORY_LABELS[c] === label)
+            if (next) setCategory(next)
+          }}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="habit-identity" className="text-sm font-semibold text-foreground">
+          Who is this making you? <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <Input
+          id="habit-identity"
+          value={identityStatement}
+          onChange={(e) => setIdentityStatement(e.target.value)}
+          placeholder="e.g. I'm becoming someone who follows through"
+          maxLength={120}
+        />
+      </div>
+
+      <Button type="submit" className="w-full" size="lg" disabled={submitting || !label.trim()}>
+        {submitting ? "Starting…" : "Start habit"}
+      </Button>
+    </motion.form>
+  )
+}

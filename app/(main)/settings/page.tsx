@@ -97,7 +97,7 @@ function SectionHeader({ icon: Icon, title, description, color = "text-blue-500"
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">{title}</p>
-        {description && <p className="text-[11px] font-medium text-muted-foreground/50">{description}</p>}
+        {description && <p className="text-[11px] font-medium text-muted-foreground">{description}</p>}
       </div>
     </div>
   )
@@ -105,7 +105,7 @@ function SectionHeader({ icon: Icon, title, description, color = "text-blue-500"
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground/50 px-1">
+    <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground px-1">
       {children}
     </label>
   )
@@ -350,7 +350,7 @@ export default function SettingsPage() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-foreground">Settings</h1>
-            <p className="text-[11px] font-medium text-muted-foreground/50">Profile, preferences & account</p>
+            <p className="text-[11px] font-medium text-muted-foreground">Profile, preferences & account</p>
           </div>
         </div>
       </motion.div>
@@ -397,7 +397,7 @@ export default function SettingsPage() {
                 <p className="truncate text-base font-bold text-foreground">
                   {displayName || "Your name"}
                 </p>
-                <p className="truncate text-xs font-medium text-muted-foreground/50">{email}</p>
+                <p className="truncate text-xs font-medium text-muted-foreground">{email}</p>
               </div>
             </div>
           </SectionRow>
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                       <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
                         {level.label}
                       </p>
-                      <p className="truncate text-[11px] font-medium text-muted-foreground/50">{level.desc}</p>
+                      <p className="truncate text-[11px] font-medium text-muted-foreground">{level.desc}</p>
                     </div>
                     {active && (
                       <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
@@ -559,7 +559,7 @@ export default function SettingsPage() {
                       <p className={cn("text-sm font-semibold", active ? "text-foreground" : "text-muted-foreground")}>
                         {model.label}
                       </p>
-                      <p className="text-[11px] font-medium text-muted-foreground/50">{model.desc}</p>
+                      <p className="text-[11px] font-medium text-muted-foreground">{model.desc}</p>
                       {active && (
                         <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
                       )}
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                       "flex flex-col items-center gap-1.5 rounded-2xl border py-3.5 text-[11px] font-semibold transition-all active:scale-[0.97]",
                       active
                         ? "border-pink-500/30 bg-pink-500/10 text-pink-600 dark:text-pink-400"
-                        : "border-border bg-accent/5 text-muted-foreground/50 hover:text-foreground"
+                        : "border-border bg-accent/5 text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Icon size={16} strokeWidth={active ? 2.5 : 1.75} />
@@ -624,7 +624,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">Browser</p>
-                <p className="text-[11px] font-medium text-muted-foreground/50">
+                <p className="text-[11px] font-medium text-muted-foreground">
                   {push.supported
                     ? push.webState === "denied"
                       ? "Blocked in browser settings."
@@ -657,7 +657,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Telegram</p>
-                  <p className="text-[11px] font-medium text-muted-foreground/50">
+                  <p className="text-[11px] font-medium text-muted-foreground">
                     {push.telegramLinked ? "Connected" : "Get alerts in Telegram"}
                   </p>
                 </div>
@@ -688,7 +688,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Daily reminders</p>
-                  <p className="text-[11px] font-medium text-muted-foreground/50">
+                  <p className="text-[11px] font-medium text-muted-foreground">
                     Review nudge + streak saver
                   </p>
                 </div>
@@ -702,7 +702,7 @@ export default function SettingsPage() {
             </div>
             {studyRemindersEnabled && (
               <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl bg-accent/5 px-4 py-3 dark:bg-white/5">
-                <label htmlFor="study-hour" className="text-[11px] font-medium text-muted-foreground/50">
+                <label htmlFor="study-hour" className="text-[11px] font-medium text-muted-foreground">
                   Remind me at
                 </label>
                 <select
@@ -738,7 +738,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-red-600 dark:text-red-400">Sign out</p>
-                <p className="text-[11px] font-medium text-muted-foreground/50">End your session</p>
+                <p className="text-[11px] font-medium text-muted-foreground">End your session</p>
               </div>
             </div>
             <ChevronRight size={14} strokeWidth={2} className="text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
@@ -747,7 +747,7 @@ export default function SettingsPage() {
       </motion.div>
 
       <motion.div variants={itemVariants} className="pt-2 text-center">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           © 2026 Hen Heang · FullStack Developer
         </p>
       </motion.div>

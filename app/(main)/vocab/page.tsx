@@ -1,17 +1,23 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Search, X } from "lucide-react"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 
 import { PageHero } from "@/components/app/page-hero"
+import { DailyPhraseCard } from "@/components/practice/DailyPhraseCard"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddWordsDialog } from "@/components/vocab/AddWordsDialog"
 import { ReviewSession } from "@/components/vocab/ReviewSession"
 import { VocabDictionary } from "@/components/vocab/VocabDictionary"
 import { useLogActivity } from "@/hooks/useLogActivity"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { useVocab } from "@/hooks/useVocab"
+import { dailyPhraseApi } from "@/lib/api"
+import { getUserId } from "@/lib/auth-store"
+import type { DailyPhrase } from "@/lib/types"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,6 +44,22 @@ export default function VocabPage() {
   useSessionTimer("vocab")
   const [query, setQuery] = useState("")
   const [addOpen, setAddOpen] = useState(false)
+
+  // Phrases tab — merges Daily Phrase history into the same page as the vocab
+  // dictionary so both "learn a phrase" surfaces live in one place.
+  const userId = getUserId()
+  const queryClient = useQueryClient()
+  const phrasesKey = ["daily-phrases", "history", userId] as const
+  const { data: phraseHistory, isPending: phrasesLoading } = useQuery({
+    queryKey: phrasesKey,
+    queryFn: dailyPhraseApi.getHistory,
+    enabled: userId != null,
+  })
+  function handlePhraseChange(next: DailyPhrase) {
+    queryClient.setQueryData<DailyPhrase[]>(phrasesKey, (prev) =>
+      (prev ?? []).map((p) => (p.id === next.id ? next : p))
+    )
+  }
 
   const topics = Array.from(new Set(words.map((w) => w.category).filter(Boolean))).sort()
 
@@ -89,56 +111,79 @@ export default function VocabPage() {
         />
       </motion.div>
 
-      {/* The one search bar — top of the page, filters the dictionary below. */}
-      {words.length > 0 && (
-        <motion.div variants={itemVariants} className="relative">
-          <Search size={18} strokeWidth={2.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Search ${words.length} saved words...`}
-            className="h-14 w-full rounded-2xl border border-border bg-card pl-12 pr-11 text-base font-bold text-foreground shadow-sm placeholder:text-muted-foreground/40 transition-colors focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:bg-slate-900/40"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <X size={16} strokeWidth={3} />
-            </button>
-          )}
-        </motion.div>
-      )}
-
-      {/* Memory Lab launch banner — the session itself opens fullscreen. */}
       <motion.div variants={itemVariants}>
-        <ReviewSession
-          dueToday={dueToday}
-          dueCount={dueCount}
-          allWords={words}
-          loading={loading}
-          onRate={rateWord}
-        />
+        <Tabs defaultValue="vocabulary">
+          <TabsList>
+            <TabsTrigger value="vocabulary">Vocabulary</TabsTrigger>
+            <TabsTrigger value="phrases">Phrases</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="vocabulary" className="space-y-8 pt-6">
+            {/* The one search bar — top of the section, filters the dictionary below. */}
+            {words.length > 0 && (
+              <div className="relative">
+                <Search size={18} strokeWidth={2.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={`Search ${words.length} saved words...`}
+                  className="h-14 w-full rounded-2xl border border-border bg-card pl-12 pr-11 text-base font-bold text-foreground shadow-sm placeholder:text-muted-foreground/40 transition-colors focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:bg-slate-900/40"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground/40 transition-colors hover:bg-accent/50 hover:text-foreground"
+                  >
+                    <X size={16} strokeWidth={3} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Memory Lab launch banner — the session itself opens fullscreen. */}
+            <ReviewSession
+              dueToday={dueToday}
+              dueCount={dueCount}
+              allWords={words}
+              loading={loading}
+              onRate={rateWord}
+            />
+
+            {error && (
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive">
+                {error}
+              </div>
+            )}
+
+            <VocabDictionary
+              words={words}
+              loading={loading}
+              dueCount={dueCount}
+              query={query}
+              onUpdate={updateWord}
+              onDelete={deleteWord}
+              onAdd={addWord}
+              onStartAdd={() => setAddOpen(true)}
+            />
+          </TabsContent>
+
+          <TabsContent value="phrases" className="space-y-4 pt-6">
+            {phrasesLoading ? (
+              <div className="h-40 w-full animate-pulse rounded-3xl bg-muted/20" />
+            ) : !phraseHistory || phraseHistory.length === 0 ? (
+              <div className="rounded-3xl border border-border bg-card p-8 text-center text-sm font-medium text-muted-foreground dark:bg-slate-900/40">
+                No daily phrases yet — visit Today to get your first one.
+              </div>
+            ) : (
+              phraseHistory.map((phrase) => (
+                <DailyPhraseCard key={phrase.id} phrase={phrase} onChange={handlePhraseChange} />
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       </motion.div>
-
-      {error && (
-        <motion.div variants={itemVariants} className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive">
-          {error}
-        </motion.div>
-      )}
-
-      <VocabDictionary
-        words={words}
-        loading={loading}
-        dueCount={dueCount}
-        query={query}
-        onUpdate={updateWord}
-        onDelete={deleteWord}
-        onAdd={addWord}
-        onStartAdd={() => setAddOpen(true)}
-      />
 
       <AddWordsDialog
         open={addOpen}

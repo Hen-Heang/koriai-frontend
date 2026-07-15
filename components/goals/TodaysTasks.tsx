@@ -166,7 +166,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
     return (
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs font-medium">
-          <span className={cn(allDone ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60")}>
+          <span className={cn(allDone ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
             {allDone ? "All tasks done" : "Daily progress"}
           </span>
           <span className="tabular-nums text-muted-foreground">
@@ -232,7 +232,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                     type="button"
                     className={cn(
                       "flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors",
-                      newTaskGoalId ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                      newTaskGoalId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Target className="h-3.5 w-3.5" />
@@ -245,7 +245,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-60 rounded-2xl p-2 shadow-lg">
-                  <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground/60">
+                  <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground">
                     Assign to
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="my-2" />
@@ -278,7 +278,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
               }}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors",
-                !isAnytime ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                !isAnytime ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Clock className="h-3.5 w-3.5" />
@@ -295,7 +295,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                 onChange={(e) => handleStartTimeChange(e.target.value || "09:00")}
                 className="h-8 rounded-lg border border-border bg-background px-2 text-xs outline-none [color-scheme:light] dark:[color-scheme:dark]"
               />
-              <span className="text-xs text-muted-foreground/50">to</span>
+              <span className="text-xs text-muted-foreground">to</span>
               <input
                 type="time"
                 aria-label="End time"
@@ -400,7 +400,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60 rounded-2xl p-2 shadow-lg">
-            <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground/60">Show tasks from</DropdownMenuLabel>
+            <DropdownMenuLabel className="px-3 pt-2 text-xs font-medium text-muted-foreground">Show tasks from</DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuCheckboxItem
               checked={allSelected}
@@ -482,18 +482,18 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           ) : (
             <span className={cn(
               "block text-sm font-medium leading-snug transition-all",
-              task.completed ? "text-muted-foreground/40 line-through" : "text-foreground group-hover/item:text-primary"
+              task.completed ? "text-muted-foreground line-through" : "text-foreground group-hover/item:text-primary"
             )}>
               {task.title || task.description}
             </span>
           )}
           <div className="mt-2 flex items-center justify-between text-xs font-medium">
-            <span className={cn("flex items-center gap-1.5", overdue ? "text-red-500/80" : "text-muted-foreground/60")}>
+            <span className={cn("flex items-center gap-1.5", overdue ? "text-red-500/80" : "text-muted-foreground")}>
               {overdue ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
               {task.is_anytime ? "Anytime" : task.daily_start_time?.slice(0, 5)}
             </span>
             {goalTitle && (
-              <span className="max-w-[120px] truncate rounded-lg bg-foreground/[0.03] px-2 py-0.5 text-muted-foreground/50">
+              <span className="max-w-[120px] truncate rounded-lg bg-foreground/[0.03] px-2 py-0.5 text-muted-foreground">
                 {goalTitle}
               </span>
             )}
@@ -533,10 +533,10 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
 
   const sectionHeader = (label: string, count: number, accent?: string) => (
     <div className="flex items-center gap-2 px-1 py-2">
-      <span className={cn("text-[11px] font-semibold uppercase tracking-wide", accent || "text-muted-foreground/40")}>
+      <span className={cn("text-[11px] font-semibold uppercase tracking-wide", accent || "text-muted-foreground")}>
         {label}
       </span>
-      <span className="text-[11px] font-medium tabular-nums text-muted-foreground/60">{count}</span>
+      <span className="text-[11px] font-medium tabular-nums text-muted-foreground">{count}</span>
       <div className="h-px flex-1 bg-foreground/5" />
     </div>
   )
@@ -553,7 +553,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
           </div>
           <div>
             <h3 className="text-base font-semibold tracking-tight text-foreground">Today&apos;s tasks</h3>
-            <p className="text-xs font-medium text-muted-foreground/60">
+            <p className="text-xs font-medium text-muted-foreground">
               {format(new Date(), "EEEE, MMM d")}
             </p>
           </div>
@@ -613,7 +613,7 @@ export function TodaysTasks({ className }: TodaysTasksProps) {
                       className="flex w-full items-center gap-2 py-2"
                     >
                       <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600/60">Completed</span>
-                      <span className="text-[11px] font-medium text-muted-foreground/60">{groups.completed.length}</span>
+                      <span className="text-[11px] font-medium text-muted-foreground">{groups.completed.length}</span>
                       <div className="h-px flex-1 bg-foreground/5" />
                       <ChevronDown className={cn("h-4 w-4 text-muted-foreground/60", showCompleted && "rotate-180")} />
                     </button>

@@ -84,7 +84,7 @@ Existing apps stop at step 1. Hengo is the loop.
 
 Hengo is not only a Korean app. It is an **AI learning and growth platform** whose first vertical is Korean for professionals — the same engine (AI conversation, structured feedback, spaced repetition, goal tracking, progress analytics) generalizes to any skill you practice through language.
 
-Today it already combines what would normally be five separate apps:
+Today it already combines what would normally be six separate apps:
 
 | Pillar | What Hengo does |
 |---|---|
@@ -93,6 +93,7 @@ Today it already combines what would normally be five separate apps:
 | Workplace assistant | Message analyzer and generator for real Korean workplace communication |
 | Productivity system | Goals, tasks, calendar, and an AI goal coach |
 | Progress tracker | Dashboard, streaks, XP/achievements, history, weak-skill detection |
+| Personal growth platform | Habits (Growth workspace) — identity-based habit streaks and domain-neutral behavior-change support (Recovery) |
 
 The long-term direction extends the same platform into:
 
@@ -106,7 +107,7 @@ The long-term direction extends the same platform into:
 
 ## 4. Key Features
 
-Features are grouped into five product areas. All routes live under `app/(main)/` unless noted.
+Features are grouped into six product areas. All routes live under `app/(main)/` unless noted.
 
 ### AI Learning
 
@@ -157,6 +158,18 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 | **Achievements** | `/achievements` | XP, levels, skill badges | A compact level/XP badge (`components/achievements/LevelBadge.tsx`) sits in the desktop and mobile top bars on every page | Supabase-backed XP model |
 | **Statistics** | `/statistics` | One analytics view for the whole platform | Streak, weekly minutes, XP, weekly progress chart, and a per-feature time breakdown across Learning and Productivity | Recharts, `lib/api/progress.ts` |
 
+### Growth
+
+A separate workspace for personal behavior-change, distinct from the language-learning pillars above. Two features are shipped; four are placeholders (`soon` flag in `lib/navigation.ts`, disabled nav entries).
+
+| Feature | Route | Purpose | Benefits | Main technologies |
+|---|---|---|---|---|
+| **Habits** | `/growth/habits`, `/growth/habits/[id]` | Generic daily habit tracking (exercise, reading, meditation, sleep, water, study, coding, deep work, walking, or a custom category) | Simple daily check-off with current streak, longest streak, and consistency % | `lib/habits.ts` (pure, calendar-date streak math), `lib/api/habits.ts` |
+| **Recovery** | `/growth/recovery` (+ `log`, `pause`, `debrief`, `plans`, `triggers`, `checkins`) | Support for urges and compulsive patterns: logging a moment, a guided breathing pause, a calm post-slip debrief, and spaced-repetition if-then plans | **Domain-neutral by design** — no specific behavior is ever named in code, copy, or commit history; habit labels are user-entered free text only. Live elapsed-time clock; full CRUD on habits, triggers, check-ins, and plans | `lib/recovery.ts` (SRS-adapted plan scheduling via `lib/srs.ts`, KST-aware day boundaries), `lib/api/recovery.ts` |
+| Deep Work · Mood · Journal · Rewards | `/growth/focus`, `/growth/mood`, `/growth/journal`, `/growth/rewards` | Planned: focus sessions, mood tracking, journaling, milestone rewards | — | — |
+
+> Recovery's underlying Supabase tables are still named `kori_focus_*` — they pre-date the Growth-workspace rename and hold live user data, so a table rename wasn't worth the migration risk. App-facing code and types use `Recovery*` naming throughout (`lib/api/recovery.ts` maps between them).
+
 ### App surfaces
 
 | Surface | Route | Notes |
@@ -168,8 +181,8 @@ The unified **AI Coach** workspace at `/chat` has four tabs, all backed by the `
 
 ### Navigation
 
-- **One nav source.** `lib/navigation.ts` defines four **workspaces** — `Learning` (Today · Vocabulary · Foundations · Reading · Listening · Scenarios · Exam Prep), `Productivity` (Dashboard · Goals · Roadmap · Notes), `AI` (Chat · Analyze · Generate · Corrections), `Progress` (Achievements · Statistics · History). The sidebar, mobile bottom bar, and "More" sheet all render from it — adding a module later means adding one workspace entry, not touching the shell. A `soon` flag on a link renders it as a disabled "Soon" entry.
-- **Home gate.** `/home` is the workspace gate: it renders without any app chrome (no sidebar, top bars, or tabs), and its three poster cards deep-link into Learning, Productivity, or Progress at the last route you visited there (`lib/last-visited.ts`).
+- **One nav source.** `lib/navigation.ts` defines five **workspaces** — `Learning` (Today · Vocabulary · Foundations · Reading · Listening · Scenarios · Exam Prep), `Productivity` (Dashboard · Goals · Roadmap · Notes), `AI` (Chat · Analyze · Generate · Corrections), `Progress` (Achievements · Statistics · History), `Growth` (Habits · Recovery · Deep Work/Mood/Journal/Rewards, the last four `soon`). The sidebar, mobile bottom bar, and "More" sheet all render from it — adding a module later means adding one workspace entry, not touching the shell. A `soon` flag on a link renders it as a disabled "Soon" entry.
+- **Home gate.** `/home` is the workspace gate: it renders without any app chrome (no sidebar, top bars, or tabs). The Learning, Productivity, and Progress poster cards deep-link to the last route you visited in that workspace (`lib/last-visited.ts`); the Growth card links to a fixed `/growth/habits` since `WorkspaceId` there still only covers `learning`/`productivity`/`progress` (same pre-existing gap as `ai`, noted in `lib/navigation.ts`).
 - **Desktop:** a contextual sidebar in `app/(main)/layout.tsx` — an icon-only workspace-switcher row on top, then only the active workspace's links below it (`getWorkspaceForPath`), so the sidebar shows one workspace at a time.
 - **Header:** a compact level/XP badge sits in both the desktop and mobile top bars, linking to `/achievements`.
 - **Mobile:** a bottom tab bar — Home · Learn (Today) · Plan (Goals) · AI (Chat) — with a "More" sheet exposing the remaining links grouped by workspace so nothing is unreachable on a phone.
@@ -371,21 +384,26 @@ app/
     history/       Progress Lab
     notes/         Dev Notes (knowledge library), notes/new, notes/[slug]
     settings/      Settings (account/ is an alias)
-    mistakes/  daily-phrase/   redirect stubs — keep them
+    growth/        Growth workspace — habits/, habits/[id]/, recovery/ (+ log, pause,
+                   debrief, plans, triggers, checkins)
+    mistakes/  daily-phrase/  focus/*  redirect stubs — keep them
+                   (focus/* redirects to growth/recovery/* from the pre-rename routes)
   api/ai/          AI route handlers (the only server-side code)
 components/
   ui/              reusable shadcn-style primitives (keep generic)
   chat/  ai/  vocab/  goals/  calendar/  reading/  dashboard/  learn/
-  interview/  notes/  achievements/  providers/  ...
+  interview/  notes/  achievements/  recovery/  habits/  providers/  ...
 hooks/             useChat, useVocab, useFoundations, useGoals, useNotes, etc.
 lib/
   api/             Supabase integration — per-domain service package (barrel: index.ts)
+                   (includes recovery.ts, habits.ts for the Growth workspace)
   server/ai.ts     shared plumbing for app/api/ai/* (requireUser, jsonAiRoute, SSE)
   supabase.ts      single browser Supabase client
   auth-store.ts    reads the persisted session (storage key "koriai-auth")
-  navigation.ts    single source of truth for the four nav workspaces
+  navigation.ts    single source of truth for the five nav workspaces
   last-visited.ts  per-workspace "continue where you left off" tracking
   goals.ts  reading.ts  vocab-review.ts  srs.ts  study-plan.ts
+  recovery.ts  habits.ts   pure logic for the Growth workspace (framework-free, tested)
   interview.ts  interview-modes.ts  interview-unexpected.ts
   interview-history.ts  exam-strategy.ts  ...
 public/            hengo-icon.svg, sw.js (web push service worker), static assets
@@ -500,7 +518,7 @@ TTS_MODEL=...
 pnpm dev          # dev server at localhost:3000
 ```
 
-> **Local dev behind corporate SSL inspection (e.g. Somansa):** Node.js doesn't trust the interception CA, so every server-side fetch (Supabase auth in `requireUser`, OpenAI) fails with `SELF_SIGNED_CERT_IN_CHAIN` and all `app/api/ai/*` routes return 401 even for valid logins. Run the dev server with `NODE_EXTRA_CA_CERTS` pointing at the exported root CA. Browser-side Supabase calls are unaffected, so the symptom is "everything works except AI".
+> **Local dev behind corporate SSL inspection:** Node.js doesn't trust the interception CA, so every server-side fetch (Supabase auth in `requireUser`, OpenAI) fails with `SELF_SIGNED_CERT_IN_CHAIN` and all `app/api/ai/*` routes return 401 even for valid logins. Run the dev server with `NODE_EXTRA_CA_CERTS` pointing at the exported root CA. Browser-side Supabase calls are unaffected, so the symptom is "everything works except AI".
 
 ### Testing
 
@@ -510,7 +528,7 @@ pnpm test:watch   # vitest watch mode
 npx vitest run lib/vocab-review.test.ts   # run a single test file
 ```
 
-Tests are plain Vitest unit tests colocated in `lib/*.test.ts` (srs, vocab-review, vocab-import, reading, interview, interview-history, interview-modes, interview-unexpected, study-focus, study-plan). There is no vitest config file — defaults apply. They cover the pure domain logic (SRS scheduling, prompt building, plan math), which is why that logic is kept framework-free in `lib/`.
+Tests are plain Vitest unit tests colocated in `lib/*.test.ts` (srs, vocab-review, vocab-import, reading, interview, interview-drills, interview-history, interview-modes, interview-unexpected, study-focus, study-plan, recovery, habits). There is no vitest config file — defaults apply. They cover the pure domain logic (SRS scheduling, prompt building, plan math, recovery/habit streak math), which is why that logic is kept framework-free in `lib/`.
 
 ### Linting
 
@@ -625,6 +643,7 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 - Workspace-based IA (July 2026): `/home` gate with Learning/Productivity/Progress poster cards, contextual sidebar with a workspace switcher, single nav source in `lib/navigation.ts`
 - Statistics page (platform-wide streaks, weekly chart, per-feature breakdown), XP/achievements
 - Foundations, Reading, Listening, Scenarios, Daily Practice hub, Dev Notes, web push
+- Growth workspace: generic **Habits** tracking (streaks, consistency %) and **Recovery** (urge logging, guided pause, post-slip debrief, spaced-repetition if-then plans) — both wired into the platform-wide activity log, streak, and Statistics feature-breakdown; Recovery is deliberately domain-neutral (no specific behavior named anywhere in code/copy, by design — see [§4 Growth](#4-key-features))
 
 ### In progress
 
@@ -637,6 +656,8 @@ The UI follows one calm, consistent visual language — keep new screens on the 
 - **Smart review** — one cross-feature review queue merging vocab, mistakes, and phrases
 - **Shadowing** — listen-and-repeat drills with TTS pacing
 - **Gamification** — richer achievement tracks beyond XP/levels
+- **Growth: Deep Work** — focused work sessions (`/growth/focus`, currently a disabled `soon` nav entry)
+- **Growth: Mood, Journal, Rewards** — mood tracking, free-form journaling, milestone rewards (`/growth/mood`, `/growth/journal`, `/growth/rewards`, all `soon`)
 
 ### Future vision
 

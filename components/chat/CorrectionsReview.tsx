@@ -97,7 +97,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
               <RotateCcw size={32} strokeWidth={2.5} />
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">Mistake Review</h2>
-            <p className="mt-2 text-sm font-medium text-muted-foreground/60">
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
               {items.length > 0
                 ? `${items.length} past mistakes are due for review`
                 : "No mistakes are due — they'll resurface here if you forget them again."}
@@ -140,7 +140,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
               transition={{ duration: 0.25 }}
               className="rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 dark:bg-slate-900/60 sm:p-8"
             >
-              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
                 What you wrote
               </p>
               <p className="mt-2 break-keep text-2xl font-bold leading-snug text-red-700 line-through dark:text-red-400 sm:text-3xl">
@@ -211,7 +211,7 @@ export function CorrectionsReview({ onDone }: { onDone?: () => void }) {
             </div>
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-foreground">Review complete</h2>
-              <p className="mt-2 text-sm font-medium text-muted-foreground/60">
+              <p className="mt-2 text-sm font-medium text-muted-foreground">
                 {Math.max(0, total - lapsedIds.size)} of {total} fixed on the first try.
               </p>
             </div>

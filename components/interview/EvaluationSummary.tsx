@@ -96,7 +96,7 @@ export function EvaluationSummary({
                     <span className="text-sm font-bold text-foreground">{s.label}</span>
                     <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
                       {s.score}
-                      <span className="text-muted-foreground/50"> / {s.max}</span>
+                      <span className="text-muted-foreground"> / {s.max}</span>
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-accent/40">

@@ -26,6 +26,13 @@ const ACCENTS = {
     eyebrow: "text-amber-600 dark:text-amber-400",
     cta: "text-amber-600 dark:text-amber-400",
   },
+  violet: {
+    glow: "bg-violet-500/10",
+    iconBg: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    border: "hover:border-violet-500/40",
+    eyebrow: "text-violet-600 dark:text-violet-400",
+    cta: "text-violet-600 dark:text-violet-400",
+  },
 } as const
 
 export interface WorkspacePosterStat {
@@ -34,7 +41,7 @@ export interface WorkspacePosterStat {
 }
 
 // One of the big "pick a lane" entry points on Home — Korean Learning, Goal
-// Setting, and Progress. The whole card deep-links via getLastVisited so it
+// Setting, Progress, and Growth. The whole card deep-links via getLastVisited so it
 // carries forward the same "continue where you left off" behavior the old
 // ContinueCards had, just with a real-data summary instead of a bare label.
 export function WorkspacePosterCard({

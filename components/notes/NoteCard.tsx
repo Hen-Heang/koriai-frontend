@@ -47,7 +47,7 @@ export function NoteCard({ slug, title, description, icon, index }: NoteCardProp
                 {title}
               </h2>
               <div className="mt-1.5 flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                   Module
                 </span>
                 <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
@@ -61,7 +61,7 @@ export function NoteCard({ slug, title, description, icon, index }: NoteCardProp
           </p>
 
           <div className="relative mt-auto flex items-center justify-between border-t border-border/60 pt-6">
-            <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/50">
+            <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">
               Study note
             </span>
             <div className="flex items-center gap-2 text-sm font-black text-muted-foreground transition-all duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">

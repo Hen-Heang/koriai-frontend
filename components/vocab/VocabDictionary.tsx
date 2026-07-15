@@ -132,8 +132,8 @@ export function VocabDictionary({
   return (
     <div id="vocab-dictionary" className="scroll-mt-20 space-y-6">
       <div className="px-4">
-        <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground/60">Your Dictionary</h4>
-        <p className="mt-1 text-xs font-bold text-muted-foreground/60">
+        <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Your Dictionary</h4>
+        <p className="mt-1 text-xs font-bold text-muted-foreground">
           {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
         </p>
       </div>
@@ -153,20 +153,20 @@ export function VocabDictionary({
                   "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
                   masteryFilter === value
                     ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                    : "border-border bg-card text-muted-foreground/60 hover:text-foreground dark:bg-slate-900/40"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground dark:bg-slate-900/40"
                 )}
               >
                 {label}
                 <span className={cn(
                   "tabular-nums",
-                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground/60"
+                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground"
                 )}>
                   {filterCount(value)}
                 </span>
               </button>
             ))}
 
-            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-xs font-bold uppercase tracking-wide text-muted-foreground/60 transition-colors hover:text-foreground dark:bg-slate-900/40">
+            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground dark:bg-slate-900/40">
               <ArrowDownUp size={12} strokeWidth={3} className="shrink-0" />
               <select
                 value={sortOrder}
@@ -250,7 +250,7 @@ export function VocabDictionary({
       {!loading && words.length > 0 && !filtered.length ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center">
           <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/60" />
-          <p className="text-sm font-bold text-muted-foreground/60">
+          <p className="text-sm font-bold text-muted-foreground">
             No words match your search.
           </p>
         </div>
@@ -262,7 +262,7 @@ export function VocabDictionary({
             <Layers3 size={40} strokeWidth={1.5} />
           </div>
           <h3 className="text-xl font-bold text-foreground">Start Your Collection</h3>
-          <p className="mx-auto mt-3 max-w-xs text-[16px] font-medium leading-relaxed text-muted-foreground/60">
+          <p className="mx-auto mt-3 max-w-xs text-[16px] font-medium leading-relaxed text-muted-foreground">
             Save words from chat sessions or use the AI Deck Builder to start mastering Korean vocabulary.
           </p>
           {onStartAdd && (

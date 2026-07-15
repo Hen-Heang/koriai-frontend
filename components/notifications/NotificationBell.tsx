@@ -114,7 +114,7 @@ function NotificationRow({
           <p className="mt-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">Accepted</p>
         )}
         {isInvite && n.invitationStatus === "declined" && (
-          <p className="mt-1.5 text-xs font-bold text-muted-foreground/60">Declined</p>
+          <p className="mt-1.5 text-xs font-bold text-muted-foreground">Declined</p>
         )}
 
         {invitePending && (

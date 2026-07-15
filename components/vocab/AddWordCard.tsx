@@ -133,7 +133,7 @@ export function AddWordCard({ categories, onAdd, embedded = false }: AddWordCard
           {saving ? "Saving…" : "Add to deck"}
         </Button>
         {categories.length > 0 && (
-          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 sm:text-right">
+          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground sm:text-right">
             {categories.length} {categories.length === 1 ? "topic" : "topics"} so far
           </p>
         )}

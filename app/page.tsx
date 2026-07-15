@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   BookOpenCheck,
   BrainCircuit,
@@ -22,6 +24,7 @@ import { motion } from "motion/react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
+import { isAuthenticated } from "@/lib/auth-store"
 
 const features = [
   {
@@ -130,6 +133,17 @@ const itemVariants = {
 } as const
 
 export default function Home() {
+  const router = useRouter()
+
+  // The PWA's start_url and any bookmark to "/" land here regardless of
+  // auth state — this is a static marketing page, so already-logged-in
+  // users need to be bounced to the real app instead of seeing it again.
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace("/home")
+    }
+  }, [router])
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground selection:bg-blue-500/30">
       {/* Ambient background */}
@@ -407,7 +421,7 @@ export default function Home() {
                 One app, every tool
               </p>
               <h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-                Everything you need for <span className="text-muted-foreground/40 italic font-medium">workplace</span> Korean.
+                Everything you need for <span className="text-muted-foreground italic font-medium">workplace</span> Korean.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
                 From an AI coach and workplace scenarios to developer vocabulary, listening, reading, and interview prep — Hengo covers the Korean you actually use on the job.

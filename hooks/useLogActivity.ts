@@ -17,6 +17,8 @@ export type ActivityFeature =
   | "foundations"
   | "interview"
   | "chat"
+  | "recovery"
+  | "habits"
 
 /**
  * `const { logActivity } = useLogActivity("vocab")` — call `logActivity()`

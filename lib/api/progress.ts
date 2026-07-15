@@ -3,6 +3,7 @@ import type { LearningMetric } from "@/lib/goals"
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { getDailyGoalMinutes } from "@/lib/onboarding-store"
+import { longestStreak } from "@/lib/habits"
 
 // Dashboard / streak / achievements, computed client-side from Supabase counts
 // (the Spring backend used to compose these responses server-side).
@@ -54,6 +55,8 @@ type Counts = {
   conversations: number
   corrections: number
   lessonsCompleted: number
+  habitsStarted: number
+  bestHabitStreak: number
 }
 
 const CATALOG: Array<Achievement & { met: (c: Counts) => boolean }> = [
@@ -66,6 +69,8 @@ const CATALOG: Array<Achievement & { met: (c: Counts) => boolean }> = [
   { code: "STREAK_30", title: "Habit Formed", description: "Practice 30 days in a row", icon: "Trophy", category: "Consistency", xp: 300, unlocked: false, met: (c) => c.streakDays >= 30 },
   { code: "MISTAKE_LEARNER", title: "Learning from Mistakes", description: "Collect 10 corrections", icon: "CheckCheck", category: "Grammar", xp: 40, unlocked: false, met: (c) => c.corrections >= 10 },
   { code: "FOUNDATION_BUILDER", title: "Foundation Builder", description: "Complete 5 foundation lessons", icon: "Blocks", category: "Foundations", xp: 50, unlocked: false, met: (c) => c.lessonsCompleted >= 5 },
+  { code: "HABIT_STARTED", title: "New Beginning", description: "Start your first Growth habit", icon: "Sparkles", category: "Growth", xp: 10, unlocked: false, met: (c) => c.habitsStarted >= 1 },
+  { code: "HABIT_MONTH", title: "One Month In", description: "Reach a 30-day streak on any habit", icon: "Flame", category: "Growth", xp: 100, unlocked: false, met: (c) => c.bestHabitStreak >= 30 },
 ]
 
 const LEVELS = [
@@ -97,8 +102,38 @@ function levelFromXp(totalXp: number): LevelInfo {
   }
 }
 
+// Habit count + best longest-streak across all of the user's habits — cheap
+// at personal scale (one query for habit ids, one for their check-ins,
+// grouped in memory).
+async function getHabitCounts(): Promise<{ habitsStarted: number; bestHabitStreak: number }> {
+  const { data: habits, error: habitsError } = await supabase.from("kori_habits").select("id")
+  if (habitsError) throw habitsError
+  const habitIds = (habits ?? []).map((h) => h.id as string)
+  if (habitIds.length === 0) return { habitsStarted: 0, bestHabitStreak: 0 }
+
+  const { data: checkins, error: checkinsError } = await supabase
+    .from("kori_habit_checkins")
+    .select("habit_id, date, completed")
+    .in("habit_id", habitIds)
+  if (checkinsError) throw checkinsError
+
+  const byHabit = new Map<string, { completed: boolean; date: string }[]>()
+  for (const row of checkins ?? []) {
+    const list = byHabit.get(row.habit_id) ?? []
+    list.push({ completed: row.completed, date: row.date })
+    byHabit.set(row.habit_id, list)
+  }
+
+  let bestHabitStreak = 0
+  for (const rows of byHabit.values()) {
+    const asCheckins = rows.map((r) => ({ id: r.date, habitId: "", date: r.date, completed: r.completed, createdAt: r.date }))
+    bestHabitStreak = Math.max(bestHabitStreak, longestStreak(asCheckins))
+  }
+  return { habitsStarted: habitIds.length, bestHabitStreak }
+}
+
 async function getCounts(): Promise<Counts> {
-  const [vocab, conversations, corrections, lessons, dates] = await Promise.all([
+  const [vocab, conversations, corrections, lessons, dates, habitCounts] = await Promise.all([
     supabase.from("kori_vocab_cards").select("id", { count: "exact", head: true }),
     supabase.from("kori_conversations").select("id", { count: "exact", head: true }),
     supabase.from("kori_corrections").select("id", { count: "exact", head: true }),
@@ -107,6 +142,7 @@ async function getCounts(): Promise<Counts> {
       .select("lesson_id", { count: "exact", head: true })
       .eq("completed", true),
     getActivityDates(),
+    getHabitCounts(),
   ])
   return {
     wordsSaved: vocab.count ?? 0,
@@ -114,6 +150,7 @@ async function getCounts(): Promise<Counts> {
     corrections: corrections.count ?? 0,
     lessonsCompleted: lessons.count ?? 0,
     streakDays: computeStreak(dates).streakDays,
+    ...habitCounts,
   }
 }
 

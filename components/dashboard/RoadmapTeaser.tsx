@@ -79,7 +79,7 @@ export function RoadmapTeaser({ className }: { className?: string }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <p className="text-xl font-bold tabular-nums text-foreground">{data.overallPct}%</p>
-          <p className="text-xs font-medium text-muted-foreground/60">complete</p>
+          <p className="text-xs font-medium text-muted-foreground">complete</p>
         </div>
         <p className="text-xs font-medium text-muted-foreground/70">
           Phase {data.num} — {data.title}

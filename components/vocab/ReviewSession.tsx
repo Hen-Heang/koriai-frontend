@@ -188,13 +188,13 @@ function FlashCard({
             {/* m-auto centers when the content fits and keeps it reachable via
                 scroll when a long meaning/example makes it taller than the card. */}
             <span className="m-auto flex w-full flex-col items-center">
-              <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">{reversed ? "English" : "Korean"}</span>
+              <span className="mb-6 rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{reversed ? "English" : "Korean"}</span>
               <p className={cn(
                 "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
                 fitText(reversed ? card.meaning : card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
               )}>{reversed ? card.meaning : card.term}</p>
               {!reversed && <Pronunciation text={card.pronunciation} className="mt-4 text-xl sm:text-3xl" />}
-              <span className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground/60">
+              <span className="mt-10 flex items-center gap-2 rounded-2xl border-2 border-b-4 border-border bg-accent/5 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 Tap to Reveal
               </span>
             </span>
@@ -346,7 +346,7 @@ function ChoiceCard({
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
-        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Select Meaning</span>
+        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground mb-4">Select Meaning</span>
         <p className={cn(
           "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
           fitText(card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
@@ -458,13 +458,13 @@ function RecallCard({
     <div className="flex flex-col gap-6">
       {/* Prompt Card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:rounded-3xl sm:p-10">
-        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40 mb-4">Type in Korean</span>
+        <span className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground mb-4">Type in Korean</span>
         <p className={cn(
           "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
           fitText(card.meaning, "text-3xl sm:text-5xl", "text-2xl sm:text-4xl", "text-xl sm:text-3xl")
         )}>{card.meaning}</p>
         {card.pronunciation && answered && (
-          <p className="mt-3 text-xs font-bold italic text-muted-foreground/50">[{card.pronunciation}]</p>
+          <p className="mt-3 text-xs font-bold italic text-muted-foreground">[{card.pronunciation}]</p>
         )}
       </div>
 
@@ -665,7 +665,7 @@ function ListeningCard({
     <div className="flex flex-col gap-6">
       {/* Audio stage */}
       <div className="flex h-[min(26rem,58dvh)] flex-col items-center justify-center gap-6 rounded-3xl border-2 border-b-[6px] border-border bg-card p-6 text-center dark:bg-slate-900/60 sm:h-96 sm:rounded-3xl sm:p-8">
-        <span className="rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/50">
+        <span className="rounded-full bg-accent/40 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
           Listen &amp; Recall
         </span>
 
@@ -700,7 +700,7 @@ function ListeningCard({
         </button>
 
         {audioFailed && (
-          <p className="text-xs font-bold text-muted-foreground/50">
+          <p className="text-xs font-bold text-muted-foreground">
             Tap the speaker to play the audio.
           </p>
         )}
@@ -813,7 +813,7 @@ function SentenceCard({
     <div className="flex flex-col gap-5">
       {/* Prompt card */}
       <div className="flex flex-col items-center justify-center rounded-3xl border border-border bg-accent/5 p-6 text-center dark:bg-white/5 sm:p-10">
-        <span className="mb-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Write a Sentence</span>
+        <span className="mb-4 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Write a Sentence</span>
         <p className={cn(
           "w-full break-keep font-bold leading-tight tracking-tight text-foreground [overflow-wrap:anywhere]",
           fitText(card.term, "text-5xl sm:text-7xl", "text-4xl sm:text-5xl", "text-2xl sm:text-4xl")
@@ -821,7 +821,7 @@ function SentenceCard({
           {card.term}
         </p>
         {card.pronunciation && (
-          <p className="mt-3 text-lg font-bold text-muted-foreground/50 sm:text-2xl">[{card.pronunciation}]</p>
+          <p className="mt-3 text-lg font-bold text-muted-foreground sm:text-2xl">[{card.pronunciation}]</p>
         )}
         <p className="mt-2 break-keep text-lg font-bold text-muted-foreground/70 [overflow-wrap:anywhere]">{card.meaning}</p>
         <div className="mt-5">
@@ -853,7 +853,7 @@ function SentenceCard({
           >
             <RotateCcw size={14} strokeWidth={3} /> Retry challenge
           </button>
-          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
+          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
             Or rate this word yourself and continue
           </p>
           <GradeButtons card={card} onGrade={advanceCard} />
@@ -866,7 +866,7 @@ function SentenceCard({
             <span className="text-[12px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400">Task</span>
             <p className="text-sm font-bold text-foreground leading-relaxed">{challenge.challengePrompt}</p>
             {challenge.contextHint && (
-              <p className="text-xs font-medium text-muted-foreground/60 italic">{challenge.contextHint}</p>
+              <p className="text-xs font-medium text-muted-foreground italic">{challenge.contextHint}</p>
             )}
           </div>
 
@@ -936,7 +936,7 @@ function SentenceCard({
 
           {/* Grade buttons — score drives the recommendation, learner confirms */}
           <div className="space-y-2">
-            <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">How well did you do?</p>
+            <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">How well did you do?</p>
             <GradeButtons card={card} onGrade={advanceCard} />
           </div>
         </motion.div>
@@ -1170,7 +1170,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
             </div>
             <div className="min-w-0">
               <h2 className="text-lg font-bold tracking-tight text-foreground">Memory Lab</h2>
-              <p className="truncate text-sm font-medium text-muted-foreground/60">
+              <p className="truncate text-sm font-medium text-muted-foreground">
                 {isDueSession
                   ? hasMoreQueued
                     ? `${filteredDueToday.length} of ${dueCount} due — next batch ready`
@@ -1187,12 +1187,12 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-accent/5 px-4 py-2">
               <div className="text-center">
                 <p className="text-lg font-bold leading-none tabular-nums text-emerald-600">{filteredDueToday.length}</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">{hasMoreQueued ? "In batch" : "Due"}</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{hasMoreQueued ? "In batch" : "Due"}</p>
               </div>
               <div className="h-7 w-px bg-border/60" />
               <div className="text-center">
                 <p className="text-lg font-bold leading-none tabular-nums text-foreground">{filteredAllWords.length}</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40">Total</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total</p>
               </div>
             </div>
             <button
@@ -1228,7 +1228,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-[16px] font-bold tracking-tight text-foreground">Memory Lab</p>
-            <p className="text-[12px] font-medium text-muted-foreground/50 leading-tight">
+            <p className="text-[12px] font-medium text-muted-foreground leading-tight">
               {isDueSession
                 ? hasMoreQueued
                   ? `${filteredDueToday.length} of ${dueCount} due — next batch ready`
@@ -1239,12 +1239,12 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-base font-bold text-emerald-600 leading-none">{filteredDueToday.length}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">{hasMoreQueued ? "In batch" : "Due"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mt-0.5">{hasMoreQueued ? "In batch" : "Due"}</p>
             </div>
             <div className="h-5 w-px bg-border/60" />
             <div className="text-right">
               <p className="text-base font-bold text-foreground leading-none">{filteredAllWords.length}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/40 mt-0.5">Total</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mt-0.5">Total</p>
             </div>
           </div>
         </div>
@@ -1256,7 +1256,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
             {/* Category grid */}
             {categories.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">
+                <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
                   <Layers3 size={12} strokeWidth={3} />
                   Filter by Category
                   {selectedCategories.size > 0 && (
@@ -1272,7 +1272,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
                     "w-full rounded-2xl border px-4 py-3 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98]",
                     selectedCategories.size === 0
                       ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
+                      : "border-border bg-accent/5 text-muted-foreground hover:text-foreground"
                   )}
                 >
                   All Categories
@@ -1290,7 +1290,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
                           "flex items-center gap-2 rounded-2xl border px-3.5 py-3 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98]",
                           selected
                             ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "border-border bg-accent/5 text-muted-foreground/60 hover:text-foreground"
+                            : "border-border bg-accent/5 text-muted-foreground hover:text-foreground"
                         )}
                       >
                         {selected
@@ -1307,7 +1307,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
 
             {/* Mode selector */}
             <div className="space-y-2">
-              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground/40">Study Mode</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Study Mode</p>
               <div className="flex gap-1 rounded-2xl bg-accent/10 p-1">
                 {(["flashcard", ...(canUseChoice ? (["choice"] as Mode[]) : []), "recall", "listening", "sentence"] as Mode[]).map((m) => (
                   <button
@@ -1404,7 +1404,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
 
           <div>
             <h2 className="text-4xl font-bold tracking-tight text-foreground">{headline}</h2>
-            <p className="mt-3 text-[16px] font-medium text-muted-foreground/60 leading-relaxed">
+            <p className="mt-3 text-[16px] font-medium text-muted-foreground leading-relaxed">
               You knew <span className="text-emerald-600 font-bold">{knew}</span> of <span className="text-foreground font-bold">{total}</span> words on the first try.
               Keep this momentum up to strengthen long-term memory.
             </p>
@@ -1496,7 +1496,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
                 saveError
                   ? "text-red-500"
                   : pendingSaves > 0
-                    ? "text-muted-foreground/60"
+                    ? "text-muted-foreground"
                     : "text-emerald-600 dark:text-emerald-400"
               )}
             >

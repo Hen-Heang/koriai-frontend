@@ -94,16 +94,16 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
       {/* Headline stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Productivity
           </p>
           <p className={cn("mt-1 text-3xl font-bold tabular-nums", scoreColor)}>
             {analytics.productivityScore}
-            <span className="text-base text-muted-foreground/40">/100</span>
+            <span className="text-base text-muted-foreground">/100</span>
           </p>
         </Card>
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Velocity
           </p>
           <p className="mt-1 flex items-center gap-1.5 text-lg font-bold capitalize text-foreground">
@@ -111,7 +111,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
           </p>
         </Card>
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-5">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Est. finish
           </p>
           <p className="mt-1 text-lg font-bold text-foreground">
@@ -124,7 +124,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
 
       {/* Productivity breakdown */}
       <Card className="rounded-[1.5rem] border-border bg-card/50 p-6">
-        <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+        <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Productivity breakdown
         </h4>
         <div className="space-y-3">
@@ -146,7 +146,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
       {mounted && (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="rounded-[1.5rem] border-border bg-card/50 p-6">
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Completions · 30 days
             </h4>
             <ResponsiveContainer width="100%" height={180}>
@@ -177,7 +177,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
           </Card>
 
           <Card className="rounded-[1.5rem] border-border bg-card/50 p-6">
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Weekly velocity
             </h4>
             {velocity.length === 0 ? (
@@ -215,7 +215,7 @@ export function SmartAnalytics({ tasks, targetDate }: { tasks: Task[]; targetDat
       {/* Insights */}
       {analytics.insights.length > 0 && (
         <Card className="rounded-[1.5rem] border-border bg-card/50 p-6">
-          <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground/50">
+          <h4 className="mb-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Insights
           </h4>
           <ul className="space-y-3">
