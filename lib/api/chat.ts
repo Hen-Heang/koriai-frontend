@@ -89,14 +89,15 @@ export const chatApi = {
     return { assistantMessageId, content: full }
   },
 
-  getMessages: async (conversationId: string): Promise<Message[]> => {
+  getMessages: async (conversationId: string, limit = 50): Promise<Message[]> => {
     const { data, error } = await supabase
       .from("kori_messages")
       .select("*")
       .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(limit)
     if (error) throw error
-    return (data as MessageRow[]).map(toMessage)
+    return (data as MessageRow[]).reverse().map(toMessage)
   },
 
   getConversation: async (conversationId: string): Promise<Conversation> => {
@@ -144,6 +145,9 @@ export const chatApi = {
     onDone: (assistantMessageId: string) => void,
     signal?: AbortSignal,
   ): Promise<void> => {
+    const startedAt = performance.now()
+    let firstTokenAt: number | null = null
+
     const response = await fetch(`/api/ai/chat/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeaders()) },
@@ -156,9 +160,25 @@ export const chatApi = {
     await readSseStream(response, (event, raw) => {
       const data = JSON.parse(raw)
       if (event === "start") onStart(String(data.userMessageId))
-      else if (event === "token") onToken(data.token)
-      else if (event === "done") onDone(String(data.assistantMessageId))
-      else if (event === "error") throw new Error(data.message)
+      else if (event === "token") {
+        if (firstTokenAt === null) {
+          firstTokenAt = performance.now()
+          console.info("[chat] first token", {
+            conversationId,
+            ms: Math.round(firstTokenAt - startedAt),
+          })
+        }
+        onToken(data.token)
+      } else if (event === "done") {
+        onDone(String(data.assistantMessageId))
+        const finishedAt = performance.now()
+        console.info("[chat] stream complete", {
+          conversationId,
+          totalMs: Math.round(finishedAt - startedAt),
+          firstTokenMs: firstTokenAt === null ? null : Math.round(firstTokenAt - startedAt),
+        })
+      } else if (event === "error") throw new Error(data.message)
     })
   },
 }
+

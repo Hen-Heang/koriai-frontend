@@ -1,8 +1,14 @@
+import { getToken } from "@/lib/auth-store"
 import { supabase } from "@/lib/supabase"
 
 // Shared with the SSE routes (chat.ts streamMessage, goals.ts coachStream) so
 // there's one place that attaches the caller's Supabase access token.
 export async function authHeaders(): Promise<Record<string, string>> {
+  const cachedToken = getToken()
+  if (cachedToken) {
+    return { Authorization: `Bearer ${cachedToken}` }
+  }
+
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   return token ? { Authorization: `Bearer ${token}` } : {}
@@ -23,3 +29,4 @@ export async function aiPost<T>(path: string, body: unknown): Promise<T> {
   }
   return (await res.json()) as T
 }
+

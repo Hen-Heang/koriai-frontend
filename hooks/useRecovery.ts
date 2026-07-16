@@ -1,5 +1,6 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { recoveryApi } from "@/lib/api"
@@ -99,6 +100,24 @@ export function useRecoveryHabits() {
     addHabit,
     updateHabit,
     deleteHabit,
+  }
+}
+
+// Which habit a sub-page (log, check-ins, plans, debrief, triggers) operates
+// on: the `?habitId=` query param when present, else the first active habit —
+// the fallback keeps pre-multi-habit bookmarks working. `backHref` is where
+// the page's back affordance (and post-save redirects) should land.
+export function useRecoveryHabitFromParams() {
+  const searchParams = useSearchParams()
+  const habitId = searchParams.get("habitId")
+  const { habits, activeHabit, loading, error } = useRecoveryHabits()
+  const habit = (habitId ? habits.find((h) => h.id === habitId) : null) ?? activeHabit
+
+  return {
+    habit,
+    loading,
+    error,
+    backHref: habit ? `/growth/recovery/${habit.id}` : "/growth/recovery",
   }
 }
 

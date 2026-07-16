@@ -3,16 +3,17 @@
 import { useRouter } from "next/navigation"
 
 import { LogFlow } from "@/components/recovery/LogFlow"
+import { BackLink } from "@/components/ui/back-link"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useRecoveryEvents, useRecoveryHabits, useRecoveryTriggers } from "@/hooks/useRecovery"
+import { useRecoveryEvents, useRecoveryHabitFromParams, useRecoveryTriggers } from "@/hooks/useRecovery"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 
 export default function RecoveryLogPage() {
   useSessionTimer("recovery")
   const router = useRouter()
-  const { activeHabit, loading: habitsLoading, error: habitsError } = useRecoveryHabits()
-  const { logEvent, error: eventsError } = useRecoveryEvents(activeHabit?.id ?? null)
+  const { habit, backHref, loading: habitsLoading, error: habitsError } = useRecoveryHabitFromParams()
+  const { logEvent, error: eventsError } = useRecoveryEvents(habit?.id ?? null)
   const { triggers, loading: triggersLoading, error: triggersError } = useRecoveryTriggers()
 
   if (habitsLoading || triggersLoading) {
@@ -25,7 +26,7 @@ export default function RecoveryLogPage() {
   }
 
   const error = habitsError || eventsError || triggersError
-  if (error || !activeHabit) {
+  if (error || !habit) {
     return (
       <div className="mx-auto max-w-md pt-10">
         <ErrorBanner>{error || "Start a habit on the Recovery overview first."}</ErrorBanner>
@@ -35,13 +36,20 @@ export default function RecoveryLogPage() {
 
   return (
     <div className="mx-auto max-w-md">
+      <div className="mb-2">
+        <BackLink href={backHref} label={habit.label} />
+      </div>
       <LogFlow
         triggers={triggers}
         onSubmit={async (input) => {
           const event = await logEvent(input)
           // Slips get a calm debrief instead of a "nice job" screen; anything
           // else is offered a Pause.
-          router.push(input.kind === "slip" ? `/growth/recovery/debrief?eventId=${event.id}` : "/growth/recovery/pause")
+          router.push(
+            input.kind === "slip"
+              ? `/growth/recovery/debrief?eventId=${event.id}&habitId=${habit.id}`
+              : "/growth/recovery/pause"
+          )
         }}
       />
     </div>

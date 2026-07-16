@@ -470,6 +470,22 @@ export default function MainLayout({
         </nav>
       )}
 
+      {/* ── Mobile floating AI button — chat moved out of the bottom tabs ── */}
+      {!isChatRoute && !isPauseRoute && !isHomeRoute && (
+        <Link
+          href="/chat"
+          aria-label="AI Chat"
+          aria-hidden={isKeyboardOpen}
+          className={cn(
+            "fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/35 ring-1 ring-white/20 outline-none transition-all duration-500 ease-in-out hover:bg-blue-500 focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-90 lg:hidden",
+            isKeyboardOpen ? "pointer-events-none translate-y-24 opacity-0" : "translate-y-0 opacity-100"
+          )}
+          style={{ bottom: "calc(4.75rem + max(1.25rem, env(safe-area-inset-bottom)))" }}
+        >
+          <MessageCircle size={24} strokeWidth={2.5} />
+        </Link>
+      )}
+
       {/* ── More sheet — grouped by workspace ── */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-[2rem] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:hidden">

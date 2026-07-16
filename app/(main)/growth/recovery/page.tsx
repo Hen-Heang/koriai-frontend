@@ -1,81 +1,74 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "motion/react"
+import { Plus } from "lucide-react"
 
+import { GrowthTabs } from "@/components/growth/GrowthTabs"
 import { CreateHabitForm } from "@/components/recovery/CreateHabitForm"
-import { RecoveryOverview } from "@/components/recovery/RecoveryOverview"
+import { RecoveryHabitCard } from "@/components/recovery/RecoveryHabitCard"
+import { BackLink } from "@/components/ui/back-link"
+import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { containerVariants, itemVariants } from "@/lib/motion"
-import { daysSince } from "@/lib/recovery"
-import { useRecoveryEvents, useRecoveryHabits } from "@/hooks/useRecovery"
+import { useRecoveryHabits } from "@/hooks/useRecovery"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 
 function RecoveryLoadingState() {
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="mt-4 h-12 w-32" />
-        <Skeleton className="mt-2 h-4 w-48" />
-        <div className="mt-6 flex gap-3">
-          <Skeleton className="h-8 w-28 rounded-full" />
-          <Skeleton className="h-8 w-20 rounded-full" />
-        </div>
-      </div>
-      <div className="flex gap-3">
-        <Skeleton className="h-11 flex-1 rounded-xl" />
-        <Skeleton className="h-11 flex-1 rounded-xl" />
-      </div>
+    <div className="mx-auto max-w-xl space-y-3">
+      <Skeleton className="h-20 w-full rounded-2xl" />
+      <Skeleton className="h-20 w-full rounded-2xl" />
     </div>
   )
 }
 
-export default function RecoveryPage() {
+export default function RecoveryListPage() {
   useSessionTimer("recovery")
-  const {
-    activeHabit,
-    loading: habitsLoading,
-    error: habitsError,
-    addHabit,
-    updateHabit,
-    deleteHabit,
-  } = useRecoveryHabits()
-  const {
-    daysSinceLastEvent,
-    lastEventAt,
-    rodeOutCount,
-    lastSlipAt,
-    loading: eventsLoading,
-    error: eventsError,
-  } = useRecoveryEvents(activeHabit?.id ?? null)
+  const { habits, loading, error, addHabit } = useRecoveryHabits()
+  const [showForm, setShowForm] = useState(false)
 
-  if (habitsLoading || (activeHabit && eventsLoading)) {
-    return <RecoveryLoadingState />
-  }
+  const activeHabits = habits.filter((h) => h.active)
 
-  const error = habitsError || eventsError
+  if (loading) return <RecoveryLoadingState />
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="pb-12">
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="mx-auto max-w-xl pb-12">
+      <motion.div variants={itemVariants} className="mb-2">
+        <BackLink href="/home" label="Home" mobileOnly className="mb-2" />
+        <GrowthTabs />
+      </motion.div>
       {error && (
-        <motion.div variants={itemVariants} className="mx-auto mb-6 max-w-xl">
+        <motion.div variants={itemVariants} className="mb-4">
           <ErrorBanner>{error}</ErrorBanner>
         </motion.div>
       )}
 
-      {!activeHabit ? (
-        <CreateHabitForm onCreate={addHabit} />
-      ) : (
-        <RecoveryOverview
-          habit={activeHabit}
-          daysSinceLastEvent={daysSinceLastEvent}
-          lastEventAt={lastEventAt}
-          rodeOutCount={rodeOutCount}
-          streakDays={daysSince(activeHabit.startedAt, lastSlipAt)}
-          onUpdateHabit={(data) => updateHabit(activeHabit.id, data)}
-          onDeleteHabit={() => deleteHabit(activeHabit.id)}
+      {activeHabits.length === 0 || showForm ? (
+        <CreateHabitForm
+          onCreate={async (input) => {
+            const habit = await addHabit(input)
+            setShowForm(false)
+            return habit
+          }}
+          onClose={activeHabits.length > 0 ? () => setShowForm(false) : undefined}
         />
+      ) : (
+        <>
+          <motion.div variants={itemVariants} className="mb-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-foreground">Recovery</h1>
+            <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+              <Plus size={16} strokeWidth={2} />
+              New habit
+            </Button>
+          </motion.div>
+          <div className="space-y-3">
+            {activeHabits.map((habit) => (
+              <RecoveryHabitCard key={habit.id} habit={habit} />
+            ))}
+          </div>
+        </>
       )}
     </motion.div>
   )

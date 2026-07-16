@@ -17,15 +17,16 @@ import { PageHero } from "@/components/app/page-hero"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFoundationsLessons } from "@/hooks/useFoundations"
+import { seedLessonsByTrack } from "@/lib/foundations-data"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { LearnTrack } from "@/lib/types"
 
-const TRACKS: Array<{ key: LearnTrack; label: string; icon: typeof Type; blurb: string }> = [
-  { key: "survival", label: "Survival", icon: LifeBuoy, blurb: "Phrases for your first day" },
-  { key: "alphabet", label: "Alphabet", icon: Type, blurb: "Read & write Hangul from zero" },
-  { key: "grammar", label: "Grammar", icon: SpellCheck2, blurb: "Build basic sentences" },
+const TRACKS: Array<{ key: LearnTrack; label: string; icon: typeof Type; blurb: string; count: number }> = [
+  { key: "survival", label: "Survival", icon: LifeBuoy, blurb: "Phrases for your first day", count: seedLessonsByTrack("survival").length },
+  { key: "alphabet", label: "Alphabet", icon: Type, blurb: "Read & write Hangul from zero", count: seedLessonsByTrack("alphabet").length },
+  { key: "grammar", label: "Grammar", icon: SpellCheck2, blurb: "Build basic sentences", count: seedLessonsByTrack("grammar").length },
 ]
 
 export default function LearnPage() {
@@ -57,7 +58,7 @@ export default function LearnPage() {
 
       {/* Track toggle */}
       <motion.div variants={itemVariants} className="grid gap-3 sm:grid-cols-3">
-        {TRACKS.map(({ key, label, icon: Icon, blurb }) => {
+        {TRACKS.map(({ key, label, icon: Icon, blurb, count }) => {
           const active = track === key
           return (
             <button
@@ -81,9 +82,14 @@ export default function LearnPage() {
                 <Icon size={22} strokeWidth={2.5} />
               </div>
               <div className="min-w-0">
-                <p className={cn("text-base font-extrabold", active ? "text-blue-700 dark:text-blue-300" : "text-foreground")}>
-                  {label}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className={cn("text-base font-extrabold", active ? "text-blue-700 dark:text-blue-300" : "text-foreground")}>
+                    {label}
+                  </p>
+                  <span className="rounded-full bg-background/70 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                    {count} lessons
+                  </span>
+                </div>
                 <p title={blurb} className="truncate text-sm text-muted-foreground">{blurb}</p>
               </div>
             </button>

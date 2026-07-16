@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 import { DebriefForm } from "@/components/recovery/DebriefForm"
 import { ErrorBanner } from "@/components/ui/error-banner"
-import { useRecoveryEvents, useRecoveryHabits, useRecoveryPlans } from "@/hooks/useRecovery"
+import { useRecoveryEvents, useRecoveryHabitFromParams, useRecoveryPlans } from "@/hooks/useRecovery"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 
 export default function RecoveryDebriefPage() {
@@ -13,14 +13,14 @@ export default function RecoveryDebriefPage() {
   const searchParams = useSearchParams()
   const eventId = searchParams.get("eventId")
 
-  const { activeHabit, loading: habitsLoading, error: habitsError } = useRecoveryHabits()
-  const { annotateEvent, error: eventsError } = useRecoveryEvents(activeHabit?.id ?? null)
-  const { addPlan, error: plansError } = useRecoveryPlans(activeHabit?.id ?? null)
+  const { habit, backHref, loading: habitsLoading, error: habitsError } = useRecoveryHabitFromParams()
+  const { annotateEvent, error: eventsError } = useRecoveryEvents(habit?.id ?? null)
+  const { addPlan, error: plansError } = useRecoveryPlans(habit?.id ?? null)
 
   if (habitsLoading) return null
 
   const error = habitsError || eventsError || plansError
-  if (error || !activeHabit) {
+  if (error || !habit) {
     return (
       <div className="mx-auto max-w-lg pt-10">
         <ErrorBanner>{error || "Start a habit on the Recovery overview first."}</ErrorBanner>
@@ -34,7 +34,7 @@ export default function RecoveryDebriefPage() {
         onSave={async ({ reflection, ifText, thenText }) => {
           if (eventId && reflection) await annotateEvent(eventId, reflection)
           await addPlan({ ifText, thenText, sourceEventId: eventId ?? undefined })
-          router.push("/growth/recovery")
+          router.push(backHref)
         }}
       />
     </div>

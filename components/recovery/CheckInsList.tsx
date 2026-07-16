@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion } from "motion/react"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { BlurFade } from "@/components/ui/blur-fade"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -179,13 +180,14 @@ export function CheckInsList({
 
   return (
     <div className="space-y-3">
-      {events.map((event) => (
-        <CheckInRow
-          key={event.id}
-          event={event}
-          onUpdateNote={(note) => onUpdateNote(event.id, note)}
-          onDelete={() => onDelete(event.id)}
-        />
+      {events.map((event, i) => (
+        <BlurFade key={event.id} delay={Math.min(i * 0.05, 0.3)} inView>
+          <CheckInRow
+            event={event}
+            onUpdateNote={(note) => onUpdateNote(event.id, note)}
+            onDelete={() => onDelete(event.id)}
+          />
+        </BlurFade>
       ))}
     </div>
   )

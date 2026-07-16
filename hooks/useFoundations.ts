@@ -4,7 +4,11 @@ import { useCallback } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { foundationsApi, type FoundationProgress } from "@/lib/api"
-import { seedLessonById, seedLessonsByTrack } from "@/lib/foundations-data"
+import {
+  FOUNDATIONS_CURRICULUM_VERSION,
+  seedLessonById,
+  seedLessonsByTrack,
+} from "@/lib/foundations-data"
 import { getUserId } from "@/lib/auth-store"
 import { useLogActivity } from "@/hooks/useLogActivity"
 import type {
@@ -77,10 +81,10 @@ function gradeLocally(lesson: LessonDetail, answers: Array<number | string>): Le
 }
 
 export const foundationsListKey = (track: LearnTrack, userId?: string | null) =>
-  ["foundations", "lessons", track, userId] as const
+  ["foundations", "lessons", FOUNDATIONS_CURRICULUM_VERSION, track, userId] as const
 
 export const foundationsLessonKey = (id: string, userId?: string | null) =>
-  ["foundations", "lesson", id, userId] as const
+  ["foundations", "lesson", FOUNDATIONS_CURRICULUM_VERSION, id, userId] as const
 
 // Track list for the /learn page: seed lessons with the user's server-backed
 // progress overlaid. If the backend is unreachable we fall back to the
@@ -91,6 +95,8 @@ export function useFoundationsLessons(track: LearnTrack) {
     queryKey: foundationsListKey(track, userId),
     queryFn: async () => {
       const lessons = seedLessonsByTrack(track)
+      if (userId == null) return mergeProgress(lessons, [])
+
       let server: FoundationProgress[] = []
       try {
         server = await foundationsApi.getProgress()
@@ -99,7 +105,7 @@ export function useFoundationsLessons(track: LearnTrack) {
       }
       return mergeProgress(lessons, server)
     },
-    enabled: userId != null,
+    placeholderData: () => mergeProgress(seedLessonsByTrack(track), []),
   })
 
   return {
@@ -123,7 +129,7 @@ export function useFoundationsLesson(id: string) {
       if (!seed) throw new Error("Lesson not found")
       return seed
     },
-    enabled: userId != null && Boolean(id),
+    enabled: Boolean(id),
   })
 
   const complete = useCallback(
@@ -138,14 +144,16 @@ export function useFoundationsLesson(id: string) {
       writeLocalProgress(local)
 
       // Persist to the backend so progress syncs across devices (best-effort).
-      try {
-        await foundationsApi.saveProgress(id, {
-          track: lesson.track,
-          accuracy: result.accuracy,
-          completed: result.completed,
-        })
-      } catch {
-        /* offline — localStorage holds it until the next online attempt */
+      if (userId != null) {
+        try {
+          await foundationsApi.saveProgress(id, {
+            track: lesson.track,
+            accuracy: result.accuracy,
+            completed: result.completed,
+          })
+        } catch {
+          /* offline — localStorage holds it until the next online attempt */
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: foundationsListKey(lesson.track, userId) })

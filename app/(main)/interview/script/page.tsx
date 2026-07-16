@@ -10,6 +10,7 @@ import {
 import Link from "next/link"
 import {
   ArrowLeft,
+  BookOpenText,
   Check,
   ChevronDown,
   ChevronUp,
@@ -165,7 +166,7 @@ export default function InterviewScriptPage() {
   const [copied, setCopied] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("")
   const [customSections, setCustomSections] = useState<CustomSection[]>(loadInitialCustom)
-  const [mode, setMode] = useState<"script" | "qa">("script")
+  const [mode, setMode] = useState<"script" | "qa" | "read">("script")
   // Show/hide the editable English translation under each fixed section.
   const [showEnglish, setShowEnglish] = useState(true)
   const seedQA = useMemo(() => getSeedQA(topic), [])
@@ -464,6 +465,16 @@ export default function InterviewScriptPage() {
   const completedSections = allSections.filter((s) => (view[s.id] ?? "").trim()).length
   const answeredQA = allQA.filter((q) => (view[q.id] ?? "").trim()).length
 
+  // Read mode: the script as one flowing Korean document (no titles, no
+  // English) for reading aloud and memorizing. Empty sections are skipped.
+  const readSections = allSections
+    .map((s) => ({ id: s.id, text: (view[s.id] ?? "").trim() }))
+    .filter((s) => s.text)
+  const readText = readSections.map((s) => s.text).join("\n\n")
+  // Rough presentation pace for Korean (~280자/min), so the candidate knows
+  // how long the delivered script runs.
+  const readMinutes = Math.max(1, Math.ceil(totalChars / 280))
+
   // Highlight the section nearest the top of the viewport in the outline rail,
   // the way Google Docs tracks the cursor's heading.
   useEffect(() => {
@@ -600,6 +611,16 @@ export default function InterviewScriptPage() {
                 )}
               >
                 <MessagesSquare size={14} strokeWidth={2.6} /> Q&amp;A Prep
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("read")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold uppercase tracking-wide transition-all",
+                  mode === "read" ? "bg-blue-600 text-white shadow" : "text-muted-foreground/70 hover:text-foreground"
+                )}
+              >
+                <BookOpenText size={14} strokeWidth={2.6} /> Read
               </button>
             </div>
 
@@ -830,6 +851,52 @@ export default function InterviewScriptPage() {
             </div>
           </article>
           </div>
+          ) : mode === "read" ? (
+            <article className="mx-auto w-full max-w-[816px] rounded-sm bg-white px-6 py-10 shadow-[0_1px_3px_rgba(60,64,67,0.15),0_4px_24px_rgba(60,64,67,0.1)] ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10 sm:px-14 sm:py-16 lg:px-[96px]">
+              <header className="border-b border-border/60 pb-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
+                      {topic.labelKo}
+                    </h1>
+                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                      Your full script as one text — read it aloud, no titles, no English.
+                    </p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {totalChars}자 · about {readMinutes} min aloud
+                    </p>
+                  </div>
+                  {readText && (
+                    <SpeakButton
+                      text={readText}
+                      title="Listen to the whole script"
+                      className="mt-1 shrink-0 rounded-xl border border-border p-2.5"
+                    />
+                  )}
+                </div>
+              </header>
+
+              {readSections.length > 0 ? (
+                <div className="mt-8 space-y-7">
+                  {readSections.map((section) => (
+                    <div key={section.id} className="group flex items-start gap-2">
+                      <p className="min-w-0 flex-1 whitespace-pre-wrap text-[17px] leading-[2.05] text-slate-800 dark:text-slate-200">
+                        {section.text}
+                      </p>
+                      <SpeakButton
+                        text={section.text}
+                        title="Listen to this part"
+                        className="mt-1 shrink-0 opacity-50 transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-8 text-sm text-muted-foreground">
+                  Nothing written yet — switch to the Script tab and write your sections first.
+                </p>
+              )}
+            </article>
           ) : (
             <article className="mx-auto w-full max-w-[816px] rounded-sm bg-white px-6 py-10 shadow-[0_1px_3px_rgba(60,64,67,0.15),0_4px_24px_rgba(60,64,67,0.1)] ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10 sm:px-14 sm:py-16 lg:px-[96px]">
               <header className="border-b border-border/60 pb-6">

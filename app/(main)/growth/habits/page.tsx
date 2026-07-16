@@ -4,8 +4,10 @@ import { useState } from "react"
 import { motion } from "motion/react"
 import { Plus } from "lucide-react"
 
+import { GrowthTabs } from "@/components/growth/GrowthTabs"
 import { CreateHabitForm } from "@/components/habits/CreateHabitForm"
 import { HabitCard } from "@/components/habits/HabitCard"
+import { BackLink } from "@/components/ui/back-link"
 import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -32,6 +34,12 @@ export default function HabitsPage() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants} className="mx-auto max-w-xl pb-12">
+      <motion.div variants={itemVariants} className="mb-2">
+        <BackLink href="/home" label="Home" mobileOnly />
+      </motion.div>
+      <motion.div variants={itemVariants}>
+        <GrowthTabs />
+      </motion.div>
       {error && (
         <motion.div variants={itemVariants} className="mb-4">
           <ErrorBanner>{error}</ErrorBanner>

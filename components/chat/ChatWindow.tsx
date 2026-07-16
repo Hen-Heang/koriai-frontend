@@ -1,13 +1,20 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { createContext, useContext, useEffect, useRef, type FC } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ArrowUp, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Plus, Mic, Headphones, Square } from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
+import { SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Mic, Headphones, Square } from "lucide-react"
+import { motion } from "motion/react"
+import { toast } from "sonner"
+import {
+  AssistantRuntimeProvider,
+  useExternalStoreRuntime,
+  useThreadRuntime,
+  type AppendMessage,
+  type ThreadMessageLike,
+} from "@assistant-ui/react"
 
-import { MessageBubble } from "@/components/chat/MessageBubble"
-import { TypingIndicator } from "@/components/chat/TypingIndicator"
+import { Thread } from "@/components/assistant-ui/thread"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -17,9 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Textarea } from "@/components/ui/textarea"
 import { useChat } from "@/hooks/useChat"
-import { useProfileImage } from "@/hooks/useProfileImage"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { ttsApi } from "@/lib/api"
 import { CHAT_PRESETS } from "@/lib/chat-presets"
@@ -64,6 +69,218 @@ const TECHNICAL_SUGGESTIONS: Suggestion[] = [
   { emoji: "🚀", label: "Deployment", text: "What are some common Korean terms used during a production deployment or system maintenance?" },
 ]
 
+// Bridges ChatWindow state to the pieces rendered inside the assistant-ui
+// Thread (welcome screen, composer mic button, listening banner).
+type HengoChatContextValue = {
+  isTechnicalMode: boolean
+  canInteract: boolean
+  mic: {
+    supported: boolean
+    isListening: boolean
+    error: string | null
+    transcript: string
+    onClick: () => void
+  }
+}
+
+const HengoChatContext = createContext<HengoChatContextValue | null>(null)
+
+function useHengoChat(): HengoChatContextValue {
+  const value = useContext(HengoChatContext)
+  if (!value) throw new Error("useHengoChat must be used inside ChatWindow")
+  return value
+}
+
+// Maps the app's ChatMessage rows into assistant-ui's message shape; the
+// correction/translation columns ride along as custom metadata so the thread
+// can render the "Suggested Improvement" card.
+function convertMessage(message: ChatMessage): ThreadMessageLike {
+  return {
+    id: message.id,
+    role: message.role,
+    content: [{ type: "text", text: message.content }],
+    createdAt: new Date(message.createdAt),
+    metadata: {
+      custom: {
+        correction: message.correction,
+        translation: message.translation,
+      },
+    },
+  }
+}
+
+function getAppendedText(message: AppendMessage): string {
+  return message.content
+    .map((part) => (part.type === "text" ? part.text : ""))
+    .join("\n")
+    .trim()
+}
+
+// Seeds the composer once when arriving via a deep link (e.g. dashboard
+// "Correction" card → /chat?prompt=...) so the user lands ready to paste.
+const ComposerSeeder: FC<{ text: string }> = ({ text }) => {
+  const runtime = useThreadRuntime()
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (seededRef.current || !text) return
+    seededRef.current = true
+    runtime.composer.setText(text)
+  }, [text, runtime])
+  return null
+}
+
+// ── Empty-state welcome: presets + suggestion chips (rendered inside Thread) ──
+const HengoWelcome: FC = () => {
+  const { isTechnicalMode, canInteract } = useHengoChat()
+  const runtime = useThreadRuntime()
+  const suggestions = isTechnicalMode ? TECHNICAL_SUGGESTIONS : GENERAL_SUGGESTIONS
+
+  function send(text: string) {
+    if (!canInteract) return
+    runtime.append({ role: "user", content: [{ type: "text", text }] })
+  }
+
+  function sendSuggestion(suggestion: Suggestion) {
+    if (!canInteract) return
+    if (suggestion.prefill) {
+      runtime.composer.setText(suggestion.text)
+      return
+    }
+    send(suggestion.text)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center gap-8 py-10 sm:py-14"
+    >
+      <div className="space-y-3 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl shadow-inner ring-1 ring-blue-500/20">
+          {isTechnicalMode ? "💻" : "🇰🇷"}
+        </div>
+        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
+          {isTechnicalMode ? "Dev Tutor" : "Hengo"}
+        </h2>
+        <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground">
+          {isTechnicalMode
+            ? "Master technical Korean for your career."
+            : "How can I help you practice today?"}
+        </p>
+      </div>
+
+      <div className="w-full max-w-2xl space-y-2.5 px-4">
+        <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
+          Practice a scenario
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {CHAT_PRESETS.map((preset, i) => (
+            <motion.button
+              key={preset.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.03 }}
+              type="button"
+              disabled={!canInteract}
+              onClick={() => send(preset.prompt)}
+              className="group flex flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/50 p-3 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+            >
+              <span className="text-lg">{preset.emoji}</span>
+              <span className="text-[13px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                {preset.label}
+              </span>
+              <span className="text-[12px] font-medium leading-snug text-muted-foreground">
+                {preset.description}
+              </span>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2 px-4">
+        {suggestions.map((s, i) => (
+          <motion.button
+            key={s.label}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.03 }}
+            type="button"
+            disabled={!canInteract}
+            onClick={() => sendSuggestion(s)}
+            className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+          >
+            <span className="text-sm">{s.emoji}</span>
+            <span className="text-[14px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              {s.label}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Composer slots: mic button + live-transcript banner ──
+const MicButton: FC = () => {
+  const { canInteract, mic } = useHengoChat()
+  if (!mic.supported) return null
+
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant="ghost"
+      onClick={mic.onClick}
+      disabled={!canInteract}
+      title={mic.isListening ? "Stop listening" : "Speak in Korean"}
+      aria-label={mic.isListening ? "Stop listening" : "Speak in Korean"}
+      className={cn(
+        "size-8 shrink-0 rounded-full transition-colors",
+        mic.isListening
+          ? "bg-red-500 text-white hover:bg-red-500 animate-pulse"
+          : "text-muted-foreground/60 hover:bg-accent hover:text-foreground"
+      )}
+    >
+      {mic.isListening ? <Square size={14} /> : <Mic size={18} />}
+    </Button>
+  )
+}
+
+const ListeningBanner: FC = () => {
+  const { mic } = useHengoChat()
+  if (!mic.isListening && !mic.error) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border px-4 py-3",
+        mic.error ? "border-destructive/30 bg-destructive/5" : "border-blue-500/30 bg-blue-500/5"
+      )}
+    >
+      {mic.error ? (
+        <p className="text-[13px] font-semibold text-destructive">{mic.error}</p>
+      ) : (
+        <>
+          <span className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+            <Mic size={12} className="animate-pulse" /> Listening
+          </span>
+          <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground">
+            {mic.transcript || "한국어로 말해 보세요…"}
+          </p>
+        </>
+      )}
+    </motion.div>
+  )
+}
+
+const THREAD_COMPONENTS = {
+  Welcome: HengoWelcome,
+  ComposerLeading: MicButton,
+  ComposerHeader: ListeningBanner,
+}
+
 type ChatWindowProps = {
   title: string
   subtitle: string
@@ -88,13 +305,12 @@ export function ChatWindow({
   embedded = false,
 }: ChatWindowProps) {
   const {
-    draft,
     error,
     isLoadingMessages,
     isStreaming,
     messages,
     sendMessage,
-    setDraft,
+    cancel,
     isTechnicalMode,
     setIsTechnicalMode,
     voiceMode,
@@ -102,11 +318,27 @@ export function ChatWindow({
   } = useChat({ conversationId, initialMessages })
 
   const router = useRouter()
-  const { url: userAvatarUrl } = useProfileImage()
-  const suggestions = isTechnicalMode ? TECHNICAL_SUGGESTIONS : GENERAL_SUGGESTIONS
+  const canInteract = Boolean(conversationId) && !isStreaming && !isLoadingMessages
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const runtime = useExternalStoreRuntime({
+    messages,
+    isRunning: isStreaming,
+    isDisabled: !conversationId || isLoadingMessages,
+    convertMessage,
+    onNew: async (message: AppendMessage) => {
+      const text = getAppendedText(message)
+      if (text) await sendMessage(text)
+    },
+    onCancel: async () => {
+      cancel()
+    },
+  })
+
+  // Streaming errors used to render above the composer; the composer now lives
+  // inside the Thread, so surface them as a toast instead.
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   // ── Voice conversation: speech-to-text in, text-to-speech out ──
   const {
@@ -173,413 +405,157 @@ export function ChatWindow({
       .catch(() => {})
   }, [isStreaming, voiceMode])
 
-  // Seed the composer once when arriving via a deep link (e.g. dashboard
-  // "Correction" card → /chat?prompt=...) so the user lands ready to paste.
-  const seededRef = useRef(false)
-  useEffect(() => {
-    if (seededRef.current || !initialDraft) return
-    seededRef.current = true
-    setDraft(initialDraft)
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.focus()
-      const end = initialDraft.length
-      textarea.setSelectionRange(end, end)
-    }
-  }, [initialDraft, setDraft])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
-  }, [messages, isStreaming])
-
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    textarea.style.height = "0px"
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
-  }, [draft])
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      if (!isStreaming && !isLoadingMessages && draft.trim()) sendMessage()
-    }
+  const hengoContext: HengoChatContextValue = {
+    isTechnicalMode,
+    canInteract,
+    mic: {
+      supported: micSupported,
+      isListening,
+      error: micError,
+      transcript: liveTranscript,
+      onClick: handleMicClick,
+    },
   }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!isStreaming && !isLoadingMessages && draft.trim()) sendMessage()
-  }
-
-  function sendSuggestion(suggestion: Suggestion) {
-    if (!conversationId || isStreaming || isLoadingMessages) return
-    if (suggestion.prefill) {
-      setDraft(suggestion.text)
-      const textarea = textareaRef.current
-      if (textarea) {
-        textarea.focus()
-        const end = suggestion.text.length
-        textarea.setSelectionRange(end, end)
-      }
-      return
-    }
-    sendMessage(suggestion.text)
-  }
-
-  function startPreset(prompt: string) {
-    if (!conversationId || isStreaming || isLoadingMessages) return
-    sendMessage(prompt)
-  }
-
-  const isEmpty = messages.length === 0 && !isLoadingMessages
 
   return (
-    <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-3xl md:border">
+    <AssistantRuntimeProvider runtime={runtime}>
+      <HengoChatContext.Provider value={hengoContext}>
+        <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-3xl md:border">
 
-      {/* ── Desktop/Mobile Optimized Header ── */}
-      <div
-        className={cn(
-          "flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 backdrop-blur-xl sm:px-6",
-          embedded ? "pt-4" : "pt-[max(1rem,env(safe-area-inset-top))]"
-        )}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          {!embedded && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
-              onClick={() => router.push("/home")}
-              title="Back to home"
-            >
-              <ChevronLeft size={24} strokeWidth={2.5} />
-            </Button>
-          )}
-
-          <div className="relative shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[1.1rem] shadow-lg shadow-blue-500/20">
-              <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
-            </div>
-            <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="truncate text-[16px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
-            <div className="mt-1.5 flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
-              <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{subtitle}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          {/* Technical Mode + Voice toggles — full controls on tablet/desktop */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsTechnicalMode(!isTechnicalMode)}
+          {/* ── Desktop/Mobile Optimized Header ── */}
+          <div
             className={cn(
-              "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
-              isTechnicalMode
-                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "border-border/60 bg-background/50 text-muted-foreground"
+              "flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 backdrop-blur-xl sm:px-6",
+              embedded ? "pt-4" : "pt-[max(1rem,env(safe-area-inset-top))]"
             )}
           >
-            {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
-            <span>{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setVoiceMode(!voiceMode)}
-            title="Korean voice conversation: speak and hear replies with subtitles"
-            className={cn(
-              "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
-              voiceMode
-                ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "border-border/60 bg-background/50 text-muted-foreground"
-            )}
-          >
-            <Headphones size={14} />
-            <span>{voiceMode ? "Voice ON" : "Voice"}</span>
-          </Button>
-
-          {onNewChat && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-95 sm:flex"
-              onClick={onNewChat}
-              disabled={isStartingNewChat}
-              title="Start fresh"
-            >
-              <SquarePen size={16} strokeWidth={2.5} />
-            </Button>
-          )}
-
-          {/* Mobile: same controls collapsed into one menu so the narrow header isn't a wall of icons */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground transition-all active:scale-95 sm:hidden"
-                title="Chat options"
-              >
-                <EllipsisVertical size={18} strokeWidth={2.5} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuCheckboxItem
-                checked={isTechnicalMode}
-                onCheckedChange={() => setIsTechnicalMode(!isTechnicalMode)}
-              >
-                {isTechnicalMode ? <Terminal size={14} className="mr-2" /> : <Briefcase size={14} className="mr-2" />}
-                Dev Mode (technical Korean)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={voiceMode} onCheckedChange={() => setVoiceMode(!voiceMode)}>
-                <Headphones size={14} className="mr-2" />
-                Voice conversation
-              </DropdownMenuCheckboxItem>
-              {onNewChat && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onNewChat} disabled={isStartingNewChat}>
-                    <SquarePen size={14} className="mr-2" />
-                    Start fresh chat
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* ── Messages Container ── */}
-      <div className="no-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-6 sm:px-8">
-        <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col">
-          {isLoadingMessages ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
-              <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shadow-inner">
-                  <Sparkles size={24} className="animate-pulse" />
-                </div>
-              </div>
-              <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Syncing History</p>
-            </div>
-          ) : isEmpty ? (
-            /* ── Native-Style Empty State ── */
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-1 flex-col items-center justify-center gap-8 py-10 sm:py-16"
-            >
-              <div className="space-y-3 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl shadow-inner ring-1 ring-blue-500/20">
-                  {isTechnicalMode ? "💻" : "🇰🇷"}
-                </div>
-                <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
-                  {isTechnicalMode ? "Dev Tutor" : "Hengo"}
-                </h2>
-                <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground">
-                  {isTechnicalMode
-                    ? "Master technical Korean for your career."
-                    : "How can I help you practice today?"}
-                </p>
-              </div>
-
-              <div className="w-full max-w-2xl space-y-2.5 px-4">
-                <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Practice a scenario
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {CHAT_PRESETS.map((preset, i) => (
-                    <motion.button
-                      key={preset.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.03 }}
-                      type="button"
-                      disabled={!conversationId || isStreaming}
-                      onClick={() => startPreset(preset.prompt)}
-                      className="group flex flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/50 p-3 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
-                    >
-                      <span className="text-lg">{preset.emoji}</span>
-                      <span className="text-[13px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        {preset.label}
-                      </span>
-                      <span className="text-[12px] font-medium leading-snug text-muted-foreground">
-                        {preset.description}
-                      </span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2 px-4">
-                {suggestions.map((s, i) => (
-                  <motion.button
-                    key={s.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    type="button"
-                    disabled={!conversationId || isStreaming}
-                    onClick={() => sendSuggestion(s)}
-                    className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
-                  >
-                    <span className="text-sm">{s.emoji}</span>
-                    <span className="text-[14px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                      {s.label}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          ) : (
-            <div className="space-y-8 pb-10">
-              {messages.map((message, i) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  userAvatarUrl={userAvatarUrl}
-                  live={isStreaming && i === messages.length - 1 && message.role === "assistant"}
-                />
-              ))}
-              <AnimatePresence>
-                {isStreaming && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-4 sm:gap-6"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm sm:h-9 sm:w-9">
-                      <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="h-full w-full" />
-                    </div>
-                    <TypingIndicator />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div ref={messagesEndRef} className="h-px" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Gemini-style Input Bar ── */}
-      <div className="shrink-0 bg-background/0 px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-10 sm:pb-10">
-        <div className="mx-auto w-full max-w-3xl">
-          {error ? (
-            <motion.p 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mb-3 px-4 text-xs font-bold uppercase tracking-wide text-destructive"
-            >
-              {error}
-            </motion.p>
-          ) : null}
-
-          {(isListening || micError) && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn(
-                "mb-3 flex items-center gap-3 rounded-2xl border px-4 py-3",
-                micError
-                  ? "border-destructive/30 bg-destructive/5"
-                  : "border-blue-500/30 bg-blue-500/5"
-              )}
-            >
-              {micError ? (
-                <p className="text-[13px] font-semibold text-destructive">{micError}</p>
-              ) : (
-                <>
-                  <span className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-                    <Mic size={12} className="animate-pulse" /> Listening
-                  </span>
-                  <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground">
-                    {liveTranscript || "한국어로 말해 보세요…"}
-                  </p>
-                </>
-              )}
-            </motion.div>
-          )}
-
-          <form
-            onSubmit={handleSubmit}
-            className="group relative flex items-center gap-1 rounded-3xl border border-border/80 bg-background p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-border/5 transition-all focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:bg-slate-900 dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
-          >
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-10 w-10 shrink-0 rounded-full text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
-              aria-label="Add attachment"
-            >
-              <Plus size={22} />
-            </Button>
-
-            <Textarea
-              ref={textareaRef}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Hengo anything..."
-              aria-label="Chat message"
-              className="max-h-48 min-h-[44px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-3 text-[16px] font-medium leading-relaxed text-foreground placeholder:text-muted-foreground/40 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-base"
-              disabled={!conversationId || isStreaming || isLoadingMessages}
-              rows={1}
-            />
-            
-            <div className="flex items-center gap-1 pr-1">
-              {micSupported && (
+            <div className="flex min-w-0 items-center gap-3">
+              {!embedded && (
                 <Button
-                  type="button"
-                  size="icon"
                   variant="ghost"
-                  onClick={handleMicClick}
-                  disabled={!conversationId || isStreaming || isLoadingMessages}
-                  title={isListening ? "Stop listening" : "Speak in Korean"}
-                  aria-label={isListening ? "Stop listening" : "Speak in Korean"}
-                  className={cn(
-                    "h-10 w-10 shrink-0 rounded-full transition-colors",
-                    isListening
-                      ? "bg-red-500 text-white hover:bg-red-500 animate-pulse"
-                      : "text-muted-foreground/60 hover:bg-accent hover:text-foreground"
-                  )}
+                  size="icon"
+                  className="h-9 w-9 -ml-2 rounded-xl text-muted-foreground transition-all active:scale-95 md:hidden"
+                  onClick={() => router.push("/home")}
+                  title="Back to home"
                 >
-                  {isListening ? <Square size={16} /> : <Mic size={20} />}
+                  <ChevronLeft size={24} strokeWidth={2.5} />
                 </Button>
               )}
 
-              <Button
-                type="submit"
-                size="icon"
-                aria-label="Send message"
-                className={cn(
-                  "h-10 w-10 shrink-0 rounded-full transition-all duration-300",
-                  draft.trim() 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 active:scale-90"
-                    : "bg-muted text-muted-foreground/60"
-                )}
-                disabled={!draft.trim() || !conversationId || isStreaming || isLoadingMessages}
-              >
-                {isStreaming ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  <ArrowUp size={20} strokeWidth={2.5} />
-                )}
-              </Button>
+              <div className="relative shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[1.1rem] shadow-lg shadow-blue-500/20">
+                  <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
+                </div>
+                <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="truncate text-[16px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
+                  <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{subtitle}</p>
+                </div>
+              </div>
             </div>
-          </form>
-          
-          <p className="mt-3 text-center text-[12px] font-medium text-muted-foreground sm:text-xs">
-            Hengo can make mistakes. Consider checking important information.
-          </p>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {/* Technical Mode + Voice toggles — full controls on tablet/desktop */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTechnicalMode(!isTechnicalMode)}
+                className={cn(
+                  "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
+                  isTechnicalMode
+                    ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "border-border/60 bg-background/50 text-muted-foreground"
+                )}
+              >
+                {isTechnicalMode ? <Terminal size={14} /> : <Briefcase size={14} />}
+                <span>{isTechnicalMode ? "Dev Mode ON" : "General Mode"}</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVoiceMode(!voiceMode)}
+                title="Korean voice conversation: speak and hear replies with subtitles"
+                className={cn(
+                  "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
+                  voiceMode
+                    ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "border-border/60 bg-background/50 text-muted-foreground"
+                )}
+              >
+                <Headphones size={14} />
+                <span>{voiceMode ? "Voice ON" : "Voice"}</span>
+              </Button>
+
+              {onNewChat && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground hover:bg-accent hover:text-foreground transition-all active:scale-95 sm:flex"
+                  onClick={onNewChat}
+                  disabled={isStartingNewChat}
+                  title="Start fresh"
+                >
+                  <SquarePen size={16} strokeWidth={2.5} />
+                </Button>
+              )}
+
+              {/* Mobile: same controls collapsed into one menu so the narrow header isn't a wall of icons */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-xl border border-border/60 bg-background/50 text-muted-foreground transition-all active:scale-95 sm:hidden"
+                    title="Chat options"
+                  >
+                    <EllipsisVertical size={18} strokeWidth={2.5} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuCheckboxItem
+                    checked={isTechnicalMode}
+                    onCheckedChange={() => setIsTechnicalMode(!isTechnicalMode)}
+                  >
+                    {isTechnicalMode ? <Terminal size={14} className="mr-2" /> : <Briefcase size={14} className="mr-2" />}
+                    Dev Mode (technical Korean)
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem checked={voiceMode} onCheckedChange={() => setVoiceMode(!voiceMode)}>
+                    <Headphones size={14} className="mr-2" />
+                    Voice conversation
+                  </DropdownMenuCheckboxItem>
+                  {onNewChat && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={onNewChat} disabled={isStartingNewChat}>
+                        <SquarePen size={14} className="mr-2" />
+                        Start fresh chat
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* ── assistant-ui Thread: messages + composer ── */}
+          <div className="relative min-h-0 flex-1">
+            {isLoadingMessages && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-card/60 backdrop-blur-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shadow-inner">
+                  <Sparkles size={24} className="animate-pulse" />
+                </div>
+                <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">Syncing History</p>
+              </div>
+            )}
+            <Thread components={THREAD_COMPONENTS} />
+            {initialDraft ? <ComposerSeeder text={initialDraft} /> : null}
+          </div>
         </div>
-      </div>
-    </div>
+      </HengoChatContext.Provider>
+    </AssistantRuntimeProvider>
   )
 }

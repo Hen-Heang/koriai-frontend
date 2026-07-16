@@ -109,12 +109,13 @@ export const workspaces: Workspace[] = [
 export const homeLink: NavLink = { href: "/home", label: "Home", icon: Gauge }
 export const settingsLink: NavLink = { href: "/settings", label: "Settings", icon: ClipboardList }
 
-// Mobile bottom bar — most-used daily surfaces, one per workspace plus Home.
+// Mobile bottom bar — most-used daily surfaces plus Home. AI chat is not a
+// tab: on mobile it lives in a floating button (see app/(main)/layout.tsx).
 export const bottomTabs: NavLink[] = [
   homeLink,
   { href: "/practice", label: "Learn", icon: Sparkles },
   { href: "/goals", label: "Plan", icon: Target },
-  { href: "/chat", label: "AI", icon: MessageCircle },
+  { href: "/growth/habits", label: "Habits", icon: ListChecks },
 ]
 
 // All navigable links, used for page-title lookup in the desktop top bar.

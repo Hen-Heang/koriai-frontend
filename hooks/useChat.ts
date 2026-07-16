@@ -109,7 +109,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     let active = true
 
     chatApi
-      .getMessages(conversationId)
+      .getMessages(conversationId, 50)
       .then((data) => {
         if (!active) {
           return
@@ -258,6 +258,12 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     }
   }
 
+  // Lets the UI's stop button abort the in-flight stream; useChat's abort
+  // handler already drops the placeholder message silently.
+  const cancel = () => {
+    abortRef.current?.abort()
+  }
+
   return {
     draft,
     error,
@@ -265,6 +271,7 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     isStreaming: isSending,
     messages,
     sendMessage,
+    cancel,
     setDraft,
     isTechnicalMode,
     setIsTechnicalMode,
@@ -272,3 +279,4 @@ export function useChat({ conversationId, initialMessages = [] }: UseChatOptions
     setVoiceMode,
   }
 }
+

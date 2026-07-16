@@ -3,6 +3,7 @@
 import { motion } from "motion/react"
 
 import { TriggersManager } from "@/components/recovery/TriggersManager"
+import { BackLink } from "@/components/ui/back-link"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { containerVariants, itemVariants } from "@/lib/motion"
@@ -25,6 +26,10 @@ export default function RecoveryTriggersPage() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants} className="mx-auto max-w-xl pb-12">
+      {/* Triggers are global (not per-habit), so back goes to the list. */}
+      <motion.div variants={itemVariants} className="mb-2">
+        <BackLink href="/growth/recovery" label="Recovery" />
+      </motion.div>
       {error && (
         <motion.div variants={itemVariants} className="mb-4">
           <ErrorBanner>{error}</ErrorBanner>

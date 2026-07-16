@@ -10,8 +10,10 @@ import { itemVariants } from "@/lib/motion"
 
 export function CreateHabitForm({
   onCreate,
+  onClose,
 }: {
   onCreate: (input: { label: string; replacementBehavior?: string }) => Promise<unknown>
+  onClose?: () => void
 }) {
   const [label, setLabel] = useState("")
   const [replacementBehavior, setReplacementBehavior] = useState("")
@@ -71,6 +73,11 @@ export function CreateHabitForm({
       <Button type="submit" className="w-full" size="lg" disabled={submitting || !label.trim()}>
         {submitting ? "Starting…" : "Start"}
       </Button>
+      {onClose && (
+        <Button type="button" variant="ghost" className="w-full" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+      )}
     </motion.form>
   )
 }
