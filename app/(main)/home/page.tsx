@@ -1,11 +1,13 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { Flame, Sparkles, Target, TreeDeciduous, Trophy } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, Flame, MessageCircle, Sparkles, Target, TreeDeciduous, Trophy } from "lucide-react"
 import { motion } from "motion/react"
 
 import { FirstRunBanner } from "@/components/dashboard/FirstRunBanner"
 import { WorkspacePosterCard } from "@/components/home/WorkspacePosterCard"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { achievementsApi } from "@/lib/api"
 import { useGoals } from "@/hooks/useGoals"
@@ -81,17 +83,29 @@ export default function HomePage() {
       {/* ── Hero strip ── */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
       >
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Your AI growth platform</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <div className="max-w-2xl">
+          <p className="app-kicker">Your daily workspace</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-4xl">
             {getGreeting()} 👋
           </h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+            Choose what needs your attention today, or ask your AI coach for a quick start.
+          </p>
         </div>
-        <div className="flex items-center gap-1.5 self-start rounded-full border border-border bg-card px-3 py-1.5 sm:self-auto">
-          <Flame size={14} className="text-orange-500" />
-          <span className="text-sm font-medium text-foreground">{stats.streakDays} day streak</span>
+        <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto sm:justify-end">
+          <div className="flex h-10 items-center gap-2 rounded-xl border border-border/70 bg-card/80 px-3.5 shadow-xs">
+            <Flame size={15} className="text-orange-500" />
+            <span className="text-sm font-semibold text-foreground">{stats.streakDays} day streak</span>
+          </div>
+          <Button asChild className="h-10 flex-1 sm:flex-none">
+            <Link href="/chat">
+              <MessageCircle size={16} />
+              Ask AI Coach
+              <ArrowRight size={15} />
+            </Link>
+          </Button>
         </div>
       </motion.div>
 

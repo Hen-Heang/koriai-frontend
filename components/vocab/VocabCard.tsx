@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useId, useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { VocabItem } from "@/lib/types"
@@ -8,6 +8,20 @@ import { SpeakButton } from "@/components/ui/SpeakButton"
 import { motion } from "motion/react"
 import { Calendar, Tag, ChevronRight, BookOpen, Pencil, Check, X, Loader2, Trash2 } from "lucide-react"
 import { SentenceChallenge } from "@/components/vocab/SentenceChallenge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { vocabApi } from "@/lib/api"
 
 type VocabCardProps = {
@@ -20,6 +34,12 @@ type VocabCardProps = {
   onDelete?: (id: string) => void | Promise<void>
 }
 
+function formatReviewDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value === "-" ? "Not scheduled" : value
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date)
+}
+
 function EditForm({
   item,
   onSave,
@@ -29,6 +49,7 @@ function EditForm({
   onSave: (data: { term: string; meaning: string; example?: string; pronunciation?: string }) => Promise<void>
   onCancel: () => void
 }) {
+  const fieldId = useId()
   const [term, setTerm] = useState(item.term)
   const [meaning, setMeaning] = useState(item.meaning)
   const [pronunciation, setPronunciation] = useState(item.pronunciation ?? "")
@@ -53,47 +74,45 @@ function EditForm({
     }
   }
 
-  const inputClass =
-    "w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-medium text-foreground placeholder:text-sm placeholder:text-muted-foreground/40 focus:border-emerald-500/40 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-colors sm:text-sm"
-
   return (
-    <div className="space-y-2.5 pt-2">
+    <div className="space-y-3 pt-2">
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Korean</label>
-        <input value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} className={cn(inputClass, "mt-1 text-lg font-bold")} />
+        <label htmlFor={`${fieldId}-term`} className="text-xs font-semibold text-foreground">Korean word</label>
+        <Input id={`${fieldId}-term`} value={term} onChange={(e) => setTerm(e.target.value)} maxLength={200} lang="ko" className="mt-1.5 text-lg font-semibold" />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Meaning</label>
-        <input value={meaning} onChange={(e) => setMeaning(e.target.value)} className={cn(inputClass, "mt-1")} />
+        <label htmlFor={`${fieldId}-meaning`} className="text-xs font-semibold text-foreground">English meaning</label>
+        <Input id={`${fieldId}-meaning`} value={meaning} onChange={(e) => setMeaning(e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Pronunciation</label>
-        <input value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className={cn(inputClass, "mt-1")} />
+        <label htmlFor={`${fieldId}-pronunciation`} className="text-xs font-semibold text-foreground">Pronunciation</label>
+        <Input id={`${fieldId}-pronunciation`} value={pronunciation} onChange={(e) => setPronunciation(e.target.value)} maxLength={300} placeholder="e.g. gong-gam" className="mt-1.5" />
       </div>
       <div>
-        <label className="text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Example sentence</label>
-        <textarea value={example} onChange={(e) => setExample(e.target.value)} rows={2} className={cn(inputClass, "mt-1 resize-none")} />
+        <label htmlFor={`${fieldId}-example`} className="text-xs font-semibold text-foreground">Example sentence</label>
+        <Textarea id={`${fieldId}-example`} value={example} onChange={(e) => setExample(e.target.value)} rows={2} lang="ko" className="mt-1.5 resize-none" />
       </div>
-      {error && <p className="text-xs font-bold text-destructive">{error}</p>}
+      {error ? <p role="alert" className="text-xs font-semibold text-destructive">{error}</p> : null}
       <div className="flex gap-2 pt-1">
-        <button
+        <Button
           type="button"
           onClick={handleSave}
           disabled={saving || !term.trim() || !meaning.trim()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95 disabled:opacity-40"
+          className="flex-1 bg-emerald-600 text-white hover:bg-emerald-500"
         >
           {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={3} />}
           Save
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-all hover:bg-accent active:scale-95"
+          variant="outline"
+          className="flex-1"
         >
           <X size={13} strokeWidth={3} />
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -101,16 +120,9 @@ function EditForm({
 
 export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps) {
   const [editing, setEditing] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const mastery = Math.max(0, Math.min(100, item.mastery))
-
-  // Confirm state reverts on its own if the user doesn't follow through
-  useEffect(() => {
-    if (!confirmingDelete) return
-    const timer = setTimeout(() => setConfirmingDelete(false), 4000)
-    return () => clearTimeout(timer)
-  }, [confirmingDelete])
 
   async function handleDelete() {
     if (!onDelete || deleting) return
@@ -118,10 +130,10 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
     try {
       await onDelete(item.id)
       toast.success(`Deleted "${item.term}"`)
+      setDeleteOpen(false)
     } catch {
       toast.error("Could not delete word. Please try again.")
       setDeleting(false)
-      setConfirmingDelete(false)
     }
   }
   const masteryColor =
@@ -141,7 +153,14 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-sm transition-all dark:bg-slate-900/40 dark:backdrop-blur-md sm:p-5 sm:hover:-translate-y-1 sm:hover:shadow-xl">
       {/* Mastery Progress Bar (Top) */}
-      <div className="absolute inset-x-0 top-0 h-1 bg-accent/10">
+      <div
+        className="absolute inset-x-0 top-0 h-1 bg-accent/10"
+        role="progressbar"
+        aria-label={`Mastery for ${item.term}`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={mastery}
+      >
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${mastery}%` }}
@@ -183,36 +202,58 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
             <div className="flex shrink-0 flex-col items-end gap-1.5">
               <div className="flex items-center gap-1.5">
                 {onUpdate && (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setEditing(true)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/40 transition-all hover:bg-accent/50 hover:text-foreground active:scale-90"
+                    variant="ghost"
+                    size="icon-lg"
+                    className="rounded-xl text-muted-foreground"
                     aria-label="Edit word"
                   >
                     <Pencil size={14} strokeWidth={2.5} />
-                  </button>
+                  </Button>
                 )}
                 {onDelete && (
-                  confirmingDelete ? (
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="flex h-8 items-center gap-1 rounded-xl bg-red-500/10 px-2.5 text-[12px] font-bold uppercase tracking-wider text-red-600 ring-1 ring-red-500/20 transition-all hover:bg-red-500/20 active:scale-95 dark:text-red-400"
-                    >
-                      {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} strokeWidth={2.5} />}
-                      {deleting ? "Deleting" : "Sure?"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmingDelete(true)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/40 transition-all hover:bg-red-500/10 hover:text-red-500 active:scale-90"
-                      aria-label="Delete word"
-                    >
-                      <Trash2 size={14} strokeWidth={2.5} />
-                    </button>
-                  )
+                  <AlertDialog
+                    open={deleteOpen}
+                    onOpenChange={(open) => {
+                      if (!deleting) setDeleteOpen(open)
+                    }}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-lg"
+                        className="rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Delete ${item.term}`}
+                      >
+                        <Trash2 size={14} strokeWidth={2.5} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete “{item.term}”?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes the word, its examples, and its review history from this deck. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleting}>Keep word</AlertDialogCancel>
+                        <AlertDialogAction
+                          disabled={deleting}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            void handleDelete()
+                          }}
+                          className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                          {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                          {deleting ? "Deleting…" : "Delete word"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
                 <div className={cn("shrink-0 rounded-2xl px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1", masteryBg)}>
                   {mastery}%
@@ -269,21 +310,21 @@ export function VocabCard({ item, onReview, onUpdate, onDelete }: VocabCardProps
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <Calendar size={12} strokeWidth={3} />
-          <span>Next: {item.nextReview}</span>
+          <span>Next review: {formatReviewDate(item.nextReview)}</span>
         </div>
       </div>
 
       {onReview && (
-        <button
+        <Button
           type="button"
           onClick={() => onReview(item.id)}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500 active:scale-95"
+          className="mt-5 w-full bg-emerald-600 text-white hover:bg-emerald-500"
         >
           Complete Review
           <ChevronRight size={16} strokeWidth={3} />
-        </button>
+        </Button>
       )}
 
       <SentenceChallenge

@@ -31,48 +31,52 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 dark:backdrop-blur-xl sm:p-10",
+        "relative overflow-hidden rounded-[1.75rem] border border-border/70 bg-card/90 p-5 shadow-sm shadow-slate-950/5 ring-1 ring-white/50 dark:bg-slate-900/70 dark:ring-white/5 sm:p-8",
         className
       )}
     >
-      {/* Dynamic Background */}
-      <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]" />
-        <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-sky-500/5 blur-[100px]" />
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute -left-24 -top-28 h-80 w-80 rounded-full bg-primary/8 blur-[90px]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/25 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+      <div className="relative z-10">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-primary">
               {eyebrow}
             </p>
+            <h1 className="mt-4 text-[clamp(1.9rem,4vw,3rem)] font-semibold leading-[1.08] tracking-[-0.035em] text-foreground">
+              {title}
+            </h1>
+            <p className="mt-3 max-w-2xl text-[0.98rem] leading-7 text-muted-foreground">
+              {description}
+            </p>
           </div>
-          <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            {title}
-          </h1>
-          <p className="max-w-2xl text-base font-normal leading-relaxed text-muted-foreground">
-            {description}
-          </p>
+
+          {actions && (
+            <div className="flex w-full flex-wrap gap-2.5 sm:w-auto lg:max-w-md lg:justify-end">
+              {actions}
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col gap-6 lg:items-end">
-          {actions && <div className="flex w-full flex-wrap gap-3 lg:w-auto lg:justify-end">{actions}</div>}
-          {stats && stats.length > 0 && (
-            <div className="flex flex-wrap gap-4">
+        {stats && stats.length > 0 && (
+          <div className="mt-6 border-t border-border/60 pt-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
               {stats.map((stat) => {
                 const tappable = Boolean(stat.href || stat.onClick)
                 const tileClass = cn(
-                  "rounded-2xl border border-border bg-background/50 px-5 py-4 text-left backdrop-blur-sm dark:bg-white/5 sm:min-w-[100px]",
-                  tappable && "transition-all hover:border-blue-500/40 hover:bg-accent/30 active:scale-95"
+                  "min-w-0 rounded-xl border border-border/60 bg-background/55 px-3.5 py-3 text-left dark:bg-white/[0.035] sm:min-w-28 sm:px-4",
+                  tappable &&
+                    "transition-[border-color,background-color,transform] hover:border-primary/30 hover:bg-primary/5 active:scale-[0.98]"
                 )
                 const inner = (
                   <>
-                    <p className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                    <p className="font-mono text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    <p className="mt-1 truncate text-[0.68rem] font-semibold uppercase tracking-[0.09em] text-muted-foreground">
                       {stat.label}
                     </p>
                   </>
@@ -98,8 +102,8 @@ export function PageHero({
                 )
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   )

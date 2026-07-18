@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   BookOpen,
@@ -25,6 +25,8 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar"
+import { BorderBeam } from "@/components/ui/border-beam"
 import { Skeleton } from "@/components/ui/skeleton"
 
 type Topic = { id: string; text: string }
@@ -257,29 +259,15 @@ function savePhases(phases: Phase[]) {
   try { localStorage.setItem(PHASES_KEY, JSON.stringify(phases)) } catch {}
 }
 
-function ProgressRing({ value, size = 56 }: { value: number; size?: number }) {
-  const r    = (size - 8) / 2
-  const circ = 2 * Math.PI * r
-  const dash = (value / 100) * circ
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor"
-        strokeWidth={4} className="text-foreground/5" />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor"
-        strokeWidth={4} strokeDasharray={`${dash} ${circ - dash}`}
-        strokeLinecap="round" className="text-blue-500 transition-all duration-700" />
-    </svg>
-  )
-}
-
 function PhaseCard({
-  phase, completed, onToggle, isOpen, onToggleOpen,
+  phase, completed, onToggle, isOpen, isCurrent, onToggleOpen,
   onAddTopic, onEditTopic, onDeleteTopic, onEditPhase, onDeletePhase,
 }: {
   phase: Phase
   completed: Set<string>
   onToggle: (id: string) => void
   isOpen: boolean
+  isCurrent: boolean
   onToggleOpen: () => void
   onAddTopic: (phaseId: string, text: string) => void
   onEditTopic: (phaseId: string, topicId: string, text: string) => void
@@ -302,10 +290,6 @@ function PhaseCard({
   const [confirmDeleteTopic, setConfirmDeleteTopic] = useState<string | null>(null)
   const [confirmDeletePhase, setConfirmDeletePhase] = useState(false)
 
-  useEffect(() => {
-    setEditPhaseData({ title: phase.title, subtitle: phase.subtitle, months: phase.months, level: phase.level })
-  }, [phase.title, phase.subtitle, phase.months, phase.level])
-
   function commitEditTopic(topicId: string) {
     if (editTopicText.trim()) onEditTopic(phase.id, topicId, editTopicText.trim())
     setEditingTopicId(null)
@@ -327,16 +311,39 @@ function PhaseCard({
     setEditingPhase(false)
   }
 
+  function startEditingPhase() {
+    setEditPhaseData({
+      title: phase.title,
+      subtitle: phase.subtitle,
+      months: phase.months,
+      level: phase.level,
+    })
+    setConfirmDeletePhase(false)
+    setEditingPhase(true)
+  }
+
   return (
     <motion.div layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       className={cn(
-        "overflow-hidden rounded-3xl border bg-card shadow-sm dark:bg-slate-900/40",
-        isComplete ? "border-emerald-500/30" : "border-border"
+        "relative overflow-hidden rounded-3xl border bg-card shadow-sm dark:bg-slate-900/40",
+        isComplete
+          ? "border-emerald-500/30"
+          : isCurrent
+            ? "border-blue-500/35"
+            : "border-border"
       )}
     >
+      {isCurrent && !isComplete ? (
+        <BorderBeam
+          size={72}
+          duration={7}
+          colorFrom="#3b82f6"
+          colorTo="#8b5cf6"
+        />
+      ) : null}
       <button
         type="button"
         onClick={onToggleOpen}
@@ -355,16 +362,22 @@ function PhaseCard({
             <span className="text-[10px] font-semibold text-muted-foreground/40">Phase {phase.number}</span>
             <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", phase.levelColor)}>{phase.level}</span>
             <span className="text-[10px] font-medium text-muted-foreground/40">{phase.months}</span>
+            {isCurrent && !isComplete ? (
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                Current
+              </span>
+            ) : null}
           </div>
           <p className="mt-0.5 text-sm font-bold text-foreground">{phase.title}</p>
           <p className="text-[11px] font-medium text-muted-foreground/50">{phase.subtitle}</p>
         </div>
-        <div className="relative shrink-0">
-          <ProgressRing value={pct} size={48} />
-          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums text-foreground">
-            {pct}%
-          </span>
-        </div>
+        <AnimatedCircularProgressBar
+          value={pct}
+          gaugePrimaryColor={isComplete ? "#10b981" : "var(--primary)"}
+          gaugeSecondaryColor="var(--muted)"
+          label={`Progress for ${phase.title}`}
+          className="size-12 shrink-0 font-mono text-[10px]"
+        />
         <ChevronDown size={16} strokeWidth={2}
           className={cn("shrink-0 text-muted-foreground/60 transition-transform", isOpen && "rotate-180")} />
       </button>
@@ -453,7 +466,7 @@ function PhaseCard({
                 </div>
               ) : (
                 <div className="mb-3 flex justify-end">
-                  <button type="button" onClick={() => setEditingPhase(true)}
+                  <button type="button" onClick={startEditingPhase}
                     className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold text-muted-foreground/40 transition-colors hover:bg-accent hover:text-foreground active:scale-95">
                     <Pencil size={11} />
                     Edit Phase
@@ -706,23 +719,26 @@ function RoadmapSkeleton() {
 }
 
 export default function RoadmapPage() {
-  const [phases,       setPhases]       = useState<Phase[]>(DEFAULT_PHASES)
-  const [completed,    setCompleted]    = useState<Set<string>>(new Set())
+  const [phases,       setPhases]       = useState<Phase[]>(loadPhases)
+  const [completed,    setCompleted]    = useState<Set<string>>(loadCompleted)
   const [openPhase,    setOpenPhase]    = useState<string | null>("phase-1")
-  const [mounted,      setMounted]      = useState(false)
   const [showAddPhase, setShowAddPhase] = useState(false)
   const [resetConfirm, setResetConfirm] = useState(false)
 
-  useEffect(() => {
-    setCompleted(loadCompleted())
-    setPhases(loadPhases())
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    (callback) => {
+      queueMicrotask(callback)
+      return () => undefined
+    },
+    () => true,
+    () => false
+  )
 
   function toggle(id: string) {
     setCompleted(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       saveCompleted(next)
       return next
     })
@@ -853,12 +869,13 @@ export default function RoadmapPage() {
       <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
         <div className="p-5 sm:p-6">
           <div className="flex items-center gap-5">
-            <div className="relative shrink-0">
-              <ProgressRing value={overallPct} size={72} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-base font-bold tabular-nums text-foreground">{overallPct}%</span>
-              </div>
-            </div>
+            <AnimatedCircularProgressBar
+              value={overallPct}
+              gaugePrimaryColor="var(--primary)"
+              gaugeSecondaryColor="var(--muted)"
+              label="Overall roadmap progress"
+              className="size-[72px] shrink-0 font-mono text-sm"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-foreground">Overall Progress</p>
               <p className="text-[11px] font-medium text-muted-foreground/50">
@@ -920,6 +937,7 @@ export default function RoadmapPage() {
             completed={completed}
             onToggle={toggle}
             isOpen={openPhase === phase.id}
+            isCurrent={phase.id === currentPhase?.id}
             onToggleOpen={() => setOpenPhase(o => o === phase.id ? null : phase.id)}
             onAddTopic={handleAddTopic}
             onEditTopic={handleEditTopic}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { ChevronDown, FolderOpen, Plus, X } from "lucide-react"
 import { toast } from "sonner"
@@ -143,6 +143,7 @@ function masteryColor(mastery: number) {
 }
 
 export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false, viewMode = "list", onUpdate, onDelete, onAdd }: VocabDeckProps) {
+  const contentId = useId()
   const [open, setOpen] = useState(defaultOpen)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   // Snapshot of "now" for due-date checks — taken once on mount so render stays
@@ -169,7 +170,9 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex h-full w-full flex-col gap-3 p-4 text-left transition-colors hover:bg-accent/5"
+          aria-expanded={isOpen}
+          aria-controls={contentId}
+          className="flex h-full w-full flex-col gap-3 p-5 text-left transition-colors hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <div className="flex w-full items-start justify-between gap-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
@@ -197,7 +200,10 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
               <span className="uppercase tracking-wide text-muted-foreground">Mastery</span>
               <span className="tabular-nums text-teal-600">{avgMastery}%</span>
             </div>
-            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-accent/20">
+            <div
+              className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-accent/20"
+              aria-hidden="true"
+            >
               <div
                 className="h-full rounded-full bg-teal-500"
                 style={{ width: `${avgMastery}%` }}
@@ -209,7 +215,9 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
+          aria-expanded={isOpen}
+          aria-controls={contentId}
+          className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/40 sm:px-6"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
             <FolderOpen size={18} strokeWidth={2.5} />
@@ -225,7 +233,10 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
               {dueCount} due
             </span>
           )}
-          <div className="hidden h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-accent/20 sm:block sm:w-24">
+          <div
+            className="hidden h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-accent/20 sm:block sm:w-24"
+            aria-hidden="true"
+          >
             <div
               className="h-full rounded-full bg-teal-500"
               style={{ width: `${avgMastery}%` }}
@@ -246,6 +257,7 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            id={contentId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -271,34 +283,32 @@ export function VocabDeck({ name, items, defaultOpen = false, forceOpen = false,
                 }
 
                 return (
-                  <div
-                    key={item.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setExpandedId(item.id)}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpandedId(item.id) }}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-accent/5 sm:px-6"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="truncate text-xl font-bold text-foreground sm:text-2xl">{item.term}</span>
-                        {item.pronunciation && (
-                          <span className="hidden truncate text-[14px] font-medium italic text-muted-foreground sm:inline">
-                            {item.pronunciation}
-                          </span>
-                        )}
+                  <div key={item.id} className="flex items-center gap-2 px-2 py-1.5 sm:px-4">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(item.id)}
+                      aria-label={`Open ${item.term}, ${item.meaning}`}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="truncate text-xl font-semibold text-foreground sm:text-2xl">{item.term}</span>
+                          {item.pronunciation ? (
+                            <span className="hidden truncate text-sm italic text-muted-foreground sm:inline">
+                              {item.pronunciation}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="truncate text-sm text-muted-foreground sm:text-base">{item.meaning}</p>
                       </div>
-                      <p className="truncate text-[16px] font-medium text-muted-foreground/70 sm:text-base">{item.meaning}</p>
-                    </div>
-                    <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", masteryColor(item.mastery))}>
-                      {item.mastery}%
-                    </span>
-                    <span onClick={(e) => e.stopPropagation()}>
-                      <SpeakButton
-                        text={item.term}
-                        className="h-10 w-10 shrink-0 rounded-lg bg-accent/30"
-                      />
-                    </span>
+                      <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold", masteryColor(item.mastery))}>
+                        {item.mastery}%
+                      </span>
+                    </button>
+                    <SpeakButton
+                      text={item.term}
+                      className="h-10 w-10 shrink-0 rounded-xl bg-accent/30"
+                    />
                   </div>
                 )
               })}

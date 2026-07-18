@@ -4,6 +4,7 @@ import { useState } from "react"
 import { AlertCircle, Mic, PencilLine, Waves } from "lucide-react"
 import { motion } from "motion/react"
 
+import { BorderBeam } from "@/components/ui/border-beam"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import type { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
@@ -29,36 +30,54 @@ export function DrillAnswerBox({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Button
-          onClick={() => (recording ? speech.stop() : speech.start())}
-          disabled={disabled}
-          className={cn(
-            "h-12 w-full rounded-2xl px-6 text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8",
-            recording
-              ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
-              : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
-          )}
-        >
+        <div className="relative w-full rounded-2xl sm:w-fit">
           {recording ? (
-            <>
-              <Waves size={18} className="mr-2 animate-pulse" /> Stop
-            </>
-          ) : (
-            <>
-              <Mic size={18} className="mr-2" /> Record Answer
-            </>
-          )}
-        </Button>
+            <BorderBeam
+              size={56}
+              duration={1.8}
+              colorFrom="#fb7185"
+              colorTo="#fbbf24"
+              borderWidth={2}
+            />
+          ) : null}
+          <Button
+            onClick={() => (recording ? speech.stop() : speech.start())}
+            disabled={disabled}
+            aria-pressed={recording}
+            className={cn(
+              "h-12 w-full rounded-2xl px-6 text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8",
+              recording
+                ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
+                : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
+            )}
+          >
+            {recording ? (
+              <>
+                <Waves size={18} className="mr-2 animate-pulse" /> Stop
+              </>
+            ) : (
+              <>
+                <Mic size={18} className="mr-2" /> Record Answer
+              </>
+            )}
+          </Button>
+        </div>
         <Button
           variant="outline"
           onClick={() => setIsEditing((v) => !v)}
-          disabled={disabled}
+          disabled={disabled || recording}
           className="h-12 w-full rounded-2xl border-border bg-background px-6 font-bold hover:bg-accent active:scale-95 sm:w-auto"
         >
           <PencilLine size={16} className="mr-2" />
           {isEditing ? "Done" : "Manual Edit"}
         </Button>
       </div>
+
+      <p role="status" aria-live="polite" className="text-xs font-medium text-muted-foreground">
+        {recording
+          ? "Listening now — pauses are okay. Tap Stop when your answer is complete."
+          : "Record a complete answer; the microphone stays open between sentences."}
+      </p>
 
       <div className="rounded-[1.5rem] border border-border bg-background p-4 shadow-sm sm:rounded-3xl sm:p-5">
         <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -78,7 +97,9 @@ export function DrillAnswerBox({
           </p>
         ) : (
           <p className="mt-3 py-5 text-center text-sm font-medium italic text-muted-foreground">
-            Your spoken answer will appear here.
+            {recording
+              ? "Listening… speak your answer in Korean."
+              : "Your spoken answer will appear here."}
           </p>
         )}
       </div>

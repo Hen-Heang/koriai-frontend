@@ -192,6 +192,18 @@ export default function InterviewScriptPage() {
     }
   }, [])
 
+  // Push the latest script to the account a moment after typing stops. Failures
+  // are silent — the local autosave already guarantees the work is kept.
+  function scheduleSync(next: Record<string, string>) {
+    if (syncTimeout.current) clearTimeout(syncTimeout.current)
+    syncTimeout.current = setTimeout(() => {
+      interviewApi
+        .saveScript(topic.id, next)
+        .then(() => setSynced(true))
+        .catch(() => {})
+    }, 1500)
+  }
+
   // Best-effort hydrate from the account, then fill any still-empty sections
   // from the drafted script. Local edits win — the remote copy is adopted only
   // when nothing meaningful (non-blank text, not just empty keys) has been
@@ -230,18 +242,6 @@ export default function InterviewScriptPage() {
       active = false
     }
   }, [])
-
-  // Push the latest script to the account a moment after typing stops. Failures
-  // are silent — the local autosave already guarantees the work is kept.
-  function scheduleSync(next: Record<string, string>) {
-    if (syncTimeout.current) clearTimeout(syncTimeout.current)
-    syncTimeout.current = setTimeout(() => {
-      interviewApi
-        .saveScript(topic.id, next)
-        .then(() => setSynced(true))
-        .catch(() => {})
-    }, 1500)
-  }
 
   // Custom sections, plus recovered placeholders for any orphaned `custom-*`
   // text (see reconcileCustom). Derived — never written back — so orphan text is

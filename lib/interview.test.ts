@@ -46,6 +46,41 @@ describe("weather topic prep", () => {
       expect(entry.en.trim()).not.toBe("")
     }
   })
+
+  it("includes a pass-first vocabulary deck with contextual examples", () => {
+    const prep = getInterviewTopic("weather").prep!
+    const core = prep.vocabulary.filter((entry) => entry.priority === "core")
+    const stretch = prep.vocabulary.filter((entry) => entry.priority === "stretch")
+
+    expect(core.length).toBeGreaterThanOrEqual(15)
+    expect(stretch.length).toBeGreaterThan(0)
+    for (const entry of core) {
+      expect(entry.exampleKo?.trim()).not.toBe("")
+      expect(entry.exampleEn?.trim()).not.toBe("")
+    }
+  })
+
+  it("ships reusable speaking frames and model answers for the core questions", () => {
+    const prep = getInterviewTopic("weather").prep!
+    const modelQuestions = prep.sampleQuestions.filter((question) => question.answerKo)
+
+    expect(prep.answerFrames?.length).toBeGreaterThanOrEqual(5)
+    expect(modelQuestions.length).toBeGreaterThanOrEqual(10)
+    for (const question of modelQuestions) {
+      expect(question.answerEn?.trim()).not.toBe("")
+      expect(question.keywords?.length).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it("cites authoritative weather, health, Cambodia-climate, and Korean-language references", () => {
+    const sources = getInterviewTopic("weather").prep!.sources ?? []
+    const publishers = sources.map((source) => source.publisher).join(" ")
+
+    expect(publishers).toContain("질병관리청")
+    expect(publishers).toContain("기상청")
+    expect(publishers).toContain("World Bank")
+    expect(publishers).toContain("국립국어원")
+  })
 })
 
 describe("weather topic script outline", () => {

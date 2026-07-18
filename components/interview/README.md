@@ -70,6 +70,7 @@ Write and edit this in `/interview/script` — it autosaves locally and syncs to
 ## Using the app to practice
 
 - **Mock Interview** (`/interview` → Start Interview) — an AI examiner asks one question at a time; answer by voice or typed text and get feedback after each turn. Finish a session to get a scorecard against the four exam criteria; scores build a trend over time.
+- **Repeat Drill** (`/interview/repeat`) — Duolingo-style listen & repeat: the app speaks a sentence from your script (or a key phrase), the mic opens, you say it back, and missed words are marked word by word (`lib/repeat-drill.ts`, graded locally — no AI call).
 - **Write my script** (`/interview/script`) — the Google-Docs-style editor for the 7-section script and Q&A prep, described above.
 - **Study Pack** — vocabulary, key phrases, and likely questions for the weather topic, each with TTS playback.
 - **Speaking Strategy card** — the rules, safety sentences, and training plan above, always available as a quick reference during a live session.

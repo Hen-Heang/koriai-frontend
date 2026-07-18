@@ -5,6 +5,7 @@ import { Loader2, Turtle, Volume2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { getCachedAudioUrl } from "@/components/ui/SpeakButton"
+import { registerSpeechAudio } from "@/lib/speech-audio"
 import { cn } from "@/lib/utils"
 
 /**
@@ -19,6 +20,7 @@ export function QuestionAudioBar({
   maxPlays,
   playsUsed,
   onPlayed,
+  onPlaybackEnded,
   autoPlayOnMount = false,
 }: {
   text: string
@@ -28,11 +30,14 @@ export function QuestionAudioBar({
   playsUsed: number
   /** Fired after a play actually starts (counts toward maxPlays). */
   onPlayed: () => void
+  /** Fired only when the question finishes naturally, not when mic capture stops it. */
+  onPlaybackEnded?: () => void
   autoPlayOnMount?: boolean
 }) {
   const [loading, setLoading] = useState(false)
   const [playing, setPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const stopAudioRef = useRef<(() => void) | null>(null)
 
   const playsLeft = maxPlays === null ? null : Math.max(0, maxPlays - playsUsed)
   const exhausted = playsLeft !== null && playsLeft <= 0
@@ -42,18 +47,25 @@ export function QuestionAudioBar({
     setLoading(true)
     try {
       const url = await getCachedAudioUrl(text)
-      audioRef.current?.pause()
+      stopAudioRef.current?.()
       const audio = new Audio(url)
       audio.playbackRate = rate
       audioRef.current = audio
-      audio.addEventListener("ended", () => setPlaying(false), { once: true })
-      audio.addEventListener("error", () => setPlaying(false), { once: true })
+      stopAudioRef.current = registerSpeechAudio(audio, () => {
+        setPlaying(false)
+        if (audio.ended) onPlaybackEnded?.()
+        if (audioRef.current === audio) {
+          audioRef.current = null
+          stopAudioRef.current = null
+        }
+      })
       await audio.play()
       // play() resolved — the listen actually started, so it counts.
       setPlaying(true)
       onPlayed()
     } catch {
       // TTS failed or autoplay blocked — nothing consumed, button stays usable.
+      stopAudioRef.current?.()
     } finally {
       setLoading(false)
     }
@@ -66,9 +78,9 @@ export function QuestionAudioBar({
   useEffect(() => {
     if (autoPlayOnMount) void play(1)
     return () => {
-      audioRef.current?.pause()
+      stopAudioRef.current?.()
+      stopAudioRef.current = null
       audioRef.current = null
-      setPlaying(false)
     }
     // play is recreated per render; running on text change is the intent.
     // eslint-disable-next-line react-hooks/exhaustive-deps

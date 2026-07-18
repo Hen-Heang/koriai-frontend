@@ -25,8 +25,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Hengo — Goals, Tasks & Learning",
-  description: "Set goals, track your to-dos, and learn — your personal AI companion for daily growth.",
+  title: {
+    default: "Hengo — Korean for Developers",
+    template: "%s · Hengo",
+  },
+  description:
+    "Practice workplace Korean, prepare for interviews, and build consistent learning habits with an AI coach made for developers.",
   manifest: "/site.webmanifest",
   icons: {
     icon: [

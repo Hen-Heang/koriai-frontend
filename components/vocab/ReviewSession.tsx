@@ -29,6 +29,7 @@ import { isCorrectTerm, shuffle } from "@/lib/vocab-review"
 import { loadBestStreak, submitBestStreak } from "@/lib/vocab-best-streak-store"
 import type { SentenceChallengeResponse, SentenceCheckResponse, VocabItem } from "@/lib/types"
 import { getCachedAudioUrl, SpeakButton } from "@/components/ui/SpeakButton"
+import { BorderBeam } from "@/components/ui/border-beam"
 import { toast } from "sonner"
 
 function getChoices(correct: VocabItem, pool: VocabItem[]): VocabItem[] {
@@ -1161,7 +1162,20 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
     // unexplained different numbers on the same page.
     const hasMoreQueued = selectedCategories.size === 0 && dueCount > filteredDueToday.length
     return (
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:bg-slate-900/40">
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-3xl border bg-card shadow-sm dark:bg-slate-900/50",
+          isDueSession ? "border-emerald-500/25" : "border-border/70"
+        )}
+      >
+        {isDueSession ? (
+          <BorderBeam
+            size={72}
+            duration={7}
+            colorFrom="#10b981"
+            colorTo="#3b82f6"
+          />
+        ) : null}
         <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
           {/* Identity */}
           <div className="flex min-w-0 items-center gap-4">
@@ -1169,8 +1183,9 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
               <BrainCircuit size={28} strokeWidth={2.5} />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-bold tracking-tight text-foreground">Memory Lab</h2>
-              <p className="truncate text-sm font-medium text-muted-foreground">
+              <p className="app-kicker">Today&apos;s review</p>
+              <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">Memory Lab</h2>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">
                 {isDueSession
                   ? hasMoreQueued
                     ? `${filteredDueToday.length} of ${dueCount} due — next batch ready`
@@ -1183,26 +1198,32 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
           </div>
 
           {/* Stats + launch */}
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-accent/5 px-4 py-2">
+          <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-background/65 px-4 py-2.5">
               <div className="text-center">
-                <p className="text-lg font-bold leading-none tabular-nums text-emerald-600">{filteredDueToday.length}</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{hasMoreQueued ? "In batch" : "Due"}</p>
+                <p className="font-mono text-lg font-semibold leading-none text-emerald-600">{filteredDueToday.length}</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{hasMoreQueued ? "In batch" : "Due"}</p>
               </div>
               <div className="h-7 w-px bg-border/60" />
               <div className="text-center">
-                <p className="text-lg font-bold leading-none tabular-nums text-foreground">{filteredAllWords.length}</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total</p>
+                <p className="font-mono text-lg font-semibold leading-none text-foreground">{filteredAllWords.length}</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Saved</p>
               </div>
             </div>
             <button
               type="button"
               disabled={loading || deckSize === 0}
               onClick={() => setIsOpen(true)}
-              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 text-sm font-bold uppercase tracking-wide text-white shadow-xl shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-95 disabled:opacity-40 sm:flex-none sm:px-6"
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-40 sm:px-6"
             >
               <Sparkles size={18} strokeWidth={2.5} />
-              {loading ? "Loading..." : deckSize === 0 ? "No words yet" : "Start Review"}
+              {loading
+                ? "Loading…"
+                : deckSize === 0
+                  ? "No words yet"
+                  : isDueSession
+                    ? `Review ${filteredDueToday.length}`
+                    : "Practice"}
             </button>
           </div>
         </div>

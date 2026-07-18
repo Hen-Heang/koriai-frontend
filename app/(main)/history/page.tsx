@@ -669,7 +669,7 @@ export default function HistoryPage() {
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-10 text-center sm:rounded-3xl sm:py-12">
                   <ScrollText size={36} className="text-muted-foreground/60" strokeWidth={1.5} />
                   <p className="text-sm font-bold text-muted-foreground">No corrections yet</p>
-                  <p className="text-xs text-muted-foreground">Go to AI Coach and ask it to correct your Korean — it'll show up here.</p>
+                  <p className="text-xs text-muted-foreground">Go to AI Coach and ask it to correct your Korean — it&apos;ll show up here.</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-[1.5rem] border border-border bg-card px-4 py-8 text-center sm:rounded-3xl">

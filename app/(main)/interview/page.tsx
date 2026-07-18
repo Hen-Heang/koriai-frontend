@@ -30,11 +30,13 @@ import { StudyPack } from "@/components/interview/StudyPack"
 import { StudyPlanCard } from "@/components/interview/StudyPlanCard"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Badge } from "@/components/ui/badge"
+import { BorderBeam } from "@/components/ui/border-beam"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useScrollToTopOnChange } from "@/hooks/useScrollToTopOnChange"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { chatApi, getApiErrorMessage, interviewApi, ttsApi } from "@/lib/api"
 import type { TranscriptEntry } from "@/lib/api/interview"
@@ -59,6 +61,7 @@ import {
   toScorecardRecord,
   type ScorecardRecord,
 } from "@/lib/interview-history"
+import { registerSpeechAudio, stopSpeechAudio } from "@/lib/speech-audio"
 import { cn } from "@/lib/utils"
 
 type SessionEntry =
@@ -83,24 +86,32 @@ const itemVariants = {
 
 // Auto-play the examiner question. iOS Safari may block playback that isn't a
 // direct tap — failures are swallowed and the candidate uses the speaker button.
-async function autoSpeak(text: string) {
-  if (!text) return
+// Resolves true only once playback finished, so callers can chain the
+// hands-free mic without ever capturing the examiner's own voice.
+async function autoSpeak(text: string): Promise<boolean> {
+  if (!text) return false
   let url: string | undefined
+  let stopAudio: (() => void) | undefined
   try {
     url = await ttsApi.speak(text)
     const audio = new Audio(url)
     // ttsApi.speak hands back an object URL — release it once playback ends or
     // errors, otherwise every spoken question leaks a blob for the whole session.
-    const release = () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-    audio.addEventListener("ended", release, { once: true })
-    audio.addEventListener("error", release, { once: true })
+    const done = new Promise<boolean>((resolve) => {
+      stopAudio = registerSpeechAudio(audio, () => {
+        if (url) URL.revokeObjectURL(url)
+        url = undefined
+        resolve(audio.ended)
+      })
+    })
     await audio.play()
+    return await done
   } catch {
     // Autoplay blocked or TTS unavailable — manual playback still works.
     // play() never started, so revoke the URL now rather than on an event.
+    stopAudio?.()
     if (url) URL.revokeObjectURL(url)
+    return false
   }
 }
 
@@ -126,10 +137,16 @@ export default function InterviewPage() {
   // Past scorecards — localStorage first (instant), merged with the Supabase
   // attempts once they arrive so history syncs across devices.
   const [history, setHistory] = useState<ScorecardRecord[]>(loadScorecards)
+  useScrollToTopOnChange(phase)
 
-  const speech = useSpeechRecognition({ lang: "ko-KR" })
+  // Continuous capture: the mic stays open across pauses (exam answers are
+  // 2–3 sentences) until the candidate stops it or submits.
+  const speech = useSpeechRecognition({ lang: "ko-KR", continuous: true })
   const conversationRef = useRef<string | null>(null)
   const sessionStartRef = useRef<number | null>(null)
+  // Guards the hands-free auto-listen: question audio can still be playing
+  // when the candidate ends the session, and the mic must not open then.
+  const sessionActiveRef = useRef(false)
 
   const topic = INTERVIEW_TOPICS[0]
   const cfg = INTERVIEW_MODES[mode]
@@ -148,6 +165,11 @@ export default function InterviewPage() {
     return () => {
       active = false
     }
+  }, [])
+
+  useEffect(() => () => {
+    sessionActiveRef.current = false
+    stopSpeechAudio()
   }, [])
 
   // Streams one examiner turn, then parses it into question + feedback and
@@ -183,7 +205,11 @@ export default function InterviewPage() {
       setQuestionCount((count) => count + 1)
       setStreamingText("")
       void logActivity()
-      void autoSpeak(turn.questionKo)
+      // Hands-free loop: once the examiner finishes speaking, open the mic so
+      // the candidate just answers — listen, speak, submit, repeat.
+      void autoSpeak(turn.questionKo).then((played) => {
+        if (played && sessionActiveRef.current) speech.start()
+      })
     } catch (err) {
       setError(getApiErrorMessage(err, "The examiner could not respond. Try again."))
       setStreamingText("")
@@ -209,6 +235,7 @@ export default function InterviewPage() {
       setAnalytics(null)
       setEndsAt(cfg.durationSeconds ? Date.now() + cfg.durationSeconds * 1000 : null)
       speech.reset()
+      sessionActiveRef.current = true
       setPhase("session")
       const unexpected = sampleUnexpectedQuestions(cfg.unexpectedQuestionCount)
       await runExaminerTurn(buildInterviewSystemPrompt(topic, cfg, unexpected))
@@ -220,7 +247,7 @@ export default function InterviewPage() {
   }
 
   function submitAnswer() {
-    const answer = speech.transcript.trim()
+    const answer = (speech.status === "listening" ? speech.stop() : speech.transcript).trim()
     if (!answer || isExaminerThinking) return
 
     setEntries((prev) => [
@@ -243,6 +270,7 @@ export default function InterviewPage() {
 
     setError("")
     setIsEvaluating(true)
+    sessionActiveRef.current = false
     speech.stop()
 
     const transcript: TranscriptEntry[] = entries.map((entry) =>
@@ -320,11 +348,17 @@ export default function InterviewPage() {
       setEndsAt(null)
       setPhase("summary")
       void logActivity()
+    } else {
+      // Evaluation failed on both paths — the session stays live, so re-arm
+      // the hands-free mic guard.
+      sessionActiveRef.current = true
     }
     setIsEvaluating(false)
   }
 
   function endSession() {
+    sessionActiveRef.current = false
+    stopSpeechAudio()
     speech.reset()
     conversationRef.current = null
     sessionStartRef.current = null
@@ -643,35 +677,54 @@ export default function InterviewPage() {
           </CardHeader>
           <CardContent className="space-y-5 pt-5 sm:pt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <Button
-                onClick={() => (recording ? speech.stop() : speech.start())}
-                disabled={isExaminerThinking}
-                className={cn(
-                  "h-12 w-full rounded-2xl px-6 text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
-                  recording
-                    ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
-                    : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
-                )}
-              >
+              <div className="relative w-full rounded-2xl sm:w-fit">
                 {recording ? (
-                  <>
-                    <Waves size={20} className="mr-2 animate-pulse" /> Stop
-                  </>
-                ) : (
-                  <>
-                    <Mic size={20} className="mr-2" /> Record Answer
-                  </>
-                )}
-              </Button>
+                  <BorderBeam
+                    size={64}
+                    duration={1.8}
+                    colorFrom="#fb7185"
+                    colorTo="#fbbf24"
+                    borderWidth={2}
+                  />
+                ) : null}
+                <Button
+                  onClick={() => (recording ? speech.stop() : speech.start())}
+                  disabled={isExaminerThinking}
+                  aria-pressed={recording}
+                  className={cn(
+                    "h-12 w-full rounded-2xl px-6 text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 sm:h-14 sm:w-auto sm:px-8 sm:text-base",
+                    recording
+                      ? "bg-rose-600 text-white shadow-rose-600/20 hover:bg-rose-700"
+                      : "bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700"
+                  )}
+                >
+                  {recording ? (
+                    <>
+                      <Waves size={20} className="mr-2 animate-pulse" /> Stop
+                    </>
+                  ) : (
+                    <>
+                      <Mic size={20} className="mr-2" /> Record Answer
+                    </>
+                  )}
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 onClick={() => setIsEditingAnswer((v) => !v)}
+                disabled={recording || isExaminerThinking}
                 className="h-12 w-full rounded-2xl border-border bg-background px-6 font-bold hover:bg-accent active:scale-95 sm:h-14 sm:w-auto"
               >
                 <PencilLine size={18} className="mr-2" />
                 {isEditingAnswer ? "Done" : "Manual Edit"}
               </Button>
             </div>
+
+            <p role="status" aria-live="polite" className="text-xs font-medium text-muted-foreground">
+              {recording
+                ? "Listening now — pauses are okay. Tap Stop when your answer is complete."
+                : "The microphone opens after the examiner finishes speaking; you can also start it manually."}
+            </p>
 
             {/* Transcript */}
             <div className="rounded-[1.5rem] border border-border bg-background p-4 shadow-sm sm:rounded-3xl sm:p-5">
@@ -691,7 +744,9 @@ export default function InterviewPage() {
                 </p>
               ) : (
                 <p className="mt-3 py-6 text-center text-sm font-medium italic text-muted-foreground">
-                  Your spoken answer will appear here.
+                  {recording
+                    ? "Listening… speak your answer in Korean."
+                    : "Your spoken answer will appear here."}
                 </p>
               )}
             </div>

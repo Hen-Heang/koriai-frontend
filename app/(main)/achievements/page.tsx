@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { LucideIcon } from "lucide-react"
 import {
   Blocks,
@@ -21,10 +21,14 @@ import { CardGrid } from "@/components/ui/card-grid"
 import { TipCard } from "@/components/app/tip-card"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar"
+import { BlurFade } from "@/components/ui/blur-fade"
+import { BorderBeam } from "@/components/ui/border-beam"
+import { Confetti, type ConfettiRef } from "@/components/ui/confetti"
 import { achievementsApi, getApiErrorMessage } from "@/lib/api"
 import { staggerContainer, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
-import type { AchievementSummary } from "@/lib/types"
+import type { Achievement, AchievementSummary } from "@/lib/types"
 
 const containerVariants = staggerContainer(0.06)
 
@@ -39,6 +43,46 @@ const ICONS: Record<string, LucideIcon> = {
   Trophy,
   CheckCheck,
   Blocks,
+}
+
+const CELEBRATION_KEY = "hengo:last-celebrated-achievement"
+
+function AchievementCelebration({ achievement }: { achievement: Achievement | null }) {
+  const confettiRef = useRef<ConfettiRef>(null)
+  const achievementKey = achievement
+    ? `${achievement.code}:${achievement.unlockedAt ?? "unlocked"}`
+    : null
+
+  useEffect(() => {
+    if (!achievementKey) return
+
+    try {
+      if (window.localStorage.getItem(CELEBRATION_KEY) === achievementKey) return
+      window.localStorage.setItem(CELEBRATION_KEY, achievementKey)
+    } catch {
+      // Celebration is optional when storage is unavailable.
+    }
+
+    const timer = window.setTimeout(() => {
+      confettiRef.current?.fire({
+        particleCount: 70,
+        spread: 72,
+        startVelocity: 34,
+        origin: { x: 0.5, y: 0.22 },
+        colors: ["#10b981", "#14b8a6", "#3b82f6", "#f59e0b"],
+      })
+    }, 280)
+
+    return () => window.clearTimeout(timer)
+  }, [achievementKey])
+
+  return (
+    <Confetti
+      ref={confettiRef}
+      manualstart
+      className="pointer-events-none fixed inset-0 z-50 size-full"
+    />
+  )
 }
 
 export default function AchievementsPage() {
@@ -69,6 +113,15 @@ export default function AchievementsPage() {
     level && level.xpForNextLevel && level.xpForNextLevel > 0
       ? Math.min(100, Math.round((level.xpIntoLevel / level.xpForNextLevel) * 100))
       : 100
+  const newestUnlocked =
+    summary?.achievements.reduce<Achievement | null>((latest, achievement) => {
+      if (!achievement.unlocked) return latest
+      if (!latest) return achievement
+
+      const latestAt = new Date(latest.unlockedAt ?? 0).getTime()
+      const achievementAt = new Date(achievement.unlockedAt ?? 0).getTime()
+      return achievementAt > latestAt ? achievement : latest
+    }, null) ?? null
 
   return (
     <motion.div
@@ -77,6 +130,8 @@ export default function AchievementsPage() {
       variants={containerVariants}
       className="space-y-8 pb-12"
     >
+      <AchievementCelebration achievement={newestUnlocked} />
+
       <motion.div variants={itemVariants}>
         <PageHero
           eyebrow="Achievements"
@@ -123,12 +178,13 @@ export default function AchievementsPage() {
                   <h3 className="text-lg font-extrabold text-foreground">{level?.name}</h3>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-foreground">{level?.totalXp}</p>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Total XP
-                </p>
-              </div>
+              <AnimatedCircularProgressBar
+                value={nextPct}
+                gaugePrimaryColor="var(--primary)"
+                gaugeSecondaryColor="var(--muted)"
+                label="Progress toward the next level"
+                className="size-20 shrink-0 font-mono text-sm"
+              />
             </div>
 
             <div className="mt-5">
@@ -149,57 +205,71 @@ export default function AchievementsPage() {
           {/* Badge grid */}
           <motion.div variants={itemVariants}>
           <CardGrid minCardWidth={220}>
-            {summary.achievements.map((a) => {
+            {summary.achievements.map((a, index) => {
               const Icon = ICONS[a.icon] ?? Trophy
               return (
-                <div
+                <BlurFade
                   key={a.code}
-                  className={cn(
-                    "relative overflow-hidden rounded-2xl border p-5 transition-all",
-                    a.unlocked
-                      ? "border-emerald-500/30 bg-emerald-500/5 shadow-sm"
-                      : "border-border bg-card/40 dark:bg-slate-900/20"
-                  )}
+                  inView
+                  delay={Math.min(index * 0.035, 0.25)}
+                  className="h-full"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div
-                      className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-2xl",
-                        a.unlocked
-                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                          : "bg-muted text-muted-foreground/50"
-                      )}
-                    >
-                      {a.unlocked ? (
-                        <Icon size={22} strokeWidth={2.5} />
-                      ) : (
-                        <Lock size={20} strokeWidth={2.5} />
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em]",
-                        a.unlocked
-                          ? "bg-emerald-600 text-white"
-                          : "bg-muted text-muted-foreground/70"
-                      )}
-                    >
-                      +{a.xp} XP
-                    </span>
-                  </div>
-                  <h4
+                  <div
                     className={cn(
-                      "mt-4 text-base font-bold",
-                      a.unlocked ? "text-foreground" : "text-muted-foreground"
+                      "relative h-full overflow-hidden rounded-2xl border p-5 transition-all",
+                      a.unlocked
+                        ? "border-emerald-500/30 bg-emerald-500/5 shadow-sm"
+                        : "border-border bg-card/40 dark:bg-slate-900/20"
                     )}
                   >
-                    {a.title}
-                  </h4>
-                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{a.description}</p>
-                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                    {a.category}
-                  </p>
-                </div>
+                    {a.code === newestUnlocked?.code ? (
+                      <BorderBeam
+                        size={70}
+                        duration={7}
+                        colorFrom="#10b981"
+                        colorTo="#3b82f6"
+                      />
+                    ) : null}
+                    <div className="flex items-start justify-between gap-3">
+                      <div
+                        className={cn(
+                          "flex h-12 w-12 items-center justify-center rounded-2xl",
+                          a.unlocked
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                            : "bg-muted text-muted-foreground/50"
+                        )}
+                      >
+                        {a.unlocked ? (
+                          <Icon size={22} strokeWidth={2.5} />
+                        ) : (
+                          <Lock size={20} strokeWidth={2.5} />
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em]",
+                          a.unlocked
+                            ? "bg-emerald-600 text-white"
+                            : "bg-muted text-muted-foreground/70"
+                        )}
+                      >
+                        +{a.xp} XP
+                      </span>
+                    </div>
+                    <h4
+                      className={cn(
+                        "mt-4 text-base font-bold",
+                        a.unlocked ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      {a.title}
+                    </h4>
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground">{a.description}</p>
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      {a.category}
+                    </p>
+                  </div>
+                </BlurFade>
               )
             })}
           </CardGrid>

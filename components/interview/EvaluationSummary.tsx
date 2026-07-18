@@ -1,13 +1,17 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import dynamic from "next/dynamic"
 import { Award, CheckCircle2, GraduationCap, Lightbulb, RotateCcw } from "lucide-react"
 import { motion } from "motion/react"
 
 import { PageHero } from "@/components/app/page-hero"
 import { AnalyticsCard } from "@/components/interview/AnalyticsCard"
+import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar"
+import { BlurFade } from "@/components/ui/blur-fade"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Confetti, type ConfettiRef } from "@/components/ui/confetti"
 import type { InterviewAnalytics, InterviewEvaluation } from "@/lib/interview"
 import type { InterviewModeConfig } from "@/lib/interview-modes"
 import type { ScorecardRecord } from "@/lib/interview-history"
@@ -27,6 +31,32 @@ const itemVariants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 } as const
+
+function CompletionCelebration() {
+  const confettiRef = useRef<ConfettiRef>(null)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      confettiRef.current?.fire({
+        particleCount: 55,
+        spread: 64,
+        startVelocity: 30,
+        origin: { x: 0.5, y: 0.2 },
+        colors: ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"],
+      })
+    }, 220)
+
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  return (
+    <Confetti
+      ref={confettiRef}
+      manualstart
+      className="pointer-events-none fixed inset-0 z-50 size-full"
+    />
+  )
+}
 
 // End-of-session scorecard: the four exam criteria as scored bars, an overall
 // summary, deeper transcript analytics when available, and concrete next-step
@@ -59,6 +89,8 @@ export function EvaluationSummary({
       variants={containerVariants}
       className="space-y-5 pb-12 sm:space-y-6"
     >
+      <CompletionCelebration />
+
       <motion.div variants={itemVariants}>
         <PageHero
           eyebrow={`Mock Interview · ${mode.label} · Result`}
@@ -69,6 +101,18 @@ export function EvaluationSummary({
             { label: "Mode", value: mode.label },
             { label: "Criteria", value: String(scores.length || 4) },
           ]}
+          actions={
+            overall > 0 ? (
+              <AnimatedCircularProgressBar
+                value={overall}
+                max={5}
+                gaugePrimaryColor="var(--primary)"
+                gaugeSecondaryColor="var(--muted)"
+                label="Overall interview score"
+                className="size-20 shrink-0 bg-background/40 font-mono text-sm"
+              />
+            ) : null
+          }
         />
       </motion.div>
 
@@ -160,15 +204,18 @@ export function EvaluationSummary({
             </CardHeader>
             <CardContent className="space-y-2.5 pt-5">
               {advice.map((tip, i) => (
-                <div
+                <BlurFade
                   key={i}
-                  className="flex items-start gap-3 rounded-2xl border border-border bg-accent/5 p-4"
+                  delay={i * 0.06}
+                  inView
                 >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm font-medium leading-relaxed text-foreground/90">{tip}</p>
-                </div>
+                  <div className="flex items-start gap-3 rounded-2xl border border-border bg-accent/5 p-4">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm font-medium leading-relaxed text-foreground/90">{tip}</p>
+                  </div>
+                </BlurFade>
               ))}
             </CardContent>
           </Card>

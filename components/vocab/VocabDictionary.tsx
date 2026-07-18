@@ -5,6 +5,14 @@ import { ArrowDownUp, LayoutGrid, Layers3, List, Plus, SearchX } from "lucide-re
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { VocabDeck } from "@/components/vocab/VocabDeck"
 import { VocabStats } from "@/components/vocab/VocabStats"
@@ -40,6 +48,8 @@ type VocabDictionaryProps = {
   }) => Promise<unknown>
   /** Opens the Add Words dialog — shown as the CTA in the empty state. */
   onStartAdd?: () => void
+  /** Clears the page-owned search input from the no-results state. */
+  onClearSearch?: () => void
 }
 
 const itemVariants = {
@@ -113,6 +123,7 @@ export function VocabDictionary({
   onDelete,
   onAdd,
   onStartAdd,
+  onClearSearch,
 }: VocabDictionaryProps) {
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>("all")
   const [sortOrder, setSortOrder] = useState<SortOrder>("alpha")
@@ -125,92 +136,120 @@ export function VocabDictionary({
   )
   const decks = useMemo(() => groupByCategory(filtered), [filtered])
 
-  // Per-bucket counts so the filter chips can advertise how many words match.
-  const filterCount = (value: MasteryFilter) =>
-    value === "all" ? words.length : words.filter((w) => matchesMastery(w.mastery, value)).length
+  // Per-bucket counts so the filter chips advertise the result before selection.
+  const filterCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        MASTERY_FILTERS.map(({ value }) => [
+          value,
+          value === "all"
+            ? words.length
+            : words.filter((word) => matchesMastery(word.mastery, value)).length,
+        ])
+      ) as Record<MasteryFilter, number>,
+    [words]
+  )
+
+  function clearFilters() {
+    setMasteryFilter("all")
+    onClearSearch?.()
+  }
 
   return (
-    <div id="vocab-dictionary" className="scroll-mt-20 space-y-6">
-      <div className="px-4">
-        <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Your Dictionary</h4>
-        <p className="mt-1 text-xs font-bold text-muted-foreground">
-          {isFiltering ? `${filtered.length} of ${words.length} items` : `${words.length} items collected`}
-        </p>
-      </div>
-
+    <div id="vocab-dictionary" className="scroll-mt-20 space-y-5">
       <VocabStats words={words} dueCount={dueCount} />
 
       {words.length > 0 && (
-        <div className="space-y-3">
-          {/* Mastery filter chips + sort — search lives at the top of the page */}
-          <div className="flex flex-wrap items-center gap-1.5">
+        <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm dark:bg-slate-900/50 sm:p-4">
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 px-1">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Browse decks</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground" aria-live="polite">
+                {isFiltering
+                  ? `Showing ${filtered.length} of ${words.length} words`
+                  : `${words.length} words across ${decks.length} decks`}
+              </p>
+            </div>
+            {isFiltering ? (
+              <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            ) : null}
+          </div>
+
+          {/* Mastery filters, sort, and layout stay together as one toolbar. */}
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Vocabulary view controls">
             {MASTERY_FILTERS.map(({ value, label }) => (
-              <button
+              <Button
                 key={value}
                 type="button"
                 onClick={() => setMasteryFilter(value)}
+                variant={masteryFilter === value ? "secondary" : "outline"}
+                size="sm"
+                aria-pressed={masteryFilter === value}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-95",
+                  "rounded-xl px-3 text-xs",
                   masteryFilter === value
-                    ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground dark:bg-slate-900/40"
+                    ? "bg-primary/10 text-primary hover:bg-primary/15"
+                    : "text-muted-foreground"
                 )}
               >
                 {label}
-                <span className={cn(
-                  "tabular-nums",
-                  masteryFilter === value ? "text-blue-600/70 dark:text-blue-400/70" : "text-muted-foreground"
-                )}>
-                  {filterCount(value)}
+                <span className="font-mono text-[10px] opacity-65">
+                  {filterCounts[value]}
                 </span>
-              </button>
+              </Button>
             ))}
 
-            <label className="relative ml-auto flex items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground dark:bg-slate-900/40">
-              <ArrowDownUp size={12} strokeWidth={3} className="shrink-0" />
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                aria-label="Sort words"
-                className="cursor-pointer appearance-none bg-transparent py-1.5 pr-1 text-xs font-bold uppercase tracking-wide text-foreground focus:outline-none"
-              >
+            <div className="ml-auto min-w-36 flex-1 sm:max-w-48">
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortOrder)}>
+                <SelectTrigger aria-label="Sort vocabulary words" className="h-9 rounded-xl bg-background shadow-none">
+                  <ArrowDownUp className="text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                 {SORT_ORDERS.map(({ value, label }) => (
-                  <option key={value} value={value} className="font-bold normal-case tracking-normal text-foreground">
+                  <SelectItem key={value} value={value}>
                     {label}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </label>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <div className="flex items-center gap-0.5 rounded-full border border-border bg-card p-0.5 dark:bg-slate-900/40">
-              <button
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1" role="group" aria-label="Deck layout">
+              <Button
                 type="button"
                 onClick={() => setViewMode("list")}
                 aria-label="List view"
                 aria-pressed={viewMode === "list"}
+                variant="ghost"
+                size="icon-lg"
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+                  "rounded-lg",
                   viewMode === "list"
-                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                    : "text-muted-foreground/40 hover:text-foreground"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 <List size={14} strokeWidth={2.5} />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setViewMode("grid")}
                 aria-label="Grid view"
                 aria-pressed={viewMode === "grid"}
+                variant="ghost"
+                size="icon-lg"
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+                  "rounded-lg",
                   viewMode === "grid"
-                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                    : "text-muted-foreground/40 hover:text-foreground"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 <LayoutGrid size={14} strokeWidth={2.5} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -221,7 +260,7 @@ export function VocabDictionary({
       <div
         className={cn(
           viewMode === "grid"
-            ? "grid grid-cols-2 items-stretch gap-3 lg:grid-cols-3"
+            ? "grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-3"
             : "space-y-3"
         )}
       >
@@ -250,9 +289,13 @@ export function VocabDictionary({
       {!loading && words.length > 0 && !filtered.length ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-accent/5 p-10 text-center">
           <SearchX size={32} strokeWidth={1.5} className="mb-4 text-muted-foreground/60" />
-          <p className="text-sm font-bold text-muted-foreground">
-            No words match your search.
+          <h3 className="text-base font-semibold text-foreground">No matching words</h3>
+          <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">
+            Try a different spelling, deck, tag, or mastery level.
           </p>
+          <Button type="button" variant="outline" onClick={clearFilters} className="mt-4">
+            Reset search and filters
+          </Button>
         </div>
       ) : null}
 
@@ -266,14 +309,15 @@ export function VocabDictionary({
             Save words from chat sessions or use the AI Deck Builder to start mastering Korean vocabulary.
           </p>
           {onStartAdd && (
-            <button
+            <Button
               type="button"
               onClick={onStartAdd}
-              className="mt-6 flex h-12 items-center gap-2 rounded-2xl bg-blue-600 px-6 text-sm font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-95"
+              size="lg"
+              className="mt-6"
             >
               <Plus size={18} strokeWidth={2.5} />
               Add your first words
-            </button>
+            </Button>
           )}
         </div>
       ) : null}

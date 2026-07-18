@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { ArrowRight, Map } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -25,7 +25,7 @@ function getCurrentPhase(completed: Set<string>): { num: number; title: string; 
 
   const entries = Object.entries(PHASE_TOPIC_RANGES)
   for (let i = 0; i < entries.length; i++) {
-    const [phaseId, info] = entries[i]
+    const [, info] = entries[i]
     // Count topics for this phase by checking IDs p{n}-t{n}
     const phaseNum = i + 1
     const ids = Array.from({ length: info.count }, (_, j) => `p${phaseNum}-t${j + 1}`)
@@ -48,19 +48,25 @@ function getCurrentPhase(completed: Set<string>): { num: number; title: string; 
 }
 
 export function RoadmapTeaser({ className }: { className?: string }) {
-  const [data, setData] = useState<{ num: number; title: string; phasePct: number; overallPct: number } | null>(null)
+  const storedProgress = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("storage", callback)
+      return () => window.removeEventListener("storage", callback)
+    },
+    () => window.localStorage.getItem(STORAGE_KEY) ?? "",
+    () => ""
+  )
 
-  useEffect(() => {
+  const data = useMemo(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      const completed: Set<string> = raw ? new Set(JSON.parse(raw) as string[]) : new Set()
-      setData(getCurrentPhase(completed))
+      const completed: Set<string> = storedProgress
+        ? new Set(JSON.parse(storedProgress) as string[])
+        : new Set()
+      return getCurrentPhase(completed)
     } catch {
-      setData({ num: 1, title: "Java Foundations", phasePct: 0, overallPct: 0 })
+      return { num: 1, title: "Java Foundations", phasePct: 0, overallPct: 0 }
     }
-  }, [])
-
-  if (!data) return null
+  }, [storedProgress])
 
   return (
     <Link

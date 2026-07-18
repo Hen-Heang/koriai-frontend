@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import Link from "next/link"
 import { ArrowRight, BookOpen, MessageCircle, Settings, X } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 
 const DISMISSED_KEY = "hengo_first_run_dismissed"
+const DISMISSED_EVENT = "hengo:first-run-dismissed"
 
 const STEPS = [
   {
@@ -40,22 +41,27 @@ const STEPS = [
 ]
 
 export function FirstRunBanner() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const dismissed = window.localStorage.getItem(DISMISSED_KEY)
-    if (!dismissed) setVisible(true)
-  }, [])
+  const dismissed = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("storage", callback)
+      window.addEventListener(DISMISSED_EVENT, callback)
+      return () => {
+        window.removeEventListener("storage", callback)
+        window.removeEventListener(DISMISSED_EVENT, callback)
+      }
+    },
+    () => window.localStorage.getItem(DISMISSED_KEY) === "1",
+    () => true
+  )
 
   function dismiss() {
     window.localStorage.setItem(DISMISSED_KEY, "1")
-    setVisible(false)
+    window.dispatchEvent(new Event(DISMISSED_EVENT))
   }
 
   return (
     <AnimatePresence>
-      {visible && (
+      {!dismissed && (
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +124,7 @@ export function FirstRunBanner() {
             onClick={dismiss}
             className="mt-4 text-xs font-bold text-muted-foreground hover:text-muted-foreground transition-colors"
           >
-            I already know what I'm doing — dismiss
+            I already know what I&apos;m doing — dismiss
           </button>
         </motion.div>
       )}

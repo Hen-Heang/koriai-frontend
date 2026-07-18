@@ -1,10 +1,16 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+
+import { SPEECH_AUDIO_START_EVENT, stopSpeechAudio } from "@/lib/speech-audio"
 
 // Minimal typing for the browser Web Speech API (no DOM lib types ship for it).
 type BrowserRecognitionErrorEvent = {
   error?: string
+}
+
+type BrowserRecognitionResult = ArrayLike<{ transcript: string }> & {
+  isFinal: boolean
 }
 
 type BrowserRecognition = {
@@ -14,7 +20,7 @@ type BrowserRecognition = {
   onstart: (() => void) | null
   onresult:
     | ((event: {
-        results: ArrayLike<ArrayLike<{ transcript: string }>>
+        results: ArrayLike<BrowserRecognitionResult>
         resultIndex: number
       }) => void)
     | null
@@ -22,6 +28,7 @@ type BrowserRecognition = {
   onerror: ((event: BrowserRecognitionErrorEvent) => void) | null
   start: () => void
   stop: () => void
+  abort?: () => void
 }
 
 declare global {
@@ -35,23 +42,57 @@ export type RecognitionStatus = "idle" | "listening" | "finished"
 
 type UseSpeechRecognitionOptions = {
   lang?: string
-  /** Called with the final transcript when a capture completes. */
+  /**
+   * Keep the mic open across pauses until stop()/reset() is called, restarting
+   * the engine whenever the browser ends it on silence. Off (default) captures
+   * a single utterance and finishes at the first pause — the chat push-to-talk
+   * behavior. Turn it on for multi-sentence answers (interview, drills).
+   */
+  continuous?: boolean
+  /** Called with the captured transcript when a capture completes. */
   onResult?: (transcript: string) => void
+}
+
+function joinSpeech(...parts: string[]) {
+  return parts.filter(Boolean).join(" ").trim()
 }
 
 /**
  * Wraps the browser ko-KR speech recognition used across speaking-style
- * features. Returns the live transcript plus controls; falls back gracefully
- * to manual entry when the API is unavailable (e.g. Firefox, some webviews).
+ * features. Returns the live transcript (interim words appear as you speak)
+ * plus controls; falls back gracefully to manual entry when the API is
+ * unavailable (e.g. Firefox, some webviews).
  */
 export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) {
-  const { lang = "ko-KR", onResult } = options
+  const { lang = "ko-KR", continuous = false, onResult } = options
 
   const [status, setStatus] = useState<RecognitionStatus>("idle")
-  const [transcript, setTranscript] = useState("")
+  const [transcript, setTranscriptState] = useState("")
   const [error, setError] = useState("")
+  // Mirrors `transcript` so callbacks held across renders (e.g. start() fired
+  // after question audio ends) never seed a capture from a stale closure.
+  const transcriptRef = useRef("")
+  const setTranscript = useCallback((value: string) => {
+    transcriptRef.current = value
+    setTranscriptState(value)
+  }, [])
   const recognitionRef = useRef<BrowserRecognition | null>(null)
   const onResultRef = useRef(onResult)
+  // Text that existed before this capture started (earlier takes / manual edits).
+  const baseRef = useRef("")
+  // Finalized speech accumulated during the current capture.
+  const finalsRef = useRef("")
+  // Latest not-yet-final words — committed on end if the engine never
+  // finalizes them (happens when a capture is stopped mid-word).
+  const interimRef = useRef("")
+  // True once the user (or unmount) asked to stop — suppresses auto-restart.
+  const manualStopRef = useRef(true)
+  // reset()/unmount can race with the browser's last result event. Ignore late
+  // events so an old answer cannot leak into the next interview question.
+  const ignoreResultsRef = useRef(true)
+  // Prevent a fast double click from calling start() twice before onstart.
+  const startingRef = useRef(false)
+  const listeningRef = useRef(false)
 
   useEffect(() => {
     onResultRef.current = onResult
@@ -74,34 +115,86 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
 
     const recognition = new Recognition()
     recognition.lang = lang
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = continuous
+    recognition.interimResults = true
 
     recognition.onstart = () => {
+      startingRef.current = false
+      if (ignoreResultsRef.current) {
+        recognition.stop()
+        return
+      }
+      listeningRef.current = true
       setStatus("listening")
       setError("")
     }
 
     recognition.onresult = (event) => {
-      const result = event.results[event.resultIndex]
-      const spokenText = Array.from(result)
-        .map((item) => item.transcript)
-        .join(" ")
-        .trim()
+      if (ignoreResultsRef.current) return
 
-      setTranscript(spokenText)
-      setStatus("finished")
-      onResultRef.current?.(spokenText)
+      let interim = ""
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        const text = Array.from(result)
+          .map((item) => item.transcript)
+          .join(" ")
+          .trim()
+        if (!text) continue
+        if (result.isFinal) {
+          finalsRef.current = joinSpeech(finalsRef.current, text)
+        } else {
+          interim = joinSpeech(interim, text)
+        }
+      }
+      interimRef.current = interim
+      setTranscript(joinSpeech(baseRef.current, finalsRef.current, interim))
     }
 
     recognition.onend = () => {
-      setStatus((current) => (current === "listening" ? "idle" : current))
+      startingRef.current = false
+      listeningRef.current = false
+      if (ignoreResultsRef.current) return
+
+      // The browser ends recognition on its own after silence or engine
+      // hiccups. In continuous mode that isn't the user stopping — restart and
+      // keep listening until stop()/reset() is actually called.
+      if (continuous && !manualStopRef.current) {
+        // Words still pending as interim won't be re-delivered after a
+        // restart — commit them so nothing the user saw disappears.
+        finalsRef.current = joinSpeech(finalsRef.current, interimRef.current)
+        interimRef.current = ""
+        try {
+          startingRef.current = true
+          recognition.start()
+          return
+        } catch {
+          startingRef.current = false
+          // Engine refused the restart — fall through and finish the capture.
+        }
+      }
+
+      const captured = joinSpeech(finalsRef.current, interimRef.current)
+      finalsRef.current = captured
+      interimRef.current = ""
+      setTranscript(joinSpeech(baseRef.current, captured))
+      if (captured) {
+        setStatus("finished")
+        onResultRef.current?.(joinSpeech(baseRef.current, captured))
+      } else {
+        setStatus((current) => (current === "listening" ? "idle" : current))
+      }
     }
 
     recognition.onerror = (event) => {
-      setStatus("idle")
+      if (event.error === "aborted") {
+        return
+      }
 
-      if (event.error === "not-allowed") {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        manualStopRef.current = true
+        startingRef.current = false
+        listeningRef.current = false
+        setStatus("idle")
         setError(
           "Microphone permission is blocked. Allow microphone access in the browser and try again."
         )
@@ -109,24 +202,59 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       }
 
       if (event.error === "no-speech") {
+        // Continuous captures just keep waiting (onend restarts the engine);
+        // only a single-shot capture treats silence as a failed take.
+        if (continuous) return
+        setStatus("idle")
         setError(
           "No speech was detected. Try holding the phone closer and speaking once clearly."
         )
         return
       }
 
-      setError(
-        "Speech capture failed. You can still type or edit the transcript manually."
-      )
+      manualStopRef.current = true
+      startingRef.current = false
+      listeningRef.current = false
+      setStatus("idle")
+      setError(event.error === "audio-capture"
+        ? "No microphone was found. Connect or enable a microphone, then try again."
+        : "Speech capture failed. You can still type or edit the transcript manually.")
     }
 
     recognitionRef.current = recognition
 
+    const stopForPromptAudio = () => {
+      if (!listeningRef.current && !startingRef.current) return
+      manualStopRef.current = true
+      startingRef.current = false
+      listeningRef.current = false
+      try {
+        recognition.stop()
+      } catch {
+        // It may have ended between the event and this handler.
+      }
+    }
+    window.addEventListener(SPEECH_AUDIO_START_EVENT, stopForPromptAudio)
+
     return () => {
-      recognition.stop()
+      manualStopRef.current = true
+      ignoreResultsRef.current = true
+      startingRef.current = false
+      listeningRef.current = false
+      window.removeEventListener(SPEECH_AUDIO_START_EVENT, stopForPromptAudio)
+      recognition.onstart = null
+      recognition.onresult = null
+      recognition.onend = null
+      recognition.onerror = null
+      try {
+        if (recognition.abort) recognition.abort()
+        else recognition.stop()
+      } catch {
+        recognition.stop()
+      }
       recognitionRef.current = null
     }
-  }, [lang])
+  }, [lang, continuous, setTranscript])
 
   function start() {
     if (!recognitionRef.current) {
@@ -136,13 +264,31 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       return false
     }
 
+    if (startingRef.current || listeningRef.current || status === "listening") return false
+
     setError("")
-    setTranscript("")
+    // Do not let the examiner's TTS or a replay become the candidate answer.
+    stopSpeechAudio()
+    manualStopRef.current = false
+    ignoreResultsRef.current = false
+    startingRef.current = true
+    finalsRef.current = ""
+    interimRef.current = ""
+    // Continuous captures append to earlier takes/edits instead of wiping them,
+    // so tapping Record again continues the answer rather than restarting it.
+    if (continuous) {
+      baseRef.current = transcriptRef.current
+    } else {
+      baseRef.current = ""
+      setTranscript("")
+    }
 
     try {
       recognitionRef.current.start()
       return true
     } catch {
+      startingRef.current = false
+      manualStopRef.current = true
       setStatus("idle")
       setError("Could not start microphone capture. Wait a moment and try again.")
       return false
@@ -150,12 +296,38 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
   }
 
   function stop() {
-    recognitionRef.current?.stop()
-    setStatus("idle")
+    manualStopRef.current = true
+    startingRef.current = false
+    listeningRef.current = false
+    // Commit a synchronous snapshot so a Submit click immediately after Stop
+    // includes the final interim phrase instead of reading stale React state.
+    const captured = joinSpeech(finalsRef.current, interimRef.current)
+    const completeTranscript = joinSpeech(baseRef.current, captured)
+    setTranscript(completeTranscript)
+    setStatus(completeTranscript ? "finished" : "idle")
+    try {
+      recognitionRef.current?.stop()
+    } catch {
+      // The engine may already have stopped on a pause; the snapshot is safe.
+    }
+    return completeTranscript
   }
 
   function reset() {
-    recognitionRef.current?.stop()
+    manualStopRef.current = true
+    ignoreResultsRef.current = true
+    startingRef.current = false
+    listeningRef.current = false
+    try {
+      const recognition = recognitionRef.current
+      if (recognition?.abort) recognition.abort()
+      else recognition?.stop()
+    } catch {
+      recognitionRef.current?.stop()
+    }
+    baseRef.current = ""
+    finalsRef.current = ""
+    interimRef.current = ""
     setStatus("idle")
     setTranscript("")
     setError("")

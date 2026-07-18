@@ -7,8 +7,9 @@ import { itemVariants } from "@/lib/motion"
 export function ErrorBanner({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
+      role="alert"
       variants={itemVariants}
-      className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive"
+      className="rounded-xl border border-destructive/20 bg-destructive/7 px-4 py-3 text-sm font-semibold leading-6 text-destructive"
     >
       {children}
     </motion.div>

@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useScrollToTopOnChange } from "@/hooks/useScrollToTopOnChange"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { getApiErrorMessage, interviewApi } from "@/lib/api"
 import type { SpeakingCheckResponse } from "@/lib/api/interview"
@@ -38,6 +39,7 @@ import {
   type DrillQuestion,
   type SpeakingScores,
 } from "@/lib/interview-drills"
+import { registerSpeechAudio, stopSpeechAudio } from "@/lib/speech-audio"
 import { cn } from "@/lib/utils"
 
 const LAST_SESSION_KEY = "kori.drill.speaking.last"
@@ -66,13 +68,23 @@ function loadLastSession(): LastSession | null {
 
 // Auto-speak through the shared session cache (SpeakButton owns the URLs, so
 // nothing to revoke). Autoplay failures are silent — the SpeakButton remains.
-async function autoSpeak(text: string) {
-  if (!text) return
+// Resolves true only after playback finished, so the hands-free mic never
+// opens while the question audio is still playing.
+async function autoSpeak(text: string): Promise<boolean> {
+  if (!text) return false
+  let stopAudio: (() => void) | undefined
   try {
     const url = await getCachedAudioUrl(text)
-    await new Audio(url).play()
+    const audio = new Audio(url)
+    const done = new Promise<boolean>((resolve) => {
+      stopAudio = registerSpeechAudio(audio, () => resolve(audio.ended))
+    })
+    await audio.play()
+    return await done
   } catch {
     // Blocked autoplay or TTS down — manual playback still works.
+    stopAudio?.()
+    return false
   }
 }
 
@@ -88,14 +100,24 @@ export default function SpeakingDrillPage() {
   const [isScoring, setIsScoring] = useState(false)
   const [error, setError] = useState("")
   const [lastSession, setLastSession] = useState<LastSession | null>(null)
+  useScrollToTopOnChange(phase)
 
-  const speech = useSpeechRecognition({ lang: "ko-KR" })
+  // Continuous capture: the mic stays open across pauses (answers are 2–3
+  // sentences) until the candidate stops it or submits.
+  const speech = useSpeechRecognition({ lang: "ko-KR", continuous: true })
   // Mirrors `index` so the background AI splice never clobbers a shown question.
   const indexRef = useRef(0)
   indexRef.current = index
+  // Guards the hands-free auto-listen: question audio can outlive the drill
+  // (End drill mid-playback), and the mic must not open then.
+  const drillActiveRef = useRef(false)
 
   useEffect(() => {
     setLastSession(loadLastSession())
+    return () => {
+      drillActiveRef.current = false
+      stopSpeechAudio()
+    }
   }, [])
 
   const question = queue[index]
@@ -108,8 +130,11 @@ export default function SpeakingDrillPage() {
     setCurrent(null)
     setError("")
     speech.reset()
+    drillActiveRef.current = true
     setPhase("drill")
-    void autoSpeak(staticQueue[0]?.ko ?? "")
+    void autoSpeak(staticQueue[0]?.ko ?? "").then((played) => {
+      if (played && drillActiveRef.current) speech.start()
+    })
 
     // Fresh AI questions replace whatever hasn't been shown yet; failure is
     // silent — the static queue is a complete drill on its own.
@@ -135,11 +160,10 @@ export default function SpeakingDrillPage() {
   }
 
   async function submitAnswer() {
-    const answer = speech.transcript.trim()
+    const answer = (speech.status === "listening" ? speech.stop() : speech.transcript).trim()
     if (!answer || !question || isScoring) return
     setError("")
     setIsScoring(true)
-    speech.stop()
     try {
       const result = await interviewApi.speakingCheck({ question: question.ko, answer })
       setCurrent(result)
@@ -162,10 +186,15 @@ export default function SpeakingDrillPage() {
     }
     const nextIdx = index + 1
     setIndex(nextIdx)
-    void autoSpeak(queue[nextIdx]?.ko ?? "")
+    void autoSpeak(queue[nextIdx]?.ko ?? "").then((played) => {
+      if (played && drillActiveRef.current) speech.start()
+    })
   }
 
   function finishDrill() {
+    drillActiveRef.current = false
+    stopSpeechAudio()
+    speech.reset()
     const summary: LastSession = {
       finishedAt: new Date().toISOString(),
       answered: results.length,

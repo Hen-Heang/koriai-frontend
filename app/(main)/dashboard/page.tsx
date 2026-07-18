@@ -205,10 +205,10 @@ export default function DashboardPage() {
       className="space-y-8 pb-12 sm:space-y-10"
     >
       {/* ── Header ── */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">{getToday()}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <p className="app-kicker">{getToday()}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-4xl">
             Your goals &amp; tasks
           </h1>
         </div>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                 key={action.label}
                 href={action.href}
                 className={cn(
-                  "group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-blue-500/40 dark:bg-slate-900/40"
+                  "group rounded-2xl border border-border/70 bg-card/90 p-5 shadow-sm outline-none transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-slate-900/70"
                 )}
               >
                 <div className="inline-flex rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">

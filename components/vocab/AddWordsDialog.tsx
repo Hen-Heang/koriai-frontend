@@ -41,8 +41,7 @@ type AddWordsDialogProps = {
   onImport: (deckName: string, text: string) => Promise<number>
 }
 
-const TITLE = "Add words"
-const DESCRIPTION = "Type a word yourself, build a themed deck with AI, or paste a textbook list."
+const TITLE = "Grow your vocabulary"
 
 /**
  * Single entry point for getting words into the deck. Renders as a bottom
@@ -60,21 +59,22 @@ export function AddWordsDialog({
   onImport,
 }: AddWordsDialogProps) {
   const isMobile = useIsMobile()
+  const description = `${totalCount} words saved${dueCount > 0 ? ` · ${dueCount} due now` : ""}. Add one word, generate a focused deck, or paste a list.`
 
   const tabs = (
     <Tabs defaultValue="manual">
-      <TabsList className="h-10 w-full">
-        <TabsTrigger value="manual" className="gap-1.5 text-xs font-bold">
+      <TabsList className="grid h-12 w-full grid-cols-3 rounded-2xl border border-border/70 bg-muted/60 p-1">
+        <TabsTrigger value="manual" className="gap-1.5 rounded-xl px-2 text-xs font-semibold">
           <PencilLine size={14} strokeWidth={2.5} />
-          Manual
+          Add one
         </TabsTrigger>
-        <TabsTrigger value="ai" className="gap-1.5 text-xs font-bold">
+        <TabsTrigger value="ai" className="gap-1.5 rounded-xl px-2 text-xs font-semibold">
           <Sparkles size={14} strokeWidth={2.5} />
-          AI Builder
+          Build deck
         </TabsTrigger>
-        <TabsTrigger value="import" className="gap-1.5 text-xs font-bold">
+        <TabsTrigger value="import" className="gap-1.5 rounded-xl px-2 text-xs font-semibold">
           <ClipboardPaste size={14} strokeWidth={2.5} />
-          Import
+          Paste list
         </TabsTrigger>
       </TabsList>
       <TabsContent value="manual" className="pt-2">
@@ -94,8 +94,8 @@ export function AddWordsDialog({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="bottom" className="max-h-[88dvh] gap-0 rounded-t-3xl">
           <SheetHeader className="pb-3">
-            <SheetTitle className="text-lg font-bold">{TITLE}</SheetTitle>
-            <SheetDescription className="font-medium">{DESCRIPTION}</SheetDescription>
+            <SheetTitle className="text-lg font-semibold">{TITLE}</SheetTitle>
+            <SheetDescription>{description}</SheetDescription>
           </SheetHeader>
           <div className="overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             {tabs}
@@ -107,10 +107,10 @@ export function AddWordsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">{TITLE}</DialogTitle>
-          <DialogDescription className="font-medium">{DESCRIPTION}</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{TITLE}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {tabs}
       </DialogContent>

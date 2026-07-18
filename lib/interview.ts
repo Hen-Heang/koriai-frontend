@@ -15,6 +15,11 @@ export type InterviewTopicId = "weather" | "workplace-qa"
 export interface VocabEntry {
   term: string
   meaning: string
+  /** The smaller pass-first deck is shown before optional stretch vocabulary. */
+  priority?: "core" | "stretch"
+  /** Short topic sentence so the learner meets the word in context. */
+  exampleKo?: string
+  exampleEn?: string
 }
 
 export interface PhraseEntry {
@@ -22,11 +27,37 @@ export interface PhraseEntry {
   en: string
 }
 
+export interface PracticeQuestion extends PhraseEntry {
+  /** A short 2–3 sentence response to shadow, then personalize. */
+  answerKo?: string
+  answerEn?: string
+  /** The minimum content words to recall before revealing the model answer. */
+  keywords?: string[]
+}
+
+export interface AnswerFrame {
+  label: string
+  useFor: string
+  patternKo: string
+  patternEn: string
+  exampleKo: string
+  exampleEn: string
+}
+
+export interface PrepSource {
+  publisher: string
+  title: string
+  url: string
+  usedFor: string
+}
+
 /** Optional curated study material shown alongside a topic. */
 export interface InterviewPrep {
   vocabulary: VocabEntry[]
   keyPhrases: PhraseEntry[]
-  sampleQuestions: PhraseEntry[]
+  sampleQuestions: PracticeQuestion[]
+  answerFrames?: AnswerFrame[]
+  sources?: PrepSource[]
 }
 
 /** One section of the prepared script the candidate submits before the exam. */
@@ -152,6 +183,135 @@ const WEATHER_SCRIPT_SEED_EN: Record<string, string> = {
   conclusion: "That concludes my presentation. Thank you for listening.",
 }
 
+// A pass-first layer over the larger topic dictionary. Core words get a short
+// sentence for recall/shadowing; everything else stays available as stretch
+// vocabulary without overwhelming the learner on day one.
+const WEATHER_VOCAB_DETAILS: Record<
+  string,
+  Pick<VocabEntry, "priority" | "exampleKo" | "exampleEn">
+> = {
+  "덥다": { priority: "core", exampleKo: "한국의 여름은 매우 덥습니다.", exampleEn: "Summer in Korea is very hot." },
+  "습하다": { priority: "core", exampleKo: "비가 온 뒤에는 날씨가 더 습합니다.", exampleEn: "After it rains, the weather is more humid." },
+  "무덥다": { priority: "core", exampleKo: "장마철에는 날씨가 무척 무덥습니다.", exampleEn: "The weather is very muggy during the rainy season." },
+  "장마": { priority: "core", exampleKo: "장마 때는 비가 많이 옵니다.", exampleEn: "It rains a lot during jangma." },
+  "습도": { priority: "core", exampleKo: "습도가 높아서 더 덥게 느껴집니다.", exampleEn: "It feels hotter because the humidity is high." },
+  "기온": { priority: "core", exampleKo: "낮 기온이 35도까지 올랐습니다.", exampleEn: "The daytime temperature rose to 35 degrees." },
+  "열대야": { priority: "core", exampleKo: "열대야 때문에 잠을 잘 못 잤습니다.", exampleEn: "I could not sleep well because of the hot night." },
+  "땀이 나다": { priority: "core", exampleKo: "출근할 때 땀이 많이 납니다.", exampleEn: "I sweat a lot on my commute." },
+  "시원하다": { priority: "core", exampleKo: "시원한 곳에서 쉬면 좋습니다.", exampleEn: "It is good to rest in a cool place." },
+  "수분 섭취": { priority: "core", exampleKo: "갈증이 없어도 수분을 섭취해야 합니다.", exampleEn: "You should drink fluids even when you are not thirsty." },
+  "온열질환": { priority: "core", exampleKo: "폭염에는 온열질환을 조심해야 합니다.", exampleEn: "You must be careful of heat-related illness during a heat wave." },
+  "건기": { priority: "core", exampleKo: "캄보디아에는 건기와 우기가 있습니다.", exampleEn: "Cambodia has a dry season and a wet season." },
+  "우기": { priority: "core", exampleKo: "우기에는 비가 자주 옵니다.", exampleEn: "It rains often during the wet season." },
+  "사계절": { priority: "core", exampleKo: "한국은 사계절이 뚜렷합니다.", exampleEn: "Korea has four distinct seasons." },
+  "차이점": { priority: "core", exampleKo: "가장 큰 차이점은 계절입니다.", exampleEn: "The biggest difference is the seasons." },
+  "반면에": { priority: "core", exampleKo: "한국은 사계절이 있는 반면에 캄보디아는 두 계절이 있습니다.", exampleEn: "Korea has four seasons, whereas Cambodia has two." },
+  "적응하다": { priority: "core", exampleKo: "한국의 습한 여름에 적응하고 있습니다.", exampleEn: "I am adapting to Korea's humid summer." },
+  "익숙해지다": { priority: "core", exampleKo: "지금은 더위에 조금 익숙해졌습니다.", exampleEn: "Now I have gotten a little used to the heat." },
+}
+
+const WEATHER_ANSWER_FRAMES: AnswerFrame[] = [
+  {
+    label: "Direct answer + detail",
+    useFor: "Describe the weather",
+    patternKo: "___은/는 ___습니다. 특히 ___습니다.",
+    patternEn: "___ is ___. In particular, ___.",
+    exampleKo: "한국의 여름은 덥고 습합니다. 특히 장마철에 습도가 높습니다.",
+    exampleEn: "Korean summer is hot and humid. In particular, humidity is high during the rainy season.",
+  },
+  {
+    label: "Compare two countries",
+    useFor: "Korea vs. Cambodia",
+    patternKo: "A는 ___한 반면에 B는 ___합니다.",
+    patternEn: "Whereas A is ___, B is ___.",
+    exampleKo: "한국은 사계절이 있는 반면에 캄보디아는 건기와 우기가 있습니다.",
+    exampleEn: "Korea has four seasons, whereas Cambodia has a dry and a wet season.",
+  },
+  {
+    label: "Cause + effect",
+    useFor: "Daily-life and health effects",
+    patternKo: "___기 때문에 ___게 됩니다.",
+    patternEn: "Because ___, it causes / makes me ___.",
+    exampleKo: "습도가 높기 때문에 쉽게 피곤해집니다.",
+    exampleEn: "Because the humidity is high, I get tired easily.",
+  },
+  {
+    label: "Action + purpose",
+    useFor: "How you protect your health",
+    patternKo: "___기 위해서 ___려고 합니다.",
+    patternEn: "To ___, I try to ___.",
+    exampleKo: "온열질환을 예방하기 위해서 물을 자주 마시려고 합니다.",
+    exampleEn: "To prevent heat-related illness, I try to drink water often.",
+  },
+  {
+    label: "Personal experience",
+    useFor: "Follow-up questions",
+    patternKo: "___(으)ㄴ 적이 있습니다. 그때 ___습니다.",
+    patternEn: "I have experienced ___. At that time, ___.",
+    exampleKo: "열대야 때문에 잠을 잘 못 잔 적이 있습니다. 그때 아침에 많이 피곤했습니다.",
+    exampleEn: "I once could not sleep well because of a hot night. I was very tired the next morning.",
+  },
+  {
+    label: "Show adaptation",
+    useFor: "Reflection and confidence",
+    patternKo: "처음에는 ___지만 지금은 ___습니다.",
+    patternEn: "At first ___, but now ___.",
+    exampleKo: "처음에는 많이 힘들었지만 지금은 조금씩 적응하고 있습니다.",
+    exampleEn: "It was very hard at first, but now I am gradually adapting.",
+  },
+]
+
+const WEATHER_CORE_ANSWERS: Record<
+  string,
+  Pick<PracticeQuestion, "answerKo" | "answerEn" | "keywords">
+> = {
+  "한국의 여름 날씨는 어때요?": {
+    answerKo: "한국의 여름은 덥고 습합니다. 특히 장마철에는 습도가 높아서 실제 기온보다 더 덥게 느껴집니다.",
+    answerEn: "Korean summer is hot and humid. Especially during the rainy season, the high humidity makes it feel hotter than the actual temperature.",
+    keywords: ["덥고 습하다", "장마철", "습도"],
+  },
+  "캄보디아의 날씨와 어떻게 달라요?": {
+    answerKo: "한국은 사계절이 있는 반면에 캄보디아는 건기와 우기가 있습니다. 캄보디아는 일 년 내내 덥지만 한국은 계절별 기온 차이가 큽니다.",
+    answerEn: "Korea has four seasons, whereas Cambodia has a dry and a wet season. Cambodia is hot all year, but Korea's temperature changes greatly by season.",
+    keywords: ["사계절", "건기와 우기", "기온 차이"],
+  },
+  "한국 여름과 캄보디아 여름 중에서 어디가 더 더워요?": {
+    answerKo: "실제 기온은 캄보디아가 더 높을 때가 많습니다. 하지만 한국은 습도가 높아서 체감상 더 힘들게 느껴질 때도 있습니다.",
+    answerEn: "The actual temperature is often higher in Cambodia. However, Korea's high humidity can sometimes make the heat feel harder to bear.",
+    keywords: ["실제 기온", "습도", "체감상"],
+  },
+  "장마철에 대해 어떻게 생각해요?": {
+    answerKo: "장마철에는 습도가 높고 갑자기 비가 많이 와서 불편합니다. 그래서 외출할 때 우산을 챙기고 날씨 예보를 확인합니다.",
+    answerEn: "The rainy season is inconvenient because humidity is high and heavy rain can start suddenly. So I carry an umbrella and check the forecast before going out.",
+    keywords: ["습도", "비가 많이 오다", "우산"],
+  },
+  "더운 날씨가 건강에 어떤 영향을 줘요?": {
+    answerKo: "날씨가 더우면 땀을 많이 흘리고 쉽게 피곤해집니다. 수분을 충분히 섭취하지 않으면 탈수 증상이나 온열질환이 생길 수 있습니다.",
+    answerEn: "In hot weather, I sweat a lot and get tired easily. Without enough fluids, dehydration symptoms or heat-related illness can occur.",
+    keywords: ["땀", "피곤하다", "온열질환"],
+  },
+  "더위를 이기기 위해서 무엇을 해요?": {
+    answerKo: "물을 자주 마시고 시원한 곳에서 충분히 쉽니다. 가장 더운 시간대에는 야외 활동을 줄이려고 합니다.",
+    answerEn: "I drink water often and rest enough in a cool place. I try to reduce outdoor activity during the hottest hours.",
+    keywords: ["물을 마시다", "시원한 곳", "휴식"],
+  },
+  "한국에 와서 날씨 때문에 힘들었던 적이 있어요?": {
+    answerKo: "네, 열대야 때문에 잠을 잘 못 잔 적이 있습니다. 그때 아침에 많이 피곤했지만 지금은 조금씩 적응하고 있습니다.",
+    answerEn: "Yes, I once could not sleep well because of a hot night. I was very tired in the morning, but now I am gradually adapting.",
+    keywords: ["열대야", "잠을 못 자다", "적응하다"],
+  },
+  "여름에 건강을 지키기 위해서 어떻게 해요?": {
+    answerKo: "갈증이 나지 않아도 물을 규칙적으로 마십니다. 또 햇볕을 피하고 더운 시간에는 휴식하려고 합니다.",
+    answerEn: "I drink water regularly even when I am not thirsty. I also avoid direct sunlight and try to rest during hot hours.",
+    keywords: ["규칙적으로", "햇볕을 피하다", "휴식"],
+  },
+  "캄보디아의 건기와 우기에 대해 설명해 줄 수 있어요?": {
+    answerKo: "캄보디아의 건기는 보통 11월부터 4월까지이고, 우기는 5월부터 10월까지입니다. 가장 더운 시기는 보통 우기가 시작되기 전입니다.",
+    answerEn: "Cambodia's dry season is generally November to April, and its wet season is May to October. The hottest time is usually just before the wet season begins.",
+    keywords: ["건기", "우기", "5월부터 10월"],
+  },
+}
+
 // Curated study material for the chosen exam topic. Drilled daily, this is the
 // 15–20 words and the handful of phrases that cover most of the Q&A.
 const WEATHER_PREP: InterviewPrep = {
@@ -173,7 +333,7 @@ const WEATHER_PREP: InterviewPrep = {
     { term: "더위를 먹다", meaning: "to suffer from the heat" },
     { term: "시원하다", meaning: "to be cool / refreshing" },
     { term: "수분 보충", meaning: "replenishing fluids / hydration" },
-    { term: "일사병", meaning: "heatstroke" },
+    { term: "일사병", meaning: "sunstroke / heat exhaustion" },
     { term: "냉방병", meaning: "illness from too much AC" },
     { term: "익숙해지다", meaning: "to get used to (something)" },
     { term: "건기", meaning: "the dry season (Cambodia)" },
@@ -200,7 +360,40 @@ const WEATHER_PREP: InterviewPrep = {
     { term: "실내 활동", meaning: "indoor activities" },
     { term: "체력 관리", meaning: "physical strength management" },
     { term: "비슷하다", meaning: "to be similar" },
-  ],
+    // Everyday summer-heat intensifiers every Korean weather chat uses
+    // (source: Korean weather-expression guides, e.g. aigokor.com, TOPIK Guide).
+    { term: "무더위", meaning: "sweltering heat (noun)" },
+    { term: "찜통더위", meaning: "steaming, sauna-like heat" },
+    { term: "후텁지근하다", meaning: "to be muggy and stuffy" },
+    { term: "햇볕", meaning: "sunshine, direct sunlight" },
+    { term: "태풍", meaning: "typhoon" },
+    { term: "일교차", meaning: "daily temperature swing" },
+    // Heat-illness terms from the KDCA heat-wave health guidance
+    // (질병관리청 온열질환 예방수칙: 물·그늘·휴식).
+    { term: "온열질환", meaning: "heat-related illness (official term)" },
+    { term: "열사병", meaning: "severe heatstroke" },
+    { term: "어지럽다", meaning: "to feel dizzy" },
+    { term: "두통", meaning: "a headache" },
+    { term: "메스껍다", meaning: "to feel nauseous" },
+    { term: "예방하다", meaning: "to prevent" },
+    { term: "무리하다", meaning: "to overdo it, push too hard" },
+    { term: "양산", meaning: "a parasol (sun umbrella)" },
+    // Korean summer food culture — a very likely follow-up question.
+    { term: "복날", meaning: "the dog days (hottest days; stamina-food days)" },
+    { term: "보양식", meaning: "stamina food (eaten to beat the heat)" },
+    { term: "삼계탕", meaning: "ginseng chicken soup" },
+    { term: "이열치열", meaning: "fighting heat with heat (idiom)" },
+    { term: "팥빙수", meaning: "shaved ice with red beans" },
+    { term: "냉면", meaning: "cold noodles" },
+    // Cambodia-side climate words for the comparison answers.
+    { term: "열대 기후", meaning: "tropical climate" },
+    { term: "스콜", meaning: "a squall (short intense tropical downpour)" },
+  ].map((entry) => ({
+    ...entry,
+    priority: WEATHER_VOCAB_DETAILS[entry.term]?.priority ?? "stretch",
+    exampleKo: WEATHER_VOCAB_DETAILS[entry.term]?.exampleKo,
+    exampleEn: WEATHER_VOCAB_DETAILS[entry.term]?.exampleEn,
+  })),
   keyPhrases: [
     { ko: "한국 여름은 정말 덥고 습해요.", en: "Korean summer is really hot and humid." },
     { ko: "캄보디아는 일 년 내내 더워요.", en: "Cambodia is hot all year round." },
@@ -245,7 +438,58 @@ const WEATHER_PREP: InterviewPrep = {
       ko: "날씨가 추워서 오시느라 고생하셨죠?",
       en: "It must've been hard to come here because of the cold weather, right?",
     },
+    // Natural heat-talk lines built on 무더위/찜통더위/열대야/후텁지근하다
+    // (standard summer expressions; see prep sources).
+    { ko: "요즘 무더위가 계속되고 있어요.", en: "The sweltering heat continues these days." },
+    {
+      ko: "한국 여름은 후텁지근해서 밖에 나가기 힘들어요.",
+      en: "Korean summer is so muggy that it's hard to go outside.",
+    },
+    {
+      ko: "열대야 때문에 밤에 잠을 설칠 때가 있어요.",
+      en: "Because of tropical nights, I sometimes sleep badly.",
+    },
+    // The official KDCA heat-safety rule — knowing it makes a strong answer.
+    {
+      ko: "폭염에는 물, 그늘, 휴식이 중요하다고 들었어요.",
+      en: "I heard that in a heat wave, water, shade, and rest are important.",
+    },
+    {
+      ko: "갈증이 없어도 물을 자주 마시는 게 좋아요.",
+      en: "It's good to drink water often, even when you're not thirsty.",
+    },
+    {
+      ko: "가장 더운 시간에는 야외 활동을 피하려고 해요.",
+      en: "I try to avoid outdoor activities during the hottest hours.",
+    },
+    {
+      ko: "어지럽거나 두통이 있으면 시원한 곳에서 쉬어야 해요.",
+      en: "If you feel dizzy or have a headache, you should rest somewhere cool.",
+    },
+    // Korean summer food culture (복날 · 이열치열).
+    {
+      ko: "한국 사람들은 복날에 삼계탕을 먹어요.",
+      en: "Koreans eat samgyetang on boknal, the dog days.",
+    },
+    {
+      ko: "이열치열이라는 말처럼 뜨거운 음식으로 더위를 이겨요.",
+      en: "As the saying 'fight heat with heat' goes, they beat the heat with hot food.",
+    },
+    {
+      ko: "여름에는 팥빙수나 냉면을 먹으면 시원해져요.",
+      en: "In summer, eating patbingsu or naengmyeon cools you down.",
+    },
+    // Cambodia-side comparison lines.
+    {
+      ko: "캄보디아는 열대 기후라서 일 년 내내 여름 같아요.",
+      en: "Cambodia has a tropical climate, so it feels like summer all year.",
+    },
+    {
+      ko: "우기에는 스콜처럼 비가 짧고 강하게 와요.",
+      en: "In the wet season, rain falls short and hard, like a squall.",
+    },
   ],
+  answerFrames: WEATHER_ANSWER_FRAMES,
   sampleQuestions: [
     { ko: "한국의 여름 날씨는 어때요?", en: "How is Korea's summer weather?" },
     {
@@ -290,6 +534,141 @@ const WEATHER_PREP: InterviewPrep = {
     { ko: "한국 여름에 가장 힘들었던 건강 문제는 무엇이었어요?", en: "What was the most difficult health issue you faced during Korean summer?" },
     { ko: "캄보디아에서는 더운 날씨에 어떻게 대처했어요?", en: "How did you cope with the hot weather in Cambodia?" },
     { ko: "습도가 높을 때 일상생활에 어떤 변화가 생겼어요?", en: "What changes happened in your daily life when humidity was high?" },
+    // Follow-up territory the examiner can reach from the topic: tropical
+    // nights, the KDCA heat rules, and Korean summer food culture. Each model
+    // answer is 2–3 short sentences in the exam's answer-first, show-growth
+    // style, ready to shadow and then personalize.
+    {
+      ko: "열대야가 뭔지 알아요?",
+      en: "Do you know what a tropical night is?",
+      answerKo:
+        "네, 밤에도 기온이 25도 아래로 안 내려가는 밤이에요. 열대야 때문에 잠을 설칠 때가 있어요. 그래서 자기 전에 샤워를 하고 선풍기를 틀어요.",
+      answerEn:
+        "Yes, it's a night when the temperature doesn't drop below 25°C. Because of tropical nights I sometimes sleep badly. So I shower before bed and turn on the fan.",
+      keywords: ["열대야", "기온", "잠"],
+    },
+    {
+      ko: "폭염 때 건강을 지키는 방법을 알고 있어요?",
+      en: "Do you know how to protect your health during a heat wave?",
+      answerKo:
+        "네, 물, 그늘, 휴식이 중요하다고 들었어요. 갈증이 없어도 물을 자주 마시고, 가장 더운 시간에는 밖에 안 나가려고 해요.",
+      answerEn:
+        "Yes, I heard water, shade, and rest are important. I drink water often even when I'm not thirsty, and I try not to go out during the hottest hours.",
+      keywords: ["물", "그늘", "휴식"],
+    },
+    {
+      ko: "더위 때문에 몸이 안 좋으면 어떻게 해야 돼요?",
+      en: "What should you do if the heat makes you feel unwell?",
+      answerKo:
+        "어지럽거나 두통이 있으면 바로 시원한 곳으로 가야 해요. 그리고 물을 마시면서 쉬는 게 좋아요. 심하면 병원에 가야 해요.",
+      answerEn:
+        "If you feel dizzy or have a headache, you should go somewhere cool right away. Then it's good to rest while drinking water. If it's serious, you should go to the hospital.",
+      keywords: ["어지럽다", "시원한 곳", "쉬다"],
+    },
+    {
+      ko: "복날에 대해 들어 본 적이 있어요?",
+      en: "Have you heard about boknal (the dog days)?",
+      answerKo:
+        "네, 일 년 중 가장 더운 날이에요. 한국 사람들은 복날에 삼계탕 같은 보양식을 먹어요. 저도 이번 여름에 삼계탕을 먹어 봤는데 맛있었어요.",
+      answerEn:
+        "Yes, they are the hottest days of the year. Koreans eat stamina food like samgyetang on boknal. I tried samgyetang this summer too, and it was delicious.",
+      keywords: ["복날", "삼계탕", "보양식"],
+    },
+    {
+      ko: "한국의 여름 음식 중에서 뭘 먹어 봤어요?",
+      en: "Which Korean summer foods have you tried?",
+      answerKo:
+        "삼계탕하고 냉면을 먹어 봤어요. 삼계탕은 뜨겁지만 힘이 나고, 냉면은 시원해서 좋았어요. 다음에는 팥빙수도 먹어 보고 싶어요.",
+      answerEn:
+        "I've tried samgyetang and naengmyeon. Samgyetang is hot but gives me energy, and naengmyeon was nice and cool. Next I want to try patbingsu too.",
+      keywords: ["삼계탕", "냉면", "팥빙수"],
+    },
+    {
+      ko: "장마철에 출근할 때 어떻게 준비해요?",
+      en: "How do you prepare for your commute during the rainy season?",
+      answerKo:
+        "우산을 항상 가방에 가지고 다녀요. 그리고 비가 많이 오는 날에는 조금 일찍 집에서 나가요. 신발이 젖을 때가 많아서 조심해요.",
+      answerEn:
+        "I always carry an umbrella in my bag. And on days with heavy rain, I leave home a little early. My shoes often get wet, so I'm careful.",
+      keywords: ["우산", "일찍", "비"],
+    },
+    {
+      ko: "캄보디아 우기에는 비가 어떻게 와요?",
+      en: "How does it rain in Cambodia's wet season?",
+      answerKo:
+        "스콜처럼 짧고 강하게 와요. 보통 오후에 갑자기 비가 오고, 한 시간 후에 그쳐요. 한국 장마처럼 하루 종일 오지 않아요.",
+      answerEn:
+        "It comes short and hard, like a squall. It usually rains suddenly in the afternoon and stops an hour later. It doesn't rain all day like the Korean jangma.",
+      keywords: ["스콜", "오후", "그치다"],
+    },
+    {
+      ko: "여름과 겨울 중에서 어느 계절이 더 좋아요?",
+      en: "Which season do you like more, summer or winter?",
+      answerKo:
+        "저는 여름이 더 좋아요. 캄보디아 날씨와 비슷해서 익숙하기 때문이에요. 그런데 한국 겨울도 한번 경험해 보고 싶어요.",
+      answerEn:
+        "I like summer more. It's because it's similar to Cambodian weather, so it's familiar. But I'd also like to experience a Korean winter once.",
+      keywords: ["여름", "비슷하다", "익숙하다"],
+    },
+    {
+      ko: "주말에 더울 때 보통 뭘 해요?",
+      en: "What do you usually do on hot weekends?",
+      answerKo:
+        "낮에는 집에서 쉬거나 카페에 가요. 저녁에 시원해지면 산책을 해요. 캄보디아에서도 저녁에 친구들과 밖에 나가곤 했어요.",
+      answerEn:
+        "During the day I rest at home or go to a cafe. When it cools down in the evening, I take a walk. In Cambodia too, I used to go out with friends in the evening.",
+      keywords: ["쉬다", "저녁", "산책"],
+    },
+    {
+      ko: "한국의 가을 날씨는 기대돼요?",
+      en: "Are you looking forward to Korea's autumn weather?",
+      answerKo:
+        "네, 정말 기대돼요. 캄보디아에는 가을이 없기 때문이에요. 시원한 날씨에 단풍을 꼭 보고 싶어요.",
+      answerEn:
+        "Yes, I'm really looking forward to it. That's because Cambodia doesn't have autumn. I definitely want to see the fall leaves in the cool weather.",
+      keywords: ["가을", "시원하다", "단풍"],
+    },
+  ].map((question) => {
+    const model = WEATHER_CORE_ANSWERS[question.ko]
+    return model ? { ...question, ...model } : question
+  }),
+  sources: [
+    {
+      publisher: "질병관리청 (KDCA)",
+      title: "2026 폭염 대비 건강수칙",
+      url: "https://www.kdca.go.kr/bbs/kdca/263/306758/download.do",
+      usedFor: "Staying cool, drinking water regularly, sun protection, rest, and heat-illness response",
+    },
+    {
+      publisher: "기상청 (KMA)",
+      title: "2025년 여름철 기후 특성",
+      url: "https://www.weather.go.kr/kma/news/press_01.jsp?mode=view&num=1194521",
+      usedFor: "Korean summer, heat-wave, tropical-night, rainy-season, and heavy-rain language",
+    },
+    {
+      publisher: "TOPIK Guide",
+      title: "Ultimate list of weather-related terms in Korean",
+      url: "https://www.topikguide.com/ultimate-list-of-weather-related-terms-in-korean/",
+      usedFor: "Summer weather expressions (무더위, 찜통더위, 열대야, 후텁지근하다)",
+    },
+    {
+      publisher: "Korea.net",
+      title: "Korea’s red-hot summers are a foodie’s delight",
+      url: "https://www.korea.net/NewsFocus/Opinion/view?articleId=147824",
+      usedFor: "Boknal food culture (복날, 보양식, 삼계탕, 이열치열)",
+    },
+    {
+      publisher: "World Bank Climate Change Knowledge Portal",
+      title: "Climate Risk Country Profile: Cambodia",
+      url: "https://climateknowledgeportal.worldbank.org/sites/default/files/2018-10/wb_gfdrr_climate_change_country_profile_for_KHM.pdf",
+      usedFor: "Cambodia's tropical climate, dry season, wet season, and hottest period",
+    },
+    {
+      publisher: "국립국어원",
+      title: "한국어기초사전",
+      url: "https://krdict.korean.go.kr/eng",
+      usedFor: "Learner-friendly Korean meanings, example usage, and pronunciation reference",
+    },
   ],
 }
 
@@ -371,8 +750,9 @@ export const INTERVIEW_TOPICS: InterviewTopic[] = [
       "1) Describe Korea's summer weather (덥다, 습하다, 무덥다, 장마, 폭염, 자외선).",
       "2) Compare it with Cambodia's weather (Korea's 사계절 vs Cambodia's 건기/우기, which is hotter, which is more humid, climate/기후 differences, 차이).",
       "3) The rainy season 장마 and daily life (commute, 땀, 에어컨, 그늘, sleep, 열대야, 환절기).",
-      "4) Health effects of the heat (더위를 먹다, 일사병, 냉방병, tiredness) and how the candidate copes (수분 보충, rest).",
-      "5) A personal reflection (a hard day because of the weather, missing home weather: 고향이 그립다, or how they adapted/endured: 익숙해지다, 적응하다, 견디다).",
+      "4) Health effects of the heat (더위를 먹다, 온열질환, 일사병, 냉방병, 어지럽다, 두통) and how the candidate copes — the 물·그늘·휴식 heat-safety rules (수분 보충, avoiding the hottest hours, rest).",
+      "5) Korean summer culture and food (복날, 보양식, 삼계탕, 이열치열, 팥빙수, 냉면) — has the candidate tried them, what do people eat in Cambodia when it's hot.",
+      "6) A personal reflection (a hard day because of the weather, missing home weather: 고향이 그립다, or how they adapted/endured: 익숙해지다, 적응하다, 견디다) and looking ahead to autumn (단풍).",
       "Keep vocabulary practical and everyday; encourage the candidate to compare with Cambodia and to give personal examples.",
     ].join("\n"),
     prep: WEATHER_PREP,

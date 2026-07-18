@@ -14,8 +14,8 @@ type CardGridProps = {
 export function CardGrid({ children, className, minCardWidth = 260 }: CardGridProps) {
   return (
     <div
-      className={cn("grid gap-5", className)}
-      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))` }}
+      className={cn("grid gap-4 sm:gap-5", className)}
+      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${minCardWidth}px), 1fr))` }}
     >
       {children}
     </div>

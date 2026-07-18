@@ -7,9 +7,11 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import { Menu, MessageCircle, Settings } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 
+import { QuickSwitcher } from "@/components/app/quick-switcher"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { LevelBadge } from "@/components/achievements/LevelBadge"
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/ui/UserAvatar"
 import {
   Sheet,
@@ -165,6 +167,12 @@ export default function MainLayout({
 
   return (
     <div className="min-h-[100dvh] bg-background">
+      <a
+        href="#main-content"
+        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background shadow-xl transition-transform focus:translate-y-0"
+      >
+        Skip to content
+      </a>
       <div
         className={cn(
           "mx-auto flex w-full max-w-[92rem]",
@@ -174,7 +182,7 @@ export default function MainLayout({
 
         {/* ── Desktop sidebar — hidden on the Home gate ── */}
         {!isHomeRoute && (
-        <aside className="sticky top-0 hidden h-screen flex-col border-r border-border/60 bg-card/50 backdrop-blur-2xl dark:border-white/[0.07] dark:bg-[#08111f]/80 lg:flex">
+        <aside className="sticky top-0 hidden h-screen flex-col border-r border-border/60 bg-card/65 backdrop-blur-2xl dark:border-white/[0.07] dark:bg-[#08111f]/88 lg:flex">
           {/* Brand */}
           <div className="px-5 pt-7 pb-5">
             <Link href="/home" className="group flex items-center gap-3">
@@ -182,8 +190,8 @@ export default function MainLayout({
                 <Image src="/hengo-icon.svg" alt="Hengo Logo" width={36} height={36} className="h-full w-full" />
               </div>
               <div>
-                <p className="text-[12px] font-bold tracking-tight text-foreground">Hengo</p>
-                <p className="text-[10px] font-medium text-muted-foreground/50">AI Growth Platform</p>
+                <p className="text-base font-semibold tracking-tight text-foreground">Hengo</p>
+                <p className="text-[11px] font-medium text-muted-foreground">Korean for developers</p>
               </div>
             </Link>
           </div>
@@ -194,7 +202,7 @@ export default function MainLayout({
               href={homeLink.href}
               aria-current={isLinkActive(pathname, homeLink.href) ? "page" : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
                 isLinkActive(pathname, homeLink.href)
                   ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
                   : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
@@ -234,9 +242,13 @@ export default function MainLayout({
 
           <div className="mx-4 h-px bg-border/60" />
 
+          <p className="px-7 pt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {activeWorkspace?.label ?? "Workspace"}
+          </p>
+
           {/* Active workspace's links only — contextual to whichever
               workspace the current route belongs to */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-0.5">
+          <nav aria-label={activeWorkspace ? `${activeWorkspace.label} navigation` : "Workspace navigation"} className="flex-1 space-y-1 overflow-y-auto px-4 py-3">
             {activeWorkspace?.links.map(({ href, label, icon: Icon, soon }) => {
               const active = !soon && isLinkActive(pathname, href)
 
@@ -244,7 +256,7 @@ export default function MainLayout({
                 return (
                   <div
                     key={href}
-                    className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground/60"
+                    className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground/60"
                   >
                     <Icon size={16} strokeWidth={2} className="shrink-0" />
                     {label}
@@ -261,7 +273,7 @@ export default function MainLayout({
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
                     active
                       ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
                       : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
@@ -290,7 +302,7 @@ export default function MainLayout({
             <Link
               href={settingsLink.href}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/70",
                 pathname === settingsLink.href
                   ? "bg-accent/60 text-foreground dark:bg-white/[0.06]"
                   : "text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground dark:hover:bg-white/5"
@@ -306,6 +318,27 @@ export default function MainLayout({
         {/* ── Main column ── */}
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
 
+          {isHomeRoute && (
+            <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6 lg:px-8">
+              <Link href="/home" className="group flex items-center gap-3" aria-label="Hengo home">
+                <span className="flex size-9 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-border/60 transition-transform group-hover:scale-105">
+                  <Image src="/hengo-icon.svg" alt="" width={36} height={36} className="size-full" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold leading-none tracking-tight text-foreground sm:text-base">Hengo</span>
+                  <span className="mt-1 block text-[11px] font-medium leading-none text-muted-foreground">Korean for developers</span>
+                </span>
+              </Link>
+              <div className="flex items-center gap-2">
+                <QuickSwitcher compact className="sm:hidden" />
+                <QuickSwitcher className="hidden sm:inline-flex" />
+                <ThemeToggle />
+                <NotificationBell />
+                <UserAvatar href="/settings" title="Profile & settings" />
+              </div>
+            </header>
+          )}
+
           {/* Mobile top bar — hidden on chat, pause, and Home for a full-bleed/gate experience */}
           {!isChatRoute && !isPauseRoute && !isHomeRoute && (
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl lg:hidden">
@@ -316,11 +349,14 @@ export default function MainLayout({
                   </div>
                 </Link>
                 <div className="flex flex-col">
-                  <span className="text-[15px] font-extrabold tracking-tight text-foreground leading-none">Hengo</span>
-                  <span className="mt-0.5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-tight">by Hen Heang</span>
+                  <span className="text-[15px] font-semibold tracking-tight text-foreground leading-none">Hengo</span>
+                  <span className="mt-1 max-w-28 truncate text-[11px] font-medium leading-none text-muted-foreground">
+                    {allLinks.find((link) => isLinkActive(pathname, link.href))?.label ?? "Workspace"}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
+                <QuickSwitcher compact />
                 <LevelBadge />
                 <NotificationBell />
                 <UserAvatar
@@ -334,11 +370,17 @@ export default function MainLayout({
 
           {/* Desktop top bar — hidden on the Home gate */}
           {!isHomeRoute && (
-          <div className="hidden items-center justify-between border-b border-border/60 bg-card/30 px-8 py-4 backdrop-blur-xl lg:flex">
-            <h2 className="text-sm font-bold text-foreground">
-              {allLinks.find((l) => isLinkActive(pathname, l.href))?.label ?? "Hengo"}
-            </h2>
+          <div className="hidden items-center justify-between border-b border-border/60 bg-card/35 px-8 py-3.5 backdrop-blur-xl lg:flex">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {activeWorkspace?.label ?? "Hengo"}
+              </p>
+              <h2 className="mt-0.5 text-sm font-semibold text-foreground">
+                {allLinks.find((l) => isLinkActive(pathname, l.href))?.label ?? "Workspace"}
+              </h2>
+            </div>
             <div className="flex items-center gap-3">
+              <QuickSwitcher />
               <Link
                 href="/chat"
                 className={cn(
@@ -351,6 +393,7 @@ export default function MainLayout({
                 <MessageCircle size={15} strokeWidth={2.5} />
                 AI Coach
               </Link>
+              <ThemeToggle />
               <LevelBadge />
               <NotificationBell />
               <UserAvatar href="/settings" title="Profile & settings" />
@@ -360,6 +403,8 @@ export default function MainLayout({
 
           {/* Page content */}
           <main
+            id="main-content"
+            tabIndex={-1}
             className={cn(
               "flex-1 overflow-x-hidden",
               isChatRoute || isPauseRoute
@@ -428,7 +473,7 @@ export default function MainLayout({
                     </div>
                     <span
                       className={cn(
-                        "w-full truncate px-0.5 text-center text-[11px] uppercase tracking-[0.02em] leading-none transition-all duration-300",
+                        "w-full truncate px-0.5 text-center text-[11px] leading-none transition-all duration-300",
                         active ? "font-extrabold opacity-100" : "font-bold opacity-70 translate-y-0.5"
                       )}
                     >
@@ -458,7 +503,7 @@ export default function MainLayout({
                 </div>
                 <span
                   className={cn(
-                    "w-full truncate px-0.5 text-center text-[11px] uppercase tracking-[0.02em] leading-none transition-all duration-300",
+                    "w-full truncate px-0.5 text-center text-[11px] leading-none transition-all duration-300",
                     onMoreRoute ? "font-extrabold opacity-100" : "font-bold opacity-70 translate-y-0.5"
                   )}
                 >
@@ -476,6 +521,7 @@ export default function MainLayout({
           href="/chat"
           aria-label="AI Chat"
           aria-hidden={isKeyboardOpen}
+          tabIndex={isKeyboardOpen ? -1 : undefined}
           className={cn(
             "fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/35 ring-1 ring-white/20 outline-none transition-all duration-500 ease-in-out hover:bg-blue-500 focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-90 lg:hidden",
             isKeyboardOpen ? "pointer-events-none translate-y-24 opacity-0" : "translate-y-0 opacity-100"
@@ -503,27 +549,35 @@ export default function MainLayout({
                   <div className="grid grid-cols-2 gap-2">
                     {workspace.links.map(({ href, label, icon: Icon, soon }) => {
                       const active = !soon && isLinkActive(pathname, href)
+                      if (soon) {
+                        return (
+                          <div
+                            key={href}
+                            aria-disabled="true"
+                            className="flex cursor-not-allowed items-center gap-3 rounded-2xl border border-border/40 bg-accent/5 p-4 text-sm font-semibold text-muted-foreground/60"
+                          >
+                            <Icon size={20} strokeWidth={2.2} className="shrink-0" />
+                            <span className="flex-1">{label}</span>
+                            <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Soon
+                            </span>
+                          </div>
+                        )
+                      }
                       return (
                         <Link
                           key={href}
-                          href={soon ? "#" : href}
-                          onClick={() => { if (!soon) setMoreOpen(false) }}
+                          href={href}
+                          onClick={() => setMoreOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-[0.98]",
-                            soon
-                              ? "cursor-default border-border/40 bg-accent/5 text-muted-foreground/60"
-                              : active
-                                ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                : "border-border bg-accent/5 text-foreground hover:bg-accent/40"
+                            "flex items-center gap-3 rounded-2xl border p-4 text-sm font-semibold outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/70 active:scale-[0.98]",
+                            active
+                              ? "border-primary/35 bg-primary/10 text-primary"
+                              : "border-border bg-accent/5 text-foreground hover:bg-accent/40"
                           )}
                         >
                           <Icon size={20} strokeWidth={2.5} className="shrink-0" />
                           <span className="flex-1">{label}</span>
-                          {soon && (
-                            <span className="rounded-full bg-muted/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground/40">
-                              Soon
-                            </span>
-                          )}
                         </Link>
                       )
                     })}

@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { useLogActivity } from "@/hooks/useLogActivity"
+import { useScrollToTopOnChange } from "@/hooks/useScrollToTopOnChange"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
 import { interviewApi } from "@/lib/api"
 import {
@@ -75,8 +76,10 @@ export default function ListeningDrillPage() {
   const [usedFallback, setUsedFallback] = useState(false)
   const [isAddingMore, setIsAddingMore] = useState(false)
   const [lastSession, setLastSession] = useState<LastSession | null>(null)
+  useScrollToTopOnChange(phase)
 
-  const speech = useSpeechRecognition({ lang: "ko-KR" })
+  // Continuous capture: the mic stays open across pauses until stopped.
+  const speech = useSpeechRecognition({ lang: "ko-KR", continuous: true })
   const cfg = LISTENING_LEVELS[level]
   const question = items[index]
 
@@ -113,10 +116,14 @@ export default function ListeningDrillPage() {
 
   function reveal(withAnswer: boolean) {
     if (!question || revealed) return
+    const answer = withAnswer
+      ? (speech.status === "listening" ? speech.stop() : speech.transcript).trim()
+      : ""
+    if (!withAnswer && speech.status === "listening") speech.stop()
     setRevealed(true)
     setResults((prev) => [
       ...prev,
-      { question, answer: withAnswer ? speech.transcript.trim() : "" },
+      { question, answer },
     ])
     void logActivity()
   }
@@ -353,6 +360,9 @@ export default function ListeningDrillPage() {
             maxPlays={cfg.maxPlays}
             playsUsed={playsUsed}
             onPlayed={() => setPlaysUsed((n) => n + 1)}
+            onPlaybackEnded={() => {
+              if (!revealed && speech.status !== "listening") speech.start()
+            }}
             autoPlayOnMount
           />
         </CardContent>

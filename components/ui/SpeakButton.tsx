@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Loader2, Volume2 } from "lucide-react"
 import { ttsApi } from "@/lib/api"
+import { registerSpeechAudio } from "@/lib/speech-audio"
 
 interface SpeakButtonProps {
   text: string
@@ -36,6 +37,9 @@ export function SpeakButton({
 }: SpeakButtonProps) {
   const [loading, setLoading] = useState(false)
   const [playing, setPlaying] = useState(false)
+  const stopAudioRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => () => stopAudioRef.current?.(), [])
 
   async function handleSpeak() {
     if (loading || playing || !text) return
@@ -44,11 +48,15 @@ export function SpeakButton({
       const url = await getCachedAudioUrl(text, voice)
       const audio = new Audio(url)
       audio.playbackRate = playbackRate
-      setLoading(false)
+      stopAudioRef.current = registerSpeechAudio(audio, () => {
+        setPlaying(false)
+        stopAudioRef.current = null
+      })
+      await audio.play()
       setPlaying(true)
-      audio.play()
-      audio.onended = () => setPlaying(false)
     } catch {
+      stopAudioRef.current?.()
+    } finally {
       setLoading(false)
     }
   }
