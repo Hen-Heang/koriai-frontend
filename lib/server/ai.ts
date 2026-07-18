@@ -46,6 +46,39 @@ export const TUTOR_SYSTEM =
   "You are Hengo, a Korean-language tutor for software developers working in Korea. " +
   "Focus on practical workplace and technical Korean. Be concise and encouraging."
 
+// Shared across every Korean-formality-producing prompt so the model always
+// picks from the same three labels instead of inventing its own wording.
+export const FORMALITY_LABELS = "반말 (casual), 존댓말 (polite), or 격식체 (formal)"
+
+export interface LearnerProfile {
+  occupation?: string | null
+  learningGoal?: string | null
+  nativeLanguage?: string | null
+  country?: string | null
+}
+
+// Personalization snippet spliced into tutoring prompts — tailors examples/
+// difficulty to the learner's job and goal without the model calling it out
+// explicitly. Returns "" when nothing is set, so callers can drop it cleanly.
+export function learnerProfileBlock(profile: LearnerProfile | null | undefined): string {
+  if (!profile) return ""
+  const lines: string[] = []
+  if (profile.occupation) lines.push(`- Job: ${profile.occupation}`)
+  if (profile.learningGoal) lines.push(`- Main learning goal: ${profile.learningGoal}`)
+  if (profile.nativeLanguage) {
+    lines.push(
+      `- Native language: ${profile.nativeLanguage} — for hard words you may add a short gloss in ${profile.nativeLanguage} in addition to English.`,
+    )
+  }
+  if (profile.country) lines.push(`- From: ${profile.country}`)
+  if (lines.length === 0) return ""
+  return (
+    "About the learner (use this to tailor examples, topics, and difficulty to their job and goal — " +
+    "don't mention it explicitly unless relevant):\n" +
+    lines.join("\n")
+  )
+}
+
 /** Factory for the JSON AI endpoints: auth → prompt → generateObject → JSON. */
 export function jsonAiRoute<S extends z.ZodType>(
   schema: S,

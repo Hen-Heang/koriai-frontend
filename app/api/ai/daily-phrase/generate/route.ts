@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { jsonAiRoute } from "@/lib/server/ai"
+import { FORMALITY_LABELS, jsonAiRoute } from "@/lib/server/ai"
 
 export const POST = jsonAiRoute(
   z.object({
@@ -19,9 +19,16 @@ export const POST = jsonAiRoute(
       .limit(30)
     const avoid = (recent ?? []).map((r) => r.phrase).join(", ")
     return (
-      `Give one useful Korean workplace phrase of the day for a ${profile?.korean_level ?? "BEGINNER"} learner ` +
-      "who is a software developer in Korea. Include meaning, romanization, when to use it, its formality level, " +
-      `and 2 similar expressions. Avoid these recently used phrases: ${avoid || "(none)"}.`
+      "You are a Korean workplace communication coach for foreign software engineers working at Korean tech companies.\n" +
+      `Generate ONE useful daily Korean workplace phrase for a ${profile?.korean_level ?? "BEGINNER"} learner.\n` +
+      "Prefer practical expressions used in standups, code reviews, deployments, reporting, and team chat.\n" +
+      `Do NOT repeat any of these recently used phrases: ${avoid || "(none)"}\n\n` +
+      "Rules:\n" +
+      "- \"phrase\" must be natural Korean a real Korean developer would actually say or write.\n" +
+      `- \"formality\" must be exactly one of ${FORMALITY_LABELS}.\n` +
+      "- Provide 2-3 similar expressions. If none fit, return an empty array.\n" +
+      "- All explanations must be in English.\n\n" +
+      "Include meaning, romanization, when to use it, its formality level, and similar expressions."
     )
   },
 )

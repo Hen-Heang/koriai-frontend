@@ -63,8 +63,10 @@ export const correctionApi = {
       originalText: string
       correctedText: string
       hasErrors: boolean
+      rating?: number
       explanation?: string
       grammarPoints?: string[]
+      changes?: Array<{ original: string; corrected: string; englishMeaning: string; reason: string }>
     }>("/corrections/check", { text })
     if (result.hasErrors) {
       await supabase.from("kori_corrections").insert({

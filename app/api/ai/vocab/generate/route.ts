@@ -11,11 +11,17 @@ export const POST = jsonAiRoute(
         example: z.string().nullable(),
         exampleTranslation: z.string().nullable(),
         difficultyLevel: z.enum(["Easy", "Medium", "Hard"]).nullable(),
+        tags: z.array(z.string()),
       }),
     ),
   }),
   (body) =>
-    `Generate ${Number(body.count) || 10} Korean vocabulary items for the category "${String(body.category)}", ` +
-    "aimed at a software developer working in Korea. Each item: the Korean term, a concise English meaning, " +
-    "romanized pronunciation, one workplace example sentence, its English translation, and a difficulty level.",
+    `You are a Korean vocabulary teacher for foreign software engineers working in Korea.\n` +
+    `Generate ${Number(body.count) || 10} Korean vocabulary flashcards for the category "${String(body.category)}".\n` +
+    "Focus on practical, high-frequency words and phrases used in real daily workplace situations.\n" +
+    "Rules:\n" +
+    "- \"pronunciation\" must use Revised Romanization (e.g. an-nyeong-ha-se-yo).\n" +
+    "- \"difficultyLevel\" must be exactly \"Easy\", \"Medium\", or \"Hard\".\n" +
+    "- \"example\" must be a realistic sentence a Korean coworker or developer would actually say.\n" +
+    "- \"tags\" is 1-3 short lowercase topic tags (e.g. [\"meetings\", \"deadlines\"]).",
 )

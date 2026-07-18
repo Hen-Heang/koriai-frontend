@@ -11,7 +11,12 @@ export const POST = jsonAiRoute(
     grammarNote: z.string(),
   }),
   (body) =>
+    `You are a Korean language coach evaluating a Korean learner's sentence.\n` +
     `Challenge: ${String(body.challengePrompt)}\nLearner's Korean sentence: ${String(body.attempt)}\n\n` +
+    "Rules:\n" +
+    "- Score 0-100: grammar correctness + naturalness + word usage.\n" +
+    "- If the attempt is blank or in English only, score 0 and explain why in the feedback.\n" +
+    "- All explanations must be in English. betterAlternative must be realistic workplace Korean.\n\n" +
     "Grade the sentence 0–100 (correct = score ≥ 70). Give brief encouraging feedback, the corrected sentence, " +
     "a more natural alternative, and one short grammar note.",
 )

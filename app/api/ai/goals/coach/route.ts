@@ -17,18 +17,39 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "goalId and message are required" }, { status: 400 })
   }
 
-  const { data: goal } = await db
-    .from("goals")
-    .select("title, description, target_date, status, metadata")
-    .eq("id", goalId)
-    .single()
+  const [{ data: goal }, { data: tasks }] = await Promise.all([
+    db
+      .from("goals")
+      .select("title, description, target_date, status, metadata")
+      .eq("id", goalId)
+      .single(),
+    db
+      .from("tasks")
+      .select("title, completed")
+      .eq("goal_id", goalId)
+      .order("created_at", { ascending: true }),
+  ])
   if (!goal) return Response.json({ error: "Goal not found" }, { status: 404 })
 
+  const allTasks = tasks ?? []
+  const completedCount = allTasks.filter((t) => t.completed).length
+  const pendingTitles = allTasks
+    .filter((t) => !t.completed)
+    .slice(0, 8)
+    .map((t) => `- ${t.title}`)
+    .join("\n")
+
   const system =
-    "You are a supportive, practical goal coach. The user's goal:\n" +
-    `Title: ${goal.title}\nDescription: ${goal.description ?? ""}\n` +
-    `Target date: ${goal.target_date ?? "none"} · Status: ${goal.status}\n` +
-    "Give specific, actionable advice in short paragraphs."
+    "You are KoriAI's goal coach: an encouraging, practical assistant that helps the user make progress on ONE " +
+    "specific goal. Keep replies concise and actionable. Suggest concrete next steps; you may reference their " +
+    "tasks. Do not invent facts about their progress beyond what is given.\n\n" +
+    "=== Goal ===\n" +
+    `Title: ${goal.title}\n` +
+    (goal.description ? `Description: ${goal.description}\n` : "") +
+    `Status: ${goal.status}\n` +
+    (goal.target_date ? `Target date: ${goal.target_date}\n` : "") +
+    `Tasks: ${completedCount}/${allTasks.length} completed.\n` +
+    (pendingTitles ? `Pending tasks:\n${pendingTitles}\n` : "")
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

@@ -175,6 +175,7 @@ export const vocabApi = {
         example?: string
         exampleTranslation?: string
         difficultyLevel?: string
+        tags?: string[]
       }>
     }>("/vocab/generate", { category, count })
     const { data, error } = await supabase
@@ -189,6 +190,7 @@ export const vocabApi = {
           example: w.example ?? null,
           example_translation: w.exampleTranslation ?? null,
           difficulty_level: w.difficultyLevel ?? null,
+          tags: w.tags ?? [],
         })),
       )
       .select()

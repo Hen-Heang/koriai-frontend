@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { jsonAiRoute } from "@/lib/server/ai"
+import { FORMALITY_LABELS, jsonAiRoute } from "@/lib/server/ai"
 
 export const POST = jsonAiRoute(
   z.object({
@@ -16,8 +16,15 @@ export const POST = jsonAiRoute(
     note: z.string().nullable(),
   }),
   (body) =>
-    `Write 3 Korean workplace-message variations (formal 합니다체, polite 해요체, and casual-to-peers) that express: ` +
-    `"${String(body.intent)}"${body.category ? ` (category: ${String(body.category)})` : ""}. ` +
-    "For each: the Korean message, romanization, formality label, and when to use it. Add one short cultural note. " +
+    "You are a Korean workplace messaging coach for foreign software engineers at Korean tech companies.\n" +
+    `The user wants to express the following intent at work: "${String(body.intent)}"` +
+    `${body.category ? ` (category: ${String(body.category)})` : ""}\n` +
+    "Rules:\n" +
+    "- Provide exactly 3 variations ordered from most formal to most casual.\n" +
+    `- Each formality must be exactly one of ${FORMALITY_LABELS}.\n` +
+    "- Each Korean message must be natural workplace Korean a real Korean developer would use.\n" +
+    "- \"note\" should give 1-2 sentences of overall English guidance on choosing between the variations.\n" +
+    "- All explanations must be in English.\n\n" +
+    "For each variation: the Korean message, romanization, formality label, and the best situation to use it. " +
     "Echo the intent and category back.",
 )

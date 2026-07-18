@@ -3,7 +3,7 @@ import { z } from "zod"
 import {
   AI_PROVIDER_OPTIONS,
   DEFAULT_MODEL,
-  TUTOR_SYSTEM,
+  FORMALITY_LABELS,
   aiModel,
   requireUser,
   sseChunk,
@@ -24,6 +24,10 @@ const schema = z.object({
   modelUsed: z.string(),
 })
 
+const ANALYZER_SYSTEM =
+  "You are a Korean workplace communication analyst helping a foreign software engineer fully understand real " +
+  "Korean messages from coworkers (Slack, KakaoTalk, meeting notes, team chat)."
+
 // Streams the analysis as it's generated (start → partial* → done → error),
 // same SSE event shape as chat/stream and goals/coach, so the UI can render
 // each field/breakdown item as soon as the model produces it instead of
@@ -34,11 +38,18 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
   const prompt =
+    "Analyze the message below in EXTREME detail so a non-native engineer understands exactly what was meant, " +
+    "how it lands socially, and how they should respond.\n" +
+    "Rules:\n" +
+    "- \"breakdown\" must cover EVERY meaningful phrase/honorific in the message so nothing is left unexplained.\n" +
+    "- Pay special attention to honorifics (-시-, -습니다, -드리다, 분, 님) and explain the social signal each sends.\n" +
+    `- \"politenessLevel\" must be exactly one of ${FORMALITY_LABELS}, followed by a short English note on who it's appropriate for.\n` +
+    `- Provide 2-3 \"suggestedReplies\" ranging across formality (each formality exactly one of ${FORMALITY_LABELS}) unless a reply would be inappropriate, then return [].\n` +
+    "- All explanations must be in English.\n\n" +
     `Analyze this Korean workplace message a developer received${body.source ? ` (via ${String(body.source)})` : ""}:\n` +
     `"${String(body.text)}"\n\n` +
     "Give: literal meaning, natural meaning, the business context/subtext, politeness level, tone, " +
-    "a fragment-by-fragment breakdown (fragment, meaning, grammar/culture note), and 3 suggested Korean replies " +
-    `(with English + formality). Set modelUsed to "${DEFAULT_MODEL}".`
+    `the fragment breakdown, and suggested replies. Set modelUsed to "${DEFAULT_MODEL}".`
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -48,7 +59,7 @@ export async function POST(req: Request): Promise<Response> {
           model: aiModel(),
           providerOptions: AI_PROVIDER_OPTIONS,
           schema,
-          system: TUTOR_SYSTEM,
+          system: ANALYZER_SYSTEM,
           prompt,
         })
         for await (const partial of result.partialObjectStream) {

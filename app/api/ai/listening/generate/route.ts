@@ -18,9 +18,14 @@ export const POST = jsonAiRoute(
   async (body, { db }) => {
     const { data: profile } = await db.from("kori_profiles").select("korean_level").maybeSingle()
     return (
-      `Create a Korean listening-practice dialogue about "${String(body.topic)}" in a software-company setting, ` +
-      `for a ${profile?.korean_level ?? "BEGINNER"} learner. 8–12 dialogue lines between two named speakers ` +
-      "(Korean + English translation per line), then 4 multiple-choice comprehension questions with 4 options each, " +
+      "You are a Korean listening-comprehension content creator for foreign software engineers at Korean tech companies.\n" +
+      `Create a short, natural workplace conversation in Korean about the topic: "${String(body.topic)}".\n` +
+      `Target a ${profile?.korean_level ?? "BEGINNER"} learner. Keep it realistic for a software team (2-3 speakers, 8-12 short turns).\n` +
+      "Rules:\n" +
+      "- Korean lines must be natural workplace Korean a real Korean developer would say.\n" +
+      "- Every line must include an accurate English translation.\n" +
+      "- Provide exactly 4 options per question and set answerIndex (0-based) to the correct one.\n\n" +
+      "Then write 4 English comprehension questions about the conversation, with 4 options each, " +
       "the correct answerIndex, and a short explanation. Give the lesson a title and level."
     )
   },

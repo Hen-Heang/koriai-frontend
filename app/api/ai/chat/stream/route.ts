@@ -1,5 +1,5 @@
 import { streamText } from "ai"
-import { AI_PROVIDER_OPTIONS, aiModel, requireUser, sseChunk, sseResponse, TUTOR_SYSTEM } from "@/lib/server/ai"
+import { AI_PROVIDER_OPTIONS, aiModel, requireUser, sseChunk, sseResponse, learnerProfileBlock } from "@/lib/server/ai"
 
 // Streaming chat reply. Persists both message rows (RLS via the caller's JWT)
 // and emits the same SSE events the Spring /chat/stream endpoint used:
@@ -23,7 +23,7 @@ export async function POST(req: Request): Promise<Response> {
   // Conversation must exist and belong to the caller (RLS enforces the latter).
   const { data: conversation, error: convError } = await db
     .from("kori_conversations")
-    .select("id")
+    .select("id, conversation_type")
     .eq("id", conversationId)
     .single()
   if (convError || !conversation) {
@@ -37,7 +37,10 @@ export async function POST(req: Request): Promise<Response> {
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: false })
       .limit(29),
-    db.from("kori_profiles").select("korean_level, preferred_model").maybeSingle(),
+    db
+      .from("kori_profiles")
+      .select("display_name, korean_level, preferred_model, occupation, learning_goal, native_language, country")
+      .maybeSingle(),
     db
       .from("kori_messages")
       .insert({ conversation_id: conversationId, user_id: user.id, role: "user", content: message })
@@ -55,9 +58,28 @@ export async function POST(req: Request): Promise<Response> {
   ]
   const preparedAt = performance.now()
 
+  const learnerName = profile?.display_name || "there"
+  const level = profile?.korean_level ?? "BEGINNER"
+  const profileBlock = learnerProfileBlock({
+    occupation: profile?.occupation,
+    learningGoal: profile?.learning_goal,
+    nativeLanguage: profile?.native_language,
+    country: profile?.country,
+  })
+
   const system =
-    `${TUTOR_SYSTEM} The learner's level is ${profile?.korean_level ?? "BEGINNER"}. ` +
-    "Reply in natural Korean appropriate to their level, and add short English help when useful."
+    `You are Hengo, a warm, encouraging Korean language tutor and conversation coach.\n` +
+    `You are helping ${learnerName}, whose Korean level is ${level}. Conversation type: ${conversation.conversation_type}.\n\n` +
+    "Coaching style:\n" +
+    "- Reply in clear, learner-friendly English. Keep it concise (2-5 sentences) unless more is asked.\n" +
+    "- If the learner writes Korean with mistakes, gently correct it: show the corrected Korean, then briefly explain the fix in English.\n" +
+    "- Whenever you give Korean, include the English translation, and add Revised Romanization for beginner/intermediate learners.\n" +
+    "- Match the Korean difficulty to the learner's level.\n" +
+    "- When useful, ground examples in the learner's job and goal so practice is relevant to their real work.\n" +
+    "- Acknowledge their effort first, then teach. Stay supportive and motivating.\n" +
+    "- End with a short natural follow-up question in Korean (with its English translation) to keep them practicing.\n" +
+    "- Use the conversation so far for context; do not repeat yourself or forget what was already said.\n\n" +
+    (profileBlock ? `${profileBlock}\n\n` : "")
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
