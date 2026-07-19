@@ -19,6 +19,12 @@ import {
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { SpeakButton } from "@/components/ui/SpeakButton";
+import {
+  CHAT_VOICE,
+  CHAT_VOICE_INSTRUCTIONS,
+  extractKoreanForSpeech,
+  parseVoiceSubtitles,
+} from "@/lib/chat-voice";
 import { cn } from "@/lib/utils";
 import {
   ActionBarMorePrimitive,
@@ -113,9 +119,9 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root bg-background @container flex h-full flex-col"
       style={{
-        ["--thread-max-width" as string]: "48rem",
+        ["--thread-max-width" as string]: "46rem",
         ["--composer-bg" as string]:
-          "color-mix(in oklab, var(--color-muted) 30%, var(--color-background))",
+          "color-mix(in oklab, var(--color-muted) 24%, var(--color-background))",
         ["--composer-radius" as string]: "1.5rem",
         ["--composer-padding" as string]: "8px",
       }}
@@ -127,7 +133,7 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
       >
         <div
           className={cn(
-            "mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4",
+            "mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-3 pt-4 sm:px-5",
             isEmpty && "justify-center",
           )}
         >
@@ -137,7 +143,7 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
 
           <div
             data-slot="aui_message-group"
-            className="mb-14 flex flex-col gap-y-6 empty:hidden"
+            className="mb-12 flex flex-col gap-y-5 empty:hidden sm:gap-y-6"
           >
             <ThreadPrimitive.Messages>
               {() => <ThreadMessage />}
@@ -146,9 +152,9 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
 
           <ThreadPrimitive.ViewportFooter
             className={cn(
-              "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6",
+              "aui-thread-viewport-footer bg-background flex flex-col gap-3 overflow-visible pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-5",
               !isEmpty &&
-                "sticky bottom-0 mt-auto rounded-t-(--composer-radius)",
+                "sticky bottom-0 mt-auto rounded-t-(--composer-radius) border-t border-border/40 bg-background/95 pt-3 shadow-[0_-12px_30px_-24px_rgba(0,0,0,0.35)] backdrop-blur-xl",
             )}
           >
             <ThreadScrollToBottom />
@@ -234,21 +240,20 @@ const Composer: FC = () => {
       <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
         <div
           data-slot="aui_composer-shell"
-          className="border-border/60 focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/5 dark:border-muted-foreground/15 dark:focus-within:border-blue-500/40 flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-[border-color,box-shadow] focus-within:shadow-[0_6px_24px_-8px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-none"
+          className="border-border/70 focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/[0.06] dark:border-muted-foreground/15 dark:focus-within:border-blue-500/40 flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) shadow-[0_8px_30px_-18px_rgba(0,0,0,0.28),0_1px_2px_rgba(0,0,0,0.05)] transition-[border-color,box-shadow] focus-within:shadow-[0_10px_34px_-18px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none"
         >
           <ComposerPrimitive.Input
-            placeholder="Ask Hengo anything..."
-            className="aui-composer-input caret-primary placeholder:text-muted-foreground/50 max-h-40 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base font-medium outline-none"
+            placeholder="Write or speak in Korean…"
+            className="aui-composer-input caret-primary placeholder:text-muted-foreground/45 max-h-40 min-h-11 w-full resize-none bg-transparent px-3 py-1.5 text-[15px] font-medium outline-none sm:text-base"
             rows={1}
-            autoFocus
             enterKeyHint="send"
             aria-label="Chat message"
           />
           <ComposerAction />
         </div>
       </ComposerPrimitive.Root>
-      <p className="aui-composer-disclaimer text-muted-foreground text-center text-[11px] font-medium">
-        Hengo can make mistakes. Consider checking important information.
+      <p className="aui-composer-disclaimer text-muted-foreground/70 text-center text-[10px] font-medium sm:text-[11px]">
+        Tap Korean words for meaning · Hengo can make mistakes.
       </p>
     </div>
   );
@@ -271,7 +276,7 @@ const ComposerAction: FC = () => {
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-send size-8 rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500"
+              className="aui-composer-send size-9 rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500"
               aria-label="Send message"
             >
               <ArrowUpIcon className="aui-composer-send-icon size-4.5" />
@@ -284,7 +289,7 @@ const ComposerAction: FC = () => {
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-cancel size-8 rounded-full bg-blue-600 text-white hover:bg-blue-500"
+              className="aui-composer-cancel size-9 rounded-full bg-blue-600 text-white hover:bg-blue-500"
               aria-label="Stop generating"
             >
               <SquareIcon className="aui-composer-cancel-icon size-3.5 fill-current" />
@@ -348,10 +353,14 @@ const MessageSpeakButton: FC = () => {
       .join("\n")
       .trim(),
   );
-  if (!text) return null;
+  const spokenText = extractKoreanForSpeech(text);
+  if (!spokenText) return null;
   return (
     <SpeakButton
-      text={text}
+      text={spokenText}
+      voice={CHAT_VOICE}
+      instructions={CHAT_VOICE_INSTRUCTIONS}
+      title="Hear the Korean reply"
       className="inline-flex size-8 items-center justify-center rounded-md p-0 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
     />
   );
@@ -364,6 +373,49 @@ const MessageError: FC = () => {
         <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
       </ErrorPrimitive.Root>
     </MessagePrimitive.Error>
+  );
+};
+
+// Voice-mode replies (Korean + labelled EN/RR/FIX lines) render as spoken
+// Korean with a subtitle block underneath, instead of the raw labelled text.
+// Anything that doesn't match the voice format falls back to markdown.
+const AssistantText: FC<{ text: string }> = ({ text }) => {
+  const subtitles = parseVoiceSubtitles(text);
+  if (!subtitles) return <MarkdownText />;
+
+  return (
+    <div className="space-y-2.5">
+      <p className="text-[17px] font-medium leading-relaxed text-foreground">
+        {subtitles.korean}
+      </p>
+      {(subtitles.en || subtitles.rr) && (
+        <div className="space-y-1 rounded-xl border border-border/50 bg-muted/40 px-3.5 py-2.5">
+          {subtitles.en && (
+            <p className="text-[13px] font-medium leading-snug text-muted-foreground">
+              <span className="mr-1.5 rounded bg-blue-500/10 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-blue-700 align-[2px] dark:text-blue-300">
+                EN
+              </span>
+              {subtitles.en}
+            </p>
+          )}
+          {subtitles.rr && (
+            <p className="text-[12px] italic leading-snug text-muted-foreground/70">
+              {subtitles.rr}
+            </p>
+          )}
+        </div>
+      )}
+      {subtitles.fix && (
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.07] px-3.5 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+            More natural
+          </p>
+          <p className="mt-0.5 text-[13px] font-medium leading-snug text-foreground/90">
+            {subtitles.fix}
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -384,7 +436,7 @@ const AssistantMessage: FC = () => {
       data-role="assistant"
       className="fade-in slide-in-from-bottom-1 animate-in relative -mb-7.5 flex gap-3 pb-7.5 duration-150 [contain-intrinsic-size:auto_200px] [content-visibility:auto]"
     >
-      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-background shadow-sm ring-1 ring-blue-500/15">
         <Image
           src="/hengo-icon.svg"
           alt=""
@@ -394,6 +446,12 @@ const AssistantMessage: FC = () => {
         />
       </div>
       <div className="min-w-0 flex-1">
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="text-[11px] font-bold text-foreground/80">Hengo</span>
+        <span className="rounded-full bg-blue-500/[0.08] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
+          AI Coach
+        </span>
+      </div>
       <div
         data-slot="aui_assistant-message-content"
         className="text-foreground leading-relaxed wrap-break-word"
@@ -439,7 +497,7 @@ const AssistantMessage: FC = () => {
                 );
               }
               case "text":
-                return <MarkdownText />;
+                return <AssistantText text={part.text} />;
               case "reasoning":
                 return <Reasoning {...part} />;
               case "tool-call":

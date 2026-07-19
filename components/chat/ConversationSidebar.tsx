@@ -52,19 +52,21 @@ export function ConversationSidebar({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between px-3 py-3">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Chats
-        </h2>
+        <div>
+          <h2 className="text-sm font-bold tracking-tight text-foreground">Conversations</h2>
+          <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">Continue where you left off</p>
+        </div>
         <div className="flex items-center gap-1">
           <Button
-            size="icon"
-            variant="ghost"
+            size="sm"
+            variant="outline"
             onClick={onNew}
             disabled={isStartingNew}
             title="New chat"
-            className="h-8 w-8 rounded-lg border border-border/60 bg-background/50 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="h-8 gap-1 rounded-full border-border/70 bg-background px-2.5 text-[11px] text-foreground"
           >
-            <Plus size={16} strokeWidth={2.5} />
+            <Plus size={14} strokeWidth={2.5} />
+            New
           </Button>
           {onCollapse && (
             <Button
@@ -88,9 +90,13 @@ export function ConversationSidebar({
             <Skeleton className="h-10 w-full rounded-xl" />
           </div>
         ) : conversations.length === 0 ? (
-          <p className="px-3 py-6 text-center text-xs font-medium text-muted-foreground">
-            No chats yet. Start a new one.
-          </p>
+          <div className="mx-1 flex flex-col items-center rounded-2xl border border-dashed border-border px-4 py-8 text-center">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <MessageSquare size={17} />
+            </span>
+            <p className="text-xs font-semibold text-foreground">No conversations yet</p>
+            <p className="mt-1 text-[11px] font-medium text-muted-foreground">Start one with Hengo.</p>
+          </div>
         ) : (
           conversations.map((c) => {
             const active = c.id === activeId
@@ -137,8 +143,10 @@ export function ConversationSidebar({
               <div
                 key={c.id}
                 className={cn(
-                  "group/conv flex items-center gap-1 rounded-xl px-1 transition-colors",
-                  active ? "bg-blue-500/10" : "hover:bg-accent/50"
+                  "group/conv flex items-center gap-1 rounded-xl border px-1 transition-colors",
+                  active
+                    ? "border-blue-500/20 bg-blue-500/[0.08] shadow-sm"
+                    : "border-transparent hover:bg-accent/50"
                 )}
               >
                 <button
@@ -199,7 +207,7 @@ export function ConversationSidebar({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex shrink-0 items-center gap-0.5 pr-1 opacity-0 transition-opacity group-hover/conv:opacity-100">
+                  <div className="flex shrink-0 items-center gap-0.5 pr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover/conv:opacity-100">
                     <button
                       type="button"
                       aria-label="Rename chat"

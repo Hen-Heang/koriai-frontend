@@ -8,7 +8,7 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { EditHabitDialog } from "@/components/recovery/EditHabitDialog"
 import { LiveElapsedClock } from "@/components/recovery/LiveElapsedClock"
-import type { RecoveryHabit } from "@/lib/types"
+import type { RecoveryHabit, TrackingMode } from "@/lib/types"
 
 // Headline is always daysSinceLastEvent (the one metric that would have
 // caught a long silent gap) — never the streak. See lib/recovery.ts. Below the
@@ -40,7 +40,7 @@ export function RecoveryOverview({
   plansCount: number
   duePlansCount: number
   triggersCount: number
-  onUpdateHabit: (data: { label: string; replacementBehavior?: string | null }) => Promise<unknown>
+  onUpdateHabit: (data: { label: string; replacementBehavior?: string | null; recoveryStatement?: string | null; trackingMode?: TrackingMode }) => Promise<unknown>
   onDeleteHabit: () => Promise<unknown>
 }) {
   const neverLogged = daysSinceLastEvent === null

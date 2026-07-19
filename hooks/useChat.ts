@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { chatApi } from "@/lib/api"
 import type { ChatMessage, MessageRole } from "@/lib/types"
@@ -49,27 +49,14 @@ function detectLanguagePreference(input: string): ResponseLanguage | null {
   return null
 }
 
-// Voice mode = spoken Korean immersion. The labelled EN:/RR: lines let the UI
-// show subtitles and let TTS speak only the Korean part.
-const VOICE_MODE_INSTRUCTION =
-  "This is a spoken Korean conversation for speaking practice. Reply in natural, " +
-  "simple Korean appropriate to my level (1-3 short sentences) and always end with a " +
-  "short follow-up question so we keep talking. After the Korean, add the English " +
-  "translation on a new line starting with 'EN: ' and the Revised Romanization on a " +
-  "new line starting with 'RR: '. If I made a Korean mistake, gently give the correct " +
-  "version on a new line starting with 'FIX: '."
-
 function buildMessageForApi(
   content: string,
   language: ResponseLanguage,
   isTechnical: boolean,
-  voiceMode: boolean,
 ): string {
   const instructions = []
 
-  if (voiceMode) {
-    instructions.push(VOICE_MODE_INSTRUCTION)
-  } else if (language === "english") {
+  if (language === "english") {
     instructions.push("Reply in English unless I ask for another language.")
   } else if (language === "korean") {
     instructions.push("Reply in Korean unless I ask for another language.")
@@ -89,7 +76,6 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
   const [isTechnicalMode, setIsTechnicalMode] = useState(false)
-  const [voiceMode, setVoiceMode] = useState(false)
   const [error, setError] = useState("")
   const [isLoadingMessages, setIsLoadingMessages] = useState(Boolean(conversationId))
   const [isSending, setIsSending] = useState(false)
@@ -236,7 +222,7 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
     try {
       await chatApi.streamMessage(
         conversationId,
-        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode, voiceMode),
+        buildMessageForApi(nextContent, nextLanguage, isTechnicalMode),
         (token) => {
           pending += token
           if (frame === null) frame = requestAnimationFrame(flush)
@@ -251,6 +237,7 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
           )
         },
         controller.signal,
+        { displayMessage: nextContent },
       )
       // Flush any tail tokens if the stream ended without a `done` event.
       flush()
@@ -281,6 +268,37 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
     }
   }
 
+  const appendVoiceTurn = useCallback(
+    async (role: "user" | "assistant", content: string) => {
+      const normalized = content.replace(/\s+/g, " ").trim()
+      if (!conversationId || !normalized) return
+
+      const optimisticId = crypto.randomUUID()
+      const optimisticMessage: ChatMessage = {
+        id: optimisticId,
+        role,
+        content: normalized,
+        createdAt: new Date().toISOString(),
+      }
+      setMessages((current) => [...current, optimisticMessage])
+
+      try {
+        const saved = await chatApi.saveVoiceTurn(conversationId, role, normalized)
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === optimisticId
+              ? { ...message, id: saved.id, createdAt: saved.createdAt }
+              : message,
+          ),
+        )
+      } catch {
+        // Keep the local transcript visible even if persistence briefly fails.
+        setError("This voice turn is visible here, but it could not be saved to history.")
+      }
+    },
+    [conversationId],
+  )
+
   // Lets the UI's stop button abort the in-flight stream; useChat's abort
   // handler already drops the placeholder message silently.
   const cancel = () => {
@@ -294,12 +312,10 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
     isStreaming: isSending,
     messages,
     sendMessage,
+    appendVoiceTurn,
     cancel,
     setDraft,
     isTechnicalMode,
     setIsTechnicalMode,
-    voiceMode,
-    setVoiceMode,
   }
 }
-

@@ -11,8 +11,9 @@ import { itemVariants } from "@/lib/motion"
 export function DebriefForm({
   onSave,
 }: {
-  onSave: (input: { reflection: string; ifText: string; thenText: string }) => Promise<void>
+  onSave: (input: { reflection: string; ifText?: string; thenText?: string }) => Promise<void>
 }) {
+  const [stabilizingAction, setStabilizingAction] = useState("")
   const [where, setWhere] = useState("")
   const [feeling, setFeeling] = useState("")
   const [chain, setChain] = useState("")
@@ -36,17 +37,22 @@ export function DebriefForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!ifText.trim() || !thenText.trim() || saving) return
+    if (saving) return
     setSaving(true)
     try {
       const reflection = [
+        stabilizingAction && `Action now: ${stabilizingAction}`,
         where.trim() && `Where: ${where.trim()}`,
         feeling.trim() && `Felt (30 min before): ${feeling.trim()}`,
         chain.trim() && `Chain of events: ${chain.trim()}`,
       ]
         .filter(Boolean)
         .join("\n")
-      await onSave({ reflection, ifText: ifText.trim(), thenText: thenText.trim() })
+      await onSave({
+        reflection,
+        ifText: ifText.trim() || undefined,
+        thenText: thenText.trim() || undefined,
+      })
     } finally {
       setSaving(false)
     }
@@ -56,13 +62,36 @@ export function DebriefForm({
     <motion.form
       variants={itemVariants}
       onSubmit={handleSubmit}
-      className="mx-auto max-w-lg space-y-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 shadow-sm sm:p-8"
+      className="mx-auto max-w-lg space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <div>
-        <h1 className="text-xl font-bold text-foreground">A quick, calm look back</h1>
+        <p className="app-kicker">Continue recovery</p>
+        <h1 className="mt-2 text-xl font-bold text-foreground">One moment does not erase your progress.</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          No verdict here — just enough detail to make next time a little easier.
+          Let&apos;s protect the rest of today. Your current streak may change, but your recovery progress does not disappear.
         </p>
+      </div>
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-semibold text-foreground">Choose one stabilizing action</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {["Close the content", "Leave the room", "Drink water", "Take a shower", "Take a walk", "Start a safe task", "Contact support", "Prepare for sleep"].map((action) => (
+            <button
+              key={action}
+              type="button"
+              aria-pressed={stabilizingAction === action}
+              onClick={() => setStabilizingAction(action)}
+              className={`min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-medium transition-colors ${stabilizingAction === action ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:text-foreground"}`}
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="border-t border-border pt-5">
+        <h2 className="text-base font-semibold">Private reflection <span className="font-normal text-muted-foreground">(optional)</span></h2>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Record only what helps you prepare. Do not include private detail you do not need.</p>
       </div>
 
       <div className="space-y-2">
@@ -86,20 +115,20 @@ export function DebriefForm({
 
       <div className="space-y-2">
         <label htmlFor="debrief-chain" className="text-sm font-semibold text-foreground">
-          What was the chain of events?
+          What happened before it?
         </label>
         <Textarea
           id="debrief-chain"
           value={chain}
           onChange={(e) => setChain(e.target.value)}
           rows={3}
-          placeholder="One thing led to another…"
+          placeholder="A short sequence is enough"
         />
       </div>
 
       <div className="space-y-2">
         <label htmlFor="debrief-break" className="text-sm font-semibold text-foreground">
-          What single link would you break next time?
+          What could make the next situation easier?
         </label>
         <Textarea
           id="debrief-break"
@@ -142,8 +171,8 @@ export function DebriefForm({
         </div>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={saving || !ifText.trim() || !thenText.trim()}>
-        {saving ? "Saving…" : "Save plan"}
+      <Button type="submit" size="lg" className="w-full" disabled={saving}>
+        {saving ? "Saving…" : breakLink.trim() ? "Save plan & continue" : "Continue recovery"}
       </Button>
     </motion.form>
   )

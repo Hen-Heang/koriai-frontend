@@ -45,11 +45,12 @@ export default function RecoveryLogPage() {
           const event = await logEvent(input)
           // Slips get a calm debrief instead of a "nice job" screen; anything
           // else is offered a Pause.
-          router.push(
-            input.kind === "slip"
-              ? `/growth/recovery/debrief?eventId=${event.id}&habitId=${habit.id}`
-              : "/growth/recovery/pause"
-          )
+          if (input.kind === "slip") {
+            sessionStorage.setItem("hengo-recovery-debrief", JSON.stringify({ eventId: event.id, habitId: habit.id }))
+            router.push("/growth/recovery/debrief")
+          } else {
+            router.push("/growth/recovery/urge")
+          }
         }}
       />
     </div>

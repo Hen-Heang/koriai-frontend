@@ -10,6 +10,7 @@ import { ConversationSidebar } from "@/components/chat/ConversationSidebar"
 import { CorrectionsReview } from "@/components/chat/CorrectionsReview"
 import { MessageAnalyzer } from "@/components/ai/MessageAnalyzer"
 import { MessageGenerator } from "@/components/ai/MessageGenerator"
+import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useConversations } from "@/hooks/useConversations"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
@@ -19,10 +20,10 @@ import { cn } from "@/lib/utils"
 type AiMode = "chat" | "analyze" | "generate" | "corrections"
 
 const MODES: { id: AiMode; label: string; icon: typeof MessageCircle }[] = [
-  { id: "chat", label: "Chat", icon: MessageCircle },
+  { id: "chat", label: "Coach", icon: MessageCircle },
   { id: "analyze", label: "Analyze", icon: ScanText },
-  { id: "generate", label: "Generate", icon: Wand2 },
-  { id: "corrections", label: "Corrections", icon: RotateCcw },
+  { id: "generate", label: "Write", icon: Wand2 },
+  { id: "corrections", label: "Review", icon: RotateCcw },
 ]
 
 export default function ChatPage() {
@@ -166,12 +167,15 @@ function ChatPageContent() {
             <h3 className="text-lg font-bold text-foreground">Connection Error</h3>
             <p className="mt-2 text-sm font-medium text-muted-foreground leading-relaxed">{error}</p>
           </div>
-          <button
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
             onClick={() => window.location.reload()}
-            className="mt-2 text-xs font-bold uppercase tracking-wide text-blue-600 hover:text-blue-500 underline underline-offset-4"
+            className="mt-2 text-xs font-bold text-blue-600 hover:text-blue-500"
           >
             Try refreshing
-          </button>
+          </Button>
         </motion.div>
       </div>
     )
@@ -180,59 +184,65 @@ function ChatPageContent() {
   return (
     <div className={cn("flex flex-col", containerHeight)}>
       {/* ── AI workspace mode bar (back + Chat / Analyze / Generate) ── */}
-      <div className="flex shrink-0 items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 sm:px-5">
-        <button
+      <div className="flex shrink-0 items-center gap-2 border-b border-border/40 bg-background/75 px-3 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur-xl sm:px-5">
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => router.push("/home")}
           aria-label="Back to home"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-95"
+          className="h-9 w-9 rounded-xl text-muted-foreground active:scale-95"
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
-        </button>
+        </Button>
 
         {/* Desktop: show history when the rail is collapsed */}
         {mode === "chat" && sidebarCollapsed && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => toggleSidebar(false)}
             aria-label="Show chat history"
             title="Show history"
-            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-95 md:flex"
+            className="hidden h-9 w-9 rounded-xl text-muted-foreground active:scale-95 md:flex"
           >
             <PanelLeft size={20} strokeWidth={2.5} />
-          </button>
+          </Button>
         )}
 
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/60 p-1 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
+          <div className="flex items-center gap-0.5 rounded-2xl border border-border/70 bg-muted/35 p-1 shadow-sm">
             {MODES.map(({ id, label, icon: Icon }) => {
               const active = mode === id
               return (
-                <button
+                <Button
                   key={id}
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setMode(id)}
                   aria-current={active ? "true" : undefined}
                   aria-label={label}
                   className={cn(
-                    "relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px] font-bold uppercase tracking-wide transition-all active:scale-95 sm:px-4",
-                    active ? "text-white" : "text-muted-foreground/70 hover:text-foreground"
+                    "relative h-8 items-center gap-1.5 overflow-hidden rounded-xl border-0 px-2.5 text-[12px] font-bold shadow-none transition-all active:scale-95 sm:px-3.5",
+                    active ? "bg-transparent text-white hover:bg-transparent hover:text-white" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId="ai-mode-pill"
-                      className="absolute inset-0 -z-10 rounded-xl bg-blue-600 shadow-md shadow-blue-600/25"
+                      className="absolute inset-0 z-0 rounded-xl bg-blue-600 shadow-md shadow-blue-600/25"
                       transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
                   )}
-                  <Icon size={14} strokeWidth={2.6} className="shrink-0" />
+                  <Icon size={14} strokeWidth={2.6} className="relative z-10 shrink-0" />
                   {/* On phones only the active tab shows its label so the 4-mode
                       bar fits; every tab keeps its label from sm up. */}
-                  <span className={cn(active ? "inline" : "hidden", "sm:inline")}>
+                  <span className={cn("relative z-10", active ? "inline" : "hidden", "sm:inline")}>
                     {label}
                   </span>
-                </button>
+                </Button>
               )
             })}
           </div>
@@ -243,13 +253,15 @@ function ChatPageContent() {
           {mode === "chat" && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label="Chat history"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-95 md:hidden"
+                  className="h-9 w-9 rounded-xl text-muted-foreground active:scale-95 md:hidden"
                 >
                   <History size={20} strokeWidth={2.5} />
-                </button>
+                </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-0">
                 <SheetTitle className="sr-only">Chat history</SheetTitle>
@@ -276,8 +288,8 @@ function ChatPageContent() {
             <div className="min-w-0 flex-1">
               <ChatWindow
                 key={conversationId ?? "new"}
-                title="AI Language Tutor"
-                subtitle={conversationId ? "Active Session · Korean" : "Connecting…"}
+                title="Hengo"
+                subtitle={conversationId ? "Ready to practice Korean" : "Connecting…"}
                 conversationId={conversationId ?? undefined}
                 initialDraft={initialDraft}
                 onNewChat={startNewChat}

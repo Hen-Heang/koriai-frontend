@@ -8,12 +8,28 @@ import { getUserId } from "@/lib/auth-store"
 import { daysSinceLastEvent, lastEventTimestamp, ratePlan, rodeOutCount, type PlanOutcome } from "@/lib/recovery"
 import { isDue } from "@/lib/srs"
 import { useLogActivity } from "@/hooks/useLogActivity"
-import type { RecoveryEventKind } from "@/lib/types"
+import type {
+  RecoveryBaseline,
+  RecoveryPrivacySettings,
+  TrackingMode,
+  TriggerCategory,
+  WeeklyReview,
+} from "@/lib/types"
+import type {
+  DailyCheckInInput,
+  ProtectionItemInput,
+  RecoveryTargetInput,
+  UrgeEventInput,
+} from "@/lib/recovery-schemas"
 
 export const recoveryHabitsQueryKey = (userId?: string | null) => ["recovery", "habits", userId] as const
 export const recoveryTriggersQueryKey = (userId?: string | null) => ["recovery", "triggers", userId] as const
 export const recoveryEventsQueryKey = (habitId?: string | null) => ["recovery", "events", habitId] as const
 export const recoveryPlansQueryKey = (habitId?: string | null) => ["recovery", "plans", habitId] as const
+export const recoveryDailyCheckInsQueryKey = (habitId?: string | null) => ["recovery", "daily-check-ins", habitId] as const
+export const recoveryProtectionQueryKey = (habitId?: string | null) => ["recovery", "protection", habitId] as const
+export const recoveryPrivacyQueryKey = (userId?: string | null) => ["recovery", "privacy", userId] as const
+export const recoveryWeeklyReviewsQueryKey = (habitId?: string | null) => ["recovery", "weekly-reviews", habitId] as const
 
 // Triggers are global per user (not per-habit) — the same "after a stressful
 // meeting" trigger can apply across habits, so it's one flat, reusable list.
@@ -28,14 +44,14 @@ export function useRecoveryTriggers() {
     enabled: userId != null,
   })
 
-  const addTrigger = async (label: string) => {
-    const trigger = await recoveryApi.addTrigger(label)
+  const addTrigger = async (label: string, category?: TriggerCategory) => {
+    const trigger = await recoveryApi.addTrigger(label, category)
     await queryClient.invalidateQueries({ queryKey: key })
     return trigger
   }
 
-  const updateTrigger = async (id: string, label: string) => {
-    const trigger = await recoveryApi.updateTrigger(id, label)
+  const updateTrigger = async (id: string, label: string, category?: TriggerCategory) => {
+    const trigger = await recoveryApi.updateTrigger(id, label, category)
     await queryClient.invalidateQueries({ queryKey: key })
     return trigger
   }
@@ -72,7 +88,7 @@ export function useRecoveryHabits() {
   const habits = data ?? []
   const activeHabit = habits.find((h) => h.active) ?? null
 
-  const addHabit = async (input: { label: string; replacementBehavior?: string }) => {
+  const addHabit = async (input: RecoveryTargetInput) => {
     const habit = await recoveryApi.addHabit(input)
     await queryClient.invalidateQueries({ queryKey: key })
     return habit
@@ -80,7 +96,16 @@ export function useRecoveryHabits() {
 
   const updateHabit = async (
     id: string,
-    data: { label?: string; replacementBehavior?: string | null; active?: boolean },
+    data: {
+      label?: string
+      replacementBehavior?: string | null
+      trackingMode?: TrackingMode
+      recoveryStatement?: string | null
+      reasons?: string[]
+      baseline?: RecoveryBaseline | null
+      personalLimit?: number | null
+      active?: boolean
+    },
   ) => {
     const habit = await recoveryApi.updateHabit(id, data)
     await queryClient.invalidateQueries({ queryKey: key })
@@ -137,15 +162,7 @@ export function useRecoveryEvents(habitId: string | null) {
     .filter((e) => e.kind === "slip")
     .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))[0]
 
-  const logEvent = async (input: {
-    kind: RecoveryEventKind
-    intensity?: number
-    triggerId?: string
-    emotion?: string
-    actionTaken?: string
-    rodeOut?: boolean
-    note?: string
-  }) => {
+  const logEvent = async (input: UrgeEventInput) => {
     if (!habitId) throw new Error("No active habit")
     const event = await recoveryApi.logEvent(habitId, input)
     await queryClient.invalidateQueries({ queryKey: key })
@@ -161,7 +178,22 @@ export function useRecoveryEvents(habitId: string | null) {
 
   const updateEvent = async (
     id: string,
-    data: { intensity?: number; triggerId?: string | null; emotion?: string | null; rodeOut?: boolean; note?: string | null },
+    data: {
+      intensity?: number
+      triggerId?: string | null
+      emotion?: string | null
+      location?: string | null
+      device?: string | null
+      situation?: string | null
+      previousActivity?: string | null
+      sleepQuality?: number | null
+      stressLevel?: number | null
+      actionTaken?: string | null
+      healthyActionCompleted?: boolean
+      rodeOut?: boolean
+      note?: string | null
+      resolvedAt?: string | null
+    },
   ) => {
     const event = await recoveryApi.updateEvent(id, data)
     await queryClient.invalidateQueries({ queryKey: key })
@@ -241,5 +273,113 @@ export function useRecoveryPlans(habitId: string | null) {
     reviewPlan,
     updatePlan,
     deletePlan,
+  }
+}
+
+export function useRecoveryDailyCheckIns(habitId: string | null) {
+  const queryClient = useQueryClient()
+  const key = recoveryDailyCheckInsQueryKey(habitId)
+  const { logActivity } = useLogActivity("recovery")
+  const { data, isPending, isError } = useQuery({
+    queryKey: key,
+    queryFn: () => recoveryApi.getDailyCheckIns(habitId as string),
+    enabled: habitId != null,
+  })
+
+  const saveCheckIn = async (input: DailyCheckInInput) => {
+    if (!habitId) throw new Error("No active habit")
+    const checkIn = await recoveryApi.saveDailyCheckIn(habitId, input)
+    await queryClient.invalidateQueries({ queryKey: key })
+    void logActivity()
+    return checkIn
+  }
+
+  return {
+    checkIns: data ?? [],
+    loading: isPending,
+    error: isError ? "Failed to load daily check-ins." : "",
+    saveCheckIn,
+  }
+}
+
+export function useRecoveryProtection(habitId: string | null) {
+  const queryClient = useQueryClient()
+  const key = recoveryProtectionQueryKey(habitId)
+  const { data, isPending, isError } = useQuery({
+    queryKey: key,
+    queryFn: () => recoveryApi.getProtectionItems(habitId as string),
+    enabled: habitId != null,
+  })
+
+  const saveItem = async (input: ProtectionItemInput) => {
+    if (!habitId) throw new Error("No active habit")
+    const item = await recoveryApi.saveProtectionItem(habitId, input)
+    await queryClient.invalidateQueries({ queryKey: key })
+    return item
+  }
+
+  return {
+    items: data ?? [],
+    loading: isPending,
+    error: isError ? "Failed to load the protection plan." : "",
+    saveItem,
+  }
+}
+
+export function useRecoveryPrivacy() {
+  const userId = getUserId()
+  const queryClient = useQueryClient()
+  const key = recoveryPrivacyQueryKey(userId)
+  const { data, isPending, isError } = useQuery({
+    queryKey: key,
+    queryFn: recoveryApi.getPrivacySettings,
+    enabled: userId != null,
+  })
+
+  const saveSettings = async (input: RecoveryPrivacySettings) => {
+    const settings = await recoveryApi.savePrivacySettings(input)
+    queryClient.setQueryData(key, settings)
+    return settings
+  }
+
+  const exportData = () => recoveryApi.exportRecoveryData()
+  const deleteAllData = async () => {
+    await recoveryApi.deleteAllRecoveryData()
+    await queryClient.invalidateQueries({ queryKey: ["recovery"] })
+  }
+
+  return {
+    settings: data,
+    loading: isPending,
+    error: isError ? "Failed to load privacy settings." : "",
+    saveSettings,
+    exportData,
+    deleteAllData,
+  }
+}
+
+export function useRecoveryWeeklyReviews(habitId: string | null) {
+  const queryClient = useQueryClient()
+  const key = recoveryWeeklyReviewsQueryKey(habitId)
+  const { data, isPending, isError } = useQuery({
+    queryKey: key,
+    queryFn: () => recoveryApi.getWeeklyReviews(habitId as string),
+    enabled: habitId != null,
+  })
+
+  const saveReview = async (
+    input: Pick<WeeklyReview, "weekStart" | "statistics" | "summary" | "experiment" | "aiSummary" | "aiConsentAt">,
+  ) => {
+    if (!habitId) throw new Error("No active habit")
+    const review = await recoveryApi.saveWeeklyReview(habitId, input)
+    await queryClient.invalidateQueries({ queryKey: key })
+    return review
+  }
+
+  return {
+    reviews: data ?? [],
+    loading: isPending,
+    error: isError ? "Failed to load weekly reviews." : "",
+    saveReview,
   }
 }

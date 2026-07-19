@@ -5,6 +5,8 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -25,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import type { RecoveryHabit } from "@/lib/types"
+import type { RecoveryHabit, TrackingMode } from "@/lib/types"
 
 export function EditHabitDialog({
   habit,
@@ -33,12 +35,14 @@ export function EditHabitDialog({
   onDelete,
 }: {
   habit: RecoveryHabit
-  onUpdate: (data: { label: string; replacementBehavior?: string | null }) => Promise<unknown>
+  onUpdate: (data: { label: string; replacementBehavior?: string | null; recoveryStatement?: string | null; trackingMode?: TrackingMode }) => Promise<unknown>
   onDelete: () => Promise<unknown>
 }) {
   const [open, setOpen] = useState(false)
   const [label, setLabel] = useState(habit.label)
   const [replacementBehavior, setReplacementBehavior] = useState(habit.replacementBehavior ?? "")
+  const [recoveryStatement, setRecoveryStatement] = useState(habit.recoveryStatement ?? "")
+  const [trackingMode, setTrackingMode] = useState<TrackingMode>(habit.trackingMode)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -47,6 +51,8 @@ export function EditHabitDialog({
     if (next) {
       setLabel(habit.label)
       setReplacementBehavior(habit.replacementBehavior ?? "")
+      setRecoveryStatement(habit.recoveryStatement ?? "")
+      setTrackingMode(habit.trackingMode)
     }
   }
 
@@ -55,7 +61,7 @@ export function EditHabitDialog({
     if (!label.trim() || saving) return
     setSaving(true)
     try {
-      await onUpdate({ label: label.trim(), replacementBehavior: replacementBehavior.trim() || null })
+      await onUpdate({ label: label.trim(), replacementBehavior: replacementBehavior.trim() || null, recoveryStatement: recoveryStatement.trim() || null, trackingMode })
       setOpen(false)
     } finally {
       setSaving(false)
@@ -82,7 +88,7 @@ export function EditHabitDialog({
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>Edit habit</DialogTitle>
-            <DialogDescription>Update the label or replacement behavior, or delete this habit entirely.</DialogDescription>
+            <DialogDescription>Update the private label, tracking mode, recovery statement, or replacement action.</DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 space-y-4">
@@ -103,6 +109,8 @@ export function EditHabitDialog({
                 maxLength={120}
               />
             </div>
+            <div className="space-y-2"><label htmlFor="edit-tracking-mode" className="text-sm font-semibold text-foreground">Tracking mode</label><Select value={trackingMode} onValueChange={(value) => setTrackingMode(value as TrackingMode)}><SelectTrigger id="edit-tracking-mode"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="abstinence">Complete abstinence</SelectItem><SelectItem value="frequency_reduction">Frequency reduction</SelectItem><SelectItem value="time_reduction">Time reduction</SelectItem><SelectItem value="personal_limit">Personal limit</SelectItem><SelectItem value="awareness">Awareness only</SelectItem></SelectContent></Select></div>
+            <div className="space-y-2"><label htmlFor="edit-recovery-statement" className="text-sm font-semibold text-foreground">Recovery statement</label><Textarea id="edit-recovery-statement" value={recoveryStatement} onChange={(event) => setRecoveryStatement(event.target.value)} rows={3} maxLength={300} /></div>
           </div>
 
           <DialogFooter className="items-center sm:justify-between">

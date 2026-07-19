@@ -13,9 +13,13 @@ export async function POST(req: Request): Promise<Response> {
   const body = (await req.json().catch(() => ({}))) as {
     conversationId?: string
     message?: string
+    displayMessage?: string
+    voiceMode?: boolean
   }
   const conversationId = body.conversationId
   const message = body.message?.trim()
+  const displayMessage = body.displayMessage?.trim() || message
+  const voiceMode = body.voiceMode === true
   if (!conversationId || !message) {
     return Response.json({ error: "conversationId and message are required" }, { status: 400 })
   }
@@ -43,7 +47,7 @@ export async function POST(req: Request): Promise<Response> {
       .maybeSingle(),
     db
       .from("kori_messages")
-      .insert({ conversation_id: conversationId, user_id: user.id, role: "user", content: message })
+      .insert({ conversation_id: conversationId, user_id: user.id, role: "user", content: displayMessage })
       .select("id")
       .single(),
   ])
@@ -67,17 +71,27 @@ export async function POST(req: Request): Promise<Response> {
     country: profile?.country,
   })
 
+  const coachingStyle = voiceMode
+    ? "Voice conversation style:\n" +
+      "- Reply in natural, contemporary Korean matched to the learner's level. Put the spoken Korean first.\n" +
+      "- Sound like a real conversation partner: react directly, vary your openings, and avoid canned praise or lecture-like explanations.\n" +
+      "- Keep each turn to 1-3 short speakable sentences and ask exactly one relevant follow-up question.\n" +
+      "- Do not use markdown, headings, lists, emoji, or stage directions in a voice reply.\n" +
+      "- Then add one EN: subtitle line and one RR: romanization line for the visible learning aids.\n" +
+      "- Add a concise FIX: line only when the learner's Korean would sound unnatural or change the intended meaning.\n"
+    : "Coaching style:\n" +
+      "- Reply in clear, learner-friendly English. Keep it concise (2-5 sentences) unless more is asked.\n" +
+      "- If the learner writes Korean with mistakes, gently correct it: show the corrected Korean, then briefly explain the fix in English.\n" +
+      "- Whenever you give Korean, include the English translation, and add Revised Romanization for beginner/intermediate learners.\n" +
+      "- End with a short natural follow-up question in Korean (with its English translation) to keep them practicing.\n"
+
   const system =
     `You are Hengo, a warm, encouraging Korean language tutor and conversation coach.\n` +
     `You are helping ${learnerName}, whose Korean level is ${level}. Conversation type: ${conversation.conversation_type}.\n\n` +
-    "Coaching style:\n" +
-    "- Reply in clear, learner-friendly English. Keep it concise (2-5 sentences) unless more is asked.\n" +
-    "- If the learner writes Korean with mistakes, gently correct it: show the corrected Korean, then briefly explain the fix in English.\n" +
-    "- Whenever you give Korean, include the English translation, and add Revised Romanization for beginner/intermediate learners.\n" +
+    coachingStyle +
     "- Match the Korean difficulty to the learner's level.\n" +
     "- When useful, ground examples in the learner's job and goal so practice is relevant to their real work.\n" +
-    "- Acknowledge their effort first, then teach. Stay supportive and motivating.\n" +
-    "- End with a short natural follow-up question in Korean (with its English translation) to keep them practicing.\n" +
+    "- Stay supportive and motivating without praising the learner automatically on every turn.\n" +
     "- Use the conversation so far for context; do not repeat yourself or forget what was already said.\n\n" +
     (profileBlock ? `${profileBlock}\n\n` : "")
 
@@ -142,5 +156,4 @@ export async function POST(req: Request): Promise<Response> {
 
   return sseResponse(stream)
 }
-
 

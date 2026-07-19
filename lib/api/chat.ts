@@ -100,6 +100,26 @@ export const chatApi = {
     return (data as MessageRow[]).reverse().map(toMessage)
   },
 
+  saveVoiceTurn: async (
+    conversationId: string,
+    role: "user" | "assistant",
+    content: string,
+  ): Promise<Message> => {
+    const userId = requireUserId()
+    const { data, error } = await supabase
+      .from("kori_messages")
+      .insert({
+        conversation_id: conversationId,
+        user_id: userId,
+        role,
+        content: content.trim(),
+      })
+      .select("*")
+      .single()
+    if (error) throw error
+    return toMessage(data as MessageRow)
+  },
+
   getConversation: async (conversationId: string): Promise<Conversation> => {
     const { data, error } = await supabase
       .from("kori_conversations")
@@ -144,6 +164,7 @@ export const chatApi = {
     onStart: (userMessageId: string) => void,
     onDone: (assistantMessageId: string) => void,
     signal?: AbortSignal,
+    options?: { displayMessage?: string; voiceMode?: boolean },
   ): Promise<void> => {
     const startedAt = performance.now()
     let firstTokenAt: number | null = null
@@ -151,7 +172,12 @@ export const chatApi = {
     const response = await fetch(`/api/ai/chat/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeaders()) },
-      body: JSON.stringify({ conversationId, message }),
+      body: JSON.stringify({
+        conversationId,
+        message,
+        displayMessage: options?.displayMessage,
+        voiceMode: options?.voiceMode,
+      }),
       signal,
     })
 
@@ -181,4 +207,3 @@ export const chatApi = {
     })
   },
 }
-

@@ -1,75 +1,103 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "motion/react"
-import { Plus } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 
 import { GrowthTabs } from "@/components/growth/GrowthTabs"
 import { CreateHabitForm } from "@/components/recovery/CreateHabitForm"
-import { RecoveryHabitCard } from "@/components/recovery/RecoveryHabitCard"
+import { RecoveryDashboard } from "@/components/recovery/RecoveryDashboard"
 import { BackLink } from "@/components/ui/back-link"
-import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/ui/error-banner"
 import { Skeleton } from "@/components/ui/skeleton"
-import { containerVariants, itemVariants } from "@/lib/motion"
-import { useRecoveryHabits } from "@/hooks/useRecovery"
+import { useGoals } from "@/hooks/useGoals"
+import { useHabits } from "@/hooks/useHabits"
+import {
+  useRecoveryDailyCheckIns,
+  useRecoveryEvents,
+  useRecoveryHabits,
+  useRecoveryPrivacy,
+  useRecoveryProtection,
+} from "@/hooks/useRecovery"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
+import { userApi } from "@/lib/api"
+import { getUserId } from "@/lib/auth-store"
+import { buildRecoveryDashboardSummary } from "@/lib/recovery"
 
 function RecoveryLoadingState() {
   return (
-    <div className="mx-auto max-w-xl space-y-3">
-      <Skeleton className="h-20 w-full rounded-2xl" />
-      <Skeleton className="h-20 w-full rounded-2xl" />
+    <div className="mx-auto max-w-5xl space-y-5">
+      <Skeleton className="h-64 w-full rounded-3xl" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-24 rounded-2xl" />)}</div>
+      <Skeleton className="h-72 w-full rounded-2xl" />
     </div>
   )
 }
 
-export default function RecoveryListPage() {
+export default function RecoveryPage() {
   useSessionTimer("recovery")
-  const { habits, loading, error, addHabit } = useRecoveryHabits()
-  const [showForm, setShowForm] = useState(false)
+  const userId = getUserId()
+  const { habits: targets, activeHabit, loading: targetsLoading, error: targetsError, addHabit } = useRecoveryHabits()
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null)
+  const target = targets.find((item) => item.id === selectedTargetId && item.active) ?? activeHabit
+  const { events, loading: eventsLoading, error: eventsError } = useRecoveryEvents(target?.id ?? null)
+  const { checkIns, loading: checkInsLoading, error: checkInsError } = useRecoveryDailyCheckIns(target?.id ?? null)
+  const { items: protectionItems, loading: protectionLoading, error: protectionError } = useRecoveryProtection(target?.id ?? null)
+  const { settings, loading: privacyLoading, error: privacyError } = useRecoveryPrivacy()
+  const { sortedGoals } = useGoals()
+  const { activeHabits } = useHabits()
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile", userId],
+    queryFn: () => userApi.getById(userId as string),
+    enabled: userId != null,
+  })
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
-  const activeHabits = habits.filter((h) => h.active)
-
+  const loading = targetsLoading || Boolean(target && (eventsLoading || checkInsLoading || protectionLoading || privacyLoading))
   if (loading) return <RecoveryLoadingState />
 
-  return (
-    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="mx-auto max-w-xl pb-12">
-      <motion.div variants={itemVariants} className="mb-2">
+  const error = targetsError || eventsError || checkInsError || protectionError || privacyError
+  const activeTargets = targets.filter((item) => item.active)
+  if (activeTargets.length === 0 || showOnboarding || !target) {
+    return (
+      <div className="mx-auto max-w-5xl pb-14">
         <BackLink href="/home" label="Home" mobileOnly className="mb-2" />
         <GrowthTabs />
-      </motion.div>
-      {error && (
-        <motion.div variants={itemVariants} className="mb-4">
-          <ErrorBanner>{error}</ErrorBanner>
-        </motion.div>
-      )}
-
-      {activeHabits.length === 0 || showForm ? (
+        {error && <div className="mx-auto mb-4 max-w-lg"><ErrorBanner>{error}</ErrorBanner></div>}
         <CreateHabitForm
           onCreate={async (input) => {
-            const habit = await addHabit(input)
-            setShowForm(false)
-            return habit
+            const created = await addHabit(input)
+            setShowOnboarding(false)
+            return created
           }}
-          onClose={activeHabits.length > 0 ? () => setShowForm(false) : undefined}
+          onClose={activeTargets.length > 0 ? () => setShowOnboarding(false) : undefined}
         />
-      ) : (
-        <>
-          <motion.div variants={itemVariants} className="mb-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-foreground">Recovery</h1>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
-              <Plus size={16} strokeWidth={2} />
-              New habit
-            </Button>
-          </motion.div>
-          <div className="space-y-3">
-            {activeHabits.map((habit) => (
-              <RecoveryHabitCard key={habit.id} habit={habit} />
-            ))}
-          </div>
-        </>
-      )}
-    </motion.div>
+      </div>
+    )
+  }
+
+  const summary = buildRecoveryDashboardSummary(target, events, checkIns)
+  const activeGoals = sortedGoals
+    .filter((goal) => goal.status !== "completed" && goal.status !== "archived")
+    .map((goal) => ({ id: goal.id, label: goal.title }))
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <BackLink href="/home" label="Home" mobileOnly className="mb-2" />
+      <GrowthTabs />
+      {error && <div className="mb-4"><ErrorBanner>{error}</ErrorBanner></div>}
+      <RecoveryDashboard
+        target={target}
+        targets={activeTargets}
+        summary={summary}
+        checkIns={checkIns}
+        protectionItems={protectionItems}
+        displayName={profile?.displayName}
+        recoveryLockEnabled={settings?.lockEnabled ?? false}
+        goals={activeGoals}
+        habits={activeHabits.map((habit) => ({ id: habit.id, label: habit.label }))}
+        onAddTarget={() => setShowOnboarding(true)}
+        onSelectTarget={setSelectedTargetId}
+      />
+    </div>
   )
 }

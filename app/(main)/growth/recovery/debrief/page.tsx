@@ -1,40 +1,45 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { DebriefForm } from "@/components/recovery/DebriefForm"
 import { ErrorBanner } from "@/components/ui/error-banner"
-import { useRecoveryEvents, useRecoveryHabitFromParams, useRecoveryPlans } from "@/hooks/useRecovery"
+import { useRecoveryEvents, useRecoveryHabits, useRecoveryPlans } from "@/hooks/useRecovery"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
+
+type DebriefContext = { eventId?: string; habitId?: string }
+
+function readDebriefContext(): DebriefContext {
+  if (typeof window === "undefined") return {}
+  try {
+    return JSON.parse(sessionStorage.getItem("hengo-recovery-debrief") ?? "{}") as DebriefContext
+  } catch {
+    return {}
+  }
+}
 
 export default function RecoveryDebriefPage() {
   useSessionTimer("recovery")
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const eventId = searchParams.get("eventId")
-
-  const { habit, backHref, loading: habitsLoading, error: habitsError } = useRecoveryHabitFromParams()
+  const [context] = useState(readDebriefContext)
+  const { habits, activeHabit, loading: habitsLoading, error: habitsError } = useRecoveryHabits()
+  const habit = habits.find((item) => item.id === context.habitId) ?? activeHabit
   const { annotateEvent, error: eventsError } = useRecoveryEvents(habit?.id ?? null)
   const { addPlan, error: plansError } = useRecoveryPlans(habit?.id ?? null)
 
   if (habitsLoading) return null
-
   const error = habitsError || eventsError || plansError
-  if (error || !habit) {
-    return (
-      <div className="mx-auto max-w-lg pt-10">
-        <ErrorBanner>{error || "Start a habit on the Recovery overview first."}</ErrorBanner>
-      </div>
-    )
-  }
+  if (error || !habit) return <div className="mx-auto max-w-lg pt-10"><ErrorBanner>{error || "Create a private recovery plan first."}</ErrorBanner></div>
 
   return (
     <div className="pb-12">
       <DebriefForm
         onSave={async ({ reflection, ifText, thenText }) => {
-          if (eventId && reflection) await annotateEvent(eventId, reflection)
-          await addPlan({ ifText, thenText, sourceEventId: eventId ?? undefined })
-          router.push(backHref)
+          if (context.eventId && reflection) await annotateEvent(context.eventId, reflection)
+          if (ifText && thenText) await addPlan({ ifText, thenText, sourceEventId: context.eventId })
+          sessionStorage.removeItem("hengo-recovery-debrief")
+          router.push("/growth/recovery")
         }}
       />
     </div>

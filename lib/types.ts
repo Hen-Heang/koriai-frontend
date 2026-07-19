@@ -321,16 +321,55 @@ export interface RecoveryHabit {
   id: string
   label: string
   replacementBehavior?: string
+  trackingMode: TrackingMode
+  recoveryStatement?: string
+  reasons: string[]
+  baseline?: RecoveryBaseline
+  personalLimit?: number
+  onboardingCompletedAt?: string
   startedAt: string
   active: boolean
   createdAt: string
 }
 
+export type TrackingMode =
+  | "abstinence"
+  | "frequency_reduction"
+  | "time_reduction"
+  | "personal_limit"
+  | "awareness"
+
+export interface RecoveryBaseline {
+  approximateFrequency?: number
+  frequencyPeriod?: "day" | "week" | "month"
+  commonTime?: string
+  commonLocation?: string
+  commonDevice?: string
+  commonEmotion?: string
+  affectedAreas?: string[]
+}
+
+/** RecoveryHabit is the persisted target record retained for compatibility. */
+export type RecoveryTarget = RecoveryHabit
+
 export interface RecoveryTrigger {
   id: string
   label: string
+  category: TriggerCategory
   createdAt: string
 }
+
+export type TriggerCategory =
+  | "emotion"
+  | "time"
+  | "location"
+  | "device"
+  | "content_source"
+  | "situation"
+  | "sleep"
+  | "stress"
+  | "social_connection"
+  | "previous_activity"
 
 export type RecoveryEventKind = "moment" | "slip" | "win"
 
@@ -342,10 +381,30 @@ export interface RecoveryEvent {
   intensity?: number
   triggerId?: string
   emotion?: string
+  location?: string
+  device?: string
+  situation?: string
+  previousActivity?: string
+  sleepQuality?: number
+  stressLevel?: number
   actionTaken?: string
+  healthyActionCompleted?: boolean
   rodeOut?: boolean
   note?: string
+  resolvedAt?: string
   createdAt: string
+}
+
+export type UrgeIntensity = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+export type UrgeEvent = RecoveryEvent
+export type LapseEvent = RecoveryEvent & { kind: "slip" }
+
+export interface CopingAction {
+  id: string
+  label: string
+  category: "environment" | "movement" | "learning" | "focus" | "sleep" | "connection" | "custom"
+  href?: string
+  preferred?: boolean
 }
 
 export interface RecoveryPlan {
@@ -360,7 +419,100 @@ export interface RecoveryPlan {
   intervalDays: number
   repetitions: number
   lapses: number
+  active: boolean
+  reminderEnabled: boolean
   createdAt: string
+}
+
+export type DailyCheckInPeriod = "morning" | "evening" | "minimal"
+
+export interface DailyCheckIn {
+  id: string
+  habitId: string
+  date: string
+  period: DailyCheckInPeriod
+  mood?: string
+  sleepQuality?: number
+  energy?: number
+  stress?: number
+  riskLevel?: number
+  importantGoal?: string
+  protectionAction?: string
+  intention?: string
+  currentUrge?: number
+  strongestUrge?: number
+  copingStrategy?: string
+  healthyHabitsCompleted: string[]
+  targetOccurred?: boolean
+  lesson?: string
+  win?: string
+  nextAction?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ProtectionStatus = "not_set" | "planned" | "active" | "needs_improvement"
+
+export interface ProtectionItem {
+  id: string
+  habitId: string
+  category: "phone" | "computer" | "daily_environment"
+  label: string
+  status: ProtectionStatus
+  preferredAction: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WeeklyReview {
+  id: string
+  habitId: string
+  weekStart: string
+  statistics: Record<string, number | string | null>
+  summary?: string
+  experiment?: string
+  aiSummary?: string
+  aiConsentAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecoveryPrivacySettings {
+  lockEnabled: boolean
+  discreetNotifications: boolean
+  customNotificationText?: string
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  morningReminder: boolean
+  eveningReminder: boolean
+  riskTimeReminder: boolean
+  bedtimeReminder: boolean
+  weeklyReviewReminder: boolean
+  aiConsent: boolean
+  updatedAt?: string
+}
+
+export interface RecoveryMomentumFactor {
+  key: "check_ins" | "managed_urges" | "healthy_actions" | "honest_reflections" | "fast_returns"
+  label: string
+  points: number
+  maximum: number
+  explanation: string
+}
+
+export interface RecoveryDashboardSummary {
+  currentStreak: number
+  bestStreak: number
+  recoveryDaysThisMonth: number
+  urgesManaged: number
+  healthyActionsCompleted: number
+  checkInConsistency: number
+  momentum: number
+  momentumFactors: RecoveryMomentumFactor[]
+  averageUrgeIntensity: number | null
+  highestRiskWindow: { startHour: number; endHour: number; count: number } | null
+  averageReturnHours: number | null
 }
 
 // ── Habits (generic identity-based habit tracking) ──────────────────────────

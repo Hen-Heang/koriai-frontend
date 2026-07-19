@@ -8,6 +8,7 @@ import { registerSpeechAudio } from "@/lib/speech-audio"
 interface SpeakButtonProps {
   text: string
   voice?: string
+  instructions?: string
   className?: string
   playbackRate?: number
   title?: string
@@ -18,11 +19,15 @@ const audioUrlCache = new Map<string, string>()
 
 // Shared so other surfaces (e.g. the auto-play in a listening drill) reuse the
 // same per-session URL cache instead of re-fetching the audio for the same text.
-export async function getCachedAudioUrl(text: string, voice = "nova"): Promise<string> {
-  const cacheKey = `${voice}|${text}`
+export async function getCachedAudioUrl(
+  text: string,
+  voice = "nova",
+  instructions?: string,
+): Promise<string> {
+  const cacheKey = `${voice}|${instructions ?? ""}|${text}`
   let url = audioUrlCache.get(cacheKey)
   if (!url) {
-    url = await ttsApi.speak(text, voice)
+    url = await ttsApi.speak(text, voice, { instructions })
     audioUrlCache.set(cacheKey, url)
   }
   return url
@@ -31,6 +36,7 @@ export async function getCachedAudioUrl(text: string, voice = "nova"): Promise<s
 export function SpeakButton({
   text,
   voice = "nova",
+  instructions,
   className = "",
   playbackRate = 1,
   title = "Listen to pronunciation",
@@ -45,7 +51,7 @@ export function SpeakButton({
     if (loading || playing || !text) return
     setLoading(true)
     try {
-      const url = await getCachedAudioUrl(text, voice)
+      const url = await getCachedAudioUrl(text, voice, instructions)
       const audio = new Audio(url)
       audio.playbackRate = playbackRate
       stopAudioRef.current = registerSpeechAudio(audio, () => {

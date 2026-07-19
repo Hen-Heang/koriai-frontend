@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useRef, type FC } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Mic, Headphones, Square } from "lucide-react"
-import { motion } from "motion/react"
+import { AudioLines, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Mic, Headphones } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 import {
   AssistantRuntimeProvider,
@@ -15,6 +15,7 @@ import {
 } from "@assistant-ui/react"
 
 import { Thread } from "@/components/assistant-ui/thread"
+import { RealtimeVoicePanel } from "@/components/chat/RealtimeVoicePanel"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -25,26 +26,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useChat } from "@/hooks/useChat"
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
-import { ttsApi } from "@/lib/api"
+import { useRealtimeVoice, type RealtimeVoicePhase } from "@/hooks/useRealtimeVoice"
 import { CHAT_PRESETS } from "@/lib/chat-presets"
 import type { ChatMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
-
-const SUBTITLE_LINE = /^(EN|RR|FIX)\s*:/i
-const HANGUL = /[가-힣]/
-
-// Pulls just the Korean (Hangul-bearing) lines out of a coach reply so TTS
-// speaks the spoken part, not the EN:/RR:/FIX: subtitle lines.
-function extractKoreanForSpeech(content: string): string {
-  return content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => HANGUL.test(line) && !SUBTITLE_LINE.test(line))
-    .join(" ")
-    .replace(/\*\*/g, "")
-    .trim()
-}
 
 type Suggestion = {
   emoji: string
@@ -69,17 +54,15 @@ const TECHNICAL_SUGGESTIONS: Suggestion[] = [
   { emoji: "🚀", label: "Deployment", text: "What are some common Korean terms used during a production deployment or system maintenance?" },
 ]
 
-// Bridges ChatWindow state to the pieces rendered inside the assistant-ui
-// Thread (welcome screen, composer mic button, listening banner).
+// Bridges ChatWindow state to the welcome screen and composer voice button
+// rendered inside the assistant-ui Thread.
 type HengoChatContextValue = {
   isTechnicalMode: boolean
   canInteract: boolean
-  mic: {
+  voice: {
     supported: boolean
-    isListening: boolean
-    error: string | null
-    transcript: string
-    onClick: () => void
+    phase: RealtimeVoicePhase
+    onToggle: () => void
   }
 }
 
@@ -131,9 +114,10 @@ const ComposerSeeder: FC<{ text: string }> = ({ text }) => {
 
 // ── Empty-state welcome: presets + suggestion chips (rendered inside Thread) ──
 const HengoWelcome: FC = () => {
-  const { isTechnicalMode, canInteract } = useHengoChat()
+  const { isTechnicalMode, canInteract, voice } = useHengoChat()
   const runtime = useThreadRuntime()
   const suggestions = isTechnicalMode ? TECHNICAL_SUGGESTIONS : GENERAL_SUGGESTIONS
+  const voiceActionLabel = voice.phase === "connecting" ? "Connecting…" : "Start live conversation"
 
   function send(text: string) {
     if (!canInteract) return
@@ -153,27 +137,69 @@ const HengoWelcome: FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center gap-8 py-10 sm:py-14"
+      className="flex flex-col items-center gap-7 py-6 sm:py-10"
     >
-      <div className="space-y-3 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl shadow-inner ring-1 ring-blue-500/20">
-          {isTechnicalMode ? "💻" : "🇰🇷"}
+      <div className="w-full max-w-xl px-4 text-center">
+        <div className="relative mx-auto mb-5 w-fit">
+          <span className="absolute inset-0 scale-150 rounded-full bg-blue-500/10 blur-xl" />
+          <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.35rem] bg-background shadow-xl shadow-blue-600/15 ring-1 ring-blue-500/20 sm:h-[4.5rem] sm:w-[4.5rem]">
+            <Image src="/hengo-icon.svg" alt="" width={72} height={72} className="h-full w-full" />
+          </div>
+          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[3px] border-background bg-emerald-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+          </span>
         </div>
-        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
-          {isTechnicalMode ? "Dev Tutor" : "Hengo"}
+
+        <div className="mb-3 flex items-center justify-center gap-2">
+          <span className="rounded-full border border-blue-500/15 bg-blue-500/[0.07] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
+            AI Korean Coach
+          </span>
+          {isTechnicalMode && (
+            <span className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Developer mode
+            </span>
+          )}
+        </div>
+
+        <h2 className="text-balance text-[1.75rem] font-bold tracking-[-0.035em] text-foreground sm:text-3xl">
+          {isTechnicalMode ? "Practice Korean for your workday" : "Speak Korean with confidence"}
         </h2>
-        <p className="mx-auto max-w-xs text-[14px] font-medium leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-md text-pretty text-[14px] font-medium leading-relaxed text-muted-foreground sm:text-[15px]">
           {isTechnicalMode
-            ? "Master technical Korean for your career."
-            : "How can I help you practice today?"}
+            ? "Rehearse meetings, code reviews, and everyday office conversations with a patient coach."
+            : "Have a natural conversation, get gentle corrections, and keep going without breaking your flow."}
         </p>
+
+        {voice.supported && (
+          <Button
+            type="button"
+            size="lg"
+            onClick={voice.onToggle}
+            disabled={!canInteract}
+            className="mt-5 h-12 min-w-52 rounded-full bg-blue-600 px-6 text-[14px] text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 active:scale-[0.98]"
+          >
+            <Mic size={17} />
+            {voiceActionLabel}
+          </Button>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-medium text-muted-foreground/70">
+          <span>Live subtitles</span>
+          <span aria-hidden="true">·</span>
+          <span>Gentle corrections</span>
+          <span aria-hidden="true">·</span>
+          <span>Hands-free turns</span>
+        </div>
       </div>
 
-      <div className="w-full max-w-2xl space-y-2.5 px-4">
-        <p className="text-center text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
-          Practice a scenario
-        </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="w-full max-w-3xl space-y-3 px-3 sm:px-4">
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <p className="text-[13px] font-bold text-foreground">Choose a conversation</p>
+            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">Practice a situation you will actually use.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {CHAT_PRESETS.map((preset, i) => (
             <motion.button
               key={preset.id}
@@ -183,13 +209,15 @@ const HengoWelcome: FC = () => {
               type="button"
               disabled={!canInteract}
               onClick={() => send(preset.prompt)}
-              className="group flex flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/50 p-3 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+              className="group flex min-h-[7.25rem] flex-col items-start rounded-2xl border border-border/70 bg-card/70 p-3.5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-500/35 hover:bg-card hover:shadow-md disabled:opacity-40 active:translate-y-0 active:scale-[0.98]"
             >
-              <span className="text-lg">{preset.emoji}</span>
-              <span className="text-[13px] font-bold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              <span className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-muted/70 text-base ring-1 ring-border/50 transition-colors group-hover:bg-blue-500/10">
+                {preset.emoji}
+              </span>
+              <span className="text-[13px] font-bold leading-tight text-foreground/90 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                 {preset.label}
               </span>
-              <span className="text-[12px] font-medium leading-snug text-muted-foreground">
+              <span className="mt-1 line-clamp-2 text-[11px] font-medium leading-snug text-muted-foreground">
                 {preset.description}
               </span>
             </motion.button>
@@ -207,10 +235,10 @@ const HengoWelcome: FC = () => {
             type="button"
             disabled={!canInteract}
             onClick={() => sendSuggestion(s)}
-            className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-4 py-2 text-left transition-all hover:border-blue-500/40 hover:bg-accent/10 disabled:opacity-40 active:scale-95"
+            className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3.5 py-1.5 text-left transition-all hover:border-blue-500/30 hover:bg-muted/60 disabled:opacity-40 active:scale-95"
           >
-            <span className="text-sm">{s.emoji}</span>
-            <span className="text-[14px] font-semibold text-foreground/80 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            <span className="text-[13px]">{s.emoji}</span>
+            <span className="text-[12px] font-semibold text-foreground/75 group-hover:text-foreground">
               {s.label}
             </span>
           </motion.button>
@@ -220,65 +248,37 @@ const HengoWelcome: FC = () => {
   )
 }
 
-// ── Composer slots: mic button + live-transcript banner ──
+// ── Composer slot: opens the same realtime room as the main voice CTA ──
 const MicButton: FC = () => {
-  const { canInteract, mic } = useHengoChat()
-  if (!mic.supported) return null
+  const { canInteract, voice } = useHengoChat()
+  if (!voice.supported) return null
+
+  const title = voice.phase === "connecting" ? "Connecting live voice" : "Start live Korean conversation"
 
   return (
     <Button
       type="button"
       size="icon"
       variant="ghost"
-      onClick={mic.onClick}
+      onClick={voice.onToggle}
       disabled={!canInteract}
-      title={mic.isListening ? "Stop listening" : "Speak in Korean"}
-      aria-label={mic.isListening ? "Stop listening" : "Speak in Korean"}
+      title={title}
+      aria-label={title}
       className={cn(
-        "size-8 shrink-0 rounded-full transition-colors",
-        mic.isListening
-          ? "bg-red-500 text-white hover:bg-red-500 animate-pulse"
+        "size-9 shrink-0 rounded-full transition-colors",
+        voice.phase === "connecting"
+          ? "animate-pulse bg-blue-600 text-white"
           : "text-muted-foreground/60 hover:bg-accent hover:text-foreground"
       )}
     >
-      {mic.isListening ? <Square size={14} /> : <Mic size={18} />}
+      <Mic size={18} />
     </Button>
-  )
-}
-
-const ListeningBanner: FC = () => {
-  const { mic } = useHengoChat()
-  if (!mic.isListening && !mic.error) return null
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "flex items-center gap-3 rounded-2xl border px-4 py-3",
-        mic.error ? "border-destructive/30 bg-destructive/5" : "border-blue-500/30 bg-blue-500/5"
-      )}
-    >
-      {mic.error ? (
-        <p className="text-[13px] font-semibold text-destructive">{mic.error}</p>
-      ) : (
-        <>
-          <span className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-            <Mic size={12} className="animate-pulse" /> Listening
-          </span>
-          <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground">
-            {mic.transcript || "한국어로 말해 보세요…"}
-          </p>
-        </>
-      )}
-    </motion.div>
   )
 }
 
 const THREAD_COMPONENTS = {
   Welcome: HengoWelcome,
   ComposerLeading: MicButton,
-  ComposerHeader: ListeningBanner,
 }
 
 type ChatWindowProps = {
@@ -314,20 +314,25 @@ export function ChatWindow({
     isStreaming,
     messages,
     sendMessage,
+    appendVoiceTurn,
     cancel,
     isTechnicalMode,
     setIsTechnicalMode,
-    voiceMode,
-    setVoiceMode,
   } = useChat({ conversationId, initialMessages, onConversationTitled })
 
   const router = useRouter()
-  const canInteract = Boolean(conversationId) && !isStreaming && !isLoadingMessages
+  const realtimeVoice = useRealtimeVoice({
+    conversationId,
+    technicalMode: isTechnicalMode,
+    onTurnComplete: appendVoiceTurn,
+  })
+  const canInteract =
+    Boolean(conversationId) && !isStreaming && !isLoadingMessages && !realtimeVoice.isActive
 
   const runtime = useExternalStoreRuntime({
     messages,
     isRunning: isStreaming,
-    isDisabled: !conversationId || isLoadingMessages,
+    isDisabled: !conversationId || isLoadingMessages || realtimeVoice.isActive,
     convertMessage,
     onNew: async (message: AppendMessage) => {
       const text = getAppendedText(message)
@@ -344,93 +349,68 @@ export function ChatWindow({
     if (error) toast.error(error)
   }, [error])
 
-  // ── Voice conversation: speech-to-text in, text-to-speech out ──
-  const {
-    supported: micSupported,
-    status: micStatus,
-    transcript: liveTranscript,
-    error: micError,
-    start: startListening,
-    stop: stopListening,
-  } = useSpeechRecognition({
-    lang: "ko-KR",
-    onResult: (spoken) => {
-      const text = spoken.trim()
-      if (text && conversationId && !isStreaming && !isLoadingMessages) {
-        sendMessage(text)
-      }
-    },
-  })
-  const isListening = micStatus === "listening"
-
-  function handleMicClick() {
-    if (!micSupported) return
-    if (isListening) {
-      stopListening()
+  function handleVoiceToggle() {
+    if (realtimeVoice.isActive) {
+      realtimeVoice.stop()
     } else {
-      if (!voiceMode) setVoiceMode(true)
-      startListening()
+      void realtimeVoice.start()
     }
   }
 
-  // Auto-play the coach's Korean reply once streaming finishes (voice mode only).
-  // `messages` is read through a ref so this effect fires only on the
-  // streaming→idle transition, not on every buffered token flush mid-stream.
-  const messagesRef = useRef(messages)
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
-  const prevStreamingRef = useRef(false)
-  const lastSpokenIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    const justFinished = prevStreamingRef.current && !isStreaming
-    prevStreamingRef.current = isStreaming
-    if (!justFinished || !voiceMode) return
-
-    let lastAssistant: ChatMessage | undefined
-    for (let i = messagesRef.current.length - 1; i >= 0; i--) {
-      if (messagesRef.current[i].role === "assistant") {
-        lastAssistant = messagesRef.current[i]
-        break
-      }
-    }
-    if (!lastAssistant || lastAssistant.id === lastSpokenIdRef.current) return
-    const korean = extractKoreanForSpeech(lastAssistant.content)
-    if (!korean) return
-    lastSpokenIdRef.current = lastAssistant.id
-    ttsApi
-      .speak(korean, "nova")
-      .then((url) => {
-        const audio = new Audio(url)
-        // Free the blob URL once playback ends so it doesn't leak per reply.
-        audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true })
-        return audio.play().catch(() => URL.revokeObjectURL(url))
-      })
-      .catch(() => {})
-  }, [isStreaming, voiceMode])
+  const coachStatus = realtimeVoice.isActive
+    ? realtimeVoice.phase === "connecting"
+      ? "Connecting live voice"
+      : realtimeVoice.phase === "listening"
+        ? "Listening to you"
+        : realtimeVoice.phase === "thinking"
+          ? "Thinking"
+          : realtimeVoice.phase === "speaking"
+            ? "Speaking live"
+            : realtimeVoice.phase === "error"
+              ? "Voice connection paused"
+              : "Live voice ready"
+    : subtitle
 
   const hengoContext: HengoChatContextValue = {
     isTechnicalMode,
     canInteract,
-    mic: {
-      supported: micSupported,
-      isListening,
-      error: micError,
-      transcript: liveTranscript,
-      onClick: handleMicClick,
+    voice: {
+      supported: realtimeVoice.supported,
+      phase: realtimeVoice.phase,
+      onToggle: handleVoiceToggle,
     },
   }
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <HengoChatContext.Provider value={hengoContext}>
-        <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-3xl md:border">
+        <div className="relative flex h-full min-h-0 w-full max-w-full min-w-0 flex-col overflow-hidden border-border/60 bg-card shadow-2xl dark:bg-slate-950/40 dark:backdrop-blur-md md:rounded-3xl md:border">
+          <AnimatePresence>
+            {realtimeVoice.isActive && (
+              <RealtimeVoicePanel
+                phase={realtimeVoice.phase}
+                turns={realtimeVoice.turns}
+                userCaption={realtimeVoice.userCaption}
+                assistantCaption={realtimeVoice.assistantCaption}
+                error={realtimeVoice.error}
+                isMuted={realtimeVoice.isMuted}
+                model={realtimeVoice.model}
+                learnerLevel={realtimeVoice.learnerLevel}
+                speechRate={realtimeVoice.speechRate}
+                onToggleMute={realtimeVoice.toggleMute}
+                onEnd={realtimeVoice.stop}
+                onRetry={() => void realtimeVoice.start()}
+              />
+            )}
+          </AnimatePresence>
 
           {/* ── Desktop/Mobile Optimized Header ── */}
           <div
+            aria-hidden={realtimeVoice.isActive || undefined}
+            inert={realtimeVoice.isActive || undefined}
             className={cn(
-              "flex shrink-0 items-center justify-between gap-3 border-b border-border/40 bg-background/40 px-5 py-4 backdrop-blur-xl sm:px-6",
-              embedded ? "pt-4" : "pt-[max(1rem,env(safe-area-inset-top))]"
+              "flex shrink-0 items-center justify-between gap-3 border-b border-border/50 bg-background/80 px-4 py-3 shadow-[0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-xl sm:px-5",
+              embedded ? "pt-3" : "pt-[max(0.75rem,env(safe-area-inset-top))]"
             )}
           >
             <div className="flex min-w-0 items-center gap-3">
@@ -447,16 +427,26 @@ export function ChatWindow({
               )}
 
               <div className="relative shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[1.1rem] shadow-lg shadow-blue-500/20">
+                <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-background shadow-md shadow-blue-500/15 ring-1 ring-blue-500/15 sm:h-10 sm:w-10 sm:rounded-[0.9rem]">
                   <Image src="/hengo-icon.svg" alt="" width={40} height={40} className="h-full w-full" />
                 </div>
-                <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-card bg-blue-400" />
+                <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
               </div>
               <div className="min-w-0">
-                <h3 className="truncate text-[16px] font-bold tracking-tight text-foreground leading-none">{title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground sm:text-[16px]">{title}</h3>
+                  <span className="hidden rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 sm:inline">
+                    AI Coach
+                  </span>
+                </div>
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  <span className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
-                  <p className="truncate text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{subtitle}</p>
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      realtimeVoice.isActive ? "animate-pulse bg-blue-500" : "bg-emerald-500"
+                    )}
+                  />
+                  <p className="truncate text-[11px] font-semibold text-muted-foreground">{coachStatus}</p>
                 </div>
               </div>
             </div>
@@ -481,17 +471,19 @@ export function ChatWindow({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setVoiceMode(!voiceMode)}
-                title="Korean voice conversation: speak and hear replies with subtitles"
+                onClick={handleVoiceToggle}
+                disabled={!realtimeVoice.supported || (!realtimeVoice.isActive && !canInteract)}
+                title={realtimeVoice.isActive ? "End live voice practice" : "Start live Korean voice practice"}
+                aria-pressed={realtimeVoice.isActive}
                 className={cn(
-                  "hidden h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold uppercase tracking-wider transition-all sm:flex",
-                  voiceMode
-                    ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                    : "border-border/60 bg-background/50 text-muted-foreground"
+                  "h-9 items-center gap-2 rounded-full px-2.5 text-[11px] font-bold transition-all sm:px-3",
+                  realtimeVoice.isActive
+                    ? "border-blue-500/40 bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-500"
+                    : "border-border/70 bg-background text-muted-foreground hover:border-blue-500/30 hover:text-foreground"
                 )}
               >
-                <Headphones size={14} />
-                <span>{voiceMode ? "Voice ON" : "Voice"}</span>
+                {realtimeVoice.isActive ? <AudioLines size={14} /> : <Headphones size={14} />}
+                <span className="hidden sm:inline">{realtimeVoice.isActive ? "Live voice" : "Practice speaking"}</span>
               </Button>
 
               {onNewChat && (
@@ -527,10 +519,6 @@ export function ChatWindow({
                     {isTechnicalMode ? <Terminal size={14} className="mr-2" /> : <Briefcase size={14} className="mr-2" />}
                     Dev Mode (technical Korean)
                   </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem checked={voiceMode} onCheckedChange={() => setVoiceMode(!voiceMode)}>
-                    <Headphones size={14} className="mr-2" />
-                    Voice conversation
-                  </DropdownMenuCheckboxItem>
                   {onNewChat && (
                     <>
                       <DropdownMenuSeparator />
@@ -546,7 +534,11 @@ export function ChatWindow({
           </div>
 
           {/* ── assistant-ui Thread: messages + composer ── */}
-          <div className="relative min-h-0 flex-1">
+          <div
+            className="relative min-h-0 flex-1"
+            aria-hidden={realtimeVoice.isActive || undefined}
+            inert={realtimeVoice.isActive || undefined}
+          >
             {isLoadingMessages && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-card/60 backdrop-blur-sm">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shadow-inner">
