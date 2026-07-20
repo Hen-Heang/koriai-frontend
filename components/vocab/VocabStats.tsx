@@ -54,17 +54,17 @@ export function VocabStats({ words, dueCount }: VocabStatsProps) {
 
   return (
     <Card className="overflow-hidden rounded-3xl border-border/70 shadow-sm">
-      <CardContent className="space-y-5 p-5 sm:p-6">
+      <CardContent className="space-y-4 p-4 sm:space-y-5 sm:p-6">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="app-kicker">Deck health</p>
-            <h3 className="mt-1 text-lg font-semibold text-foreground">How your memory is developing</h3>
+            <h3 className="mt-1 text-base font-semibold text-foreground sm:text-lg">How your memory is developing</h3>
           </div>
           <p className="text-sm text-muted-foreground">Based on {stats.total} saved words</p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[minmax(12rem,0.7fr)_minmax(0,1.8fr)]">
-          <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-primary/[0.035] p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-primary/[0.035] p-3.5 sm:gap-4 sm:p-4">
             <AnimatedCircularProgressBar
               value={stats.averageMastery}
               gaugePrimaryColor="var(--primary)"
@@ -80,17 +80,17 @@ export function VocabStats({ words, dueCount }: VocabStatsProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {tiles.map(({ label, value, helper, icon: Icon, accent, iconBg }) => (
-              <div key={label} className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                <div className={cn("flex size-8 items-center justify-center rounded-lg", iconBg, accent)}>
+              <div key={label} className="min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3 sm:p-4">
+                <div className={cn("flex size-7 items-center justify-center rounded-lg sm:size-8", iconBg, accent)}>
                   <Icon size={15} strokeWidth={2.25} />
                 </div>
-                <p className={cn("mt-3 font-mono text-2xl font-semibold tracking-tight", accent)}>
+                <p className={cn("mt-2.5 font-mono text-xl font-semibold tracking-tight sm:mt-3 sm:text-2xl", accent)}>
                   {value}
                 </p>
-                <p className="mt-1 text-xs font-semibold text-foreground">{label}</p>
-                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{helper}</p>
+                <p className="mt-1 text-[11px] font-semibold leading-tight text-foreground sm:text-xs">{label}</p>
+                <p className="mt-0.5 hidden text-[11px] leading-4 text-muted-foreground sm:block">{helper}</p>
               </div>
             ))}
           </div>

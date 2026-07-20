@@ -110,7 +110,7 @@ export default function VocabPage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="space-y-8 pb-16"
+      className="space-y-6 pb-10 sm:space-y-8 sm:pb-16"
     >
       <motion.div variants={itemVariants}>
         <PageHero
@@ -134,7 +134,7 @@ export default function VocabPage() {
 
       <motion.div variants={itemVariants}>
         <Tabs defaultValue="vocabulary" className="gap-0">
-          <TabsList className="grid h-12 w-full max-w-md grid-cols-2 rounded-2xl border border-border/70 bg-muted/60 p-1">
+          <TabsList className="grid h-12 w-full grid-cols-2 rounded-2xl border border-border/70 bg-muted/60 p-1 sm:max-w-md">
             <TabsTrigger value="vocabulary" className="rounded-xl px-3 font-semibold">
               <LibraryBig />
               Words
@@ -149,7 +149,7 @@ export default function VocabPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="vocabulary" className="space-y-7 pt-6">
+          <TabsContent value="vocabulary" className="space-y-6 pt-5 sm:space-y-7 sm:pt-6">
             {/* The daily task leads the page; the full session opens in a focused overlay. */}
             <ReviewSession
               dueToday={dueToday}
@@ -161,11 +161,11 @@ export default function VocabPage() {
 
             {error ? <ErrorBanner>{error}</ErrorBanner> : null}
 
-            <section aria-labelledby="word-library-title" className="space-y-5">
+            <section aria-labelledby="word-library-title" className="space-y-4 sm:space-y-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="app-kicker">Your collection</p>
-                  <h2 id="word-library-title" className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+                  <h2 id="word-library-title" className="mt-1 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                     Word library
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">

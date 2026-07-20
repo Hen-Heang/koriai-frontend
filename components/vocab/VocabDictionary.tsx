@@ -160,8 +160,8 @@ export function VocabDictionary({
       <VocabStats words={words} dueCount={dueCount} />
 
       {words.length > 0 && (
-        <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm dark:bg-slate-900/50 sm:p-4">
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 px-1">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm dark:bg-slate-900/50">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 px-4 py-3.5 sm:px-5">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Browse decks</h3>
               <p className="mt-0.5 text-xs text-muted-foreground" aria-live="polite">
@@ -177,9 +177,9 @@ export function VocabDictionary({
             ) : null}
           </div>
 
-          {/* Mastery filters, sort, and layout stay together as one toolbar. */}
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Vocabulary view controls">
-            {MASTERY_FILTERS.map(({ value, label }) => (
+          <div className="space-y-3 p-3 sm:p-4" role="group" aria-label="Vocabulary view controls">
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {MASTERY_FILTERS.map(({ value, label }) => (
               <Button
                 key={value}
                 type="button"
@@ -188,7 +188,7 @@ export function VocabDictionary({
                 size="sm"
                 aria-pressed={masteryFilter === value}
                 className={cn(
-                  "rounded-xl px-3 text-xs",
+                  "shrink-0 rounded-xl px-3 text-xs",
                   masteryFilter === value
                     ? "bg-primary/10 text-primary hover:bg-primary/15"
                     : "text-muted-foreground"
@@ -199,11 +199,13 @@ export function VocabDictionary({
                   {filterCounts[value]}
                 </span>
               </Button>
-            ))}
+              ))}
+            </div>
 
-            <div className="ml-auto min-w-36 flex-1 sm:max-w-48">
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1 sm:max-w-56">
               <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortOrder)}>
-                <SelectTrigger aria-label="Sort vocabulary words" className="h-9 rounded-xl bg-background shadow-none">
+                <SelectTrigger aria-label="Sort vocabulary words" className="h-10 w-full rounded-xl bg-background shadow-none">
                   <ArrowDownUp className="text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
@@ -215,9 +217,9 @@ export function VocabDictionary({
                 ))}
                 </SelectContent>
               </Select>
-            </div>
+              </div>
 
-            <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1" role="group" aria-label="Deck layout">
+            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-border bg-background p-1" role="group" aria-label="Deck layout">
               <Button
                 type="button"
                 onClick={() => setViewMode("list")}
@@ -250,6 +252,7 @@ export function VocabDictionary({
               >
                 <LayoutGrid size={14} strokeWidth={2.5} />
               </Button>
+            </div>
             </div>
           </div>
         </div>

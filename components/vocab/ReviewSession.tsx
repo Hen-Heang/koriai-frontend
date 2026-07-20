@@ -1198,7 +1198,7 @@ export function ReviewSession({ dueToday, dueCount, allWords, loading, onRate }:
           </div>
 
           {/* Stats + launch */}
-          <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+          <div className="grid shrink-0 grid-cols-1 items-center gap-3 min-[420px]:grid-cols-[auto_minmax(0,1fr)]">
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-background/65 px-4 py-2.5">
               <div className="text-center">
                 <p className="font-mono text-lg font-semibold leading-none text-emerald-600">{filteredDueToday.length}</p>
