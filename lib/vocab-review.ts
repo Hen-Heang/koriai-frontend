@@ -21,15 +21,18 @@ function normalizeAnswer(text: string): string {
 /**
  * Lenient comparison for typed recall answers: Unicode-normalized,
  * case/whitespace/punctuation-insensitive. A term like "출시(하다)" accepts
- * both "출시하다" and "출시".
+ * both "출시하다" and "출시". A term listing alternatives with "/" (e.g.
+ * "구매하다 / 구입하다 / 사다") accepts any single alternative, not just the
+ * full joined string.
  */
 export function isCorrectTerm(input: string, term: string): boolean {
   const answer = normalizeAnswer(input)
   if (!answer) return false
-  const variants = new Set([
-    normalizeAnswer(term),
-    normalizeAnswer(term.replace(/\([^)]*\)/g, "")),
-  ])
+  const variants = new Set<string>()
+  for (const part of [term, ...term.split("/")]) {
+    variants.add(normalizeAnswer(part))
+    variants.add(normalizeAnswer(part.replace(/\([^)]*\)/g, "")))
+  }
   return variants.has(answer)
 }
 

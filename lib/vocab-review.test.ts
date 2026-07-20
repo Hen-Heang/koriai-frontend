@@ -71,6 +71,20 @@ describe("isCorrectTerm", () => {
     expect(isCorrectTerm("", "회의")).toBe(false)
     expect(isCorrectTerm("   ", "회의")).toBe(false)
   })
+
+  it("accepts any single alternative in a slash-separated term", () => {
+    expect(isCorrectTerm("구매하다", "구매하다 / 구입하다 / 사다")).toBe(true)
+    expect(isCorrectTerm("구입하다", "구매하다 / 구입하다 / 사다")).toBe(true)
+    expect(isCorrectTerm("사다", "구매하다 / 구입하다 / 사다")).toBe(true)
+  })
+
+  it("still accepts the full slash-joined string", () => {
+    expect(isCorrectTerm("구매하다 / 구입하다 / 사다", "구매하다 / 구입하다 / 사다")).toBe(true)
+  })
+
+  it("rejects an alternative that isn't in the list", () => {
+    expect(isCorrectTerm("팔다", "구매하다 / 구입하다 / 사다")).toBe(false)
+  })
 })
 
 describe("matchesMastery", () => {
