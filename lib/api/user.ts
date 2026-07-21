@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabase"
 import { getUserEmail } from "@/lib/auth-store"
+import { resolveAllowedModel } from "@/lib/server/models"
+import { recommendLevel, type CategoryEvidence } from "@/lib/learning/level-engine"
+import { skillsApi } from "./skills"
 
 // User profile over kori_profiles (snake_case columns mapped to the camelCase
 // shapes the pages already consume). Avatars live in the public `kori-avatars`
@@ -114,7 +117,7 @@ export const userApi = {
   updatePreferredModel: async (id: string, preferredModel: string) => {
     const { error } = await supabase
       .from("kori_profiles")
-      .update({ preferred_model: preferredModel })
+      .update({ preferred_model: resolveAllowedModel(preferredModel) })
       .eq("id", id)
     if (error) throw error
   },
@@ -167,35 +170,50 @@ export interface LevelSuggestion {
   avgCorrectionRating: number
 }
 
-const LEVEL_ORDER = ["BEGINNER", "INTERMEDIATE", "ADVANCED"]
+// Aggregates kori_skill_mastery rows (skill_code prefix) into one weighted
+// evidence bucket: attempts = sum, averageScore = attempts-weighted mean.
+function aggregateCategory(rows: Array<{ skillCode: string; masteryScore: number; attemptCount: number }>, prefix: string): CategoryEvidence {
+  const matching = rows.filter((r) => r.skillCode.startsWith(prefix))
+  const attempts = matching.reduce((s, r) => s + r.attemptCount, 0)
+  if (attempts === 0) return { attempts: 0, averageScore: 0 }
+  const averageScore = matching.reduce((s, r) => s + r.masteryScore * r.attemptCount, 0) / attempts
+  return { attempts, averageScore: Math.round(averageScore) }
+}
 
-// Suggests leveling BEGINNER -> INTERMEDIATE -> ADVANCED from real vocab-mastery
-// data. Computed client-side from Supabase now (the Spring version also folded in
-// grammar accuracy); never downgrades.
+// Suggests leveling BEGINNER -> INTERMEDIATE -> ADVANCED from real,
+// multi-category skill-mastery evidence (lib/learning/level-engine.ts) —
+// vocabulary alone used to decide this. Never downgrades; the learner must
+// still manually accept the suggestion via apply().
 export const levelApi = {
   getSuggestion: async (): Promise<LevelSuggestion> => {
-    const [{ data: profile }, { data: vocab }] = await Promise.all([
+    const [{ data: profile }, { data: vocab }, mastery] = await Promise.all([
       supabase.from("kori_profiles").select("korean_level").maybeSingle(),
       supabase.from("kori_vocab_cards").select("mastery"),
+      skillsApi.getMastery().catch(() => []),
     ])
     const currentLevel = profile?.korean_level ?? "BEGINNER"
     const words = vocab ?? []
-    const avgMastery = words.length
+    const avgVocabMastery = words.length
       ? words.reduce((s, w) => s + (w.mastery ?? 0), 0) / words.length
       : 0
-    const idx = LEVEL_ORDER.indexOf(currentLevel)
-    const canUpgrade = idx >= 0 && idx < LEVEL_ORDER.length - 1
-    const qualified = words.length >= 50 && avgMastery >= 60
+
+    const recommendation = recommendLevel({
+      currentLevel,
+      vocabulary: aggregateCategory(mastery, "vocabulary."),
+      grammar: aggregateCategory(mastery, "grammar."),
+      listening: aggregateCategory(mastery, "listening."),
+      speaking: aggregateCategory(mastery, "speaking."),
+      workplaceCommunication: aggregateCategory(mastery, "communication."),
+    })
+
     return {
       currentLevel,
-      suggestedLevel: canUpgrade && qualified ? LEVEL_ORDER[idx + 1] : null,
-      upgradeAvailable: canUpgrade && qualified,
-      reason: qualified
-        ? "Strong vocabulary mastery — ready for the next level."
-        : "Keep building vocabulary mastery to unlock the next level.",
+      suggestedLevel: recommendation.suggestedLevel,
+      upgradeAvailable: recommendation.upgradeAvailable,
+      reason: recommendation.reason,
       streakDays: 0,
       wordsSaved: words.length,
-      avgVocabMastery: Math.round(avgMastery),
+      avgVocabMastery: Math.round(avgVocabMastery),
       avgCorrectionRating: 0,
     }
   },

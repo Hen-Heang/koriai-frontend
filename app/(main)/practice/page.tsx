@@ -25,8 +25,17 @@ import { BestQuizStreakCard } from "@/components/dashboard/BestQuizStreakCard"
 import { DailyPhraseCard } from "@/components/practice/DailyPhraseCard"
 import { LearningSnapshot } from "@/components/practice/LearningSnapshot"
 import { ExamCountdownBanner } from "@/components/interview/ExamCountdownBanner"
-import { isScenarioDoneToday, markScenarioDoneToday } from "@/lib/daily-mission"
-import { levelApi, practiceApi, progressApi, getApiErrorMessage } from "@/lib/api"
+import {
+  chatApi,
+  levelApi,
+  missionsApi,
+  practiceApi,
+  progressApi,
+  scenarioSessionsApi,
+  getApiErrorMessage,
+  type DailyMission,
+  type MissionItem,
+} from "@/lib/api"
 import { containerVariants, itemVariants } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { LevelSuggestion } from "@/lib/api/user"
@@ -38,15 +47,17 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const [mission, setMission] = useState<DailyMission | null>(null)
+  const [missionLoading, setMissionLoading] = useState(true)
+  const [startingScenario, setStartingScenario] = useState(false)
+
   const [suggestion, setSuggestion] = useState<LevelSuggestion | null>(null)
   const [applying, setApplying] = useState(false)
-  const [scenarioDone, setScenarioDone] = useState(false)
   const [streakDays, setStreakDays] = useState(0)
   const [activityToday, setActivityToday] = useState(false)
 
   useEffect(() => {
     let active = true
-    setScenarioDone(isScenarioDoneToday())
     practiceApi
       .getToday()
       .then((res) => {
@@ -58,6 +69,24 @@ export default function PracticePage() {
       .finally(() => {
         if (active) setLoading(false)
       })
+
+    // Today's mission is generated once and persists all day — refreshProgress
+    // re-checks each item against real evidence (graded cards, learned phrase,
+    // evaluated scenarios/listening/interview attempts) rather than trusting
+    // that opening this page means anything was actually practiced.
+    missionsApi
+      .getOrCreateToday()
+      .then((created) => missionsApi.refreshProgress().then((refreshed) => refreshed ?? created))
+      .then((res) => {
+        if (active) setMission(res)
+      })
+      .catch((err) => {
+        if (active) setError((prev) => prev || getApiErrorMessage(err, "Could not load today's mission."))
+      })
+      .finally(() => {
+        if (active) setMissionLoading(false)
+      })
+
     levelApi
       .getSuggestion()
       .then((res) => {
@@ -94,53 +123,48 @@ export default function PracticePage() {
     }
   }
 
-  function goToScenario() {
+  // Creates a real scenario-tagged conversation + session, then hands off to
+  // /chat to practice it. The mission item only completes once the learner
+  // has exchanged at least 3 turns and the AI judges the goal accomplished
+  // (see useChat's evaluateScenario / app/api/ai/scenario/evaluate) — not
+  // the moment this button is clicked.
+  async function goToScenario(item?: MissionItem) {
     if (!data) return
-    markScenarioDoneToday()
-    setScenarioDone(true)
-    router.push(
-      `/chat?prompt=${encodeURIComponent(data.suggestedScenario.introMessage || data.suggestedScenario.goal)}`
-    )
+    const scenario = data.suggestedScenario
+    setStartingScenario(true)
+    try {
+      const conversation = await chatApi.createConversation(`Scenario: ${scenario.title}`, "SCENARIO", scenario.id)
+      await scenarioSessionsApi.start(scenario.id, conversation.id, item?.id ?? null)
+      router.push(`/chat?conversationId=${conversation.id}`)
+    } catch {
+      // Fall back to the old prompt-prefill behavior if session setup fails.
+      router.push(`/chat?prompt=${encodeURIComponent(scenario.introMessage || scenario.goal)}`)
+    } finally {
+      setStartingScenario(false)
+    }
   }
 
   function scrollToPhrase() {
     document.getElementById("daily-phrase")?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
-  const missions = data
-    ? [
-        {
-          key: "vocab",
-          label: data.dueVocabCount > 0 ? `Review ${data.dueVocabCount} vocab cards` : "No vocab due today",
-          // 0 due = SRS is clear = genuinely done for today
-          done: data.dueVocabCount === 0,
-          href: "/vocab",
-          onClick: null,
-        },
-        {
-          key: "phrase",
-          label: "Learn today's phrase",
-          done: data.dailyPhrase.learned,
-          href: null,
-          onClick: scrollToPhrase,
-        },
-        {
-          key: "mistakes",
-          label: data.dueCorrectionsCount > 0 ? `Clear ${data.dueCorrectionsCount} repeated mistakes` : "No mistakes due today",
-          done: data.dueCorrectionsCount === 0,
-          href: "/chat?mode=corrections",
-          onClick: null,
-        },
-        {
-          key: "scenario",
-          label: "Practice today's scenario with AI Coach",
-          done: scenarioDone,
-          href: null,
-          onClick: goToScenario,
-        },
-      ]
-    : []
-  const completedCount = missions.filter((m) => m.done).length
+  function hrefForItem(item: MissionItem): string | null {
+    switch (item.type) {
+      case "vocab_review":
+        return "/vocab"
+      case "correction_review":
+        return "/chat?mode=corrections"
+      case "listening":
+        return `/listening${item.referenceIds[0] ? `?topic=${encodeURIComponent(item.referenceIds[0])}` : ""}`
+      case "interview":
+        return "/interview"
+      default:
+        return null
+    }
+  }
+
+  const missionItems = mission?.items ?? []
+  const completedCount = missionItems.filter((i) => i.status === "completed").length
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-8 pb-12">
@@ -148,14 +172,14 @@ export default function PracticePage() {
         <PageHero
           eyebrow="Today"
           title="Today's Mission"
-          description="One focused checklist for today — clear it and you've made real progress, no need to hunt through the rest of the app."
+          description="One focused, personalized checklist for today — built from what you actually have due and where you're weakest."
           stats={
             data
               ? [
                   { label: "Level", value: data.userLevel, href: "/settings" },
                   {
                     label: "Progress",
-                    value: `${completedCount}/${missions.length}`,
+                    value: `${completedCount}/${missionItems.length || 0}`,
                     onClick: () =>
                       document.getElementById("todays-mission")?.scrollIntoView({ behavior: "smooth", block: "start" }),
                   },
@@ -236,70 +260,91 @@ export default function PracticePage() {
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      {loading && (
+      {(loading || missionLoading) && (
         <motion.div variants={itemVariants} className="space-y-4">
           <Skeleton className="h-32 w-full rounded-3xl" />
           <Skeleton className="h-80 w-full rounded-3xl" />
         </motion.div>
       )}
 
-      {data && !loading && (
+      {data && !loading && !missionLoading && (
         <>
-          {/* Today's Mission checklist */}
+          {/* Today's Mission checklist — driven by kori_daily_missions, built
+              once per Korea-calendar day by lib/learning/mission-engine.ts */}
           <motion.div
             id="todays-mission"
             variants={itemVariants}
             className="rounded-3xl border border-border bg-card p-6 shadow-sm dark:bg-slate-900/40 scroll-mt-20"
           >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
                 Today&apos;s Mission
               </h3>
               <span className="text-xs font-bold text-foreground">
-                {completedCount}/{missions.length}
+                {completedCount}/{missionItems.length}
               </span>
             </div>
+            {mission?.reason && (
+              <p className="mb-4 text-xs font-medium leading-relaxed text-muted-foreground">{mission.reason}</p>
+            )}
             <div className="h-2 w-full overflow-hidden rounded-full bg-accent/40">
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all"
-                style={{ width: `${(completedCount / missions.length) * 100}%` }}
+                style={{ width: `${missionItems.length ? (completedCount / missionItems.length) * 100 : 0}%` }}
               />
             </div>
-            <ul className="mt-5 space-y-3">
-              {missions.map((m) => {
+            <ul className="mt-5 space-y-4">
+              {missionItems.map((item) => {
+                const done = item.status === "completed"
+                const href = !done ? hrefForItem(item) : null
+                const isScenario = item.type === "scenario"
                 const inner = (
                   <>
-                    {m.done ? (
-                      <CheckCircle2 size={20} className="shrink-0 text-emerald-500" strokeWidth={2.5} />
+                    {done ? (
+                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-emerald-500" strokeWidth={2.5} />
                     ) : (
-                      <Circle size={20} className="shrink-0 text-muted-foreground/60" strokeWidth={2.5} />
+                      <Circle size={20} className="mt-0.5 shrink-0 text-muted-foreground/60" strokeWidth={2.5} />
                     )}
-                    <span
-                      className={cn(
-                        "text-sm font-bold",
-                        m.done ? "text-muted-foreground/60 line-through" : "text-foreground"
-                      )}
-                    >
-                      {m.label}
-                    </span>
+                    <div className="min-w-0">
+                      <span
+                        className={cn(
+                          "block text-sm font-bold",
+                          done ? "text-muted-foreground/60 line-through" : "text-foreground"
+                        )}
+                      >
+                        {item.title}
+                      </span>
+                      <span className="mt-0.5 block text-xs font-medium leading-snug text-muted-foreground">
+                        {item.reason}
+                      </span>
+                    </div>
                   </>
                 )
                 return (
-                  <li key={m.key}>
-                    {m.href && !m.done ? (
-                      <Link href={m.href} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <li key={item.id}>
+                    {href && !done ? (
+                      <Link href={href} className="flex items-start gap-3 hover:opacity-80 transition-opacity">
                         {inner}
                       </Link>
-                    ) : m.onClick && !m.done ? (
+                    ) : isScenario && !done ? (
                       <button
                         type="button"
-                        onClick={m.onClick}
-                        className="flex w-full items-center gap-3 text-left hover:opacity-80 transition-opacity"
+                        disabled={startingScenario}
+                        onClick={() => goToScenario(item)}
+                        className="flex w-full items-start gap-3 text-left hover:opacity-80 transition-opacity disabled:opacity-50"
+                      >
+                        {inner}
+                      </button>
+                    ) : item.type === "daily_phrase" && !done ? (
+                      <button
+                        type="button"
+                        onClick={scrollToPhrase}
+                        className="flex w-full items-start gap-3 text-left hover:opacity-80 transition-opacity"
                       >
                         {inner}
                       </button>
                     ) : (
-                      <div className="flex items-center gap-3">{inner}</div>
+                      <div className="flex items-start gap-3">{inner}</div>
                     )}
                   </li>
                 )
@@ -383,11 +428,11 @@ export default function PracticePage() {
             >
               <p className="text-sm text-muted-foreground">{data.suggestedScenario.summary}</p>
               <ActionButton
-                onClick={goToScenario}
+                onClick={() => goToScenario()}
                 className="bg-blue-600 hover:bg-blue-500"
                 icon={<MessageCircle size={14} className="mr-2" />}
               >
-                Practice with AI Coach
+                {startingScenario ? "Starting…" : "Practice with AI Coach"}
               </ActionButton>
             </Card>
 

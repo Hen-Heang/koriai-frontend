@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabase"
 import { getUserId, requireUserId } from "@/lib/auth-store"
 import { applyRating, type ReviewRating } from "@/lib/srs"
 import { prepareVocabImport } from "@/lib/vocab-import"
+import { skillForVocabCategory } from "@/lib/learning/skills"
 import { aiPost } from "./ai-client"
+import { skillsApi } from "./skills"
 
 // Vocab over kori_vocab_cards. SRS grading is computed client-side (lib/srs.ts,
 // the mirror of the old backend SrsScheduler) and persisted here. AI features
@@ -66,6 +68,11 @@ function toItem(row: VocabRow): VocabItem {
   }
 }
 
+// SRS grading buttons ("AGAIN"/"HARD"/"GOOD"/"EASY") as a rough 0-100 evidence
+// score for skill mastery — mirrors the direction of lib/srs.ts's own
+// MASTERY_DELTA without needing a second grading scale.
+const RATING_SCORE: Record<ReviewRating, number> = { AGAIN: 15, HARD: 55, GOOD: 80, EASY: 100 }
+
 async function rateCard(id: string, rating: ReviewRating): Promise<VocabItem> {
   const { data: row, error } = await supabase
     .from("kori_vocab_cards")
@@ -98,6 +105,12 @@ async function rateCard(id: string, rating: ReviewRating): Promise<VocabItem> {
     .select()
     .single()
   if (updateError) throw updateError
+  void skillsApi.recordEvent({
+    skillCode: skillForVocabCategory(card.category),
+    sourceFeature: "vocab_srs",
+    sourceId: id,
+    score: RATING_SCORE[rating],
+  })
   return toItem(updated as VocabRow)
 }
 

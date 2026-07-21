@@ -17,8 +17,12 @@ import type {
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { applyRating, type ReviewRating } from "@/lib/srs"
+import { createCorrectionFingerprint } from "@/lib/learning/korean-text"
+import { planCorrectionUpsert, type ExistingCorrectionState } from "@/lib/learning/corrections"
+import { skillForCorrectionCategory, skillsForListeningTopic } from "@/lib/learning/skills"
 import { aiPost, authHeaders } from "./ai-client"
 import { readSseStream } from "./sse"
+import { skillsApi } from "./skills"
 import { vocabApi } from "./vocab"
 
 // ── Correction ──────────────────────────────────────────────────────────────
@@ -36,6 +40,7 @@ type CorrectionRow = {
   repetitions: number
   lapses: number
   created_at: string
+  error_category?: string | null
 }
 
 function toCorrectionReview(row: CorrectionRow): CorrectionReview & { createdAt: string } {
@@ -55,27 +60,110 @@ function toCorrectionReview(row: CorrectionRow): CorrectionReview & { createdAt:
   }
 }
 
+// Manual-check mistakes don't carry an explicit severity from the AI (unlike
+// chat turn analysis) — derived from the overall rating instead: a low
+// rating means the individual changes matter more.
+function severityFromRating(rating: number): "minor" | "important" {
+  return rating <= 3 ? "important" : "minor"
+}
+
 export const correctionApi = {
-  // AI checks the text; if it found mistakes, the correction is saved so it
-  // resurfaces on the SRS schedule (same algorithm as vocab cards).
+  // AI checks the text; if it found mistakes, each change is saved (deduped
+  // by fingerprint) so it resurfaces on the SRS schedule, same as chat's
+  // automatic turn analysis.
   check: async (text: string) => {
     const result = await aiPost<{
       originalText: string
       correctedText: string
       hasErrors: boolean
-      rating?: number
+      rating: number
       explanation?: string
       grammarPoints?: string[]
-      changes?: Array<{ original: string; corrected: string; englishMeaning: string; reason: string }>
+      changes: Array<{
+        original: string
+        corrected: string
+        englishMeaning: string
+        reason: string
+        category: string | null
+      }>
     }>("/corrections/check", { text })
+
     if (result.hasErrors) {
-      await supabase.from("kori_corrections").insert({
-        user_id: requireUserId(),
-        original_text: result.originalText,
-        corrected_text: result.correctedText,
-        explanation: result.explanation ?? null,
-        grammar_points: result.grammarPoints ?? [],
-      })
+      const userId = requireUserId()
+      const severity = severityFromRating(result.rating)
+      // Fall back to one whole-text row if the model returned no fragment-level
+      // changes despite flagging errors, so the mistake is still saved.
+      const changes =
+        result.changes.length > 0
+          ? result.changes
+          : [
+              {
+                original: result.originalText,
+                corrected: result.correctedText,
+                englishMeaning: "",
+                reason: result.explanation ?? "",
+                category: null as string | null,
+              },
+            ]
+
+      for (const change of changes) {
+        const category = change.category ?? "expression"
+        const fingerprint = createCorrectionFingerprint({
+          originalText: change.original,
+          correctedText: change.corrected,
+          category,
+        })
+        const { data: existingRow } = await supabase
+          .from("kori_corrections")
+          .select("mastery, ease_factor, interval_days, repetitions, lapses, occurrence_count, next_review_date")
+          .eq("user_id", userId)
+          .eq("fingerprint", fingerprint)
+          .maybeSingle()
+        const existing: ExistingCorrectionState | null = existingRow
+          ? {
+              mastery: existingRow.mastery,
+              easeFactor: existingRow.ease_factor,
+              intervalDays: existingRow.interval_days,
+              repetitions: existingRow.repetitions,
+              lapses: existingRow.lapses,
+              occurrenceCount: existingRow.occurrence_count,
+              nextReviewDate: existingRow.next_review_date,
+            }
+          : null
+        const plan = planCorrectionUpsert(existing, { severity })
+        const row = {
+          user_id: userId,
+          original_text: change.original,
+          corrected_text: change.corrected,
+          explanation: change.reason || result.explanation || null,
+          grammar_points: result.grammarPoints ?? [],
+          mastery: plan.state.mastery,
+          next_review_date: plan.state.nextReviewDate,
+          ease_factor: plan.state.easeFactor,
+          interval_days: plan.state.intervalDays,
+          repetitions: plan.state.repetitions,
+          lapses: plan.state.lapses,
+          source_feature: "manual_check",
+          error_category: category,
+          severity,
+          natural_version: result.correctedText,
+          fingerprint,
+          occurrence_count: plan.occurrenceCount,
+          last_seen_at: new Date().toISOString(),
+        }
+        if (plan.action === "insert") {
+          await supabase.from("kori_corrections").insert(row)
+        } else {
+          await supabase.from("kori_corrections").update(row).eq("user_id", userId).eq("fingerprint", fingerprint)
+        }
+
+        void skillsApi.recordEvent({
+          skillCode: skillForCorrectionCategory(category),
+          sourceFeature: "corrections_check",
+          score: result.rating * 20,
+          difficulty: "medium",
+        })
+      }
     }
     return result
   },
@@ -100,6 +188,8 @@ export const correctionApi = {
     return (data as CorrectionRow[]).map(toCorrectionReview)
   },
 
+  // Mirrors lib/api/vocab.ts's RATING_SCORE so SRS grading contributes
+  // comparable skill-mastery evidence across vocab and correction cards.
   rate: async (id: string | number, rating: ReviewRating): Promise<CorrectionReview> => {
     const { data: row, error } = await supabase
       .from("kori_corrections")
@@ -132,6 +222,12 @@ export const correctionApi = {
       .select()
       .single()
     if (updateError) throw updateError
+    void skillsApi.recordEvent({
+      skillCode: skillForCorrectionCategory(c.error_category ?? "expression"),
+      sourceFeature: "corrections_srs",
+      sourceId: String(id),
+      score: { AGAIN: 15, HARD: 55, GOOD: 80, EASY: 100 }[rating],
+    })
     return toCorrectionReview(updated as CorrectionRow)
   },
 
@@ -367,6 +463,14 @@ export const listeningApi = {
       results,
     })
     if (error) throw error
+    for (const skillCode of skillsForListeningTopic(lesson.topic)) {
+      void skillsApi.recordEvent({
+        skillCode,
+        sourceFeature: "listening_quiz",
+        sourceId: lessonId,
+        score: accuracy,
+      })
+    }
     return { lessonId, score, total, accuracy, results }
   },
 

@@ -19,6 +19,7 @@ import {
 } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 
+import { CodeSyntaxHighlighter } from "@/components/assistant-ui/code-syntax-highlighter";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { SmartPeek } from "@/components/ui/SmartPeek";
 import { cn } from "@/lib/utils";
@@ -301,4 +302,5 @@ const defaultComponents = memoizeMarkdownComponents({
     );
   },
   CodeHeader,
+  SyntaxHighlighter: CodeSyntaxHighlighter,
 });

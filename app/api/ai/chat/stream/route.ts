@@ -1,5 +1,11 @@
 import { streamText } from "ai"
-import { AI_PROVIDER_OPTIONS, aiModel, requireUser, sseChunk, sseResponse, learnerProfileBlock } from "@/lib/server/ai"
+import { AI_PROVIDER_OPTIONS, DEFAULT_MODEL, aiModel, requireUser, sseChunk, sseResponse, learnerProfileBlock } from "@/lib/server/ai"
+import { checkRateLimit, recordUsage } from "@/lib/server/ai-limits"
+import { shouldAnalyzeKoreanTurn } from "@/lib/learning/korean-text"
+import { runTurnAnalysis } from "@/lib/server/turn-analysis"
+import { persistTurnMistakes } from "@/lib/server/corrections-store"
+
+const MAX_MESSAGE_LENGTH = 4000
 
 // Streaming chat reply. Persists both message rows (RLS via the caller's JWT)
 // and emits the same SSE events the Spring /chat/stream endpoint used:
@@ -18,10 +24,21 @@ export async function POST(req: Request): Promise<Response> {
   }
   const conversationId = body.conversationId
   const message = body.message?.trim()
-  const displayMessage = body.displayMessage?.trim() || message
   const voiceMode = body.voiceMode === true
   if (!conversationId || !message) {
     return Response.json({ error: "conversationId and message are required" }, { status: 400 })
+  }
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return Response.json({ error: `message must be ${MAX_MESSAGE_LENGTH} characters or fewer` }, { status: 400 })
+  }
+  const displayMessage = body.displayMessage?.trim() || message
+
+  const rateStatus = await checkRateLimit(db, user.id, "chat")
+  if (!rateStatus.allowed) {
+    return Response.json(
+      { error: `Daily chat limit reached (${rateStatus.limit}/day). Try again tomorrow.` },
+      { status: 429 },
+    )
   }
 
   // Conversation must exist and belong to the caller (RLS enforces the latter).
@@ -115,6 +132,17 @@ export async function POST(req: Request): Promise<Response> {
           controller.enqueue(sseChunk("token", { token }))
         }
         const generationFinishedAt = performance.now()
+        const usage = await Promise.resolve(result.usage).catch(() => null)
+        void recordUsage(db, {
+          userId: user.id,
+          feature: "chat",
+          model: profile?.preferred_model || DEFAULT_MODEL,
+          inputTokens: usage?.inputTokens ?? null,
+          outputTokens: usage?.outputTokens ?? null,
+          totalTokens: usage?.totalTokens ?? null,
+          latencyMs: Math.round(generationFinishedAt - requestStartedAt),
+          success: true,
+        })
         const [assistantInsert, conversationTouch] = await Promise.all([
           db
             .from("kori_messages")
@@ -133,6 +161,34 @@ export async function POST(req: Request): Promise<Response> {
         ])
         if (assistantInsert.error) throw assistantInsert.error
         if (conversationTouch.error) throw conversationTouch.error
+
+        // Runs after the visible reply has already fully streamed to the
+        // client — analysis/persistence failures are swallowed inside these
+        // helpers so they can never fail the chat turn itself.
+        if (shouldAnalyzeKoreanTurn(displayMessage)) {
+          try {
+            const analysis = await runTurnAnalysis({ level, text: displayMessage })
+            if (analysis) {
+              if (analysis.hasErrors && analysis.mistakes.length > 0) {
+                await persistTurnMistakes({
+                  db,
+                  userId: user.id,
+                  sourceFeature: "chat",
+                  sourceId: conversationId,
+                  mistakes: analysis.mistakes,
+                  naturalVersion: analysis.naturalVersion,
+                })
+              }
+              controller.enqueue(sseChunk("turn_analysis", analysis))
+            }
+          } catch (analysisErr) {
+            console.error(
+              "[chat-stream] turn analysis failed:",
+              analysisErr instanceof Error ? analysisErr.message : "unknown error",
+            )
+          }
+        }
+
         const completedAt = performance.now()
         console.info("[chat-stream] timings", {
           conversationId,
@@ -145,6 +201,14 @@ export async function POST(req: Request): Promise<Response> {
         })
         controller.enqueue(sseChunk("done", { assistantMessageId: assistantInsert.data.id }))
       } catch (err) {
+        void recordUsage(db, {
+          userId: user.id,
+          feature: "chat",
+          model: profile?.preferred_model || DEFAULT_MODEL,
+          latencyMs: Math.round(performance.now() - requestStartedAt),
+          success: false,
+          errorCode: err instanceof Error ? err.name : "unknown",
+        })
         controller.enqueue(
           sseChunk("error", { message: err instanceof Error ? err.message : "Chat failed" }),
         )

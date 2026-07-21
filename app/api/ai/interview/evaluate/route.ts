@@ -9,11 +9,19 @@ import { jsonAiRoute } from "@/lib/server/ai"
 
 const transcriptEntry = z.object({
   role: z.enum(["examiner", "candidate"]),
-  text: z.string(),
+  text: z.string().max(2000),
 })
 
-export const POST = jsonAiRoute(
-  z.object({
+export const POST = jsonAiRoute({
+  feature: "interview_evaluate",
+  inputSchema: z.object({
+    topicId: z.string().max(200).optional(),
+    mode: z.string().max(50).default("practice"),
+    transcript: z.array(transcriptEntry).max(120),
+    questionCount: z.number().int().min(0).max(200).optional(),
+    durationSeconds: z.number().int().min(0).max(36000).optional(),
+  }),
+  outputSchema: z.object({
     scores: z.object({
       speaking: z.number().min(1).max(5),
       pronunciation: z.number().min(1).max(5),
@@ -32,12 +40,8 @@ export const POST = jsonAiRoute(
       wordsToPractice: z.array(z.string()).max(10),
     }),
   }),
-  (body) => {
-    const parsed = z.array(transcriptEntry).safeParse(body.transcript)
-    const transcript = parsed.success ? parsed.data : []
-    const lines = transcript
-      .map((t) => `${t.role === "examiner" ? "Q" : "A"}: ${t.text}`)
-      .join("\n")
+  buildPrompt: ({ mode, transcript, questionCount }) => {
+    const lines = transcript.map((t) => `${t.role === "examiner" ? "Q" : "A"}: ${t.text}`).join("\n")
     return (
       "You are scoring a K-Specialist Korean speaking mock interview from its transcript. " +
       "Judge ONLY the candidate's answers (the A lines). Score each of the four official criteria " +
@@ -46,10 +50,10 @@ export const POST = jsonAiRoute(
       "judge pronunciation only indirectly (misrecognized or garbled words hint at unclear pronunciation), " +
       "and note fillers/hesitation from repeated or fragmented phrasing. " +
       "Write the summary and advice in encouraging, honest English suitable for an intermediate learner.\n\n" +
-      `Interview mode: ${String(body.mode ?? "practice")} · Questions answered: ${String(body.questionCount ?? transcript.filter((t) => t.role === "candidate").length)}\n` +
+      `Interview mode: ${mode} · Questions answered: ${questionCount ?? transcript.filter((t) => t.role === "candidate").length}\n` +
       `Transcript:\n${lines}\n\n` +
       "Fill every field. wordsToPractice = Korean words or expressions the candidate avoided, misused, " +
       "or should add to sound more natural on this topic."
     )
   },
-)
+})

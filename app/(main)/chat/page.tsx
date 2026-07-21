@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useConversations } from "@/hooks/useConversations"
 import { useSessionTimer } from "@/hooks/useSessionTimer"
-import { chatApi } from "@/lib/api"
+import { chatApi, scenarioApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 type AiMode = "chat" | "analyze" | "generate" | "corrections"
@@ -40,6 +40,10 @@ function ChatPageContent() {
   const searchParams = useSearchParams()
   const initialDraft = searchParams.get("prompt") ?? undefined
   const initialCategory = searchParams.get("category") ?? undefined
+  // Set by the Practice page's "Practice with AI Coach" scenario launcher —
+  // resumes that specific (already scenario-tagged) conversation directly
+  // instead of the usual "most recent or new" bootstrap.
+  const deepLinkConversationId = searchParams.get("conversationId") ?? undefined
 
   // A ?prompt= deep link is a correction/chat request, so it always lands on Chat.
   const queryMode = searchParams.get("mode")
@@ -67,8 +71,41 @@ function ChatPageContent() {
     useConversations()
 
   const [conversationId, setConversationId] = useState<string | null>(null)
-  const [bootstrapped, setBootstrapped] = useState(false)
+  const [bootstrapped, setBootstrapped] = useState(Boolean(deepLinkConversationId))
   const [error, setError] = useState("")
+  const [scenarioContext, setScenarioContext] = useState<{ scenarioId: string; goal: string; title: string } | null>(null)
+
+  // Deep-linked scenario conversation: resume it directly, skip the normal
+  // "most recent or new" bootstrap entirely.
+  useEffect(() => {
+    if (deepLinkConversationId) setConversationId(deepLinkConversationId)
+    // Intentionally one-shot: only reacts to the initial query param.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Detect whether the active conversation is scenario-tagged, so ChatWindow
+  // can show the "End scenario" evaluation flow instead of the normal chat UI.
+  useEffect(() => {
+    if (!conversationId) {
+      setScenarioContext(null)
+      return
+    }
+    let active = true
+    chatApi
+      .getConversation(conversationId)
+      .then((conv) => {
+        if (!active || !conv.scenarioId) return
+        return scenarioApi.getById(conv.scenarioId).then((scenario) => {
+          if (active) setScenarioContext({ scenarioId: scenario.id, goal: scenario.goal, title: scenario.title })
+        })
+      })
+      .catch(() => {
+        if (active) setScenarioContext(null)
+      })
+    return () => {
+      active = false
+    }
+  }, [conversationId])
   const [isStartingNewChat, setIsStartingNewChat] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   // Desktop rail collapse — persisted so it sticks across visits.
@@ -296,6 +333,7 @@ function ChatPageContent() {
                 isStartingNewChat={isStartingNewChat}
                 onConversationTitled={refresh}
                 embedded
+                scenario={scenarioContext ?? undefined}
               />
             </div>
           </div>

@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { chatApi } from "@/lib/api"
+import { chatApi, scenarioSessionsApi, type ScenarioEvaluateResult } from "@/lib/api"
 import type { ChatMessage, MessageRole } from "@/lib/types"
+import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
 
 type UseChatOptions = {
   conversationId?: string
@@ -11,6 +12,10 @@ type UseChatOptions = {
   // Fired after the conversation is auto-titled from its first message, so the
   // caller can refresh whatever list is showing the (previously generic) title.
   onConversationTitled?: () => void
+  // Present only for a scenario-practice conversation (see kori_conversations
+  // .scenario_id) — enables turn counting + evidence-based evaluation instead
+  // of marking the scenario "done" the moment the page opens.
+  scenario?: { scenarioId: string; goal: string }
 }
 
 // ChatGPT-style auto title: a short snippet of the first user message.
@@ -71,7 +76,7 @@ function buildMessageForApi(
   return `${content}\n\n[Response preference: ${instructions.join(" ")}]`
 }
 
-export function useChat({ conversationId, initialMessages = [], onConversationTitled }: UseChatOptions) {
+export function useChat({ conversationId, initialMessages = [], onConversationTitled, scenario }: UseChatOptions) {
   const [messages, setMessages] = useState(conversationId ? [] : initialMessages)
   const [draft, setDraft] = useState("")
   const [responseLanguage, setResponseLanguage] = useState<ResponseLanguage>("auto")
@@ -79,6 +84,29 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
   const [error, setError] = useState("")
   const [isLoadingMessages, setIsLoadingMessages] = useState(Boolean(conversationId))
   const [isSending, setIsSending] = useState(false)
+  // Compact correction card shown after a Korean turn with real mistakes —
+  // only ever set for turns the server judged worth flagging (hasErrors).
+  const [turnAnalysis, setTurnAnalysis] = useState<TurnAnalysis | null>(null)
+  const [turnAnalysisOriginalText, setTurnAnalysisOriginalText] = useState("")
+  const [scenarioTurnCount, setScenarioTurnCount] = useState(0)
+  const [scenarioResult, setScenarioResult] = useState<ScenarioEvaluateResult | null>(null)
+  const [isEvaluatingScenario, setIsEvaluatingScenario] = useState(false)
+
+  useEffect(() => {
+    if (!scenario || !conversationId) return
+    let active = true
+    scenarioSessionsApi
+      .getByConversation(conversationId)
+      .then((session) => {
+        if (active && session) setScenarioTurnCount(session.userTurnCount)
+      })
+      .catch(() => {
+        /* turn count just starts at 0 if this fails */
+      })
+    return () => {
+      active = false
+    }
+  }, [scenario, conversationId])
 
   // Tracks the in-flight stream so we can cancel it when the user navigates
   // away or switches conversations, instead of leaking the fetch and writing
@@ -169,6 +197,7 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
 
     setMessages((current) => [...current, userMessage])
     setDraft("")
+    setTurnAnalysis(null)
 
     if (!conversationId) {
       setError("Conversation is not available.")
@@ -237,11 +266,29 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
           )
         },
         controller.signal,
-        { displayMessage: nextContent },
+        {
+          displayMessage: nextContent,
+          onTurnAnalysis: (analysis) => {
+            // Only correct Korean truly worth flagging — a clean turn should
+            // never surface a card.
+            if (analysis.hasErrors && analysis.mistakes.length > 0) {
+              setTurnAnalysisOriginalText(nextContent)
+              setTurnAnalysis(analysis)
+            }
+          },
+        },
       )
       // Flush any tail tokens if the stream ended without a `done` event.
       flush()
       setError("")
+      if (scenario) {
+        scenarioSessionsApi
+          .incrementTurn(conversationId)
+          .then(setScenarioTurnCount)
+          .catch(() => {
+            /* evaluation still works off the session's persisted count */
+          })
+      }
     } catch (err) {
       flush()
       // Aborted (navigation/new send) — drop the placeholder silently.
@@ -305,6 +352,28 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
     abortRef.current?.abort()
   }
 
+  // Judges the transcript so far against the scenario's goal. Only ever
+  // completes the linked mission item (inside scenarioSessionsApi.evaluate)
+  // when the goal was actually accomplished — never just for opening the chat.
+  const evaluateScenario = useCallback(async () => {
+    if (!scenario || !conversationId || isEvaluatingScenario) return
+    setIsEvaluatingScenario(true)
+    try {
+      const session = await scenarioSessionsApi.getByConversation(conversationId)
+      if (!session) return
+      const transcript = messages
+        .filter((m) => (m.role === "user" || m.role === "assistant") && m.content.trim())
+        .slice(-24)
+        .map((m) => ({ role: m.role as "user" | "assistant", text: m.content }))
+      const result = await scenarioSessionsApi.evaluate(session, scenario.goal, transcript)
+      setScenarioResult(result)
+    } catch {
+      setError("Could not evaluate the scenario right now. Please try again.")
+    } finally {
+      setIsEvaluatingScenario(false)
+    }
+  }, [scenario, conversationId, messages, isEvaluatingScenario])
+
   return {
     draft,
     error,
@@ -317,5 +386,12 @@ export function useChat({ conversationId, initialMessages = [], onConversationTi
     setDraft,
     isTechnicalMode,
     setIsTechnicalMode,
+    turnAnalysis,
+    turnAnalysisOriginalText,
+    dismissTurnAnalysis: useCallback(() => setTurnAnalysis(null), []),
+    scenarioTurnCount,
+    scenarioResult,
+    isEvaluatingScenario,
+    evaluateScenario,
   }
 }

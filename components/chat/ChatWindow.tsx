@@ -15,6 +15,7 @@ import {
 } from "@assistant-ui/react"
 
 import { Thread } from "@/components/assistant-ui/thread"
+import { CorrectionCard } from "@/components/chat/CorrectionCard"
 import { RealtimeVoicePanel } from "@/components/chat/RealtimeVoicePanel"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,6 +30,7 @@ import { useChat } from "@/hooks/useChat"
 import { useRealtimeVoice, type RealtimeVoicePhase } from "@/hooks/useRealtimeVoice"
 import { CHAT_PRESETS } from "@/lib/chat-presets"
 import type { ChatMessage } from "@/lib/types"
+import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
 import { cn } from "@/lib/utils"
 
 type Suggestion = {
@@ -248,6 +250,28 @@ const HengoWelcome: FC = () => {
   )
 }
 
+// Rendered inside AssistantRuntimeProvider so it can pull the thread runtime
+// itself (same pattern as ComposerSeeder) rather than assume the shape of
+// the outer useExternalStoreRuntime() object.
+const TurnAnalysisBanner: FC<{
+  analysis: TurnAnalysis
+  originalText: string
+  onDismiss: () => void
+}> = ({ analysis, originalText, onDismiss }) => {
+  const runtime = useThreadRuntime()
+  return (
+    <CorrectionCard
+      analysis={analysis}
+      originalText={originalText}
+      onDismiss={onDismiss}
+      onTryAgain={() => {
+        runtime.composer.setText(originalText)
+        onDismiss()
+      }}
+    />
+  )
+}
+
 // ── Composer slot: opens the same realtime room as the main voice CTA ──
 const MicButton: FC = () => {
   const { canInteract, voice } = useHengoChat()
@@ -295,6 +319,10 @@ type ChatWindowProps = {
   // When rendered inside the AI workspace tabs, the surrounding mode bar already
   // provides the back button and safe-area top padding — so we drop ours here.
   embedded?: boolean
+  // Present only when this conversation is a scenario-practice session
+  // (kori_conversations.scenario_id) — enables the "End scenario" evaluation
+  // flow that gives the linked mission item real completion evidence.
+  scenario?: { scenarioId: string; goal: string; title: string }
 }
 
 export function ChatWindow({
@@ -307,6 +335,7 @@ export function ChatWindow({
   isStartingNewChat,
   onConversationTitled,
   embedded = false,
+  scenario,
 }: ChatWindowProps) {
   const {
     error,
@@ -318,7 +347,25 @@ export function ChatWindow({
     cancel,
     isTechnicalMode,
     setIsTechnicalMode,
-  } = useChat({ conversationId, initialMessages, onConversationTitled })
+    turnAnalysis,
+    turnAnalysisOriginalText,
+    dismissTurnAnalysis,
+    scenarioTurnCount,
+    scenarioResult,
+    isEvaluatingScenario,
+    evaluateScenario,
+  } = useChat({ conversationId, initialMessages, onConversationTitled, scenario })
+
+  useEffect(() => {
+    if (!scenarioResult) return
+    if (scenarioResult.taskCompleted) {
+      toast.success(`Scenario complete — score ${scenarioResult.score}/100`, {
+        description: scenarioResult.strengths[0],
+      })
+    } else {
+      toast.info("Not quite there yet", { description: scenarioResult.improvements[0] ?? "Keep going and try ending again." })
+    }
+  }, [scenarioResult])
 
   const router = useRouter()
   const realtimeVoice = useRealtimeVoice({
@@ -452,6 +499,17 @@ export function ChatWindow({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              {scenario && scenarioTurnCount >= 3 && !scenarioResult?.taskCompleted && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void evaluateScenario()}
+                  disabled={isEvaluatingScenario}
+                  className="h-9 items-center gap-1.5 rounded-xl border-emerald-500/40 bg-emerald-500/10 px-2.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 sm:px-3"
+                >
+                  {isEvaluatingScenario ? "Checking…" : "End scenario"}
+                </Button>
+              )}
               {/* Technical Mode + Voice toggles — full controls on tablet/desktop */}
               <Button
                 variant="outline"
@@ -532,6 +590,16 @@ export function ChatWindow({
               </DropdownMenu>
             </div>
           </div>
+
+          <AnimatePresence>
+            {turnAnalysis && !realtimeVoice.isActive && (
+              <TurnAnalysisBanner
+                analysis={turnAnalysis}
+                originalText={turnAnalysisOriginalText}
+                onDismiss={dismissTurnAnalysis}
+              />
+            )}
+          </AnimatePresence>
 
           {/* ── assistant-ui Thread: messages + composer ── */}
           <div

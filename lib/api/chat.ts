@@ -1,4 +1,5 @@
 import type { Conversation, Message } from "@/lib/types"
+import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
 import { supabase } from "@/lib/supabase"
 import { requireUserId } from "@/lib/auth-store"
 import { authHeaders } from "./ai-client"
@@ -59,11 +60,15 @@ function toMessage(row: MessageRow): Message {
 const CONVERSATION_SELECT = "*, kori_messages(count)"
 
 export const chatApi = {
-  createConversation: async (title: string, conversationType: string): Promise<Conversation> => {
+  createConversation: async (
+    title: string,
+    conversationType: string,
+    scenarioId?: string | null,
+  ): Promise<Conversation> => {
     const userId = requireUserId()
     const { data, error } = await supabase
       .from("kori_conversations")
-      .insert({ user_id: userId, title, conversation_type: conversationType })
+      .insert({ user_id: userId, title, conversation_type: conversationType, scenario_id: scenarioId ?? null })
       .select(CONVERSATION_SELECT)
       .single()
     if (error) throw error
@@ -164,7 +169,14 @@ export const chatApi = {
     onStart: (userMessageId: string) => void,
     onDone: (assistantMessageId: string) => void,
     signal?: AbortSignal,
-    options?: { displayMessage?: string; voiceMode?: boolean },
+    options?: {
+      displayMessage?: string
+      voiceMode?: boolean
+      // Fired if the server judged the user's Korean turn worth analyzing —
+      // absent for non-Korean/ineligible turns, so existing callers that
+      // don't pass this just never see it (no breaking change).
+      onTurnAnalysis?: (analysis: TurnAnalysis) => void
+    },
   ): Promise<void> => {
     const startedAt = performance.now()
     let firstTokenAt: number | null = null
@@ -203,6 +215,8 @@ export const chatApi = {
           totalMs: Math.round(finishedAt - startedAt),
           firstTokenMs: firstTokenAt === null ? null : Math.round(firstTokenAt - startedAt),
         })
+      } else if (event === "turn_analysis") {
+        options?.onTurnAnalysis?.(data as TurnAnalysis)
       } else if (event === "error") throw new Error(data.message)
     })
   },

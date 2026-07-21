@@ -3,13 +3,22 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js"
 import { openai } from "@ai-sdk/openai"
 import { generateObject } from "ai"
-import type { z } from "zod"
+import { z } from "zod"
 import { SUPABASE_URL, SUPABASE_KEY } from "@/lib/supabase"
+import { DEFAULT_ALLOWED_MODEL, resolveAllowedModel } from "@/lib/server/models"
+import { checkRateLimit, recordUsage, RATE_LIMIT_BUCKETS } from "@/lib/server/ai-limits"
 
-export const DEFAULT_MODEL = process.env.AI_MODEL ?? "gpt-5-mini"
+// Thrown by a buildPrompt function to signal "this is bad input" (400)
+// rather than "the AI call itself failed" (500).
+export class InputValidationError extends Error {}
 
+export const DEFAULT_MODEL = DEFAULT_ALLOWED_MODEL
+
+// Requested model names come from client-controlled input (profile
+// preference, request body) — always resolve through the allowlist instead
+// of passing an arbitrary string into the OpenAI model factory.
 export function aiModel(name?: string | null) {
-  return openai(name || DEFAULT_MODEL)
+  return openai(resolveAllowedModel(name))
 }
 
 // gpt-5-mini is a reasoning model that defaults to "medium" reasoning effort
@@ -79,29 +88,113 @@ export function learnerProfileBlock(profile: LearnerProfile | null | undefined):
   )
 }
 
-/** Factory for the JSON AI endpoints: auth → prompt → generateObject → JSON. */
+export interface JsonAiRouteConfig<In extends z.ZodType = z.ZodType, Out extends z.ZodType = z.ZodType> {
+  // When provided, the raw request body is validated against this before
+  // buildPrompt runs — invalid input returns 400, never reaches the model.
+  inputSchema?: In
+  outputSchema: Out
+  buildPrompt: (input: z.infer<In>, ctx: AuthedRequest) => string | Promise<string>
+  system?: string
+  // Identifies this route in kori_ai_usage and for rate-limit bucketing
+  // (see lib/server/ai-limits.ts) — required so every migrated route is
+  // both validated and tracked.
+  feature: string
+}
+
+function isZodSchema(value: unknown): value is z.ZodType {
+  return typeof value === "object" && value !== null && typeof (value as z.ZodType).safeParse === "function"
+}
+
+/** Factory for the JSON AI endpoints: auth → rate limit → validate → prompt
+ *  → generateObject → JSON, with usage logging throughout.
+ *
+ *  Two call shapes:
+ *  - Legacy (being migrated off): `jsonAiRoute(outputSchema, buildPrompt, system?)`
+ *    — no input validation, generic rate-limit bucket/usage feature name.
+ *  - Preferred: `jsonAiRoute({ inputSchema?, outputSchema, buildPrompt, system?, feature })`. */
 export function jsonAiRoute<S extends z.ZodType>(
   schema: S,
   buildPrompt: (body: Record<string, unknown>, ctx: AuthedRequest) => string | Promise<string>,
-  system: string = TUTOR_SYSTEM,
+  system?: string,
+): (req: Request) => Promise<Response>
+export function jsonAiRoute<In extends z.ZodType, Out extends z.ZodType>(
+  config: JsonAiRouteConfig<In, Out>,
+): (req: Request) => Promise<Response>
+export function jsonAiRoute(
+  schemaOrConfig: z.ZodType | JsonAiRouteConfig,
+  legacyBuildPrompt?: (body: Record<string, unknown>, ctx: AuthedRequest) => string | Promise<string>,
+  legacySystem?: string,
 ) {
+  const config: JsonAiRouteConfig = isZodSchema(schemaOrConfig)
+    ? {
+        outputSchema: schemaOrConfig,
+        buildPrompt: legacyBuildPrompt as JsonAiRouteConfig["buildPrompt"],
+        system: legacySystem,
+        feature: "ai_structured_legacy",
+      }
+    : schemaOrConfig
+
   return async function POST(req: Request): Promise<Response> {
     const auth = await requireUser(req)
     if (auth instanceof Response) return auth
+    const { user, db } = auth
+    const startedAt = performance.now()
+
+    const rateStatus = await checkRateLimit(db, user.id, config.feature)
+    if (!rateStatus.allowed) {
+      return Response.json(
+        {
+          error: `Daily limit reached for ${RATE_LIMIT_BUCKETS[rateStatus.bucket].description.toLowerCase()} (${rateStatus.limit}/day). Try again tomorrow.`,
+        },
+        { status: 429 },
+      )
+    }
+
+    const rawBody = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    let input: unknown = rawBody
+    if (config.inputSchema) {
+      const parsed = config.inputSchema.safeParse(rawBody)
+      if (!parsed.success) {
+        return Response.json(
+          { error: "Invalid request", details: parsed.error.issues.map((i) => i.message) },
+          { status: 400 },
+        )
+      }
+      input = parsed.data
+    }
+
     try {
-      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
-      const prompt = await buildPrompt(body, auth)
-      const { object } = await generateObject({
+      const prompt = await config.buildPrompt(input, auth)
+      const { object, usage } = await generateObject({
         model: aiModel(),
         providerOptions: AI_PROVIDER_OPTIONS,
-        schema,
-        system,
+        schema: config.outputSchema,
+        system: config.system ?? TUTOR_SYSTEM,
         prompt,
+      })
+      void recordUsage(db, {
+        userId: user.id,
+        feature: config.feature,
+        model: DEFAULT_MODEL,
+        inputTokens: usage?.inputTokens ?? null,
+        outputTokens: usage?.outputTokens ?? null,
+        totalTokens: usage?.totalTokens ?? null,
+        latencyMs: Math.round(performance.now() - startedAt),
+        success: true,
       })
       return Response.json(object)
     } catch (err) {
+      const isValidationError = err instanceof InputValidationError
       const message = err instanceof Error ? err.message : "AI request failed"
-      return Response.json({ error: message }, { status: 500 })
+      void recordUsage(db, {
+        userId: user.id,
+        feature: config.feature,
+        model: DEFAULT_MODEL,
+        latencyMs: Math.round(performance.now() - startedAt),
+        success: false,
+        errorCode: isValidationError ? "invalid_input" : err instanceof Error ? err.name : "unknown",
+      })
+      return Response.json({ error: message }, { status: isValidationError ? 400 : 500 })
     }
   }
 }

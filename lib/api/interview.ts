@@ -7,7 +7,16 @@ import type {
 } from "@/lib/interview"
 import type { EnrichedDrillQuestion, SpeakingScores } from "@/lib/interview-drills"
 import type { InterviewMode } from "@/lib/interview-modes"
+import type { SkillCode } from "@/lib/learning/skills"
 import { aiPost } from "./ai-client"
+import { skillsApi } from "./skills"
+
+const EVALUATION_LABEL_TO_SKILL: Record<string, SkillCode> = {
+  Speaking: "interview.speaking",
+  Pronunciation: "interview.speaking",
+  Vocabulary: "interview.vocabulary",
+  Confidence: "interview.confidence",
+}
 
 // Mock Interview / Exam Prep
 // The examiner Q&A itself runs over the chat layer (chatApi). These helpers
@@ -159,6 +168,24 @@ export const interviewApi = {
       .select(ATTEMPT_COLUMNS)
       .single()
     if (error) throw error
+
+    for (const s of attempt.scores) {
+      const skillCode = EVALUATION_LABEL_TO_SKILL[s.label]
+      if (!skillCode) continue
+      void skillsApi.recordEvent({
+        skillCode,
+        sourceFeature: "interview_evaluation",
+        sourceId: attempt.id,
+        score: Math.round((s.score / s.max) * 100),
+      })
+    }
+    void skillsApi.recordEvent({
+      skillCode: "interview.task_completion",
+      sourceFeature: "interview_evaluation",
+      sourceId: attempt.id,
+      score: Math.round(attempt.overall * 20),
+    })
+
     return mapAttempt(data as AttemptRow)
   },
 

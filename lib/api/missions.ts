@@ -1,0 +1,336 @@
+import { supabase } from "@/lib/supabase"
+import { requireUserId } from "@/lib/auth-store"
+import { dateKeyInTimeZone, DEFAULT_TIME_ZONE } from "@/lib/date-key"
+import { getDailyGoalMinutes } from "@/lib/onboarding-store"
+import { buildDailyMission, type MissionContext, type MissionItemType } from "@/lib/learning/mission-engine"
+import type { SkillCode } from "@/lib/learning/skills"
+import { correctionApi, dailyPhraseApi, listeningApi, scenarioApi } from "./learning"
+import { vocabApi } from "./vocab"
+import { skillsApi } from "./skills"
+
+// Daily mission over kori_daily_missions / kori_daily_mission_items. A
+// mission is generated once per (user, Korea-calendar day) and then only
+// ever read or have its items' progress refreshed — never regenerated —
+// so "today's mission" stays stable across refreshes for the whole day.
+
+export interface MissionItem {
+  id: string
+  type: MissionItemType
+  title: string
+  reason: string
+  targetCount: number
+  referenceIds: string[]
+  skillCodes: SkillCode[]
+  estimatedMinutes: number
+  status: "pending" | "in_progress" | "completed"
+  progressCount: number
+  completedAt: string | null
+}
+
+export interface DailyMission {
+  id: string
+  dateKey: string
+  title: string
+  reason: string
+  estimatedMinutes: number
+  focusSkillCodes: SkillCode[]
+  createdAt: string
+  items: MissionItem[]
+}
+
+type MissionRow = {
+  id: string
+  mission_date: string
+  title: string
+  reason: string
+  estimated_minutes: number
+  focus_skill_codes: string[]
+  created_at: string
+}
+
+type MissionItemRow = {
+  id: string
+  item_type: MissionItemType
+  title: string
+  reason: string
+  target_count: number
+  reference_ids: string[]
+  skill_codes: string[]
+  estimated_minutes: number
+  status: "pending" | "in_progress" | "completed"
+  progress_count: number
+  completed_at: string | null
+}
+
+function toMissionItem(row: MissionItemRow): MissionItem {
+  return {
+    id: row.id,
+    type: row.item_type,
+    title: row.title,
+    reason: row.reason,
+    targetCount: row.target_count,
+    referenceIds: row.reference_ids ?? [],
+    skillCodes: (row.skill_codes ?? []) as SkillCode[],
+    estimatedMinutes: row.estimated_minutes,
+    status: row.status,
+    progressCount: row.progress_count,
+    completedAt: row.completed_at,
+  }
+}
+
+function toMission(row: MissionRow, items: MissionItemRow[]): DailyMission {
+  return {
+    id: row.id,
+    dateKey: row.mission_date,
+    title: row.title,
+    reason: row.reason,
+    estimatedMinutes: row.estimated_minutes,
+    focusSkillCodes: (row.focus_skill_codes ?? []) as SkillCode[],
+    createdAt: row.created_at,
+    items: items.map(toMissionItem),
+  }
+}
+
+async function todayDateKey(): Promise<string> {
+  const { data } = await supabase.from("kori_profiles").select("timezone").maybeSingle()
+  return dateKeyInTimeZone(new Date(), data?.timezone || DEFAULT_TIME_ZONE)
+}
+
+async function fetchMission(userId: string, dateKey: string): Promise<DailyMission | null> {
+  const { data: missionRow, error } = await supabase
+    .from("kori_daily_missions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("mission_date", dateKey)
+    .maybeSingle()
+  if (error) throw error
+  if (!missionRow) return null
+
+  const { data: itemRows, error: itemsError } = await supabase
+    .from("kori_daily_mission_items")
+    .select("*")
+    .eq("mission_id", missionRow.id)
+    .order("created_at", { ascending: true })
+  if (itemsError) throw itemsError
+
+  return toMission(missionRow as MissionRow, (itemRows ?? []) as MissionItemRow[])
+}
+
+async function buildContext(dateKey: string): Promise<MissionContext> {
+  const [profileRes, dueVocabulary, dueVocabularyCount, dueCorrections, weakSkills, phrase, scenarios, activity] =
+    await Promise.all([
+      supabase.from("kori_profiles").select("korean_level, learning_goal").maybeSingle(),
+      vocabApi.getDueWords(),
+      vocabApi.getDueCount(),
+      correctionApi.getDueReviews(),
+      skillsApi.getWeakSkills(3),
+      dailyPhraseApi.getToday().catch(() => null),
+      scenarioApi.getList().catch(() => []),
+      supabase
+        .from("kori_activity_log")
+        .select("feature")
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ])
+
+  const listeningTopics = await listeningApi.getTopics()
+
+  return {
+    dateKey,
+    koreanLevel: profileRes.data?.korean_level ?? "BEGINNER",
+    learningGoal: profileRes.data?.learning_goal ?? null,
+    availableMinutes: getDailyGoalMinutes(),
+    dueVocabulary: dueVocabulary.map((v) => ({ id: v.id, term: v.term, meaning: v.meaning })),
+    dueVocabularyCount,
+    dueCorrections: dueCorrections.map((c) => ({ id: c.id, originalText: c.originalText, correctedText: c.correctedText })),
+    dueCorrectionsCount: dueCorrections.length,
+    weakSkills: weakSkills.map((s) => ({ skillCode: s.skillCode, masteryScore: s.masteryScore })),
+    recentFeatures: (activity.data ?? []).map((a) => a.feature),
+    recentTopics: [],
+    // No per-user exam-date field exists yet (the countdown banner shown
+    // elsewhere is a fixed personal date, not per-account data) — leaving
+    // this null avoids fabricating exam personalization from data that
+    // doesn't exist. See README limitations.
+    upcomingExam: null,
+    availableScenarios: scenarios.map((s) => ({ id: s.id, title: s.title, category: s.category })),
+    availableListeningTopics: listeningTopics.map((topic) => ({ topic })),
+    dailyPhraseLearned: phrase?.learned ?? true,
+  }
+}
+
+export const missionsApi = {
+  getToday: async (): Promise<DailyMission | null> => {
+    const userId = requireUserId()
+    const dateKey = await todayDateKey()
+    return fetchMission(userId, dateKey)
+  },
+
+  // Generates and persists today's mission on first call of the day; every
+  // later call the same day returns the exact same persisted rows.
+  getOrCreateToday: async (): Promise<DailyMission> => {
+    const userId = requireUserId()
+    const dateKey = await todayDateKey()
+    const existing = await fetchMission(userId, dateKey)
+    if (existing) return existing
+
+    const context = await buildContext(dateKey)
+    const plan = buildDailyMission(context)
+
+    const { data: missionRow, error: missionError } = await supabase
+      .from("kori_daily_missions")
+      .insert({
+        user_id: userId,
+        mission_date: dateKey,
+        title: plan.title,
+        reason: plan.reason,
+        estimated_minutes: plan.estimatedMinutes,
+        focus_skill_codes: plan.focusSkillCodes,
+        context_snapshot: {
+          dueVocabularyCount: context.dueVocabularyCount,
+          dueCorrectionsCount: context.dueCorrectionsCount,
+          weakSkills: context.weakSkills,
+        },
+      })
+      // Two near-simultaneous requests could both miss the SELECT above and
+      // both try to insert — the (user_id, mission_date) unique constraint
+      // makes the loser's insert fail; upsert on that key so it becomes a
+      // safe no-op merge instead of an error.
+      .select("*")
+      .single()
+
+    if (missionError) {
+      if (missionError.code === "23505") {
+        const raceWinner = await fetchMission(userId, dateKey)
+        if (raceWinner) return raceWinner
+      }
+      throw missionError
+    }
+
+    if (plan.items.length > 0) {
+      const { error: itemsError } = await supabase.from("kori_daily_mission_items").insert(
+        plan.items.map((item) => ({
+          mission_id: missionRow.id,
+          user_id: userId,
+          item_type: item.type,
+          title: item.title,
+          reason: item.reason,
+          target_count: item.targetCount,
+          reference_ids: item.referenceIds,
+          skill_codes: item.skillCodes,
+          estimated_minutes: item.estimatedMinutes,
+        })),
+      )
+      if (itemsError) throw itemsError
+    }
+
+    const created = await fetchMission(userId, dateKey)
+    if (!created) throw new Error("Failed to load the mission just created")
+    return created
+  },
+
+  // Re-checks each pending/in-progress item against real evidence and marks
+  // it complete where the evidence now exists. Never marks anything complete
+  // just because a page was opened.
+  refreshProgress: async (): Promise<DailyMission | null> => {
+    const userId = requireUserId()
+    const mission = await missionsApi.getToday()
+    if (!mission) return null
+
+    const pending = mission.items.filter((i) => i.status !== "completed")
+    if (pending.length === 0) return mission
+
+    const [dueVocabIds, dueCorrectionIds, phrase] = await Promise.all([
+      vocabApi.getDueCount().then(() => vocabApi.getDueWords()).then((rows) => new Set(rows.map((r) => r.id))),
+      correctionApi.getDueReviews().then((rows) => new Set(rows.map((r) => r.id))),
+      dailyPhraseApi.getToday().catch(() => null),
+    ])
+
+    for (const item of pending) {
+      let completed = false
+      let progressCount = item.progressCount
+
+      if (item.type === "vocab_review") {
+        const stillDue = item.referenceIds.filter((id) => dueVocabIds.has(id))
+        progressCount = item.referenceIds.length - stillDue.length
+        completed = item.referenceIds.length > 0 && stillDue.length === 0
+      } else if (item.type === "correction_review") {
+        const stillDue = item.referenceIds.filter((id) => dueCorrectionIds.has(id))
+        progressCount = item.referenceIds.length - stillDue.length
+        completed = item.referenceIds.length > 0 && stillDue.length === 0
+      } else if (item.type === "daily_phrase") {
+        completed = Boolean(phrase?.learned)
+        progressCount = completed ? 1 : 0
+      } else if (item.type === "scenario") {
+        const scenarioId = item.referenceIds[0]
+        if (scenarioId) {
+          const { data } = await supabase
+            .from("kori_scenario_sessions")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("scenario_id", scenarioId)
+            .eq("task_completed", true)
+            .gte("started_at", mission.createdAt)
+            .limit(1)
+          completed = Boolean(data && data.length > 0)
+          progressCount = completed ? 1 : 0
+        }
+      } else if (item.type === "listening") {
+        const topic = item.referenceIds[0]
+        if (topic) {
+          const { data: lessons } = await supabase
+            .from("kori_listening_lessons")
+            .select("id")
+            .eq("topic", topic)
+            .gte("created_at", mission.createdAt)
+          const lessonIds = (lessons ?? []).map((l) => l.id as string)
+          if (lessonIds.length > 0) {
+            const { data: attempts } = await supabase
+              .from("kori_listening_attempts")
+              .select("id")
+              .in("lesson_id", lessonIds)
+              .limit(1)
+            completed = Boolean(attempts && attempts.length > 0)
+            progressCount = completed ? 1 : 0
+          }
+        }
+      } else if (item.type === "interview") {
+        const { data: attempts } = await supabase
+          .from("kori_interview_attempts")
+          .select("id")
+          .gte("created_at", mission.createdAt)
+          .limit(1)
+        completed = Boolean(attempts && attempts.length > 0)
+        progressCount = completed ? 1 : 0
+      }
+
+      if (completed || progressCount !== item.progressCount) {
+        await supabase
+          .from("kori_daily_mission_items")
+          .update({
+            status: completed ? "completed" : "in_progress",
+            progress_count: progressCount,
+            completed_at: completed ? new Date().toISOString() : null,
+          })
+          .eq("id", item.id)
+      }
+    }
+
+    return fetchMission(userId, mission.dateKey)
+  },
+
+  // Directly completes one item with explicit evidence (used by flows that
+  // already know they just satisfied it — e.g. a scenario evaluation result)
+  // rather than waiting for the next refreshProgress() poll.
+  completeItemWithEvidence: async (itemId: string, evidence: Record<string, unknown> = {}): Promise<void> => {
+    const { error } = await supabase
+      .from("kori_daily_mission_items")
+      .update({
+        status: "completed",
+        progress_count: 1,
+        completed_at: new Date().toISOString(),
+        evidence,
+      })
+      .eq("id", itemId)
+    if (error) throw error
+  },
+}

@@ -1,8 +1,10 @@
 import { z } from "zod"
 import { FORMALITY_LABELS, jsonAiRoute } from "@/lib/server/ai"
 
-export const POST = jsonAiRoute(
-  z.object({
+export const POST = jsonAiRoute({
+  feature: "daily_phrase_generate",
+  inputSchema: z.object({}),
+  outputSchema: z.object({
     phrase: z.string(),
     meaning: z.string(),
     romanization: z.string().nullable(),
@@ -10,7 +12,7 @@ export const POST = jsonAiRoute(
     formality: z.string().nullable(),
     similarExpressions: z.array(z.object({ phrase: z.string(), meaning: z.string() })),
   }),
-  async (_body, { db }) => {
+  buildPrompt: async (_body, { db }) => {
     const { data: profile } = await db.from("kori_profiles").select("korean_level").maybeSingle()
     const { data: recent } = await db
       .from("kori_daily_phrases")
@@ -31,4 +33,4 @@ export const POST = jsonAiRoute(
       "Include meaning, romanization, when to use it, its formality level, and similar expressions."
     )
   },
-)
+})
