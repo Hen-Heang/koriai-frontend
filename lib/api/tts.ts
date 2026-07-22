@@ -9,7 +9,7 @@ export type TtsOptions = {
 // TTS — audio comes from the app/api/ai/tts route (OpenAI TTS behind the
 // server key); returns an object URL for <audio>.
 export const ttsApi = {
-  speak: async (text: string, voice = "nova", options: TtsOptions = {}): Promise<string> => {
+  speak: async (text: string, voice = "marin", options: TtsOptions = {}): Promise<string> => {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     const res = await fetch("/api/ai/tts", {

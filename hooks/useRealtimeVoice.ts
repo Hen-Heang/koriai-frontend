@@ -3,6 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { realtimeApi } from "@/lib/api"
+import type { RealtimeBootstrap } from "@/lib/api/realtime"
+import { buildBootstrapEvents, responseCreate } from "@/lib/realtime/events"
+import {
+  decideCorrection,
+  DEFAULT_CORRECTION_POLICY,
+  initialCorrectionState,
+  type CorrectionPolicy,
+} from "@/lib/realtime/correction-policy"
+import { shouldAnalyzeKoreanTurn } from "@/lib/learning/korean-text"
+import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
+
+const EMPTY_BOOTSTRAP: RealtimeBootstrap = { history: [], createInitialResponse: true }
 
 export type RealtimeVoicePhase =
   | "idle"
@@ -17,6 +29,14 @@ export interface RealtimeVoiceTurn {
   role: "user" | "assistant"
   text: string
   interrupted?: boolean
+}
+
+// One analyzed learner voice turn: the spoken Korean plus its structured
+// analysis. Used for the live correction notice and the post-session report.
+export interface VoiceCorrection {
+  itemId: string
+  originalText: string
+  analysis: TurnAnalysis
 }
 
 type RealtimeServerEvent = {
@@ -35,6 +55,8 @@ type RealtimeServerEvent = {
 type UseRealtimeVoiceOptions = {
   conversationId?: string
   technicalMode: boolean
+  // How aggressively to surface live corrections (fluency / balanced / accuracy).
+  correctionPolicy?: CorrectionPolicy
   onTurnComplete?: (role: "user" | "assistant", text: string) => void | Promise<void>
 }
 
@@ -52,6 +74,7 @@ function readableVoiceError(error: unknown): string {
 export function useRealtimeVoice({
   conversationId,
   technicalMode,
+  correctionPolicy = DEFAULT_CORRECTION_POLICY,
   onTurnComplete,
 }: UseRealtimeVoiceOptions) {
   const [phase, setPhase] = useState<RealtimeVoicePhase>("idle")
@@ -64,8 +87,13 @@ export function useRealtimeVoice({
   const [model, setModel] = useState<string | null>(null)
   const [learnerLevel, setLearnerLevel] = useState<string | null>(null)
   const [speechRate, setSpeechRate] = useState<number | null>(null)
+  const [scenarioTitle, setScenarioTitle] = useState<string | null>(null)
+  // Compact correction shown live during the session (per correction policy);
+  // null when nothing is currently surfaced.
+  const [liveCorrection, setLiveCorrection] = useState<VoiceCorrection | null>(null)
 
   const peerRef = useRef<RTCPeerConnection | null>(null)
+  const bootstrapRef = useRef<RealtimeBootstrap>(EMPTY_BOOTSTRAP)
   const channelRef = useRef<RTCDataChannel | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -249,6 +277,8 @@ export function useRealtimeVoice({
     setIsMuted(false)
     setLearnerLevel(null)
     setSpeechRate(null)
+    setScenarioTitle(null)
+    bootstrapRef.current = EMPTY_BOOTSTRAP
     persistedTurnIdsRef.current.clear()
     currentUserRef.current = null
     currentAssistantRef.current = null
@@ -279,6 +309,19 @@ export function useRealtimeVoice({
       setModel(credentials.model)
       setLearnerLevel(credentials.learnerLevel)
       setSpeechRate(credentials.speechRate)
+      setScenarioTitle(credentials.scenarioTitle)
+
+      // Seed the visible transcript with the recent history the server returned
+      // so a resumed or reconnected session shows continuity, and mark those
+      // ids as already persisted so the completion handler never re-saves them.
+      bootstrapRef.current = credentials.bootstrap
+      const seededTurns: RealtimeVoiceTurn[] = credentials.bootstrap.history.map((message) => ({
+        id: message.id,
+        role: message.role,
+        text: message.text,
+      }))
+      persistedTurnIdsRef.current = new Set(seededTurns.map((turn) => turn.id))
+      if (seededTurns.length) setTurns(seededTurns)
 
       const peer = new RTCPeerConnection()
       peerRef.current = peer
@@ -309,8 +352,19 @@ export function useRealtimeVoice({
       })
       channel.addEventListener("open", () => {
         if (!mountedRef.current) return
-        setPhase("thinking")
-        channel.send(JSON.stringify({ type: "response.create" }))
+        // Replay recent history into the fresh realtime context, then let the
+        // assistant speak first only when it's genuinely its turn (greet a new
+        // conversation, or answer a pending learner message). Otherwise wait.
+        const bootstrap = bootstrapRef.current
+        for (const event of buildBootstrapEvents(bootstrap.history)) {
+          channel.send(JSON.stringify(event))
+        }
+        if (bootstrap.createInitialResponse) {
+          setPhase("thinking")
+          channel.send(JSON.stringify(responseCreate()))
+        } else {
+          setPhase("listening")
+        }
       })
       channel.addEventListener("close", () => {
         if (mountedRef.current && !closingRef.current && peer.connectionState !== "closed") {
@@ -395,6 +449,7 @@ export function useRealtimeVoice({
     model,
     learnerLevel,
     speechRate,
+    scenarioTitle,
     start,
     stop,
     toggleMute,

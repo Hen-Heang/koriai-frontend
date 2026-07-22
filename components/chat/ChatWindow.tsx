@@ -444,6 +444,7 @@ export function ChatWindow({
                 model={realtimeVoice.model}
                 learnerLevel={realtimeVoice.learnerLevel}
                 speechRate={realtimeVoice.speechRate}
+                scenarioTitle={realtimeVoice.scenarioTitle}
                 onToggleMute={realtimeVoice.toggleMute}
                 onEnd={realtimeVoice.stop}
                 onRetry={() => void realtimeVoice.start()}

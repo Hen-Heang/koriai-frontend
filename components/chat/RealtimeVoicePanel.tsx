@@ -4,7 +4,7 @@ import Image from "next/image"
 import { memo, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "motion/react"
-import { AudioLines, Captions, LoaderCircle, Mic, MicOff, PhoneOff, RotateCcw } from "lucide-react"
+import { AudioLines, Captions, LoaderCircle, Mic, MicOff, PhoneOff, RotateCcw, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { RealtimeVoicePhase, RealtimeVoiceTurn } from "@/hooks/useRealtimeVoice"
@@ -23,6 +23,7 @@ type RealtimeVoicePanelProps = {
   model: string | null
   learnerLevel: string | null
   speechRate: number | null
+  scenarioTitle: string | null
   onToggleMute: () => void
   onEnd: () => void
   onRetry: () => void
@@ -112,6 +113,7 @@ export const RealtimeVoicePanel = memo(function RealtimeVoicePanel({
   model,
   learnerLevel,
   speechRate,
+  scenarioTitle,
   onToggleMute,
   onEnd,
   onRetry,
@@ -198,6 +200,12 @@ export const RealtimeVoicePanel = memo(function RealtimeVoicePanel({
             <Captions size={13} />
             KO · EN captions
           </span>
+          {scenarioTitle && (
+            <span className="flex h-8 max-w-[45vw] items-center gap-1.5 truncate rounded-full border border-blue-300/20 bg-blue-400/10 px-3 text-[11px] font-bold text-blue-100">
+              <Sparkles size={12} className="shrink-0" />
+              <span className="truncate">{scenarioTitle}</span>
+            </span>
+          )}
         </div>
 
         <div className="order-3 flex w-full justify-center sm:order-none sm:w-auto sm:shrink-0">

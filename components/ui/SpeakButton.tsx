@@ -21,7 +21,7 @@ const audioUrlCache = new Map<string, string>()
 // same per-session URL cache instead of re-fetching the audio for the same text.
 export async function getCachedAudioUrl(
   text: string,
-  voice = "nova",
+  voice = "marin",
   instructions?: string,
 ): Promise<string> {
   const cacheKey = `${voice}|${instructions ?? ""}|${text}`
@@ -35,7 +35,7 @@ export async function getCachedAudioUrl(
 
 export function SpeakButton({
   text,
-  voice = "nova",
+  voice = "marin",
   instructions,
   className = "",
   playbackRate = 1,

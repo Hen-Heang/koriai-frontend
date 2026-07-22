@@ -39,6 +39,7 @@ const FEATURE_TO_BUCKET: Record<string, RateLimitBucket> = {
   recovery_coach: "structured",
   translate: "structured",
   realtime_session: "structured",
+  realtime_turn_analysis: "structured",
 }
 
 export function bucketForFeature(feature: string): RateLimitBucket {

@@ -1,123 +1,158 @@
 import { createHash } from "node:crypto"
 
+import { z } from "zod"
+
 import { requireUser } from "@/lib/server/ai"
+import { checkRateLimit, recordUsage } from "@/lib/server/ai-limits"
+import type { RealtimeBootstrapMessage } from "@/lib/realtime/events"
+import {
+  buildRealtimeBootstrap,
+  buildRealtimeInstructions,
+  cleanProfileValue,
+  normalizeKoreanLevel,
+  resolveRealtimeModel,
+  VOICE_LEVELS,
+  type RealtimeRecentMistake,
+  type RealtimeScenarioContext,
+} from "@/lib/realtime/session-context"
 
-const REALTIME_MODEL = process.env.REALTIME_MODEL ?? "gpt-realtime-2.1"
+const REALTIME_FEATURE = "realtime_session"
 
-type KoreanLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-
-const VOICE_LEVELS: Record<
-  KoreanLevel,
-  { speed: number; maxOutputTokens: number; instructions: string }
-> = {
-  BEGINNER: {
-    speed: 0.88,
-    maxOutputTokens: 500,
-    instructions:
-      "- Use beginner Korean (TOPIK 1 / A1-A2) in polite 해요체. Use common everyday words and one idea per sentence. Avoid slang, idioms, abstract vocabulary, long clauses, and advanced connective endings.\n" +
-      "- Reply with 3-4 short sentences, usually 4-8 Korean words per sentence. Keep the conversation substantial by using simple sentences, not by making sentences complex.\n" +
-      "- Introduce at most one new expression per turn. When useful, naturally repeat or rephrase the key expression. Ask one simple open question.",
-  },
-  INTERMEDIATE: {
-    speed: 0.94,
-    maxOutputTokens: 700,
-    instructions:
-      "- Use intermediate Korean (roughly TOPIK 2-3 / B1) in natural polite speech. Prefer familiar vocabulary and clear sentence structures; explain uncommon expressions with a simpler Korean rephrasing.\n" +
-      "- Reply with 3-5 natural sentences (about 25-50 Korean words), add at most two useful new expressions, and ask one relevant open question.",
-  },
-  ADVANCED: {
-    speed: 0.99,
-    maxOutputTokens: 900,
-    instructions:
-      "- Use natural advanced Korean appropriate to the topic, including nuanced vocabulary and idioms when they genuinely fit. Do not make the wording complex just to sound advanced.\n" +
-      "- Reply with 4-6 natural sentences (about 40-75 Korean words) and ask one relevant open question.",
-  },
+// Resolve (and validate) the configured model once at module load so an
+// unsupported REALTIME_MODEL surfaces a clear warning instead of a generic 502.
+const { model: REALTIME_MODEL, invalidRequest: INVALID_REALTIME_MODEL } = resolveRealtimeModel(
+  process.env.REALTIME_MODEL,
+)
+if (INVALID_REALTIME_MODEL) {
+  console.warn(
+    `[realtime-session] REALTIME_MODEL="${INVALID_REALTIME_MODEL}" is not an allowed realtime model; ` +
+      `falling back to "${REALTIME_MODEL}".`,
+  )
 }
 
-function cleanProfileValue(value: unknown, maxLength = 120): string | null {
-  if (typeof value !== "string") return null
-  const cleaned = value.replace(/\s+/g, " ").trim()
-  return cleaned ? cleaned.slice(0, maxLength) : null
-}
+// Fetch a little more than the bootstrap cap so empty rows don't shrink the tail.
+const HISTORY_FETCH_LIMIT = 16
 
-function normalizeKoreanLevel(value: unknown): KoreanLevel {
-  const normalized = cleanProfileValue(value, 30)?.toUpperCase()
-  if (normalized === "ADVANCED") return "ADVANCED"
-  if (normalized === "INTERMEDIATE") return "INTERMEDIATE"
-  return "BEGINNER"
-}
+const inputSchema = z.object({
+  conversationId: z.string().uuid(),
+  technicalMode: z.boolean().optional(),
+})
 
 export async function POST(req: Request): Promise<Response> {
+  const startedAt = performance.now()
   const auth = await requireUser(req)
   if (auth instanceof Response) return auth
+  const { user, db } = auth
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return Response.json({ error: "Realtime voice is not configured" }, { status: 503 })
   }
 
-  const body = (await req.json().catch(() => ({}))) as {
-    conversationId?: string
-    technicalMode?: boolean
+  const rateStatus = await checkRateLimit(db, user.id, REALTIME_FEATURE)
+  if (!rateStatus.allowed) {
+    return Response.json(
+      { error: `Daily live-voice limit reached (${rateStatus.limit}/day). Try again tomorrow.` },
+      { status: 429 },
+    )
   }
 
-  if (!body.conversationId) {
-    return Response.json({ error: "conversationId is required" }, { status: 400 })
+  const parsed = inputSchema.safeParse(await req.json().catch(() => ({})))
+  if (!parsed.success) {
+    return Response.json(
+      { error: "conversationId is required", details: parsed.error.issues.map((i) => i.message) },
+      { status: 400 },
+    )
   }
+  const { conversationId, technicalMode = false } = parsed.data
 
-  const [{ data: conversation, error: conversationError }, { data: profile }] = await Promise.all([
-    auth.db
+  // Conversation + profile + recent transcript + recent important mistakes in
+  // parallel (all RLS-scoped to the caller). Scenario needs conversation.scenario_id
+  // first, so it's a second, conditional read.
+  const [
+    { data: conversation, error: conversationError },
+    { data: profile },
+    { data: historyRows },
+    { data: mistakeRows },
+  ] = await Promise.all([
+    db
       .from("kori_conversations")
-      .select("id, conversation_type")
-      .eq("id", body.conversationId)
+      .select("id, conversation_type, scenario_id")
+      .eq("id", conversationId)
       .maybeSingle(),
-    auth.db
+    db
       .from("kori_profiles")
       .select("display_name, korean_level, occupation, learning_goal, native_language, country")
       .maybeSingle(),
+    db
+      .from("kori_messages")
+      .select("id, role, content")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: false })
+      .limit(HISTORY_FETCH_LIMIT),
+    db
+      .from("kori_corrections")
+      .select("original_text, corrected_text")
+      .eq("severity", "important")
+      .order("last_seen_at", { ascending: false })
+      .limit(5),
   ])
 
   if (conversationError || !conversation) {
     return Response.json({ error: "Conversation not found" }, { status: 404 })
   }
 
-  const learnerName = cleanProfileValue(profile?.display_name, 60) ?? "the learner"
+  let scenario: RealtimeScenarioContext | null = null
+  if (conversation.scenario_id) {
+    const { data: scenarioRow } = await db
+      .from("kori_scenarios")
+      .select("title, summary, goal, intro_message")
+      .eq("id", conversation.scenario_id)
+      .maybeSingle()
+    if (scenarioRow) {
+      scenario = {
+        title: cleanProfileValue(scenarioRow.title, 120) ?? "Roleplay",
+        summary: cleanProfileValue(scenarioRow.summary, 300),
+        goal: cleanProfileValue(scenarioRow.goal, 300),
+        introMessage: cleanProfileValue(scenarioRow.intro_message, 600),
+      }
+    }
+  }
+
   const level = normalizeKoreanLevel(profile?.korean_level)
   const voiceLevel = VOICE_LEVELS[level]
-  const occupation = cleanProfileValue(profile?.occupation)
-  const learningGoal = cleanProfileValue(profile?.learning_goal)
-  const nativeLanguage = cleanProfileValue(profile?.native_language, 60)
-  const country = cleanProfileValue(profile?.country, 60)
-  const profileDetails = [
-    occupation && `Job: ${occupation}`,
-    learningGoal && `Learning goal: ${learningGoal}`,
-    nativeLanguage && `Native language: ${nativeLanguage} (do not speak it unless explicitly requested)`,
-    country && `Country: ${country}`,
-  ].filter(Boolean)
-  const profileBlock = profileDetails.length
-    ? `Learner context (adapt quietly; do not announce this profile):\n${profileDetails.map((line) => `- ${line}`).join("\n")}`
-    : ""
-  const practiceContext = body.technicalMode
-    ? "Prioritize realistic Korean for software work, meetings, code reviews, and office relationships."
-    : "Use practical everyday Korean and let the learner guide the topic naturally."
 
-  const instructions =
-    `You are Hengo, a warm Korean conversation partner and speaking coach for ${learnerName}. ` +
-    `Their approximate Korean level is ${level}. The practice type is ${conversation.conversation_type}.\n\n` +
-    "VOICE AND LANGUAGE:\n" +
-    "- Speak only natural, contemporary Korean. Never read English translations, romanization, markdown, labels, or stage directions aloud.\n" +
-    "- Sound like a real person in a relaxed one-to-one conversation: warm, responsive, expressive, and never scripted.\n" +
-    "- Speak clearly at the configured learner pace, with natural intonation and a brief pause between every sentence.\n\n" +
-    "LEVEL RULES (follow these strictly):\n" +
-    `${voiceLevel.instructions}\n\n` +
-    "CONVERSATION BEHAVIOR:\n" +
-    "- React specifically to what the learner said, add one useful idea or personal-style observation, and move the same topic forward. Vary your openings and never praise automatically.\n" +
-    "- Let the learner finish. If they pause mid-thought, wait patiently. They may interrupt you; adapt naturally and do not complain.\n" +
-    "- Match vocabulary and grammar to their level. If they struggle, simplify and offer a short example in Korean.\n" +
-    "- Correct only an important mistake that affects naturalness or meaning. First respond to their idea, then say '더 자연스럽게 말하면…' with one concise correction, and continue the conversation.\n" +
-    "- On the first response when no learner audio has been provided yet, greet them warmly in Korean, introduce one easy topic, and ask a simple question that invites more than yes/no.\n" +
-    `- ${practiceContext}\n` +
-    (profileBlock ? `\n${profileBlock}\n` : "")
+  const history: RealtimeBootstrapMessage[] = (historyRows ?? [])
+    .reverse()
+    .map((row) => ({
+      id: String(row.id),
+      role: row.role === "assistant" ? ("assistant" as const) : ("user" as const),
+      text: String(row.content ?? ""),
+    }))
+  const bootstrap = buildRealtimeBootstrap(history)
+
+  const recentMistakes: RealtimeRecentMistake[] = (mistakeRows ?? [])
+    .map((row) => ({
+      original: cleanProfileValue(row.original_text, 80) ?? "",
+      corrected: cleanProfileValue(row.corrected_text, 80) ?? "",
+    }))
+    .filter((mistake) => mistake.original && mistake.corrected)
+
+  const instructions = buildRealtimeInstructions({
+    learnerName: cleanProfileValue(profile?.display_name, 60) ?? "the learner",
+    level,
+    conversationType: conversation.conversation_type,
+    technicalMode,
+    occupation: cleanProfileValue(profile?.occupation),
+    learningGoal: cleanProfileValue(profile?.learning_goal),
+    nativeLanguage: cleanProfileValue(profile?.native_language, 60),
+    country: cleanProfileValue(profile?.country, 60),
+    scenario,
+    recentMistakes,
+    // The bootstrap tail is what the model will actually see replayed, so the
+    // greet/continue instruction is derived from the same set.
+    history: bootstrap.history,
+  })
 
   const safetyIdentifier = createHash("sha256").update(auth.user.id).digest("hex")
 
@@ -143,7 +178,8 @@ export async function POST(req: Request): Promise<Response> {
               transcription: {
                 model: "gpt-4o-mini-transcribe",
                 language: "ko",
-                prompt: "Natural Korean conversation. Preserve Korean names, workplace terms, and software vocabulary accurately.",
+                prompt:
+                  "Natural Korean conversation. Preserve Korean names, workplace terms, and software vocabulary accurately.",
               },
               turn_detection: {
                 type: "semantic_vad",
@@ -164,13 +200,37 @@ export async function POST(req: Request): Promise<Response> {
     if (!response.ok) {
       const detail = await response.text()
       console.error("[realtime-session] OpenAI rejected session", response.status, detail)
+      void recordUsage(db, {
+        userId: user.id,
+        feature: REALTIME_FEATURE,
+        model: REALTIME_MODEL,
+        latencyMs: Math.round(performance.now() - startedAt),
+        success: false,
+        errorCode: `http_${response.status}`,
+      })
       return Response.json({ error: "Could not start realtime voice" }, { status: 502 })
     }
 
     const data = (await response.json()) as { value?: string; expires_at?: number }
     if (!data.value) {
+      void recordUsage(db, {
+        userId: user.id,
+        feature: REALTIME_FEATURE,
+        model: REALTIME_MODEL,
+        latencyMs: Math.round(performance.now() - startedAt),
+        success: false,
+        errorCode: "no_client_secret",
+      })
       return Response.json({ error: "Realtime voice returned no client secret" }, { status: 502 })
     }
+
+    void recordUsage(db, {
+      userId: user.id,
+      feature: REALTIME_FEATURE,
+      model: REALTIME_MODEL,
+      latencyMs: Math.round(performance.now() - startedAt),
+      success: true,
+    })
 
     return Response.json({
       clientSecret: data.value,
@@ -178,9 +238,19 @@ export async function POST(req: Request): Promise<Response> {
       model: REALTIME_MODEL,
       learnerLevel: level,
       speechRate: voiceLevel.speed,
+      scenarioTitle: scenario?.title ?? null,
+      bootstrap,
     })
   } catch (error) {
     console.error("[realtime-session] Failed to create session", error)
+    void recordUsage(db, {
+      userId: user.id,
+      feature: REALTIME_FEATURE,
+      model: REALTIME_MODEL,
+      latencyMs: Math.round(performance.now() - startedAt),
+      success: false,
+      errorCode: error instanceof Error ? error.name : "unknown",
+    })
     return Response.json({ error: "Could not connect to realtime voice" }, { status: 502 })
   }
 }
