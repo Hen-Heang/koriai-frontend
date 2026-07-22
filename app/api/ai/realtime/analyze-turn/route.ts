@@ -38,7 +38,9 @@ export async function POST(req: Request): Promise<Response> {
       { status: 400 },
     )
   }
-  const { conversationId, itemId, text } = parsed.data
+  // itemId is validated for the client contract (dedup is enforced client-side)
+  // but not needed server-side yet.
+  const { conversationId, text } = parsed.data
 
   // Cheap eligibility gate first — non-Korean/too-short turns never reach the
   // model or the daily quota.

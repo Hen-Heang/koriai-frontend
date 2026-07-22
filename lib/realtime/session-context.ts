@@ -72,6 +72,22 @@ export const VOICE_LEVELS: Record<KoreanLevel, VoiceLevelConfig> = {
   },
 }
 
+// Optional per-session speaking pace override. When set, it replaces the
+// level-derived speed so a learner can slow the coach down (or speed it up)
+// from the setup sheet without changing their level.
+export type SpeakingPace = "slow" | "clear" | "natural"
+
+export const PACE_SPEED: Record<SpeakingPace, number> = {
+  slow: 0.85,
+  clear: 0.93,
+  natural: 1.0,
+}
+
+export function resolveSpeechSpeed(level: KoreanLevel, pace?: SpeakingPace | null): number {
+  if (pace && PACE_SPEED[pace] !== undefined) return PACE_SPEED[pace]
+  return VOICE_LEVELS[level].speed
+}
+
 export function cleanProfileValue(value: unknown, maxLength = 120): string | null {
   if (typeof value !== "string") return null
   const cleaned = value.replace(/\s+/g, " ").trim()

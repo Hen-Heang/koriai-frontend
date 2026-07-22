@@ -11,6 +11,7 @@ import {
   cleanProfileValue,
   normalizeKoreanLevel,
   resolveRealtimeModel,
+  resolveSpeechSpeed,
   VOICE_LEVELS,
   type RealtimeRecentMistake,
   type RealtimeScenarioContext,
@@ -36,6 +37,7 @@ const HISTORY_FETCH_LIMIT = 16
 const inputSchema = z.object({
   conversationId: z.string().uuid(),
   technicalMode: z.boolean().optional(),
+  pace: z.enum(["slow", "clear", "natural"]).optional(),
 })
 
 export async function POST(req: Request): Promise<Response> {
@@ -64,7 +66,7 @@ export async function POST(req: Request): Promise<Response> {
       { status: 400 },
     )
   }
-  const { conversationId, technicalMode = false } = parsed.data
+  const { conversationId, technicalMode = false, pace } = parsed.data
 
   // Conversation + profile + recent transcript + recent important mistakes in
   // parallel (all RLS-scoped to the caller). Scenario needs conversation.scenario_id
@@ -121,6 +123,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const level = normalizeKoreanLevel(profile?.korean_level)
   const voiceLevel = VOICE_LEVELS[level]
+  const speechSpeed = resolveSpeechSpeed(level, pace)
 
   const history: RealtimeBootstrapMessage[] = (historyRows ?? [])
     .reverse()
@@ -190,7 +193,7 @@ export async function POST(req: Request): Promise<Response> {
             },
             output: {
               voice: "marin",
-              speed: voiceLevel.speed,
+              speed: speechSpeed,
             },
           },
         },
@@ -237,7 +240,7 @@ export async function POST(req: Request): Promise<Response> {
       expiresAt: data.expires_at ?? null,
       model: REALTIME_MODEL,
       learnerLevel: level,
-      speechRate: voiceLevel.speed,
+      speechRate: speechSpeed,
       scenarioTitle: scenario?.title ?? null,
       bootstrap,
     })

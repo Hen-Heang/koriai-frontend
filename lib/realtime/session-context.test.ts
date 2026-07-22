@@ -6,7 +6,9 @@ import {
   buildRealtimeInstructions,
   DEFAULT_REALTIME_MODEL,
   normalizeKoreanLevel,
+  PACE_SPEED,
   resolveRealtimeModel,
+  resolveSpeechSpeed,
   VOICE_LEVELS,
   type RealtimeContextInput,
 } from "./session-context"
@@ -45,6 +47,17 @@ describe("resolveRealtimeModel", () => {
     const result = resolveRealtimeModel("gpt-5-imaginary")
     expect(result.model).toBe(DEFAULT_REALTIME_MODEL)
     expect(result.invalidRequest).toBe("gpt-5-imaginary")
+  })
+})
+
+describe("resolveSpeechSpeed", () => {
+  it("uses the level-derived speed when no pace is set", () => {
+    expect(resolveSpeechSpeed("BEGINNER")).toBe(VOICE_LEVELS.BEGINNER.speed)
+    expect(resolveSpeechSpeed("ADVANCED", null)).toBe(VOICE_LEVELS.ADVANCED.speed)
+  })
+  it("overrides with the pace speed when set", () => {
+    expect(resolveSpeechSpeed("ADVANCED", "slow")).toBe(PACE_SPEED.slow)
+    expect(resolveSpeechSpeed("BEGINNER", "natural")).toBe(PACE_SPEED.natural)
   })
 })
 

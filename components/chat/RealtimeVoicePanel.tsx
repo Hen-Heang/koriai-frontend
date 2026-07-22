@@ -1,14 +1,20 @@
 "use client"
 
 import Image from "next/image"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState, type FC } from "react"
 import { createPortal } from "react-dom"
-import { motion } from "motion/react"
-import { AudioLines, Captions, LoaderCircle, Mic, MicOff, PhoneOff, RotateCcw, Sparkles } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { AudioLines, Captions, Lightbulb, LoaderCircle, Mic, MicOff, PhoneOff, RotateCcw, Sparkles, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import type { RealtimeVoicePhase, RealtimeVoiceTurn } from "@/hooks/useRealtimeVoice"
+import type { RealtimeVoicePhase, RealtimeVoiceTurn, VoiceCorrection } from "@/hooks/useRealtimeVoice"
 import { translateApi } from "@/lib/api"
+import { pickPrimaryMistake } from "@/lib/realtime/correction-policy"
+import {
+  englishAllowed,
+  koreanCaptionsVisible,
+  type CaptionMode,
+} from "@/lib/realtime/voice-practice"
 import { cn } from "@/lib/utils"
 
 const WAVE_BARS = [18, 30, 22, 38, 26, 34, 19] as const
@@ -24,9 +30,68 @@ type RealtimeVoicePanelProps = {
   learnerLevel: string | null
   speechRate: number | null
   scenarioTitle: string | null
+  liveCorrection: VoiceCorrection | null
+  captionMode: CaptionMode
   onToggleMute: () => void
   onEnd: () => void
   onRetry: () => void
+  onDismissCorrection: () => void
+}
+
+// A single compact, non-disruptive correction card surfaced mid-session.
+const LIVE_CORRECTION_DISMISS_MS = 9000
+
+const CorrectionNotice: FC<{ correction: VoiceCorrection; onDismiss: () => void }> = ({
+  correction,
+  onDismiss,
+}) => {
+  const mistake = pickPrimaryMistake(correction.analysis)
+  const suggestion = mistake?.corrected ?? correction.analysis.naturalVersion
+
+  useEffect(() => {
+    const timer = window.setTimeout(onDismiss, LIVE_CORRECTION_DISMISS_MS)
+    return () => window.clearTimeout(timer)
+  }, [correction.itemId, onDismiss])
+
+  if (!suggestion) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      className="mt-3 w-full max-w-2xl rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-left"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-start gap-2.5">
+        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-amber-200">
+          <Lightbulb size={13} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200/90">
+            더 자연스럽게
+          </p>
+          <p className="mt-1 text-[14px] font-semibold leading-snug text-white" lang="ko">
+            {suggestion}
+          </p>
+          {mistake?.explanation && (
+            <p className="mt-1 text-[12px] font-medium leading-relaxed text-amber-100/80">
+              {mistake.explanation}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss correction"
+          className="shrink-0 rounded-full p-1 text-amber-200/70 transition-colors hover:bg-amber-400/15 hover:text-amber-100"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </motion.div>
+  )
 }
 
 const PHASE_COPY: Record<RealtimeVoicePhase, { label: string; detail: string }> = {
@@ -57,37 +122,39 @@ function formatSpeechPace(rate: number | null): string {
   return "Natural pace"
 }
 
-// English subtitle for the live Korean caption. The realtime transcript
-// streams word by word, so requests wait for a short pause instead of firing
-// per delta; mid-turn pauses still get a partial translation, which keeps the
-// English feeling live. Failures are silent — the Korean caption is primary.
-const TRANSLATE_SETTLE_MS = 700
+// English subtitle for the Korean caption. Only *completed* assistant turns are
+// translated (the caller passes the finished turn, not the streaming caption),
+// so each turn triggers at most one request instead of one per word. A stale
+// request whose caption has already been superseded is discarded, results are
+// cached, and failures are silent — the Korean caption is primary.
+const TRANSLATE_SETTLE_MS = 300
 
 function useLiveTranslation(korean: string, enabled: boolean): string {
   const text = korean.trim()
-  // The latest finished translation stays on screen while a newer caption's
-  // request is still in flight, so the English line doesn't flicker.
   const [english, setEnglish] = useState("")
   const cacheRef = useRef(new Map<string, string>())
 
   useEffect(() => {
     if (!enabled || !text) return
+    const cached = cacheRef.current.get(text)
+    if (cached !== undefined) {
+      setEnglish(cached)
+      return
+    }
+
+    // Cancels the effect: a newer caption (or captions turned off) supersedes an
+    // in-flight request, so its result is ignored rather than flashing stale EN.
+    let cancelled = false
     let retryTimer: number | null = null
 
     const translate = async (retriesLeft: number) => {
-      const cached = cacheRef.current.get(text)
-      if (cached !== undefined) {
-        setEnglish(cached)
-        return
-      }
       try {
         const en = await translateApi.toEnglish(text)
+        if (cancelled) return
         cacheRef.current.set(text, en)
         setEnglish(en)
       } catch {
-        // One quiet retry (e.g. the route was still compiling in dev, or a
-        // network blip); beyond that the Korean caption stands alone.
-        if (retriesLeft > 0) {
+        if (!cancelled && retriesLeft > 0) {
           retryTimer = window.setTimeout(() => void translate(retriesLeft - 1), 1500)
         }
       }
@@ -95,6 +162,7 @@ function useLiveTranslation(korean: string, enabled: boolean): string {
 
     const timer = window.setTimeout(() => void translate(1), TRANSLATE_SETTLE_MS)
     return () => {
+      cancelled = true
       window.clearTimeout(timer)
       if (retryTimer !== null) window.clearTimeout(retryTimer)
     }
@@ -114,26 +182,37 @@ export const RealtimeVoicePanel = memo(function RealtimeVoicePanel({
   learnerLevel,
   speechRate,
   scenarioTitle,
+  liveCorrection,
+  captionMode,
   onToggleMute,
   onEnd,
   onRetry,
+  onDismissCorrection,
 }: RealtimeVoicePanelProps) {
   const panelRef = useRef<HTMLElement | null>(null)
   const previousFocusRef = useRef<HTMLElement | null>(
     document.activeElement instanceof HTMLElement ? document.activeElement : null,
   )
+  const [englishRevealed, setEnglishRevealed] = useState(false)
   const copy = PHASE_COPY[phase]
   const latestAssistant = latestTurnText(turns, "assistant")
   const latestUser = latestTurnText(turns, "user")
-  // Only real transcript text — never the placeholder greeting — is translated.
+
+  const showKorean = koreanCaptionsVisible(captionMode)
+  // "ko_en" always shows English; "tap" reveals it on demand; others never.
+  const englishOn =
+    englishAllowed(captionMode) && (captionMode === "ko_en" || englishRevealed)
+
+  // Only the streaming caption or the last *completed* assistant turn is shown;
+  // translation runs on the completed turn only, so it fires once per turn.
   const assistantTranscript = assistantCaption || latestAssistant
   const visibleAssistantCaption =
     assistantTranscript ||
     (phase === "connecting" ? "잠시만 기다려 주세요…" : "안녕하세요! 오늘은 어떤 이야기를 해 볼까요?")
   const visibleUserCaption = userCaption || latestUser
   const assistantEnglish = useLiveTranslation(
-    assistantTranscript,
-    phase !== "connecting" && phase !== "error",
+    latestAssistant,
+    englishOn && phase !== "connecting" && phase !== "error",
   )
 
   useEffect(() => {
@@ -300,15 +379,21 @@ export const RealtimeVoicePanel = memo(function RealtimeVoicePanel({
               <Captions size={13} />
               Hengo · live subtitle
             </div>
-            <p
-              className="text-balance text-[1.3rem] font-semibold leading-[1.55] tracking-[-0.025em] text-white sm:text-[1.75rem] sm:leading-[1.5]"
-              lang="ko"
-              aria-live="polite"
-              aria-atomic="false"
-            >
-              {visibleAssistantCaption}
-              {phase === "speaking" && <span className="ml-1 inline-block h-5 w-0.5 animate-pulse bg-blue-300 align-middle" />}
-            </p>
+            {showKorean ? (
+              <p
+                className="text-balance text-[1.3rem] font-semibold leading-[1.55] tracking-[-0.025em] text-white sm:text-[1.75rem] sm:leading-[1.5]"
+                lang="ko"
+                aria-live="polite"
+                aria-atomic="false"
+              >
+                {visibleAssistantCaption}
+                {phase === "speaking" && <span className="ml-1 inline-block h-5 w-0.5 animate-pulse bg-blue-300 align-middle" />}
+              </p>
+            ) : (
+              <p className="text-[13px] font-medium text-slate-400">
+                Captions off — listening practice. Hengo is {phase === "speaking" ? "speaking" : "here"}.
+              </p>
+            )}
             {assistantEnglish && (
               <p
                 className="mx-auto mt-3 max-w-2xl text-pretty border-t border-white/[0.08] pt-3 text-[13px] font-medium leading-relaxed text-blue-200/85 sm:text-[15px]"
@@ -321,14 +406,36 @@ export const RealtimeVoicePanel = memo(function RealtimeVoicePanel({
                 {assistantEnglish}
               </p>
             )}
+            {captionMode === "tap" && !englishRevealed && latestAssistant && (
+              <button
+                type="button"
+                onClick={() => setEnglishRevealed(true)}
+                className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[11px] font-bold text-blue-200 transition-colors hover:bg-white/12"
+              >
+                <Captions size={12} />
+                Show English
+              </button>
+            )}
           </div>
 
-          <div className="mt-3 min-h-16 w-full max-w-2xl rounded-2xl border border-white/[0.07] bg-black/15 px-4 py-3 text-center">
-            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-300/80">You · live subtitle</p>
-            <p className="mt-1 text-[14px] font-medium leading-relaxed text-slate-200 sm:text-[15px]" lang="ko" aria-live="polite">
-              {visibleUserCaption || (phase === "listening" ? "한국어로 편하게 말해 보세요…" : "Your words will appear here as you speak")}
-            </p>
-          </div>
+          {showKorean && (
+            <div className="mt-3 min-h-16 w-full max-w-2xl rounded-2xl border border-white/[0.07] bg-black/15 px-4 py-3 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-300/80">You · live subtitle</p>
+              <p className="mt-1 text-[14px] font-medium leading-relaxed text-slate-200 sm:text-[15px]" lang="ko" aria-live="polite">
+                {visibleUserCaption || (phase === "listening" ? "한국어로 편하게 말해 보세요…" : "Your words will appear here as you speak")}
+              </p>
+            </div>
+          )}
+
+          <AnimatePresence>
+            {liveCorrection && (
+              <CorrectionNotice
+                key={liveCorrection.itemId}
+                correction={liveCorrection}
+                onDismiss={onDismissCorrection}
+              />
+            )}
+          </AnimatePresence>
 
           {turns.length > 1 && (
             <div className="mt-4 w-full max-w-2xl rounded-2xl border border-white/[0.07] bg-white/[0.035] p-3 text-left">

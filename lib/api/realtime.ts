@@ -1,4 +1,5 @@
 import type { RealtimeBootstrapMessage } from "@/lib/realtime/events"
+import type { SpeakingPace } from "@/lib/realtime/session-context"
 import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
 import { authHeaders } from "./ai-client"
 
@@ -27,12 +28,13 @@ export const realtimeApi = {
   createSession: async (
     conversationId: string,
     technicalMode: boolean,
+    pace?: SpeakingPace,
     signal?: AbortSignal,
   ): Promise<RealtimeSessionCredentials> => {
     const response = await fetch("/api/ai/realtime/session", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeaders()) },
-      body: JSON.stringify({ conversationId, technicalMode }),
+      body: JSON.stringify({ conversationId, technicalMode, pace }),
       signal,
     })
 

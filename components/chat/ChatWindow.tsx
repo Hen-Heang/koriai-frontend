@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useRef, type FC } from "react"
+import { createContext, useContext, useEffect, useRef, useState, type FC } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { AudioLines, SquarePen, Sparkles, Terminal, Briefcase, ChevronLeft, EllipsisVertical, Mic, Headphones } from "lucide-react"
@@ -17,6 +17,9 @@ import {
 import { Thread } from "@/components/assistant-ui/thread"
 import { CorrectionCard } from "@/components/chat/CorrectionCard"
 import { RealtimeVoicePanel } from "@/components/chat/RealtimeVoicePanel"
+import { VoiceSessionReport } from "@/components/chat/VoiceSessionReport"
+import { VoicePracticeSetup } from "@/components/chat/VoicePracticeSetup"
+import { ShadowPractice } from "@/components/chat/ShadowPractice"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -28,6 +31,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useChat } from "@/hooks/useChat"
 import { useRealtimeVoice, type RealtimeVoicePhase } from "@/hooks/useRealtimeVoice"
+import { vocabApi } from "@/lib/api"
+import { DEFAULT_CORRECTION_POLICY } from "@/lib/realtime/correction-policy"
+import {
+  DEFAULT_CAPTION_MODE,
+  DEFAULT_PACE,
+  DEFAULT_PRACTICE_MODE,
+  type VoicePracticeOptions,
+} from "@/lib/realtime/voice-practice"
+import { SHADOW_SENTENCES } from "@/lib/realtime/shadow-sentences"
 import { CHAT_PRESETS } from "@/lib/chat-presets"
 import type { ChatMessage } from "@/lib/types"
 import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
@@ -368,9 +380,24 @@ export function ChatWindow({
   }, [scenarioResult])
 
   const router = useRouter()
+
+  // Voice practice setup (Phase 5) — chosen in the setup sheet, applied to the
+  // next live session.
+  const [voiceSetupOpen, setVoiceSetupOpen] = useState(false)
+  const [voiceOptions, setVoiceOptions] = useState<VoicePracticeOptions>({
+    mode: DEFAULT_PRACTICE_MODE,
+    correctionPolicy: DEFAULT_CORRECTION_POLICY,
+    pace: DEFAULT_PACE,
+    captionMode: DEFAULT_CAPTION_MODE,
+  })
+  const [shadowOpen, setShadowOpen] = useState(false)
+  const [vocabState, setVocabState] = useState<"idle" | "saving" | "saved">("idle")
+
   const realtimeVoice = useRealtimeVoice({
     conversationId,
     technicalMode: isTechnicalMode,
+    correctionPolicy: voiceOptions.correctionPolicy,
+    pace: voiceOptions.pace,
     onTurnComplete: appendVoiceTurn,
   })
   const canInteract =
@@ -400,7 +427,44 @@ export function ChatWindow({
     if (realtimeVoice.isActive) {
       realtimeVoice.stop()
     } else {
-      void realtimeVoice.start()
+      // Open the setup sheet first (mode / corrections / pace / captions).
+      setVoiceSetupOpen(true)
+    }
+  }
+
+  function startVoiceWithOptions(options: VoicePracticeOptions) {
+    setVoiceOptions(options)
+    setVoiceSetupOpen(false)
+    if (options.mode === "shadow") {
+      setShadowOpen(true)
+      return
+    }
+    const technical = options.mode === "developer"
+    setIsTechnicalMode(technical)
+    void realtimeVoice.start({
+      correctionPolicy: options.correctionPolicy,
+      pace: options.pace,
+      technicalMode: technical,
+    })
+  }
+
+  function closeReport() {
+    realtimeVoice.dismissSessionReport()
+    setVocabState("idle")
+  }
+
+  async function saveReportVocabulary() {
+    const vocabulary = realtimeVoice.sessionReport?.vocabulary ?? []
+    if (!vocabulary.length) return
+    setVocabState("saving")
+    try {
+      for (const item of vocabulary) {
+        await vocabApi.save({ category: "Speaking", term: item.korean, meaning: item.english })
+      }
+      setVocabState("saved")
+    } catch {
+      setVocabState("idle")
+      toast.error("Could not save vocabulary")
     }
   }
 
@@ -445,12 +509,50 @@ export function ChatWindow({
                 learnerLevel={realtimeVoice.learnerLevel}
                 speechRate={realtimeVoice.speechRate}
                 scenarioTitle={realtimeVoice.scenarioTitle}
+                liveCorrection={realtimeVoice.liveCorrection}
+                captionMode={voiceOptions.captionMode}
                 onToggleMute={realtimeVoice.toggleMute}
                 onEnd={realtimeVoice.stop}
                 onRetry={() => void realtimeVoice.start()}
+                onDismissCorrection={realtimeVoice.dismissLiveCorrection}
               />
             )}
           </AnimatePresence>
+
+          {/* Voice practice setup sheet, shadow mode, and post-session report. */}
+          <VoicePracticeSetup
+            open={voiceSetupOpen}
+            onOpenChange={setVoiceSetupOpen}
+            scenarioTitle={scenario?.title ?? null}
+            defaults={voiceOptions}
+            onStart={startVoiceWithOptions}
+          />
+
+          {shadowOpen && (
+            <ShadowPractice sentences={SHADOW_SENTENCES} onClose={() => setShadowOpen(false)} />
+          )}
+
+          {realtimeVoice.sessionReport && (
+            <VoiceSessionReport
+              report={realtimeVoice.sessionReport}
+              onClose={closeReport}
+              onPracticeAgain={() => {
+                closeReport()
+                setVoiceSetupOpen(true)
+              }}
+              onReviewCorrections={() => {
+                closeReport()
+                router.push("/chat?mode=corrections")
+              }}
+              onStartRecommended={() => {
+                const href = realtimeVoice.sessionReport?.recommendedPractice.href
+                closeReport()
+                if (href) router.push(href)
+              }}
+              onSaveVocabulary={saveReportVocabulary}
+              vocabState={vocabState}
+            />
+          )}
 
           {/* ── Desktop/Mobile Optimized Header ── */}
           <div

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { realtimeApi } from "@/lib/api"
+import { realtimeApi, voiceSessionsApi } from "@/lib/api"
 import type { RealtimeBootstrap } from "@/lib/api/realtime"
 import { buildBootstrapEvents, responseCreate } from "@/lib/realtime/events"
 import {
@@ -11,6 +11,13 @@ import {
   initialCorrectionState,
   type CorrectionPolicy,
 } from "@/lib/realtime/correction-policy"
+import {
+  nextSessionStatus,
+  type VoiceSessionEvent,
+  type VoiceSessionStatus,
+} from "@/lib/realtime/session-lifecycle"
+import { buildVoiceSessionReport, type VoiceSessionReport } from "@/lib/realtime/session-report"
+import type { SpeakingPace } from "@/lib/realtime/session-context"
 import { shouldAnalyzeKoreanTurn } from "@/lib/learning/korean-text"
 import type { TurnAnalysis } from "@/lib/ai/schemas/turn-analysis"
 
@@ -57,6 +64,8 @@ type UseRealtimeVoiceOptions = {
   technicalMode: boolean
   // How aggressively to surface live corrections (fluency / balanced / accuracy).
   correctionPolicy?: CorrectionPolicy
+  // Optional speaking-pace override (slow / clear / natural).
+  pace?: SpeakingPace
   onTurnComplete?: (role: "user" | "assistant", text: string) => void | Promise<void>
 }
 
@@ -75,6 +84,7 @@ export function useRealtimeVoice({
   conversationId,
   technicalMode,
   correctionPolicy = DEFAULT_CORRECTION_POLICY,
+  pace,
   onTurnComplete,
 }: UseRealtimeVoiceOptions) {
   const [phase, setPhase] = useState<RealtimeVoicePhase>("idle")
@@ -91,6 +101,10 @@ export function useRealtimeVoice({
   // Compact correction shown live during the session (per correction policy);
   // null when nothing is currently surfaced.
   const [liveCorrection, setLiveCorrection] = useState<VoiceCorrection | null>(null)
+  // Session lifecycle status (distinct from the per-turn `phase`).
+  const [sessionStatus, setSessionStatus] = useState<VoiceSessionStatus>("idle")
+  // Post-session report, set once the learner ends a session with real turns.
+  const [sessionReport, setSessionReport] = useState<VoiceSessionReport | null>(null)
 
   const peerRef = useRef<RTCPeerConnection | null>(null)
   const bootstrapRef = useRef<RealtimeBootstrap>(EMPTY_BOOTSTRAP)
@@ -104,10 +118,53 @@ export function useRealtimeVoice({
   const persistedTurnIdsRef = useRef(new Set<string>())
   const currentUserRef = useRef<{ id: string; text: string } | null>(null)
   const currentAssistantRef = useRef<{ id: string; text: string } | null>(null)
+  // Learning-analysis state. Read through refs so the analysis callback stays
+  // stable and never re-subscribes the data channel mid-session.
+  const analyzedItemIdsRef = useRef(new Set<string>())
+  const correctionStateRef = useRef(initialCorrectionState())
+  const collectedCorrectionsRef = useRef<VoiceCorrection[]>([])
+  const correctionPolicyRef = useRef(correctionPolicy)
+  const conversationIdRef = useRef(conversationId)
+  const technicalModeRef = useRef(technicalMode)
+  const paceRef = useRef(pace)
+  // Mirror of `turns` so stop() can build the report from the final list without
+  // waiting for the async setTurns to flush.
+  const turnsRef = useRef<RealtimeVoiceTurn[]>([])
+  // Session metadata captured at connect time, for the report + persistence.
+  const sessionMetaRef = useRef<{
+    startedAt: number
+    learnerLevel: string
+    model: string | null
+    scenarioTitle: string | null
+  }>({ startedAt: 0, learnerLevel: "BEGINNER", model: null, scenarioTitle: null })
+  const sessionStatusRef = useRef<VoiceSessionStatus>("idle")
 
   useEffect(() => {
     onTurnCompleteRef.current = onTurnComplete
   }, [onTurnComplete])
+
+  useEffect(() => {
+    correctionPolicyRef.current = correctionPolicy
+  }, [correctionPolicy])
+
+  useEffect(() => {
+    conversationIdRef.current = conversationId
+  }, [conversationId])
+
+  useEffect(() => {
+    technicalModeRef.current = technicalMode
+  }, [technicalMode])
+
+  useEffect(() => {
+    paceRef.current = pace
+  }, [pace])
+
+  // Advances the lifecycle status through the pure state machine.
+  const advanceStatus = useCallback((event: VoiceSessionEvent) => {
+    const next = nextSessionStatus(sessionStatusRef.current, event)
+    sessionStatusRef.current = next
+    setSessionStatus(next)
+  }, [])
 
   useEffect(() => {
     setSupported(
@@ -155,8 +212,12 @@ export function useRealtimeVoice({
 
       setTurns((current) => {
         const existingIndex = current.findIndex((item) => item.id === normalized.id)
-        if (existingIndex === -1) return [...current, normalized]
-        return current.map((item, index) => (index === existingIndex ? normalized : item))
+        const next =
+          existingIndex === -1
+            ? [...current, normalized]
+            : current.map((item, index) => (index === existingIndex ? normalized : item))
+        turnsRef.current = next
+        return next
       })
 
       if (!persist || persistedTurnIdsRef.current.has(normalized.id)) return
@@ -165,6 +226,36 @@ export function useRealtimeVoice({
     },
     [],
   )
+
+  // Fire-and-forget analysis of a completed learner turn. Runs the shared
+  // Korean turn-analysis + correction-SRS pipeline server-side and, per the
+  // correction policy, may surface a compact live correction. Never awaited by
+  // the event loop, so it can't delay the live assistant response. Deduped per
+  // realtime item id; failures are swallowed inside realtimeApi.analyzeTurn.
+  const analyzeUserTurn = useCallback(async (itemId: string, rawText: string) => {
+    const conversationId = conversationIdRef.current
+    if (!conversationId) return
+    const text = rawText.replace(/\s+/g, " ").trim()
+    if (!text) return
+    if (analyzedItemIdsRef.current.has(itemId)) return
+    if (!shouldAnalyzeKoreanTurn(text)) return
+    analyzedItemIdsRef.current.add(itemId)
+
+    const state = correctionStateRef.current
+    state.userTurnIndex += 1
+
+    const analysis = await realtimeApi.analyzeTurn(conversationId, itemId, text)
+    if (!analysis || !mountedRef.current) return
+
+    const decision = decideCorrection({ policy: correctionPolicyRef.current, analysis, state })
+    if (decision.collect) {
+      collectedCorrectionsRef.current.push({ itemId, originalText: text, analysis })
+    }
+    if (decision.show) {
+      state.lastShownAtTurn = state.userTurnIndex
+      setLiveCorrection({ itemId, originalText: text, analysis })
+    }
+  }, [])
 
   const handleServerEvent = useCallback(
     (event: RealtimeServerEvent) => {
@@ -201,6 +292,7 @@ export function useRealtimeVoice({
           currentUserRef.current = null
           setUserCaption(text)
           commitTurn({ id, role: "user", text }, true)
+          void analyzeUserTurn(id, text)
           break
         }
         case "conversation.item.input_audio_transcription.failed":
@@ -256,11 +348,20 @@ export function useRealtimeVoice({
           break
       }
     },
-    [commitTurn],
+    [commitTurn, analyzeUserTurn],
   )
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (overrides?: {
+    correctionPolicy?: CorrectionPolicy
+    pace?: SpeakingPace
+    technicalMode?: boolean
+  }) => {
     if (!conversationId || phase === "connecting" || (phase !== "idle" && phase !== "error")) return
+    // Apply per-session overrides synchronously (from the setup sheet) so the
+    // very first session uses them without waiting for a prop-sync render.
+    if (overrides?.correctionPolicy) correctionPolicyRef.current = overrides.correctionPolicy
+    if (overrides?.pace) paceRef.current = overrides.pace
+    if (overrides?.technicalMode !== undefined) technicalModeRef.current = overrides.technicalMode
     if (!navigator.mediaDevices?.getUserMedia || typeof RTCPeerConnection === "undefined") {
       setError("Live voice is not supported in this browser.")
       setPhase("error")
@@ -278,8 +379,15 @@ export function useRealtimeVoice({
     setLearnerLevel(null)
     setSpeechRate(null)
     setScenarioTitle(null)
+    setLiveCorrection(null)
+    setSessionReport(null)
+    advanceStatus("start")
     bootstrapRef.current = EMPTY_BOOTSTRAP
     persistedTurnIdsRef.current.clear()
+    analyzedItemIdsRef.current.clear()
+    correctionStateRef.current = initialCorrectionState()
+    collectedCorrectionsRef.current = []
+    turnsRef.current = []
     currentUserRef.current = null
     currentAssistantRef.current = null
 
@@ -297,7 +405,8 @@ export function useRealtimeVoice({
       streamRef.current = mediaStream
       const credentials = await realtimeApi.createSession(
         conversationId,
-        technicalMode,
+        technicalModeRef.current,
+        paceRef.current,
         controller.signal,
       )
 
@@ -310,6 +419,12 @@ export function useRealtimeVoice({
       setLearnerLevel(credentials.learnerLevel)
       setSpeechRate(credentials.speechRate)
       setScenarioTitle(credentials.scenarioTitle)
+      sessionMetaRef.current = {
+        startedAt: Date.now(),
+        learnerLevel: credentials.learnerLevel,
+        model: credentials.model,
+        scenarioTitle: credentials.scenarioTitle,
+      }
 
       // Seed the visible transcript with the recent history the server returned
       // so a resumed or reconnected session shows continuity, and mark those
@@ -321,6 +436,7 @@ export function useRealtimeVoice({
         text: message.text,
       }))
       persistedTurnIdsRef.current = new Set(seededTurns.map((turn) => turn.id))
+      turnsRef.current = seededTurns
       if (seededTurns.length) setTurns(seededTurns)
 
       const peer = new RTCPeerConnection()
@@ -352,6 +468,7 @@ export function useRealtimeVoice({
       })
       channel.addEventListener("open", () => {
         if (!mountedRef.current) return
+        advanceStatus("connected")
         // Replay recent history into the fresh realtime context, then let the
         // assistant speak first only when it's genuinely its turn (greet a new
         // conversation, or answer a pending learner message). Otherwise wait.
@@ -370,6 +487,7 @@ export function useRealtimeVoice({
         if (mountedRef.current && !closingRef.current && peer.connectionState !== "closed") {
           setError("The live voice connection ended.")
           setPhase("error")
+          advanceStatus("fail")
         }
       })
 
@@ -381,6 +499,7 @@ export function useRealtimeVoice({
         ) {
           setError("The live voice connection was interrupted.")
           setPhase("error")
+          advanceStatus("fail")
         }
       })
 
@@ -411,12 +530,18 @@ export function useRealtimeVoice({
       if (!mountedRef.current) return
       setError(readableVoiceError(startError))
       setPhase("error")
+      advanceStatus("fail")
     }
-  }, [closeConnection, conversationId, handleServerEvent, phase, technicalMode])
+  }, [advanceStatus, closeConnection, conversationId, handleServerEvent, phase])
 
   const stop = useCallback(() => {
     const userTurn = currentUserRef.current
-    if (userTurn?.text.trim()) commitTurn({ ...userTurn, role: "user" }, true)
+    if (userTurn?.text.trim()) {
+      commitTurn({ ...userTurn, role: "user" }, true)
+      // Capture the final utterance for the session report even if the session
+      // ended before its transcription completed (deduped if it already ran).
+      void analyzeUserTurn(userTurn.id, userTurn.text)
+    }
     const assistantTurn = currentAssistantRef.current
     if (assistantTurn?.text.trim()) {
       commitTurn({ ...assistantTurn, role: "assistant", interrupted: true }, true)
@@ -427,7 +552,43 @@ export function useRealtimeVoice({
     setPhase("idle")
     setError(null)
     setIsMuted(false)
-  }, [closeConnection, commitTurn])
+    setLiveCorrection(null)
+
+    // Build the post-session report from the final in-memory transcript. Only
+    // when the learner actually spoke — opening and immediately closing yields
+    // no report.
+    advanceStatus("end")
+    const meta = sessionMetaRef.current
+    if (meta.startedAt > 0) {
+      advanceStatus("summarize")
+      const report = buildVoiceSessionReport({
+        turns: turnsRef.current.map((turn) => ({ role: turn.role, text: turn.text })),
+        corrections: collectedCorrectionsRef.current,
+        startedAt: meta.startedAt,
+        endedAt: Date.now(),
+        scenarioTitle: meta.scenarioTitle,
+      })
+      if (report.metrics.userTurnCount > 0) {
+        setSessionReport(report)
+        // Best-effort persistence — a failure (incl. an unmigrated table) must
+        // never hide the report the learner just earned.
+        void voiceSessionsApi.record({
+          conversationId: conversationIdRef.current ?? null,
+          scenarioId: null,
+          practiceMode: meta.scenarioTitle ? "scenario" : technicalModeRef.current ? "developer" : "free",
+          correctionPolicy: correctionPolicyRef.current,
+          learnerLevel: meta.learnerLevel,
+          model: meta.model,
+          status: "completed",
+          startedAt: new Date(meta.startedAt).toISOString(),
+          endedAt: new Date().toISOString(),
+          report,
+        })
+      }
+      advanceStatus("summaryReady")
+    }
+    sessionMetaRef.current = { startedAt: 0, learnerLevel: "BEGINNER", model: null, scenarioTitle: null }
+  }, [advanceStatus, closeConnection, commitTurn, analyzeUserTurn])
 
   const toggleMute = useCallback(() => {
     const track = streamRef.current?.getAudioTracks()[0]
@@ -450,6 +611,17 @@ export function useRealtimeVoice({
     learnerLevel,
     speechRate,
     scenarioTitle,
+    liveCorrection,
+    dismissLiveCorrection: useCallback(() => setLiveCorrection(null), []),
+    // Snapshot of every real mistake collected this session, for the
+    // post-session report (Phase 4). Read from a ref, so call it when ending.
+    getSessionCorrections: useCallback((): VoiceCorrection[] => collectedCorrectionsRef.current, []),
+    sessionStatus,
+    sessionReport,
+    dismissSessionReport: useCallback(() => {
+      setSessionReport(null)
+      advanceStatus("reset")
+    }, [advanceStatus]),
     start,
     stop,
     toggleMute,
