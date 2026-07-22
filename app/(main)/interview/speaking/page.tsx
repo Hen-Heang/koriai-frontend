@@ -12,6 +12,7 @@ import {
   Mic,
   RotateCcw,
   Send,
+  Target,
 } from "lucide-react"
 import { motion } from "motion/react"
 
@@ -39,6 +40,7 @@ import {
   type DrillQuestion,
   type SpeakingScores,
 } from "@/lib/interview-drills"
+import { selectFocusQueue } from "@/lib/interview-practice"
 import { registerSpeechAudio, stopSpeechAudio } from "@/lib/speech-audio"
 import { cn } from "@/lib/utils"
 
@@ -100,6 +102,11 @@ export default function SpeakingDrillPage() {
   const [isScoring, setIsScoring] = useState(false)
   const [error, setError] = useState("")
   const [lastSession, setLastSession] = useState<LastSession | null>(null)
+  // "Focus on weak questions" pulls from the DB-backed question bank + this
+  // account's per-question progress (lib/interview-practice.ts selectFocusQueue)
+  // instead of the static offline pool, so never-practiced and low-scoring
+  // questions come up first.
+  const [focusMode, setFocusMode] = useState(false)
   useScrollToTopOnChange(phase)
 
   // Continuous capture: the mic stays open across pauses (answers are 2–3
@@ -111,6 +118,9 @@ export default function SpeakingDrillPage() {
   // Guards the hands-free auto-listen: question audio can outlive the drill
   // (End drill mid-playback), and the mic must not open then.
   const drillActiveRef = useRef(false)
+  // Groups every answer saved during one drill under the same id
+  // (kori_interview_answers.session_id) — regenerated each time a drill starts.
+  const sessionIdRef = useRef<string>("")
 
   useEffect(() => {
     setLastSession(loadLastSession())
@@ -122,19 +132,39 @@ export default function SpeakingDrillPage() {
 
   const question = queue[index]
 
-  function startDrill() {
-    const staticQueue = buildDrillQueue()
-    setQueue(staticQueue)
+  function launchQueue(initialQueue: DrillQuestion[]) {
+    setQueue(initialQueue)
     setIndex(0)
     setResults([])
     setCurrent(null)
     setError("")
     speech.reset()
     drillActiveRef.current = true
+    sessionIdRef.current = crypto.randomUUID()
     setPhase("drill")
-    void autoSpeak(staticQueue[0]?.ko ?? "").then((played) => {
+    void autoSpeak(initialQueue[0]?.ko ?? "").then((played) => {
       if (played && drillActiveRef.current) speech.start()
     })
+  }
+
+  function startDrill() {
+    if (focusMode) {
+      // Bank questions have stable ids, so progress tracking works; if the
+      // fetch fails (offline, not signed in yet), fall back to the static
+      // pool rather than blocking the drill.
+      Promise.all([interviewApi.listQuestions("weather"), interviewApi.listQuestionProgress()])
+        .then(([questions, progress]) => {
+          const focusQueue = selectFocusQueue(questions, progress, DRILL_SIZE).map(
+            (q): DrillQuestion => ({ id: q.id, ko: q.questionKo, en: q.questionEn ?? "" })
+          )
+          launchQueue(focusQueue.length > 0 ? focusQueue : buildDrillQueue())
+        })
+        .catch(() => launchQueue(buildDrillQueue()))
+      return
+    }
+
+    const staticQueue = buildDrillQueue()
+    launchQueue(staticQueue)
 
     // Fresh AI questions replace whatever hasn't been shown yet; failure is
     // silent — the static queue is a complete drill on its own.
@@ -169,6 +199,23 @@ export default function SpeakingDrillPage() {
       setCurrent(result)
       setResults((prev) => [...prev, { question, answer, result }])
       void logActivity()
+      // Fire-and-forget: history/progress persistence must never block the
+      // drill, and a failure here has already been surfaced to the user via
+      // the scorecard they can see (see lib/api/interview.ts saveAnswer).
+      void interviewApi
+        .saveAnswer({
+          questionId: question.id ?? null,
+          sessionType: "speaking_drill",
+          sessionId: sessionIdRef.current,
+          questionKo: question.ko,
+          answerText: answer,
+          scores: result.scores,
+          feedback: result.feedback,
+          correctedAnswer: result.correctedAnswer,
+          naturalAlternative: result.betterAlternative,
+          tip: result.tip,
+        })
+        .catch((err) => console.warn("Could not save interview answer:", err))
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not score your answer. Try again."))
     } finally {
@@ -256,6 +303,23 @@ export default function SpeakingDrillPage() {
             </CardContent>
           </Card>
         )}
+
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setFocusMode((v) => !v)}
+            aria-pressed={focusMode}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold shadow-sm transition-all active:scale-95",
+              focusMode
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                : "border-border bg-background text-muted-foreground hover:bg-accent"
+            )}
+          >
+            <Target size={16} strokeWidth={2.5} />
+            Focus on weak questions
+          </button>
+        </div>
 
         <div className="flex justify-center">
           <Button

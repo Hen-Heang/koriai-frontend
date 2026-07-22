@@ -12,6 +12,11 @@ export const DRILL_SIZE = 5
 export interface DrillQuestion {
   ko: string
   en: string
+  // Set only for questions sourced from the DB-backed question bank
+  // (lib/api/interview.ts listQuestions) — the legacy static pool below has no
+  // stable ids, so those questions save full answer history but don't feed
+  // per-question progress tracking (see lib/interview-practice.ts).
+  id?: string
 }
 
 /** A drill question with the listening-reveal extras (from the AI batch). */

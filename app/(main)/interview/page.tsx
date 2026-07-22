@@ -24,6 +24,7 @@ import { PageHero } from "@/components/app/page-hero"
 import { DrillEntryCards } from "@/components/interview/DrillEntryCards"
 import { EvaluationSummary } from "@/components/interview/EvaluationSummary"
 import { ExamTimer } from "@/components/interview/ExamTimer"
+import { InterviewProgressCard } from "@/components/interview/InterviewProgressCard"
 import { ModePicker } from "@/components/interview/ModePicker"
 import { SpeakingTipsCard } from "@/components/interview/SpeakingTipsCard"
 import { StudyPack } from "@/components/interview/StudyPack"
@@ -428,6 +429,10 @@ export default function InterviewPage() {
         {/* Renders itself only after mount + when scorecards exist, so it's safe
             to leave ungated here (no SSR/CSR conditional mismatch). */}
         <ScoreTrend records={history} />
+
+        <motion.div variants={itemVariants}>
+          <InterviewProgressCard topicId={topic.id} />
+        </motion.div>
 
         <motion.div variants={itemVariants}>
           <StudyPlanCard />

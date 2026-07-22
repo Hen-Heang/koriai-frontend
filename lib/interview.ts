@@ -151,36 +151,36 @@ const WEATHER_SCRIPT_OUTLINE: ScriptSection[] = [
 // The candidate's own drafted script, transcribed into the outline sections above.
 const WEATHER_SCRIPT_SEED: Record<string, string> = {
   intro:
-    "안녕하세요. 저는 히엉(Henry)입니다. 오늘 주제는 한국 여름 날씨와 캄보디아 날씨의 다른 점과 생활/건강에 미치는 영향입니다.\n오늘은 한국과 캄보디아의 여름이 어떻게 다른지, 그리고 그 날씨가 우리 생활과 건강에 주는 영향을 제 경험과 함께 이야기해보겠습니다.",
+    "안녕하세요. 오늘은 한국과 캄보디아의 여름이 어떻게 다른지, 그리고 그 날씨가 우리 생활과 건강에 주는 영향을 제 경험과 함께 이야기해 보겠습니다.",
   "korea-summer":
     "한국의 여름은 6월부터 8월까지입니다. 보통 30도 정도인데, 더운 날은 35도가 넘습니다. 그리고 장마라고 해서 비가 계속 오는 때가 있습니다. 습도도 높아서 실제 온도보다 더 덥게 느껴집니다.\n그래서 사람들은 우산을 항상 가지고 다니고, 수영장이나 바다에 가기도 하고, 삼계탕을 먹으면서 힘을 얻기도 합니다.",
   compare:
-    "캄보디아는 좀 다릅니다. 일 년 내내 덥고, 건기와 우기 두 계절만 있습니다. 가장 더운 때는 3월부터 5월인데, 40도 가까이 올라갑니다. 그래서 낮에는 너무 더워서 밖에 잘 나가지 않고, 저녁이 되면 시원해져서 저는 그때 친구들과 밖에 나가곤 했습니다.\n한국도 비슷하게, 더운 날에는 다들 에어컨이나 선풍기를 틀어놓은 곳에서 시간을 보냅니다.",
+    "캄보디아는 좀 다릅니다. 일 년 내내 덥고, 건기와 우기 두 계절만 있습니다. 가장 더운 때는 3월부터 5월인데, 40도 가까이 올라갑니다. 그래서 낮에는 너무 더워서 밖에 잘 나가지 않고, 저녁이 되면 시원해져서 그때 친구들과 밖에 나가곤 합니다.\n한국도 비슷하게, 더운 날에는 다들 에어컨이나 선풍기를 틀어놓은 곳에서 시간을 보냅니다.",
   "daily-life":
-    "날씨가 다르니까 저희의 생활 방식도 조금 달라졌습니다. 다니는 시간도 바꾸게 되고, 낮에는 활동을 줄이게 됩니다.",
+    "날씨가 다르니까 생활 방식도 조금 달라집니다. 밖에 다니는 시간도 바꾸게 되고, 낮에는 활동을 줄이게 됩니다.",
   health:
     "건강에도 영향을 많이 줍니다. 더우면 쉽게 피곤해지고, 심하면 더위를 먹을 수도 있어서 조심해야 합니다.\n그래서 저는 이 날씨에 적응하기 위해 물을 많이 마시려고 노력합니다.",
   reflection:
-    "이번 여름은 한국에서 보내는 첫 여름이라 아직 익숙하지 않습니다. 날씨가 많이 덥고 습해서 가끔 잠을 잘 못 잘 때도 있습니다. 그래도 조금씩 적응하고 있습니다.\n나중에 기회가 된다면 여름에 바다나 산에도 한번 가보고 싶습니다.",
-  conclusion: "이상으로 발표를 마치겠습니다. 들어 주셔서 감사합니다.",
+    "이번 여름에는 한국에서 새로운 경험도 많이 했습니다. 친구와 함께 여의도 한강 수영장에 갔는데, 한국에서 여름에 수영한 것은 이번이 처음이었습니다. 사람이 정말 많았지만 정말 즐거웠고, 좋은 추억이 되었습니다.\n또 친구와 함께 선유도공원에도 갔습니다. 공원을 걸으면서 조금 힘들었지만, 자연을 보며 산책해서 기분이 정말 좋았습니다. 저녁까지 공원에 있었는데, 밤에 보는 풍경이 정말 아름다웠습니다. 서울의 야경을 구경하고 사진도 많이 찍었습니다. 이런 경험을 통해 한국의 여름을 더 즐길 수 있었고, 지금은 조금씩 한국 여름에 적응하고 있습니다.\n이번 여름은 한국에서 보내는 첫 여름이라 아직 익숙하지 않습니다. 날씨가 많이 덥고 습해서 가끔 잠을 잘 못 잘 때도 있습니다. 그래도 조금씩 적응하고 있습니다.\n나중에 기회가 된다면 여름에 바다나 산에도 한번 가보고 싶습니다.",
+  conclusion: "감사합니다.",
 }
 
 // The candidate's own English translation of the script (from the same prep
 // doc), section by section, mirroring WEATHER_SCRIPT_SEED's paragraphing.
 const WEATHER_SCRIPT_SEED_EN: Record<string, string> = {
   intro:
-    "Hello, I am Heang (Henry). Today's topic is the differences between Korean summer weather and Cambodian weather, and their impact on life and health.\nToday, I will talk about how summer in Korea and Cambodia are different, and how the weather affects our daily life and health, along with my own experience.",
+    "Hello. Today, I would like to talk about the differences between summer in Korea and Cambodia, and how the weather affects our daily life and health based on my own experience.",
   "korea-summer":
-    "Summer in Korea is from June to August. The temperature is usually around 30°C, but on hot days it goes over 35°C. There is also a rainy period called \"jangma,\" when it rains continuously. The humidity is also high, so it feels hotter than the actual temperature.\nBecause of this, people always carry umbrellas, sometimes go to swimming pools or the beach, and sometimes eat samgyetang to regain energy.",
+    "Summer in Korea is from June to August. The temperature is usually around 30°C, but on very hot days it can go over 35°C. There is also a rainy season called jangma, when it rains continuously. The humidity is also very high, so it feels hotter than the actual temperature.\nBecause of this, people always carry umbrellas, go to swimming pools or the beach, and sometimes eat food like samgyetang to regain their energy.",
   compare:
-    "Cambodia is a bit different. It is hot all year round and has only two seasons: the dry season and the rainy season. The hottest period is from March to May, when the temperature rises to nearly 40°C. So during the daytime, it is too hot and people do not go outside much. In the evening, it becomes cooler, so I used to go out with my friends at that time.\nKorea is similar in some ways — on hot days, everyone spends time in places with the air conditioner or fan on.",
+    "Cambodia is a little different. It is hot all year round and has only two seasons: the dry season and the rainy season. The hottest period is from March to May, when the temperature can reach nearly 40°C. During the daytime, it is too hot to go outside, so people usually stay indoors. In the evening, when it becomes cooler, people often go outside with their friends.\nKorea is similar in some ways. On hot days, people also spend time in places with air conditioning or fans.",
   "daily-life":
-    "Because the weather is different, our lifestyle has also changed a little. We end up changing the times we go out, and we reduce activities during the daytime.",
+    "Because the weather is different, our lifestyle also changes. We change the time we go outside and reduce outdoor activities during the daytime.",
   health:
-    "The weather also affects health a lot. When it is hot, people get tired easily, and in serious cases, they can even get heat sickness, so we have to be careful.\nThat is why I try to drink a lot of water to adapt to this weather.",
+    "The weather also affects our health. When it is very hot, people get tired easily, and in serious cases, they may suffer from heat-related illnesses.\nThat is why I try to drink a lot of water to adapt to this weather.",
   reflection:
-    "This is my first summer in Korea, so I am still not used to it. It is very hot and humid, so sometimes I cannot sleep well. But I am slowly getting used to it.\nIn the future, if I have the chance, I would like to visit the beach or the mountains in summer.",
-  conclusion: "That concludes my presentation. Thank you for listening.",
+    "This summer, I also had many new experiences in Korea. I went to the Yeouido Hangang Swimming Pool with my friend. It was my first time swimming in Korea during the summer. There were so many people, but I had a great time, and it became a wonderful memory.\nI also visited Seonyudo Park with my friend. While walking around the park, I felt a little tired, but being surrounded by nature made me feel refreshed and relaxed. I stayed there until the evening, and the night view was truly beautiful. I enjoyed the Seoul city skyline and took many photos. Through these experiences, I was able to enjoy the Korean summer more, and now I am gradually getting used to it.\nThis is my first summer in Korea, so I am still not completely used to it. It is hot and humid, and sometimes I cannot sleep well. However, I am gradually adapting.\nIf I have the chance in the future, I would also like to visit the beach or the mountains during the summer.",
+  conclusion: "Thank you.",
 }
 
 // A pass-first layer over the larger topic dictionary. Core words get a short

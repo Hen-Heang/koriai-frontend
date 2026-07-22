@@ -19,6 +19,7 @@ import {
   CloudCheck,
   Download,
   FileText,
+  History,
   Languages,
   ListTree,
   MessagesSquare,
@@ -26,9 +27,11 @@ import {
   Trash2,
 } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { SpeakButton } from "@/components/ui/SpeakButton"
 import { Button } from "@/components/ui/button"
 import { interviewApi } from "@/lib/api"
+import type { ScriptVersion } from "@/lib/api/interview"
 import {
   buildQADocument,
   buildScriptDocument,
@@ -169,8 +172,22 @@ export default function InterviewScriptPage() {
   const [mode, setMode] = useState<"script" | "qa" | "read">("script")
   // Show/hide the editable English translation under each fixed section.
   const [showEnglish, setShowEnglish] = useState(true)
-  const seedQA = useMemo(() => getSeedQA(topic), [])
+  // Starts from the hardcoded seed (instant, offline-safe) and upgrades to the
+  // DB-backed question bank (kori_interview_questions) once it loads — that
+  // table is the real seed source now (supabase/seed/kori_interview_questions.sql)
+  // and is what "Focus on weak questions" mode on /interview/speaking reads too.
+  const [bankQA, setBankQA] = useState<QAItem[]>(() => getSeedQA(topic))
   const [customQA, setCustomQA] = useState<CustomQA[]>(loadInitialQA)
+  // Named snapshots layered on top of the autosaving draft (kori_interview_scripts,
+  // untouched by this) — "Original" / "Script V1" / "Mentor Correction" / etc.
+  const [versions, setVersions] = useState<ScriptVersion[]>([])
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  useEffect(() => {
+    interviewApi
+      .listScriptVersions(topic.id)
+      .then(setVersions)
+      .catch(() => {})
+  }, [])
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -243,6 +260,46 @@ export default function InterviewScriptPage() {
     }
   }, [])
 
+  // Loads the DB-backed question bank (kori_interview_questions — the real
+  // seed source now, supabase/seed/kori_interview_questions.sql; also what
+  // "Focus on weak questions" mode on /interview/speaking reads) and fills any
+  // still-blank Q&A answer from its own drafted answer (sample_answer_ko) —
+  // same fill-once logic withSeedDefaults uses for script sections above.
+  useEffect(() => {
+    let active = true
+    interviewApi
+      .listQuestions(topic.id)
+      .then((questions) => {
+        if (!active || questions.length === 0) return
+        setBankQA(
+          questions.map((q) => ({ id: q.id, questionKo: q.questionKo, questionEn: q.questionEn ?? "" }))
+        )
+        setValues((prev) => {
+          let changed = false
+          const next = { ...prev }
+          for (const q of questions) {
+            if (q.sampleAnswerKo && !(next[q.id] ?? "").trim()) {
+              next[q.id] = q.sampleAnswerKo
+              changed = true
+            }
+          }
+          if (!changed) return prev
+          try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+            setSavedAt(new Date())
+          } catch {
+            // ignore
+          }
+          scheduleSync(next)
+          return next
+        })
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
   // Custom sections, plus recovered placeholders for any orphaned `custom-*`
   // text (see reconcileCustom). Derived — never written back — so orphan text is
   // always shown and exported without any state-sync gymnastics.
@@ -254,10 +311,10 @@ export default function InterviewScriptPage() {
   // Seeded likely questions + the candidate's own, in display order.
   const allQA = useMemo<QAItem[]>(
     () => [
-      ...seedQA,
+      ...bankQA,
       ...customQA.map((q) => ({ id: q.id, questionKo: q.questionKo, questionEn: "" })),
     ],
-    [seedQA, customQA]
+    [bankQA, customQA]
   )
 
   const scriptDocument = useMemo(
@@ -420,6 +477,54 @@ export default function InterviewScriptPage() {
     anchor.download = `interview-script-${topic.id}.txt`
     anchor.click()
     URL.revokeObjectURL(url)
+  }
+
+  // ── Script version snapshots ──────────────────────────────────────────────
+  async function saveVersion() {
+    const label = window.prompt(
+      'Name this version (e.g. "Script V1", "Mentor Correction", "Final Practice Version"):',
+      ""
+    )
+    if (!label || !label.trim()) return
+    try {
+      const version = await interviewApi.saveScriptVersion(topic.id, {
+        versionLabel: label.trim(),
+        sections: values,
+        makeActive: true,
+      })
+      setVersions((prev) => [version, ...prev.map((v) => ({ ...v, isActive: false }))])
+    } catch {
+      // Best-effort — the live draft in kori_interview_scripts is unaffected
+      // either way, so a failed snapshot never loses the candidate's work.
+    }
+  }
+
+  async function activateVersion(id: string) {
+    try {
+      await interviewApi.setActiveScriptVersion(topic.id, id)
+      setVersions((prev) => prev.map((v) => ({ ...v, isActive: v.id === id })))
+    } catch {
+      // ignore
+    }
+  }
+
+  function restoreVersion(version: ScriptVersion) {
+    if (
+      !window.confirm(
+        `Load "${version.versionLabel}" into the editor? This will overwrite the current draft text below (your saved versions themselves are never lost).`
+      )
+    )
+      return
+    const next = { ...values, ...version.sections }
+    setValues(next)
+    setSynced(false)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setSavedAt(new Date())
+    } catch {
+      // ignore
+    }
+    scheduleSync(next)
   }
 
   function clearAll() {
@@ -641,6 +746,88 @@ export default function InterviewScriptPage() {
               </button>
             )}
           </div>
+
+          {mode === "script" && (
+            <div className="mb-6 flex justify-center">
+              <div className="w-full max-w-[816px]">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border/70 bg-background px-4 py-2.5 shadow-sm dark:bg-slate-900">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-muted-foreground">
+                    <History size={14} strokeWidth={2.5} />
+                    {versions.length === 0
+                      ? "No saved versions yet"
+                      : `${versions.length} version${versions.length === 1 ? "" : "s"} saved`}
+                    {versions.find((v) => v.isActive) && (
+                      <Badge className="rounded-lg border-none bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-600 dark:text-blue-400">
+                        Active: {versions.find((v) => v.isActive)?.versionLabel}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={saveVersion}
+                      className="h-7 rounded-lg text-xs font-bold"
+                    >
+                      Save as version
+                    </Button>
+                    {versions.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setVersionsOpen((v) => !v)}
+                        className="h-7 rounded-lg text-xs font-bold"
+                      >
+                        {versionsOpen ? "Hide" : "Show"} history
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {versionsOpen && versions.length > 0 && (
+                  <div className="mt-2 space-y-1.5 rounded-2xl border border-border/70 bg-background p-2 shadow-sm dark:bg-slate-900">
+                    {versions.map((v) => (
+                      <div
+                        key={v.id}
+                        className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 hover:bg-accent"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-foreground">
+                            {v.versionLabel}
+                            {v.isActive && (
+                              <span className="ml-1.5 text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400">
+                                Active
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[10px] font-medium text-muted-foreground">
+                            {new Date(v.createdAt).toLocaleString()} · {v.sourceType}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {!v.isActive && (
+                            <button
+                              type="button"
+                              onClick={() => activateVersion(v.id)}
+                              className="rounded-lg px-2 py-1 text-[10px] font-bold text-blue-600 hover:bg-blue-500/10 dark:text-blue-400"
+                            >
+                              Mark active
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => restoreVersion(v)}
+                            className="rounded-lg px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-accent"
+                          >
+                            Load into editor
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {mode === "script" ? (
           <div className="flex justify-center gap-6 xl:gap-8">
