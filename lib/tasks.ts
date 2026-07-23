@@ -20,6 +20,17 @@ export interface Task {
   duration_minutes?: number | null
   tags?: string[]
   color?: string | null // custom task color (hex, e.g. "#3b82f6")
+  // ── Goal System v2 quality fields (Goal System v2 — see
+  //    docs/goal-system-v2-audit.md) — all optional/nullable so every
+  //    pre-v2 task keeps working unchanged.
+  key_result_id?: string | null
+  expected_output?: string | null
+  completion_criteria?: string | null
+  evidence_required?: boolean
+  impact_level?: "low" | "medium" | "high" | null
+  effort_minutes?: number | null
+  source?: "manual" | "ai" | "template"
+  reschedule_count?: number
 }
 
 export interface TaskTag {

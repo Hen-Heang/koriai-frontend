@@ -1,4 +1,5 @@
 import { differenceInDays, isToday, isPast, parseISO } from "date-fns"
+import type { GoalKeyResult } from "@/lib/goal-key-results"
 
 // ── Types (ported from Orbit src/types/goal.ts) ──────────────────────────────
 
@@ -55,6 +56,13 @@ export type SortField = "title" | "target_date" | "status" | "created_at"
 
 export type GoalType = "general" | "travel" | "finance" | "education" | "financial"
 
+// ── Outcome fields (Goal System v2 — see docs/goal-system-v2-audit.md) ───────
+// Deterministic health status computed by lib/goal-health.ts and persisted so
+// the goal list/detail don't need to recompute it on every render. Distinct
+// from GoalDeadlineStatus below, which is purely time-based.
+export type GoalHealthStatus = "on_track" | "attention" | "at_risk" | "blocked" | "completed" | "not_started"
+export type GoalReviewFrequency = "weekly" | "biweekly" | "monthly"
+
 export interface Goal {
   id: string
   title: string
@@ -73,6 +81,23 @@ export interface Goal {
     completed: number
     incomplete: number
   }
+  // ── Outcome fields — nullable text/config fields are genuinely optional
+  //    (a goal can exist before the user fills in the wizard's Measurement
+  //    step); outcome_progress/health_status always have a DB default so
+  //    every goal — including pre-v2 rows — has a value.
+  outcome_statement?: string | null
+  motivation?: string | null
+  baseline_summary?: string | null
+  success_definition?: string | null
+  weekly_capacity_minutes?: number | null
+  review_frequency?: GoalReviewFrequency | null
+  outcome_progress: number
+  health_status: GoalHealthStatus
+  health_reason?: string | null
+  last_reviewed_at?: string | null
+  // Client-side enrichment: active (non-archived) key results for this goal,
+  // when fetched via goalsApi (nested select) — see lib/api/goals.ts.
+  keyResults?: GoalKeyResult[]
   // ── Deferred-feature fields (sharing / themes) — kept optional so ported
   //    components compile; populated only once those features are re-enabled.
   share_code?: string
@@ -303,6 +328,58 @@ export const getDeadlineStatusIcon = (status: GoalDeadlineStatus) => {
       return "Timer"
     default:
       return "Target"
+  }
+}
+
+// ── Health status styling (Goal System v2) — mirrors the deadline styling
+// pattern above but for the deterministic health engine (lib/goal-health.ts).
+export const GOAL_HEALTH_LABELS: Record<GoalHealthStatus, string> = {
+  on_track: "On track",
+  attention: "Needs attention",
+  at_risk: "At risk",
+  blocked: "Blocked",
+  completed: "Completed",
+  not_started: "Not started",
+}
+
+export const getHealthStatusStyling = (status: GoalHealthStatus) => {
+  switch (status) {
+    case "completed":
+      return {
+        badgeColor:
+          "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
+        dotColor: "bg-green-500",
+      }
+    case "on_track":
+      return {
+        badgeColor:
+          "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+        dotColor: "bg-blue-500",
+      }
+    case "attention":
+      return {
+        badgeColor:
+          "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800",
+        dotColor: "bg-yellow-500",
+      }
+    case "at_risk":
+      return {
+        badgeColor:
+          "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+        dotColor: "bg-orange-500",
+      }
+    case "blocked":
+      return {
+        badgeColor:
+          "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
+        dotColor: "bg-red-500",
+      }
+    default:
+      return {
+        badgeColor:
+          "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+        dotColor: "bg-slate-400",
+      }
   }
 }
 

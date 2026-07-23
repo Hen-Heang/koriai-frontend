@@ -2,7 +2,8 @@
 // Back on Orbit's original Supabase tables (goals / tasks / goal_members /
 // goal_stars / notifications) and SECURITY DEFINER RPCs, since KoriAI now shares
 // the Orbit Supabase project. Scoping comes from RLS + auth.uid().
-import type { Goal } from "@/lib/goals"
+import type { Goal, GoalHealthStatus, GoalReviewFrequency } from "@/lib/goals"
+import type { GoalKeyResult } from "@/lib/goal-key-results"
 import type { Task } from "@/lib/tasks"
 import { supabase } from "@/lib/supabase"
 import { getUserId, requireUserId } from "@/lib/auth-store"
@@ -16,6 +17,17 @@ export interface CreateGoalPayload {
   no_duration?: boolean
   status?: string
   metadata: Goal["metadata"]
+  // ── Outcome fields (Goal System v2) — all optional so the existing
+  //    quick-create / template flows keep working unchanged.
+  outcome_statement?: string | null
+  motivation?: string | null
+  baseline_summary?: string | null
+  success_definition?: string | null
+  weekly_capacity_minutes?: number | null
+  review_frequency?: GoalReviewFrequency | null
+  health_status?: GoalHealthStatus
+  health_reason?: string | null
+  last_reviewed_at?: string | null
 }
 
 export type UpdateGoalPayload = Partial<CreateGoalPayload>
@@ -36,20 +48,22 @@ export interface GoalMemberDto {
 type GoalRow = Goal & {
   goal_stars?: { user_id: string }[]
   tasks?: { id: string; completed: boolean }[]
+  goal_key_results?: GoalKeyResult[]
 }
 
-// Nested selects → isStarred / taskCounts enrichment in one query.
-const GOAL_SELECT = "*, goal_stars(user_id), tasks(id, completed)"
+// Nested selects → isStarred / taskCounts / keyResults enrichment in one query.
+const GOAL_SELECT = "*, goal_stars(user_id), tasks(id, completed), goal_key_results(*)"
 
 function enrichGoal(row: GoalRow): Goal {
   const me = getUserId()
-  const { goal_stars, tasks, ...goal } = row
+  const { goal_stars, tasks, goal_key_results, ...goal } = row
   const total = tasks?.length ?? 0
   const completed = tasks?.filter((t) => t.completed).length ?? 0
   return {
     ...goal,
     isStarred: Boolean(goal_stars?.some((s) => s.user_id === me)),
     taskCounts: { total, completed, incomplete: total - completed },
+    keyResults: goal_key_results ?? [],
   } as Goal
 }
 
@@ -80,6 +94,12 @@ export const goalsApi = {
         no_duration: data.no_duration ?? false,
         status: data.status ?? "active",
         metadata: data.metadata,
+        outcome_statement: data.outcome_statement ?? null,
+        motivation: data.motivation ?? null,
+        baseline_summary: data.baseline_summary ?? null,
+        success_definition: data.success_definition ?? null,
+        weekly_capacity_minutes: data.weekly_capacity_minutes ?? null,
+        review_frequency: data.review_frequency ?? null,
       })
       .select()
       .single()
@@ -104,6 +124,17 @@ export const goalsApi = {
         ...(data.no_duration !== undefined ? { no_duration: data.no_duration } : {}),
         ...(data.status !== undefined ? { status: data.status } : {}),
         ...(data.metadata !== undefined ? { metadata: data.metadata } : {}),
+        ...(data.outcome_statement !== undefined ? { outcome_statement: data.outcome_statement } : {}),
+        ...(data.motivation !== undefined ? { motivation: data.motivation } : {}),
+        ...(data.baseline_summary !== undefined ? { baseline_summary: data.baseline_summary } : {}),
+        ...(data.success_definition !== undefined ? { success_definition: data.success_definition } : {}),
+        ...(data.weekly_capacity_minutes !== undefined
+          ? { weekly_capacity_minutes: data.weekly_capacity_minutes }
+          : {}),
+        ...(data.review_frequency !== undefined ? { review_frequency: data.review_frequency } : {}),
+        ...(data.health_status !== undefined ? { health_status: data.health_status } : {}),
+        ...(data.health_reason !== undefined ? { health_reason: data.health_reason } : {}),
+        ...(data.last_reviewed_at !== undefined ? { last_reviewed_at: data.last_reviewed_at } : {}),
       })
       .eq("id", id)
     if (error) throw error

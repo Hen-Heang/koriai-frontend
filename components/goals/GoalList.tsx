@@ -34,9 +34,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DeadlineStatusBadge } from "@/components/goals/DeadlineStatusBadge"
+import { HealthBadge } from "@/components/goals/HealthBadge"
 import { goalsApi } from "@/lib/api"
 import { goalsQueryKey } from "@/hooks/useGoals"
 import { calculateGoalDeadlineInfo, getDeadlineStatusStyling, type Goal, type SortOption } from "@/lib/goals"
+import { allKeyResultsAchieved, computeGoalProgress } from "@/lib/goal-progress"
+import { computeGoalHealth } from "@/lib/goal-health"
 import { getUserId } from "@/lib/auth-store"
 import { cn } from "@/lib/utils"
 
@@ -320,10 +323,35 @@ export function GoalList({
             const deadlineStyling = deadlineInfo
               ? getDeadlineStatusStyling(deadlineInfo.status, deadlineInfo.urgencyLevel)
               : null
-            const total = goal.taskCounts?.total ?? 0
-            const done = goal.taskCounts?.completed ?? 0
-            const progress = total > 0 ? Math.round((done / total) * 100) : 0
-            const readyToComplete = progress === 100 && goal.status !== "completed"
+            // Outcome progress (weighted key results) takes priority over the
+            // legacy done/total task percentage — see lib/goal-progress.ts.
+            const goalProgress = computeGoalProgress(goal.taskCounts, goal.keyResults ?? [])
+            const total = goalProgress.activityProgress.total
+            const done = goalProgress.activityProgress.completed
+            const progress = goalProgress.outcomeProgress ?? goalProgress.activityProgress.percentage
+            const readyToComplete =
+              goal.status !== "completed" &&
+              (goalProgress.hasActiveKeyResults
+                ? allKeyResultsAchieved(goal.keyResults ?? [])
+                : goalProgress.activityProgress.percentage === 100)
+            // List-level health: no per-goal task-detail fetch here, so overdue
+            // high-impact / inactivity signals are omitted (0 / null) — the
+            // goal detail page computes those from the full task list.
+            const health = computeGoalHealth({
+              goalStatus: goal.status,
+              hasKeyResults: goalProgress.hasActiveKeyResults,
+              outcomeProgress: goalProgress.outcomeProgress,
+              allKeyResultsAchieved: goalProgress.hasActiveKeyResults
+                ? allKeyResultsAchieved(goal.keyResults ?? [])
+                : false,
+              activityTotalTasks: total,
+              targetDate: goal.target_date,
+              startDate: goal.metadata?.start_date ?? null,
+              noDuration: Boolean(goal.no_duration || goal.metadata?.no_duration),
+              now: new Date(),
+              daysSinceLastActivity: null,
+              overdueHighImpactTaskCount: 0,
+            })
             const goalIcon = getGoalIcon(goal)
             const isOpening = openingGoalId === goal.id
             const isOwner = currentUser != null && String(currentUser) === String(goal.user_id)
@@ -362,7 +390,10 @@ export function GoalList({
                       {goal.title}
                     </h3>
                     <div className="mt-1.5 flex items-center gap-2">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-foreground/5">
+                      <span className="shrink-0">
+                        <HealthBadge status={health.status} reason={health.reason} />
+                      </span>
+                      <div className="h-2 min-w-6 flex-1 overflow-hidden rounded-full bg-foreground/5">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
@@ -452,6 +483,7 @@ export function GoalList({
                       <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-primary">
                         {goal.metadata?.goal_type || "General"}
                       </Badge>
+                      <HealthBadge status={health.status} reason={health.reason} />
                       {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                     </div>
                     <h3 title={goal.title} className="mt-2 line-clamp-2 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-lg">
@@ -488,6 +520,7 @@ export function GoalList({
                         <span className="flex items-center gap-1.5">
                           <ClipboardList size={14} className="text-primary/60" />
                           {done}/{total}
+                          {goalProgress.hasActiveKeyResults && " activity"}
                         </span>
                         <span className="flex items-center gap-1.5">
                           {isOpening ? (

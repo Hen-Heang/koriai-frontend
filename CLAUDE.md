@@ -71,6 +71,7 @@ Tests are plain vitest unit tests colocated in `lib/*.test.ts` — there is no v
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` — must also be registered under Supabase Auth > Providers > Google.
 - `NEXT_PUBLIC_VAPID_KEY` — web push, paired with the `kori-send-push` Edge Function.
 - Optional: `AI_MODEL`, `TTS_MODEL`.
+- Optional, Money Flow integration preview (see `docs/money-flow-integration.md`): `NEXT_PUBLIC_FEATURE_MONEY_FLOW=true` shows the mocked, feature-flagged `MoneyFlowIntegrationCard` on finance-type goals; `NEXT_PUBLIC_MONEY_FLOW_URL` enables its deep link. Both off/unset by default — no real Money Flow connection exists yet.
 
 ## Conventions
 

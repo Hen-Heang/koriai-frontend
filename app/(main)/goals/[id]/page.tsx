@@ -51,6 +51,10 @@ import { ShareGoalCard } from "@/components/goals/ShareGoalCard"
 import { GoalMilestones, type Milestone } from "@/components/goals/GoalMilestones"
 import { LearningPracticeCard } from "@/components/goals/LearningPracticeCard"
 import { LearningMetricCard } from "@/components/goals/LearningMetricCard"
+import { KeyResultsCard } from "@/components/goals/KeyResultsCard"
+import { HealthBadge } from "@/components/goals/HealthBadge"
+import { MoneyFlowIntegrationCard } from "@/components/goals/MoneyFlowIntegrationCard"
+import { isMoneyFlowIntegrationEnabled } from "@/lib/feature-flags"
 import { GoalCoach } from "@/components/goals/GoalCoach"
 import { GoalCoachChat } from "@/components/goals/GoalCoachChat"
 import dynamic from "next/dynamic"
@@ -64,6 +68,8 @@ import {
   getDeadlineStatusStyling,
   type Goal,
 } from "@/lib/goals"
+import { allKeyResultsAchieved, computeGoalProgress } from "@/lib/goal-progress"
+import { computeGoalHealth } from "@/lib/goal-health"
 import { cn } from "@/lib/utils"
 
 // Heavy, below-the-fold pieces — deferred so the goal header/tabs paint first.
@@ -189,7 +195,39 @@ export default function GoalDetailPage() {
 
   const completedTasks = tasks.filter((t) => t.completed).length
   const totalTasks = tasks.length
-  const taskProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+  // Outcome vs activity progress (Goal System v2) — see lib/goal-progress.ts.
+  // outcomeProgress is null (not 0) when the goal has no key results yet, so
+  // the UI can tell "no outcome data" apart from "0% outcome progress".
+  const progress = computeGoalProgress({ total: totalTasks, completed: completedTasks }, goal?.keyResults ?? [])
+  const displayProgress = progress.outcomeProgress ?? progress.activityProgress.percentage
+
+  const now = new Date()
+  const overdueHighImpactTaskCount = tasks.filter(
+    (t) => !t.completed && t.impact_level === "high" && new Date(t.end_date) < now,
+  ).length
+  const lastCompletedAt = tasks
+    .filter((t) => t.completed && t.updated_at)
+    .map((t) => new Date(t.updated_at as string).getTime())
+    .reduce((max, v) => (v > max ? v : max), 0)
+  const daysSinceLastActivity =
+    lastCompletedAt > 0 ? Math.floor((now.getTime() - lastCompletedAt) / 86_400_000) : null
+
+  const health = goal
+    ? computeGoalHealth({
+        goalStatus: goal.status,
+        hasKeyResults: progress.hasActiveKeyResults,
+        outcomeProgress: progress.outcomeProgress,
+        allKeyResultsAchieved: allKeyResultsAchieved(goal.keyResults ?? []),
+        activityTotalTasks: totalTasks,
+        targetDate: goal.target_date,
+        startDate: goal.metadata?.start_date ?? null,
+        noDuration: Boolean(goal.no_duration || goal.metadata?.no_duration),
+        now,
+        daysSinceLastActivity,
+        overdueHighImpactTaskCount,
+      })
+    : null
 
   const memberCount = members.length || goal?.memberCounts?.total || 0
 
@@ -417,6 +455,7 @@ export default function GoalDetailPage() {
                   <Badge className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[9px] font-medium text-primary hover:bg-primary/20 sm:px-3 sm:py-1">
                     {goal.metadata?.goal_type || "General"}
                   </Badge>
+                  {health && <HealthBadge status={health.status} reason={health.reason} />}
                   {deadlineInfo && <DeadlineStatusBadge deadlineInfo={deadlineInfo} size="sm" />}
                 </div>
                 <h1 className="text-2xl font-semibold leading-tight tracking-tight text-foreground break-words sm:text-3xl lg:text-4xl">
@@ -486,18 +525,36 @@ export default function GoalDetailPage() {
 
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground sm:text-xs">
-              <span>Progress</span>
-              <span className="text-xs font-semibold text-primary sm:text-sm">{taskProgress}%</span>
+              <span>{progress.hasActiveKeyResults ? "Outcome progress" : "Activity progress (legacy)"}</span>
+              <span
+                className="text-xs font-semibold text-primary sm:text-sm"
+                aria-label={`${progress.hasActiveKeyResults ? "Outcome" : "Activity"} progress: ${displayProgress} percent`}
+              >
+                {displayProgress}%
+              </span>
             </div>
-            <div className="relative h-3 w-full overflow-hidden rounded-full bg-foreground/5 sm:h-4">
+            <div
+              className="relative h-3 w-full overflow-hidden rounded-full bg-foreground/5 sm:h-4"
+              role="progressbar"
+              aria-valuenow={displayProgress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${taskProgress}%` }}
+                animate={{ width: `${displayProgress}%` }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full rounded-full"
-                style={{ background: progressGradient(taskProgress) }}
+                style={{ background: progressGradient(displayProgress) }}
               />
             </div>
+            {progress.hasActiveKeyResults && (
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Activity (legacy): {progress.activityProgress.completed}/{progress.activityProgress.total} tasks
+                completed ({progress.activityProgress.percentage}%) — separate from outcome progress above.
+              </p>
+            )}
+            {health?.reason && <p className="text-[11px] font-medium text-muted-foreground">{health.reason}</p>}
           </div>
         </div>
       </section>
@@ -625,6 +682,20 @@ export default function GoalDetailPage() {
               </p>
             )}
           </Card>
+
+          {/* Key results — the measurable proof-of-outcome layer (Goal System v2) */}
+          <KeyResultsCard
+            goalId={id}
+            keyResults={goal.keyResults ?? []}
+            onChanged={() => void queryClient.invalidateQueries({ queryKey: goalKey })}
+          />
+
+          {/* Money Flow preview (feature-flagged, finance goals only) — see
+              docs/money-flow-integration.md. Mocked data only, no live connection. */}
+          {isMoneyFlowIntegrationEnabled() &&
+            (goal.metadata?.goal_type === "finance" || goal.metadata?.goal_type === "financial") && (
+              <MoneyFlowIntegrationCard />
+            )}
 
           {/* Sub-goals / Milestones */}
           <GoalMilestones
