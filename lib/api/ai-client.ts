@@ -23,7 +23,7 @@ export async function aiPost<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify(body ?? {}),
   })
-  if (!res.ok) {
+  if (!res.ok) {~
     const payload = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(payload?.error ?? `AI request failed (${res.status})`)
   }
