@@ -64,7 +64,6 @@ export function GoalFormContainer({
       template_id: "",
       generate_tasks_with_ai: false,
       ai_prompt: "",
-      recurrence: undefined,
       travel_destination: initialData?.travel_details?.destination || "",
       travel_accommodation: initialData?.travel_details?.accommodation || "",
       travel_transportation: initialData?.travel_details?.transportation || "",
@@ -97,13 +96,10 @@ export function GoalFormContainer({
           due_date: m.due_date?.toISOString(),
         })) || [],
       template_id: values.template_id,
-      recurrence: values.recurrence
-        ? {
-            type: values.recurrence.type || "daily",
-            timeRange: (values.recurrence.timeRange as [string, string]) || undefined,
-            daysOfWeek: values.recurrence.daysOfWeek,
-          }
-        : undefined,
+      // No `recurrence` key: recurring commitments are schedule rules now
+      // (goal_schedule_rules), created from the goal's Schedule tab. Existing
+      // goals keep whatever metadata.recurrence they already have — it's read
+      // as legacy data, never written here.
     }
 
     if (values.goal_type === "travel") {

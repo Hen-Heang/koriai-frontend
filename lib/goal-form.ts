@@ -28,13 +28,10 @@ export const goalSchema = z.object({
   template_id: z.string().optional(),
   generate_tasks_with_ai: z.boolean().optional(),
   ai_prompt: z.string().optional(),
-  recurrence: z
-    .object({
-      type: z.enum(["daily", "weekly", "monthly"]).optional(),
-      timeRange: z.array(z.string()).optional(),
-      daysOfWeek: z.array(z.number()).optional(),
-    })
-    .optional(),
+  // NOTE: there is deliberately no `recurrence` field here. It used to exist
+  // in this schema (and be written to metadata) with no UI and no consumer.
+  // Recurrence is now a first-class, structured concept — `goal_schedule_rules`
+  // (lib/goal-schedule-rules.ts), created from the goal's Schedule tab.
   travel_destination: z.string().optional(),
   travel_accommodation: z.string().optional(),
   travel_transportation: z.string().optional(),

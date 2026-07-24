@@ -119,7 +119,7 @@ export default function HomePage() {
       {/* ── Big entry points ── */}
       <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
         <WorkspacePosterCard
-          href={getLastVisited("learning", "/practice")}
+          href={getLastVisited("learn", "/practice")}
           eyebrow="Learning"
           title="Korean Learning"
           description="Vocab, grammar corrections, listening, reading, and exam prep — pick up today's practice."
@@ -133,7 +133,7 @@ export default function HomePage() {
           cta="Continue learning"
         />
         <WorkspacePosterCard
-          href={getLastVisited("productivity", "/dashboard")}
+          href={getLastVisited("goals", "/dashboard")}
           eyebrow="Productivity"
           title="Goal Setting"
           description="Plan goals, break them into tasks, and track deadlines — see what needs you today."

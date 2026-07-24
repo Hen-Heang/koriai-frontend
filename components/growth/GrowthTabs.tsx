@@ -4,11 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
-import { isLinkActive, workspaces } from "@/lib/navigation"
+import { isLinkActive, navSections, shippedItems } from "@/lib/navigation"
 
-const growthLinks = workspaces
-  .find((w) => w.id === "growth")!
-  .links.filter((l) => !l.soon)
+const growthLinks = shippedItems(navSections.find((s) => s.id === "growth")!.items)
 
 // Segmented switcher between the Growth workspace's shipped features
 // (Habits / Recovery). Rendered at the top of each feature's root page so the

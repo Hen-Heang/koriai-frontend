@@ -4,7 +4,8 @@
 // the Orbit Supabase project. Scoping comes from RLS + auth.uid().
 import type { Goal, GoalHealthStatus, GoalReviewFrequency } from "@/lib/goals"
 import type { GoalKeyResult } from "@/lib/goal-key-results"
-import type { Task } from "@/lib/tasks"
+import type { Task, TaskSchedulingSource, TaskStatus } from "@/lib/tasks"
+import { taskCompletionPatch, taskStatusPatch } from "@/lib/task-status"
 import { supabase } from "@/lib/supabase"
 import { getUserId, requireUserId } from "@/lib/auth-store"
 import { aiPost, authHeaders } from "./ai-client"
@@ -43,6 +44,15 @@ export interface GoalMemberDto {
   email: string | null
   joinedAt: string | null
   lastSeen: string | null
+}
+
+/** One AI-proposed task, before the user has accepted anything. */
+export interface AiTaskDraft {
+  title: string
+  description?: string | null
+  start_date: string
+  end_date: string
+  duration_minutes?: number | null
 }
 
 type GoalRow = Goal & {
@@ -256,31 +266,36 @@ export const goalsApi = {
     return data as Task[]
   },
 
-  // AI-generate tasks for a goal (server AI key via app/api/ai); inserts and
-  // returns the created tasks.
-  generateTasks: async (id: string, body?: { count?: number; note?: string }): Promise<Task[]> => {
-    const userId = requireUserId()
+  // AI task drafts for a goal (server AI key via app/api/ai). Read-only: this
+  // returns a draft the user reviews and confirms — nothing is written until
+  // `createTasksFromDrafts` is called. See docs/goal-planning-scheduling-audit.md
+  // ("Never create tasks without a preview").
+  previewTasks: async (
+    id: string,
+    body?: { count?: number; note?: string },
+  ): Promise<AiTaskDraft[]> => {
     const goal = await goalsApi.get(id)
-    const { tasks } = await aiPost<{
-      tasks: Array<{
-        title: string
-        description?: string
-        start_date: string
-        end_date: string
-        duration_minutes?: number | null
-      }>
-    }>("/goals/generate-tasks", {
+    const { tasks } = await aiPost<{ tasks: AiTaskDraft[] }>("/goals/generate-tasks", {
       goalTitle: goal.title,
       goalDescription: goal.description,
       targetDate: goal.target_date,
+      startDate: goal.metadata?.start_date ?? null,
       metadata: goal.metadata,
       count: body?.count,
       note: body?.note,
     })
+    return tasks
+  },
+
+  // Persist drafts the user explicitly accepted (the review screen passes only
+  // the selected subset).
+  createTasksFromDrafts: async (id: string, drafts: AiTaskDraft[]): Promise<Task[]> => {
+    if (drafts.length === 0) return []
+    const userId = requireUserId()
     const { data, error } = await supabase
       .from("tasks")
       .insert(
-        tasks.map((t) => ({
+        drafts.map((t) => ({
           user_id: userId,
           goal_id: id,
           title: t.title,
@@ -288,6 +303,9 @@ export const goalsApi = {
           start_date: t.start_date,
           end_date: t.end_date,
           duration_minutes: t.duration_minutes ?? null,
+          effort_minutes: t.duration_minutes ?? null,
+          source: "ai" as const,
+          scheduling_source: "ai" as const,
         })),
       )
       .select()
@@ -361,6 +379,20 @@ export interface CreateTaskPayload {
   color?: string | null
   tags?: string[]
   completed?: boolean
+  // ── Quality + plan/schedule linkage (Goal System v2 / Planning & Scheduling)
+  key_result_id?: string | null
+  phase_id?: string | null
+  schedule_rule_id?: string | null
+  occurrence_date?: string | null
+  scheduling_source?: TaskSchedulingSource
+  effort_minutes?: number | null
+  impact_level?: "low" | "medium" | "high" | null
+  expected_output?: string | null
+  completion_criteria?: string | null
+  reschedule_count?: number
+  status?: TaskStatus
+  blocked_reason?: string | null
+  evidence_required?: boolean
 }
 
 export type UpdateTaskPayload = Partial<CreateTaskPayload>
@@ -404,6 +436,67 @@ export const tasksApi = {
     const { error } = await supabase.from("tasks").delete().eq("id", id)
     if (error) throw error
   },
+
+  /**
+   * Set a task's workflow status. Goes through `taskStatusPatch` so `status`
+   * and the legacy `completed` boolean can never drift apart — this is the
+   * only sanctioned way to change either (see lib/task-status.ts).
+   */
+  setStatus: async (
+    id: string,
+    status: TaskStatus,
+    blockedReason?: string | null,
+  ): Promise<Task> => tasksApi.update(id, taskStatusPatch(status, blockedReason)),
+
+  /** Toggle completion, deriving the resulting status from the schedule. */
+  setCompleted: async (
+    task: Pick<Task, "id" | "start_date" | "end_date">,
+    completed: boolean,
+    todayYmd: string,
+  ): Promise<Task> =>
+    tasksApi.update(task.id, taskCompletionPatch(completed, task, todayYmd)),
+
+  /**
+   * Move a missed task. `reschedule_count` is incremented here (and only here)
+   * so the counter means "times this slipped", not "times it was edited" —
+   * a plain `update()` that happens to change dates does not bump it.
+   */
+  reschedule: async (
+    task: Pick<Task, "id" | "reschedule_count">,
+    data: UpdateTaskPayload,
+  ): Promise<Task> => {
+    const { data: row, error } = await supabase
+      .from("tasks")
+      .update({
+        ...data,
+        scheduling_source: "rescheduled",
+        reschedule_count: (task.reschedule_count ?? 0) + 1,
+        updated_by: getUserId(),
+      })
+      .eq("id", task.id)
+      .select()
+      .single()
+    if (error) throw error
+    return row as Task
+  },
+
+  /**
+   * Return a task to the unscheduled backlog (keeps its day, drops the slot).
+   *
+   * The status has to move too. Dropping only the slot left `status` on its
+   * previous value — usually `"scheduled"` — so the row's badge said
+   * "Scheduled" while its schedule column said "Unscheduled", and a status
+   * filter for `scheduled` still returned tasks sitting in the backlog.
+   * `taskStatusPatch` also mirrors `completed`, which is why the boolean is
+   * never written by hand here.
+   */
+  moveToBacklog: async (task: Pick<Task, "id" | "reschedule_count">): Promise<Task> =>
+    tasksApi.reschedule(task, {
+      daily_start_time: null,
+      daily_end_time: null,
+      is_anytime: true,
+      ...taskStatusPatch("backlog"),
+    }),
 }
 
 // Goal notifications over Orbit's notifications table; the enriched feed

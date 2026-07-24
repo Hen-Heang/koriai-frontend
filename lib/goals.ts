@@ -24,11 +24,21 @@ export interface GoalMetadata {
   no_duration?: boolean
   priority?: "low" | "medium" | "high"
   category?: string
+  /**
+   * @deprecated Legacy, read-only. Never written since the Planning &
+   * Scheduling pass — recurring commitments are `goal_schedule_rules` rows
+   * (lib/goal-schedule-rules.ts). Kept so pre-existing goals still parse.
+   */
   recurrence?: {
     type: "daily" | "weekly" | "monthly"
     timeRange?: [string, string]
     daysOfWeek?: number[]
   }
+  /**
+   * @deprecated Legacy "Sub-goals" checklist. Superseded by plan phases
+   * (`goal_plan_phases`); still read, and convertible on explicit user action
+   * from the Plan tab. Not deleted — see lib/goal-plan-phases.ts.
+   */
   milestones?: Array<{ title: string; due_date?: string; done?: boolean }>
   template_id?: string
   icon?: string

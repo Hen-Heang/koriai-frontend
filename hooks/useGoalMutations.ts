@@ -1,6 +1,7 @@
 "use client"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { goalsApi, getApiErrorMessage } from "@/lib/api"
@@ -8,10 +9,13 @@ import { getUserId } from "@/lib/auth-store"
 import { goalsQueryKey } from "@/hooks/useGoals"
 import type { Goal, GoalMetadata } from "@/lib/goals"
 
-// Combines Orbit's useCreateGoal + useUpdateGoal over the api layer. Supabase
-// inserts/RPC and AI task-generation are dropped; AI generation is a deferred
-// seam (see INTEGRATION.md) surfaced via the `generateTasksWithAI` flag, which
-// currently no-ops with a toast rather than silently disappearing.
+// Combines Orbit's useCreateGoal + useUpdateGoal over the api layer.
+//
+// `generateTasksWithAI` used to fire a "coming soon" toast and do nothing,
+// while the form's switch promised an AI action plan. It now routes to the
+// new goal's AI plan builder (`?aiPlan=1`), which drafts tasks and requires an
+// explicit confirmation before anything is written — see
+// docs/goal-planning-scheduling-audit.md.
 
 export interface CreateGoalPayload {
   title: string
@@ -40,17 +44,9 @@ export interface GoalMutationOptions {
 const toDateOnly = (d?: Date | null) =>
   d && !isNaN(d.getTime()) ? d.toISOString().split("T")[0] : null
 
-// AI task generation seam — re-enable when the AI backend is wired (deferred).
-function notifyAiSeam(options: GoalMutationOptions) {
-  if (options.generateTasksWithAI) {
-    toast.info("AI task generation is coming soon", {
-      description: "Your goal was saved. Add tasks manually for now.",
-    })
-  }
-}
-
 export function useCreateGoal() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const userId = getUserId()
 
   const mutation = useMutation({
@@ -85,8 +81,10 @@ export function useCreateGoal() {
   ): Promise<{ success: boolean; goal?: Goal; error?: string }> => {
     try {
       const goal = await mutation.mutateAsync(payload)
-      notifyAiSeam(options)
       toast.success("Success!", { description: "Your goal has been created." })
+      // The AI switch opens the plan builder on the new goal. It drafts and
+      // shows tasks; it never writes them without a confirmation.
+      if (options.generateTasksWithAI) router.push(`/goals/${goal.id}?aiPlan=1`)
       return { success: true, goal }
     } catch (error) {
       const message = getApiErrorMessage(error, "Could not create goal")
@@ -101,6 +99,7 @@ export function useCreateGoal() {
 
 export function useUpdateGoal() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const userId = getUserId()
 
   const mutation = useMutation({
@@ -139,8 +138,8 @@ export function useUpdateGoal() {
   ): Promise<{ success: boolean; goal?: Goal; message?: string }> => {
     try {
       const goal = await mutation.mutateAsync({ goalId, payload })
-      notifyAiSeam(options)
       toast.success("Success!", { description: "Your goal has been updated." })
+      if (options.generateTasksWithAI) router.push(`/goals/${goalId}?aiPlan=1`)
       return { success: true, goal }
     } catch (error) {
       const message = getApiErrorMessage(error, "Failed to update goal. Please try again.")

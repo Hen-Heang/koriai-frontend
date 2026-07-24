@@ -187,7 +187,10 @@ function ChatPageContent() {
     onDelete: handleDelete,
   }
 
-  const containerHeight = "h-[100dvh] lg:h-[calc(100dvh-9rem)] lg:min-h-[40rem]"
+  // Full viewport on mobile (the shell hides its header here); on tablet and up
+  // subtract the shell's sticky top bar so chat still fits without scrolling.
+  // md: not lg: — the shell switches to rail + header at 768px.
+  const containerHeight = "h-[100dvh] md:h-[calc(100dvh-3.6rem)] md:min-h-[36rem]"
 
   if (error && !conversationId && mode === "chat") {
     return (

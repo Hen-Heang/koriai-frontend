@@ -31,7 +31,24 @@ export interface Task {
   effort_minutes?: number | null
   source?: "manual" | "ai" | "template"
   reschedule_count?: number
+  // ── Plan / schedule linkage (Goal Planning & Scheduling — see
+  //    docs/goal-planning-scheduling-audit.md). All nullable/defaulted so
+  //    every pre-existing task keeps working unchanged.
+  phase_id?: string | null
+  schedule_rule_id?: string | null
+  /** Set only on tasks materialised from a schedule rule (YYYY-MM-DD). */
+  occurrence_date?: string | null
+  scheduling_source?: TaskSchedulingSource
+  // ── Workflow status. `completed` above is kept in sync with this and stays
+  //    authoritative on read while external (Orbit) writers exist — the one
+  //    canonical rule lives in lib/task-status.ts.
+  status?: TaskStatus
+  blocked_reason?: string | null
 }
+
+export type TaskSchedulingSource = "manual" | "ai" | "recurring_rule" | "rescheduled"
+
+export type TaskStatus = "backlog" | "scheduled" | "in_progress" | "blocked" | "completed"
 
 export interface TaskTag {
   name: string
